@@ -1,0 +1,543 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Package,
+  Search,
+  Filter,
+  Download,
+  Edit,
+  Save,
+  X,
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  RefreshCw,
+  Settings,
+  Users,
+  AlertTriangle,
+  CheckCircle,
+  Globe,
+  Monitor,
+  Building,
+  Eye,
+  Activity,
+  Calendar,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import {
+  warehouseAPI,
+  productAPI,
+  brandAPI,
+  getCurrentUser,
+  handleApiError,
+} from '../../utils/api';
+import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
+import WarehouseStockTable from '../../components/stock/WarehouseStockTable';
+import WarehouseStatsCards from '../../components/stock/WarehouseStatsCards';
+import WarehouseFilters from '../../components/stock/WarehouseFilters';
+import StockEditModal from '../../components/stock/StockEditModal';
+import SystemControlModal from '../../components/stock/SystemControlModal';
+import ActivityLogModal from '../../components/stock/ActivityLogModal';
+
+const WarehouseManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    category: '',
+    brand: '',
+    productType: '',
+    compatibleSystem: '',
+    availability: '',
+  });
+
+  // Modal states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showSystemControlModal, setShowSystemControlModal] = useState(false);
+  const [showActivityLogModal, setShowActivityLogModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // Filter data
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [compatibleSystems, setCompatibleSystems] = useState([]);
+
+  // System status
+  const [systemEnabled, setSystemEnabled] = useState(false);
+  const [systemSettings, setSystemSettings] = useState({
+    autoSyncEnabled: true,
+    lowStockThreshold: 10,
+    criticalStockThreshold: 5,
+  });
+
+  // Stats
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalStock: 0,
+    onlineStock: 0,
+    offlineStock: 0,
+    lowStockItems: 0,
+    outOfStockItems: 0,
+    damagedItems: 0,
+    refurbishedItems: 0,
+  });
+
+  const currentUser = getCurrentUser();
+  const canEdit = systemEnabled && currentUser?.subRole === 'WAREHOUSE';
+  const canManageSystem = ['DIRECTOR', 'IT'].includes(currentUser?.subRole);
+
+  useEffect(() => {
+    initializeData();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [products, searchTerm, filters]);
+
+  const initializeData = async () => {
+    await Promise.all([
+      fetchProducts(),
+      fetchFilterData(),
+      checkSystemStatus(),
+    ]);
+  };
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await warehouseAPI.getProductsForStock({
+        page: 1,
+        limit: 1000, // Get all products for warehouse view
+      });
+
+      if (response.success) {
+        setProducts(response.data);
+        calculateStats(response.data);
+      } else {
+        toast.error(response.message || 'Failed to fetch products');
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error(handleApiError(error, 'Failed to fetch products'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFilterData = async () => {
+    try {
+      const [categoryResponse, brandResponse] = await Promise.all([
+        productAPI.getCategoryStructure(),
+        brandAPI.getBrands(),
+      ]);
+
+      if (categoryResponse.success) {
+        setCategories(categoryResponse.data);
+      }
+
+      if (brandResponse.success) {
+        setBrands(brandResponse.data);
+        // Extract compatible systems from brands
+        const systems = brandResponse.data
+          .filter((brand) => brand.compatibleSystem)
+          .map((brand) => ({ _id: brand._id, name: brand.name }));
+        setCompatibleSystems(systems);
+      }
+    } catch (error) {
+      console.error('Error fetching filter data:', error);
+    }
+  };
+
+  const checkSystemStatus = async () => {
+    try {
+      const response = await warehouseAPI.getSystemStatus();
+      if (response.success) {
+        setSystemEnabled(response.data.enabled);
+        setSystemSettings(response.data.settings);
+      }
+    } catch (error) {
+      console.error('Error checking system status:', error);
+      toast.error('Failed to load system status');
+    }
+  };
+
+  const calculateStats = (productData) => {
+    const stats = productData.reduce(
+      (acc, product) => {
+        const stock = product.warehouseStock || {};
+
+        acc.totalProducts += 1;
+        acc.totalStock += stock.finalStock || 0;
+        acc.onlineStock += stock.onlineStock || 0;
+        acc.offlineStock += stock.offlineStock || 0;
+        acc.damagedItems += stock.damagedQty || 0;
+        acc.refurbishedItems += stock.refurbishedQty || 0;
+
+        const finalStock = stock.finalStock || 0;
+        if (finalStock === 0) {
+          acc.outOfStockItems += 1;
+        } else if (finalStock <= systemSettings.lowStockThreshold) {
+          acc.lowStockItems += 1;
+        }
+
+        return acc;
+      },
+      {
+        totalProducts: 0,
+        totalStock: 0,
+        onlineStock: 0,
+        offlineStock: 0,
+        lowStockItems: 0,
+        outOfStockItems: 0,
+        damagedItems: 0,
+        refurbishedItems: 0,
+      }
+    );
+
+    setStats(stats);
+  };
+
+  const applyFilters = () => {
+    let filtered = [...products];
+
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (product) =>
+          product.name?.toLowerCase().includes(searchLower) ||
+          product.sku?.toLowerCase().includes(searchLower) ||
+          product.description?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply category filter
+    if (filters.category) {
+      filtered = filtered.filter(
+        (product) => product.category?._id === filters.category
+      );
+    }
+
+    // Apply brand filter
+    if (filters.brand) {
+      filtered = filtered.filter((product) =>
+        product.brand?.some((b) => b._id === filters.brand)
+      );
+    }
+
+    // Apply product type filter
+    if (filters.productType) {
+      filtered = filtered.filter(
+        (product) => product.productType === filters.productType
+      );
+    }
+
+    // Apply compatible system filter
+    if (filters.compatibleSystem) {
+      filtered = filtered.filter(
+        (product) => product.compatibleSystem?._id === filters.compatibleSystem
+      );
+    }
+
+    // Apply availability filter
+    if (filters.availability) {
+      filtered = filtered.filter((product) => {
+        const stock = product.warehouseStock?.finalStock || 0;
+        switch (filters.availability) {
+          case 'in-stock':
+            return stock > systemSettings.lowStockThreshold;
+          case 'low-stock':
+            return stock > 0 && stock <= systemSettings.lowStockThreshold;
+          case 'out-of-stock':
+            return stock === 0;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const handleEditStock = (product) => {
+    if (!canEdit) {
+      toast.error('Warehouse stock editing is disabled');
+      return;
+    }
+    setEditingProduct(product);
+    setShowEditModal(true);
+  };
+
+  const handleSaveStock = async (productId, stockData) => {
+    try {
+      const response = await warehouseAPI.updateStock({
+        productId,
+        ...stockData,
+      });
+
+      if (response.success) {
+        toast.success('Stock updated successfully');
+        await fetchProducts(); // Refresh the data
+        setShowEditModal(false);
+        setEditingProduct(null);
+      } else {
+        toast.error(response.message || 'Failed to update stock');
+      }
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      toast.error(handleApiError(error, 'Failed to update stock'));
+    }
+  };
+
+  const handleSystemToggle = async (enabled) => {
+    try {
+      if (enabled) {
+        const response = await warehouseAPI.enableSystem();
+        if (response.success) {
+          setSystemEnabled(true);
+          toast.success('Warehouse stock system enabled');
+        }
+      } else {
+        const response = await warehouseAPI.disableSystem();
+        if (response.success) {
+          setSystemEnabled(false);
+          toast.success('Warehouse stock system disabled');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling system:', error);
+      toast.error(error.message || 'Failed to update system status');
+    }
+  };
+
+  const handleUpdateSettings = async (settings) => {
+    try {
+      const response = await warehouseAPI.updateSystemSettings(settings);
+      if (response.success) {
+        setSystemSettings(response.data);
+        toast.success('System settings updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      toast.error(error.message || 'Failed to update settings');
+    }
+  };
+
+  const exportToCSV = () => {
+    const csvContent = [
+      [
+        'Product Name',
+        'SKU',
+        'Category',
+        'Brand',
+        'Product Type',
+        'Stock on Arrival',
+        'Damaged Qty',
+        'Expired Qty',
+        'Refurbished Qty',
+        'Final Stock',
+        'Online Stock',
+        'Offline Stock',
+        'Last Updated',
+      ],
+      ...filteredProducts.map((product) => {
+        const stock = product.warehouseStock || {};
+        return [
+          product.name || '',
+          product.sku || '',
+          product.category?.name || '',
+          product.brand?.map((b) => b.name).join(', ') || '',
+          product.productType || '',
+          stock.stockOnArrival || 0,
+          stock.damagedQty || 0,
+          stock.expiredQty || 0,
+          stock.refurbishedQty || 0,
+          stock.finalStock || 0,
+          stock.onlineStock || 0,
+          stock.offlineStock || 0,
+          stock.lastUpdated
+            ? new Date(stock.lastUpdated).toLocaleDateString()
+            : '',
+        ];
+      }),
+    ];
+
+    const csvString = csvContent
+      .map((row) => row.map((field) => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'warehouse-stock-report.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Warehouse Management
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Manual stock quantity management and inventory control
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={fetchProducts}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+
+          <button
+            onClick={() => setShowActivityLogModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Activity className="h-4 w-4" />
+            Activity Log
+          </button>
+
+          <RoleBasedAccess allowedRoles={['DIRECTOR', 'IT']}>
+            <button
+              onClick={() => setShowSystemControlModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              System Control
+            </button>
+          </RoleBasedAccess>
+        </div>
+      </div>
+
+      {/* System Status Alert */}
+      <div
+        className={`p-4 rounded-lg border ${
+          systemEnabled
+            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+            : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {systemEnabled ? (
+            <CheckCircle className="h-5 w-5 text-green-600" />
+          ) : (
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+          )}
+          <div>
+            <p
+              className={`font-medium ${
+                systemEnabled
+                  ? 'text-green-800 dark:text-green-200'
+                  : 'text-red-800 dark:text-red-200'
+              }`}
+            >
+              Warehouse Stock System: {systemEnabled ? 'Enabled' : 'Disabled'}
+            </p>
+            <p
+              className={`text-sm ${
+                systemEnabled
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+              }`}
+            >
+              {systemEnabled
+                ? 'Warehouse staff can manually update stock quantities'
+                : 'Manual stock updates are disabled. Contact Director or IT to enable.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <WarehouseStatsCards systemSettings={systemSettings} />
+
+      {/* Filters */}
+      <WarehouseFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filters={filters}
+        setFilters={setFilters}
+        categories={categories}
+        brands={brands}
+        compatibleSystems={compatibleSystems}
+        filteredCount={filteredProducts.length}
+        totalCount={products.length}
+      />
+
+      {/* Stock Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              Product Stock Management
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <Package className="h-4 w-4" />
+              {filteredProducts.length} of {products.length} products
+            </div>
+          </div>
+        </div>
+
+        <WarehouseStockTable
+          loading={loading}
+          filteredProducts={filteredProducts}
+          canEdit={canEdit}
+          onEditStock={handleEditStock}
+          systemSettings={systemSettings}
+        />
+      </div>
+
+      {/* Stock Edit Modal */}
+      {showEditModal && editingProduct && (
+        <StockEditModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingProduct(null);
+          }}
+          product={editingProduct}
+          onSave={handleSaveStock}
+        />
+      )}
+
+      {/* System Control Modal */}
+      {showSystemControlModal && (
+        <SystemControlModal
+          isOpen={showSystemControlModal}
+          onClose={() => setShowSystemControlModal(false)}
+          systemEnabled={systemEnabled}
+          systemSettings={systemSettings}
+          onToggleSystem={handleSystemToggle}
+          onUpdateSettings={handleUpdateSettings}
+        />
+      )}
+
+      {/* Activity Log Modal */}
+      {showActivityLogModal && (
+        <ActivityLogModal
+          isOpen={showActivityLogModal}
+          onClose={() => setShowActivityLogModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default WarehouseManagement;
