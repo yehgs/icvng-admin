@@ -976,6 +976,8 @@ export const pricingAPI = {
     return apiCall('/pricing/config/approve', {
       method: 'PATCH',
     });
+
+    console.log('=== END PRICING API ===');
   },
 
   // Calculate prices from purchase order
