@@ -1,3 +1,4 @@
+//admin
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -52,6 +53,10 @@ import PurchaseReports from './pages/reports/PurchaseReports';
 
 // User Management
 import UserManagement from './pages/users/UserManagement';
+
+// logistics Components and tracking
+import LogisticsManagement from './pages/logistics/LogisticsManagement';
+import TrackingManagement from './pages/logistics/TrackingManagement';
 
 // Settings & Other
 import Settings from './pages/settings/Settings';
@@ -178,6 +183,26 @@ const App = () => {
                   allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
                 >
                   <ColorManagement />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="logistics"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS']}
+                >
+                  <LogisticsManagement />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="tracking"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS']}
+                >
+                  <TrackingManagement />
                 </RoleProtectedRoute>
               }
             />

@@ -1,3 +1,4 @@
+//admin
 // utils/api.js - Updated with improved error handling and getCurrentUser consistency
 const API_BASE_URL =
   import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
@@ -1206,6 +1207,249 @@ export const coffeeRoastAreaAPI = {
   },
 };
 
+export const logisticsAPI = {
+  // Shipping Zones
+  getShippingZones: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(`/shipping/zones${queryString ? `?${queryString}` : ''}`);
+  },
+
+  createShippingZone: async (zoneData) => {
+    return apiCall('/shipping/zones', {
+      method: 'POST',
+      body: zoneData,
+    });
+  },
+
+  updateShippingZone: async (zoneId, zoneData) => {
+    return apiCall(`/shipping/zones/${zoneId}`, {
+      method: 'PUT',
+      body: zoneData,
+    });
+  },
+
+  deleteShippingZone: async (zoneId) => {
+    return apiCall(`/shipping/zones/${zoneId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Shipping Methods
+  getShippingMethods: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(`/shipping/methods${queryString ? `?${queryString}` : ''}`);
+  },
+
+  createShippingMethod: async (methodData) => {
+    // Clean up the data based on method type and new structure
+    const cleanedData = { ...methodData };
+
+    // Clean up unused configurations
+    if (methodData.type !== 'pickup') {
+      delete cleanedData.pickup;
+    }
+    if (methodData.type !== 'flat_rate') {
+      delete cleanedData.flatRate;
+    }
+    if (methodData.type !== 'table_shipping') {
+      delete cleanedData.tableShipping;
+    }
+
+    // Additional cleanup for new zone structure
+    if (methodData.type === 'flat_rate' && cleanedData.flatRate) {
+      // If no zone rates, ensure we have a default cost
+      if (
+        !cleanedData.flatRate.zoneRates ||
+        cleanedData.flatRate.zoneRates.length === 0
+      ) {
+        cleanedData.flatRate.defaultCost =
+          cleanedData.flatRate.defaultCost || cleanedData.flatRate.cost || 0;
+      }
+    }
+
+    if (methodData.type === 'pickup' && cleanedData.pickup) {
+      // If no zone locations, ensure we have default locations
+      if (
+        !cleanedData.pickup.zoneLocations ||
+        cleanedData.pickup.zoneLocations.length === 0
+      ) {
+        cleanedData.pickup.defaultLocations =
+          cleanedData.pickup.defaultLocations ||
+          cleanedData.pickup.locations ||
+          [];
+      }
+      // Remove old locations field for backward compatibility
+      delete cleanedData.pickup.locations;
+    }
+
+    return apiCall('/shipping/methods', {
+      method: 'POST',
+      body: cleanedData,
+    });
+  },
+
+  updateShippingMethod: async (methodId, methodData) => {
+    // Same cleanup logic as create
+    const cleanedData = { ...methodData };
+
+    if (methodData.type !== 'pickup') {
+      delete cleanedData.pickup;
+    }
+    if (methodData.type !== 'flat_rate') {
+      delete cleanedData.flatRate;
+    }
+    if (methodData.type !== 'table_shipping') {
+      delete cleanedData.tableShipping;
+    }
+
+    if (methodData.type === 'flat_rate' && cleanedData.flatRate) {
+      if (
+        !cleanedData.flatRate.zoneRates ||
+        cleanedData.flatRate.zoneRates.length === 0
+      ) {
+        cleanedData.flatRate.defaultCost =
+          cleanedData.flatRate.defaultCost || cleanedData.flatRate.cost || 0;
+      }
+    }
+
+    if (methodData.type === 'pickup' && cleanedData.pickup) {
+      if (
+        !cleanedData.pickup.zoneLocations ||
+        cleanedData.pickup.zoneLocations.length === 0
+      ) {
+        cleanedData.pickup.defaultLocations =
+          cleanedData.pickup.defaultLocations ||
+          cleanedData.pickup.locations ||
+          [];
+      }
+      delete cleanedData.pickup.locations;
+    }
+
+    return apiCall(`/shipping/methods/${methodId}`, {
+      method: 'PUT',
+      body: cleanedData,
+    });
+  },
+
+  deleteShippingMethod: async (methodId) => {
+    return apiCall(`/shipping/methods/${methodId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // NEW: Categories and Products for Assignment
+  getCategoriesForAssignment: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/shipping/categories/for-assignment${
+        queryString ? `?${queryString}` : ''
+      }`
+    );
+  },
+
+  getProductsForAssignment: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/shipping/products/for-assignment${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  // Calculate shipping costs
+  calculateShippingCost: async (orderData) => {
+    return apiCall('/shipping/calculate', {
+      method: 'POST',
+      body: orderData,
+    });
+  },
+
+  // Tracking Management
+  createShipment: async (shipmentData) => {
+    return apiCall('/shipping/shipments', {
+      method: 'POST',
+      body: shipmentData,
+    });
+  },
+
+  updateTracking: async (trackingId, updateData) => {
+    return apiCall(`/shipping/trackings/${trackingId}`, {
+      method: 'PUT',
+      body: updateData,
+    });
+  },
+
+  getAllTrackings: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/shipping/trackings${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  getTrackingByNumber: async (trackingNumber) => {
+    return apiCall(`/shipping/track/${trackingNumber}`);
+  },
+
+  getTrackingStats: async () => {
+    return apiCall('/shipping/trackings/stats');
+  },
+
+  // Dashboard
+  getShippingDashboardStats: async () => {
+    return apiCall('/shipping/dashboard/stats');
+  },
+
+  // Orders ready for shipping
+  getOrdersReadyForShipping: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/shipping/orders/ready-for-shipping${
+        queryString ? `?${queryString}` : ''
+      }`
+    );
+  },
+};
+
 // Warehouse Stock Management API calls
 export const warehouseAPI = {
   // Get products for stock management (warehouse view)
@@ -1837,6 +2081,7 @@ export default {
   stockAPI,
   pricingAPI,
   pricingUtils,
+  logisticsAPI,
   tagAPI,
   coffeeRoastAreaAPI,
   warehouseAPI,

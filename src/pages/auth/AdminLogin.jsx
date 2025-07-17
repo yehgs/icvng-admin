@@ -46,6 +46,7 @@ const AdminLogin = () => {
     { value: 'MANAGER', label: 'Manager' },
     { value: 'WAREHOUSE', label: 'Warehouse' },
     { value: 'ACCOUNTANT', label: 'Accounting' },
+    { value: 'LOGISTICS', label: 'Logistics' },
     { value: 'GRAPHICS', label: 'Graphics Design' },
     { value: 'EDITOR', label: 'Content Editor' },
   ];

@@ -1,3 +1,4 @@
+//admin
 import React, { useState } from 'react';
 import {
   ChevronDown,
@@ -31,6 +32,8 @@ import {
   Archive,
   AlertTriangle,
   PieChart,
+  MapPin,
+  Navigation,
 } from 'lucide-react';
 
 const AdminSidebar = ({
@@ -70,7 +73,7 @@ const AdminSidebar = ({
       path: '/admin/dashboard',
       icon: Home,
       single: true,
-      allowedSubRoles: [], // All admin roles
+      allowedSubRoles: [],
     },
     {
       key: 'products',
@@ -154,6 +157,7 @@ const AdminSidebar = ({
         // },
       ],
     },
+
     {
       key: 'inventory',
       title: 'Inventory Management',
@@ -221,6 +225,26 @@ const AdminSidebar = ({
           path: '/admin/exchange-rates',
           icon: TrendingUp,
           allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+        },
+      ],
+    },
+    {
+      key: 'logistics',
+      title: 'Logistics',
+      icon: Truck,
+      allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS'],
+      items: [
+        {
+          title: 'Logistics Management',
+          path: '/admin/logistics',
+          icon: MapPin,
+          allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS'],
+        },
+        {
+          title: 'Tracking Management',
+          path: '/admin/tracking',
+          icon: Navigation,
+          allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS'],
         },
       ],
     },

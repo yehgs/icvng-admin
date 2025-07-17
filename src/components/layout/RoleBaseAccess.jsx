@@ -1,3 +1,4 @@
+//admin
 import React from 'react';
 import { getCurrentUser } from '../../utils/api';
 
