@@ -1,7 +1,259 @@
 //admin
-// utils/api.js - Updated with improved error handling and getCurrentUser consistency
+// utils/api.js
 const API_BASE_URL =
   import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
+
+function cleanShippingMethodData(methodData) {
+  const cleanedData = { ...methodData };
+
+  // Remove configurations for other method types
+  if (methodData.type !== 'pickup') {
+    delete cleanedData.pickup;
+  }
+  if (methodData.type !== 'flat_rate') {
+    delete cleanedData.flatRate;
+  }
+  if (methodData.type !== 'table_shipping') {
+    delete cleanedData.tableShipping;
+  }
+
+  // Clean pickup method data
+  if (methodData.type === 'pickup' && cleanedData.pickup) {
+    const pickupConfig = cleanedData.pickup;
+
+    // Ensure assignment defaults
+    if (!pickupConfig.assignment) {
+      pickupConfig.assignment = 'all_products';
+    }
+
+    // Clean categories and products based on assignment
+    if (pickupConfig.assignment !== 'categories') {
+      pickupConfig.categories = [];
+    }
+    if (pickupConfig.assignment !== 'specific_products') {
+      pickupConfig.products = [];
+    }
+
+    // Clean and validate zone locations
+    if (
+      pickupConfig.zoneLocations &&
+      Array.isArray(pickupConfig.zoneLocations)
+    ) {
+      pickupConfig.zoneLocations = pickupConfig.zoneLocations.filter(
+        (zoneLocation) => {
+          // Remove zone locations without a zone selected
+          if (!zoneLocation.zone || zoneLocation.zone.trim() === '') {
+            return false;
+          }
+
+          // Filter locations within this zone to only include valid ones
+          if (zoneLocation.locations && Array.isArray(zoneLocation.locations)) {
+            zoneLocation.locations = zoneLocation.locations.filter(
+              (location) => {
+                return (
+                  location.name &&
+                  location.name.trim() !== '' &&
+                  location.address &&
+                  location.address.trim() !== '' &&
+                  location.city &&
+                  location.city.trim() !== '' &&
+                  location.state &&
+                  location.state.trim() !== ''
+                );
+              }
+            );
+          }
+
+          // Only keep zone locations that have at least one valid location
+          return zoneLocation.locations && zoneLocation.locations.length > 0;
+        }
+      );
+    }
+
+    // Clean and validate default locations
+    if (
+      pickupConfig.defaultLocations &&
+      Array.isArray(pickupConfig.defaultLocations)
+    ) {
+      pickupConfig.defaultLocations = pickupConfig.defaultLocations.filter(
+        (location) => {
+          return (
+            location.name &&
+            location.name.trim() !== '' &&
+            location.address &&
+            location.address.trim() !== '' &&
+            location.city &&
+            location.city.trim() !== '' &&
+            location.state &&
+            location.state.trim() !== ''
+          );
+        }
+      );
+    }
+
+    // Ensure we have at least one location type
+    const hasValidZoneLocations =
+      pickupConfig.zoneLocations && pickupConfig.zoneLocations.length > 0;
+    const hasValidDefaultLocations =
+      pickupConfig.defaultLocations && pickupConfig.defaultLocations.length > 0;
+
+    if (!hasValidZoneLocations && !hasValidDefaultLocations) {
+      throw new Error(
+        'At least one valid pickup location is required with name, address, city, and state filled out.'
+      );
+    }
+  }
+
+  // Clean flat rate method data
+  if (methodData.type === 'flat_rate' && cleanedData.flatRate) {
+    const flatRateConfig = cleanedData.flatRate;
+
+    // Ensure assignment defaults
+    if (!flatRateConfig.assignment) {
+      flatRateConfig.assignment = 'all_products';
+    }
+
+    // Clean categories and products based on assignment
+    if (flatRateConfig.assignment !== 'categories') {
+      flatRateConfig.categories = [];
+    }
+    if (flatRateConfig.assignment !== 'specific_products') {
+      flatRateConfig.products = [];
+    }
+
+    // Clean zone rates
+    if (flatRateConfig.zoneRates && Array.isArray(flatRateConfig.zoneRates)) {
+      flatRateConfig.zoneRates = flatRateConfig.zoneRates.filter((zoneRate) => {
+        return zoneRate.zone && zoneRate.zone.trim() !== '';
+      });
+    }
+
+    // Handle date formatting
+    if (flatRateConfig.validFrom) {
+      flatRateConfig.validFrom = new Date(
+        flatRateConfig.validFrom
+      ).toISOString();
+    }
+    if (flatRateConfig.validUntil) {
+      flatRateConfig.validUntil = new Date(
+        flatRateConfig.validUntil
+      ).toISOString();
+    }
+  }
+
+  // Clean table shipping method data
+  if (methodData.type === 'table_shipping' && cleanedData.tableShipping) {
+    const tableShippingConfig = cleanedData.tableShipping;
+
+    // Ensure assignment defaults
+    if (!tableShippingConfig.assignment) {
+      tableShippingConfig.assignment = 'all_products';
+    }
+
+    // Clean categories and products based on assignment
+    if (tableShippingConfig.assignment !== 'categories') {
+      tableShippingConfig.categories = [];
+    }
+    if (tableShippingConfig.assignment !== 'specific_products') {
+      tableShippingConfig.products = [];
+    }
+
+    // Clean and validate zone rates
+    if (
+      tableShippingConfig.zoneRates &&
+      Array.isArray(tableShippingConfig.zoneRates)
+    ) {
+      tableShippingConfig.zoneRates = tableShippingConfig.zoneRates.filter(
+        (zoneRate) => {
+          return (
+            zoneRate.zone &&
+            zoneRate.zone.trim() !== '' &&
+            zoneRate.weightRanges &&
+            zoneRate.weightRanges.length > 0
+          );
+        }
+      );
+    }
+
+    // Ensure at least one zone rate exists
+    if (
+      !tableShippingConfig.zoneRates ||
+      tableShippingConfig.zoneRates.length === 0
+    ) {
+      throw new Error(
+        'At least one zone rate is required for table shipping method.'
+      );
+    }
+
+    // Handle date formatting
+    if (tableShippingConfig.validFrom) {
+      tableShippingConfig.validFrom = new Date(
+        tableShippingConfig.validFrom
+      ).toISOString();
+    }
+    if (tableShippingConfig.validUntil) {
+      tableShippingConfig.validUntil = new Date(
+        tableShippingConfig.validUntil
+      ).toISOString();
+    }
+  }
+
+  return cleanedData;
+}
+
+// Enhanced error handling wrapper
+export const handleShippingMethodSubmission = async (
+  methodData,
+  isUpdate = false,
+  methodId = null
+) => {
+  try {
+    let result;
+    if (isUpdate && methodId) {
+      result = await logisticsAPI.updateShippingMethod(methodId, methodData);
+    } else {
+      result = await logisticsAPI.createShippingMethod(methodData);
+    }
+
+    return {
+      success: true,
+      data: result,
+      message: isUpdate
+        ? 'Shipping method updated successfully'
+        : 'Shipping method created successfully',
+    };
+  } catch (error) {
+    console.error('Shipping method submission error:', error);
+
+    // Parse common validation errors
+    let userFriendlyMessage = error.message;
+
+    if (error.message.includes('validation failed')) {
+      if (
+        error.message.includes('pickup.zoneLocations') &&
+        error.message.includes('Cast to ObjectId failed')
+      ) {
+        userFriendlyMessage =
+          'Please select a valid zone for all pickup locations, or remove empty zone entries.';
+      } else if (
+        error.message.includes('address') &&
+        error.message.includes('required')
+      ) {
+        userFriendlyMessage =
+          'All pickup locations must have name, address, city, and state filled out.';
+      } else if (error.message.includes('pickup.defaultLocations')) {
+        userFriendlyMessage =
+          'Default pickup locations must have all required fields (name, address, city, state) filled out.';
+      }
+    }
+
+    return {
+      success: false,
+      error: userFriendlyMessage,
+      originalError: error,
+    };
+  }
+};
 
 // Generic API call function with improved error handling
 export const apiCall = async (endpoint, options = {}) => {
@@ -48,6 +300,98 @@ export const apiCall = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection.');
+    }
+    throw error;
+  }
+};
+
+// utils/api.js - Update apiCall function
+export const apiCallFileUploader = async (endpoint, options = {}) => {
+  const token = localStorage.getItem('accessToken');
+
+  // Debug: Check if token exists
+  console.log('=== API CALL DEBUG ===');
+  console.log('Token exists:', !!token);
+  console.log('Token value:', token ? token.substring(0, 20) + '...' : 'null');
+
+  try {
+    const processedOptions = {
+      method: 'GET',
+      ...options,
+    };
+
+    // Initialize headers object
+    processedOptions.headers = {};
+
+    // Add authorization header if token exists
+    if (token) {
+      processedOptions.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Handle FormData vs JSON differently
+    if (processedOptions.body instanceof FormData) {
+      // For FormData, don't set Content-Type - let browser handle it
+      console.log('Processing FormData request');
+
+      // Only add non-Content-Type headers from options
+      if (options.headers) {
+        Object.keys(options.headers).forEach((key) => {
+          if (key.toLowerCase() !== 'content-type') {
+            processedOptions.headers[key] = options.headers[key];
+          }
+        });
+      }
+    } else {
+      // For JSON, set Content-Type and stringify body
+      console.log('Processing JSON request');
+      processedOptions.headers['Content-Type'] = 'application/json';
+
+      if (processedOptions.body && typeof processedOptions.body !== 'string') {
+        processedOptions.body = JSON.stringify(processedOptions.body);
+      }
+
+      // Merge any additional headers from options
+      if (options.headers) {
+        processedOptions.headers = {
+          ...processedOptions.headers,
+          ...options.headers,
+        };
+      }
+    }
+
+    console.log('Final headers:', processedOptions.headers);
+    console.log('Request URL:', `${API_BASE_URL}${endpoint}`);
+    console.log('Request method:', processedOptions.method);
+    console.log('=== END API CALL DEBUG ===');
+
+    const response = await fetch(
+      `${API_BASE_URL}${endpoint}`,
+      processedOptions
+    );
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+
+    const data = await response.json();
+    console.log('Response data:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
+      }
+      throw new Error(
+        data.message || `HTTP ${response.status}: ${response.statusText}`
+      );
+    }
+
+    return data;
+  } catch (error) {
+    console.error('API Call Error:', error);
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new Error('Network error. Please check your connection.');
     }
@@ -628,6 +972,8 @@ export const exchangeRateUtils = {
 };
 
 // File upload API calls
+// Update your fileAPI.uploadFile function in utils/api.js for better debugging
+
 export const fileAPI = {
   uploadImage: async (file) => {
     const formData = new FormData();
@@ -638,6 +984,74 @@ export const fileAPI = {
       body: formData,
       headers: {}, // Let browser set Content-Type for FormData
     });
+  },
+
+  // utils/api.js - Fix the uploadFile function
+  uploadFile: async (file) => {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    console.log('=== FILE UPLOAD DEBUG ===');
+    console.log('Token exists:', !!token);
+    console.log('File to upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/file/upload-file`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('Error response:', errorData);
+        throw new Error(
+          errorData.message || `Upload failed: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+      console.log('Upload response:', data);
+      return data;
+    } catch (error) {
+      console.error('Upload API error:', error);
+      throw error;
+    }
+  },
+
+  deleteFile: async (publicId) => {
+    if (!publicId) {
+      throw new Error('Public ID is required for file deletion');
+    }
+
+    try {
+      // URL encode the public_id to handle special characters
+      const encodedPublicId = encodeURIComponent(publicId);
+
+      const response = await apiCall(`/file/delete-file/${encodedPublicId}`, {
+        method: 'DELETE',
+      });
+
+      console.log('Delete response:', response);
+      return response;
+    } catch (error) {
+      console.error('Delete API error:', error);
+      throw error;
+    }
   },
 };
 
@@ -1255,94 +1669,43 @@ export const logisticsAPI = {
   },
 
   createShippingMethod: async (methodData) => {
-    // Clean up the data based on method type and new structure
-    const cleanedData = { ...methodData };
+    try {
+      // Deep clean the data before sending
+      const cleanedData = cleanShippingMethodData(methodData);
 
-    // Clean up unused configurations
-    if (methodData.type !== 'pickup') {
-      delete cleanedData.pickup;
-    }
-    if (methodData.type !== 'flat_rate') {
-      delete cleanedData.flatRate;
-    }
-    if (methodData.type !== 'table_shipping') {
-      delete cleanedData.tableShipping;
-    }
+      console.log(
+        'Sending cleaned shipping method data:',
+        JSON.stringify(cleanedData, null, 2)
+      );
 
-    // Additional cleanup for new zone structure
-    if (methodData.type === 'flat_rate' && cleanedData.flatRate) {
-      // If no zone rates, ensure we have a default cost
-      if (
-        !cleanedData.flatRate.zoneRates ||
-        cleanedData.flatRate.zoneRates.length === 0
-      ) {
-        cleanedData.flatRate.defaultCost =
-          cleanedData.flatRate.defaultCost || cleanedData.flatRate.cost || 0;
-      }
+      return apiCall('/shipping/methods', {
+        method: 'POST',
+        body: cleanedData,
+      });
+    } catch (error) {
+      console.error('Create shipping method API error:', error);
+      throw error;
     }
-
-    if (methodData.type === 'pickup' && cleanedData.pickup) {
-      // If no zone locations, ensure we have default locations
-      if (
-        !cleanedData.pickup.zoneLocations ||
-        cleanedData.pickup.zoneLocations.length === 0
-      ) {
-        cleanedData.pickup.defaultLocations =
-          cleanedData.pickup.defaultLocations ||
-          cleanedData.pickup.locations ||
-          [];
-      }
-      // Remove old locations field for backward compatibility
-      delete cleanedData.pickup.locations;
-    }
-
-    return apiCall('/shipping/methods', {
-      method: 'POST',
-      body: cleanedData,
-    });
   },
 
   updateShippingMethod: async (methodId, methodData) => {
-    // Same cleanup logic as create
-    const cleanedData = { ...methodData };
+    try {
+      // Deep clean the data before sending
+      const cleanedData = cleanShippingMethodData(methodData);
 
-    if (methodData.type !== 'pickup') {
-      delete cleanedData.pickup;
-    }
-    if (methodData.type !== 'flat_rate') {
-      delete cleanedData.flatRate;
-    }
-    if (methodData.type !== 'table_shipping') {
-      delete cleanedData.tableShipping;
-    }
+      console.log(
+        'Sending cleaned shipping method update data:',
+        JSON.stringify(cleanedData, null, 2)
+      );
 
-    if (methodData.type === 'flat_rate' && cleanedData.flatRate) {
-      if (
-        !cleanedData.flatRate.zoneRates ||
-        cleanedData.flatRate.zoneRates.length === 0
-      ) {
-        cleanedData.flatRate.defaultCost =
-          cleanedData.flatRate.defaultCost || cleanedData.flatRate.cost || 0;
-      }
+      return apiCall(`/shipping/methods/${methodId}`, {
+        method: 'PUT',
+        body: cleanedData,
+      });
+    } catch (error) {
+      console.error('Update shipping method API error:', error);
+      throw error;
     }
-
-    if (methodData.type === 'pickup' && cleanedData.pickup) {
-      if (
-        !cleanedData.pickup.zoneLocations ||
-        cleanedData.pickup.zoneLocations.length === 0
-      ) {
-        cleanedData.pickup.defaultLocations =
-          cleanedData.pickup.defaultLocations ||
-          cleanedData.pickup.locations ||
-          [];
-      }
-      delete cleanedData.pickup.locations;
-    }
-
-    return apiCall(`/shipping/methods/${methodId}`, {
-      method: 'PUT',
-      body: cleanedData,
-    });
   },
 
   deleteShippingMethod: async (methodId) => {
@@ -1451,6 +1814,7 @@ export const logisticsAPI = {
 };
 
 // Warehouse Stock Management API calls
+
 export const warehouseAPI = {
   // Get products for stock management (warehouse view)
   getProductsForStock: async (params = {}) => {
@@ -1491,45 +1855,18 @@ export const warehouseAPI = {
     });
   },
 
-  // Get stock summary for warehouse
-  getStockSummary: async () => {
-    return apiCall('/warehouse/stock-summary');
-  },
-
-  //////warehouse stock system - manual stock update
-  getProductsForStock: async (params = {}) => {
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-
-    const queryString = queryParams.toString();
-    return apiCall(
-      `/warehouse/products${queryString ? `?${queryString}` : ''}`
-    );
-  },
-
-  // Update stock quantities (warehouse only)
-  updateStock: async (stockData) => {
-    if (!stockData.productId) {
+  // NEW: Update product weight (warehouse only, no approval required)
+  updateWeight: async (productId, weight) => {
+    if (!productId) {
       throw new Error('Product ID is required');
     }
 
     const validatedData = {
-      productId: stockData.productId,
-      stockOnArrival: parseInt(stockData.stockOnArrival) || 0,
-      damagedQty: parseInt(stockData.damagedQty) || 0,
-      expiredQty: parseInt(stockData.expiredQty) || 0,
-      refurbishedQty: parseInt(stockData.refurbishedQty) || 0,
-      finalStock: parseInt(stockData.finalStock) || 0,
-      onlineStock: parseInt(stockData.onlineStock) || 0,
-      offlineStock: parseInt(stockData.offlineStock) || 0,
-      notes: stockData.notes || '',
+      productId,
+      weight: parseFloat(weight) || 0,
     };
 
-    return apiCall('/warehouse/update-stock', {
+    return apiCall('/warehouse/update-weight', {
       method: 'PUT',
       body: validatedData,
     });
@@ -1677,6 +2014,7 @@ export const warehouseAPI = {
       },
     });
   },
+
   // Warehouse override management
   disableWarehouseOverride: async (productId) => {
     return apiCall(`/warehouse/products/${productId}/disable-override`, {
@@ -1737,11 +2075,6 @@ export const accountingAPI = {
 };
 
 // Utility functions
-export const handleApiError = (error, defaultMessage = 'An error occurred') => {
-  console.error('API Error:', error);
-  return error.message || defaultMessage;
-};
-
 export const isTokenValid = () => {
   const token = localStorage.getItem('accessToken');
   if (!token) return false;
@@ -2053,12 +2386,169 @@ export const pricingUtils = {
   },
 };
 
+export const blogAPI = {
+  // Categories
+  getCategories: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/blog/admin/categories${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  getCategory: async (categoryId) => {
+    return apiCall(`/blog/admin/categories/${categoryId}`);
+  },
+
+  createCategory: async (categoryData) => {
+    return apiCall('/blog/admin/categories', {
+      method: 'POST',
+      body: categoryData,
+    });
+  },
+
+  updateCategory: async (categoryId, categoryData) => {
+    return apiCall(`/blog/admin/categories/${categoryId}`, {
+      method: 'PUT',
+      body: categoryData,
+    });
+  },
+
+  deleteCategory: async (categoryId) => {
+    return apiCall(`/blog/admin/categories/${categoryId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Tags
+  getTags: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(`/blog/admin/tags${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getTag: async (tagId) => {
+    return apiCall(`/blog/admin/tags/${tagId}`);
+  },
+
+  createTag: async (tagData) => {
+    return apiCall('/blog/admin/tags', {
+      method: 'POST',
+      body: tagData,
+    });
+  },
+
+  updateTag: async (tagId, tagData) => {
+    return apiCall(`/blog/admin/tags/${tagId}`, {
+      method: 'PUT',
+      body: tagData,
+    });
+  },
+
+  deleteTag: async (tagId) => {
+    return apiCall(`/blog/admin/tags/${tagId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Posts
+  getPosts: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(`/blog/admin/posts${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getPost: async (postId) => {
+    return apiCall(`/blog/admin/posts/${postId}`);
+  },
+
+  createPost: async (postData) => {
+    return apiCall('/blog/admin/posts', {
+      method: 'POST',
+      body: postData,
+    });
+  },
+
+  updatePost: async (postId, postData) => {
+    return apiCall(`/blog/admin/posts/${postId}`, {
+      method: 'PUT',
+      body: postData,
+    });
+  },
+
+  deletePost: async (postId) => {
+    return apiCall(`/blog/admin/posts/${postId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Public endpoints for frontend
+  getPublicCategories: async () => {
+    return apiCall('/blog/public/categories');
+  },
+
+  getPublicTags: async () => {
+    return apiCall('/blog/public/tags');
+  },
+
+  getPublicPosts: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(`/blog/public/posts${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getPublicPostBySlug: async (slug) => {
+    return apiCall(`/blog/public/posts/slug/${slug}`);
+  },
+
+  getFeaturedPosts: async (limit = 6) => {
+    return apiCall(`/blog/public/posts/featured?limit=${limit}`);
+  },
+
+  getRelatedPosts: async (postId, limit = 4) => {
+    return apiCall(`/blog/public/posts/${postId}/related?limit=${limit}`);
+  },
+};
+
 export const setAuthData = (accessToken, refreshToken, user) => {
   localStorage.setItem('accessToken', accessToken);
   if (refreshToken) {
     localStorage.setItem('refreshToken', refreshToken);
   }
   localStorage.setItem('user', JSON.stringify(user));
+};
+export const handleApiError = (error, defaultMessage = 'An error occurred') => {
+  if (error.response && error.response.data && error.response.data.message) {
+    return error.response.data.message;
+  }
+  if (error.message) {
+    return error.message;
+  }
+  return defaultMessage;
 };
 
 export const clearAuthData = () => {
@@ -2068,6 +2558,7 @@ export const clearAuthData = () => {
 };
 
 export default {
+  blogAPI,
   authAPI,
   userAPI,
   supplierAPI,

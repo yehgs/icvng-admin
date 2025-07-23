@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { brandAPI } from '../../utils/manageApi';
 import toast from 'react-hot-toast';
-import ImageUploader from '../../components/product/ImageUploader';
+import ImageUploader from '../../components/common/ImageUploader';
 
 const BrandManagement = () => {
   const [brands, setBrands] = useState([]);

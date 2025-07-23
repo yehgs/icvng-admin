@@ -8,7 +8,7 @@ import {
   Star,
   Package,
 } from 'lucide-react';
-import ImageUploader from './ImageUploader';
+import ImageUploader from '../common/ImageUploader';
 import {
   productAPI,
   categoryAPI,

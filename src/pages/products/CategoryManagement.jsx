@@ -11,7 +11,7 @@ import {
   CheckCircle,
   Loader2,
 } from 'lucide-react';
-import ImageUploader from '../../components/product/ImageUploader';
+import ImageUploader from '../../components/common/ImageUploader';
 import { categoryAPI } from '../../utils/manageApi';
 import toast from 'react-hot-toast';
 

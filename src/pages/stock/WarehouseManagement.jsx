@@ -21,6 +21,9 @@ import {
   Eye,
   Activity,
   Calendar,
+  Scale,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -35,12 +38,14 @@ import WarehouseStockTable from '../../components/stock/WarehouseStockTable';
 import WarehouseStatsCards from '../../components/stock/WarehouseStatsCards';
 import WarehouseFilters from '../../components/stock/WarehouseFilters';
 import StockEditModal from '../../components/stock/StockEditModal';
+import WeightEditModal from '../../components/stock/WeightEditModal';
 import SystemControlModal from '../../components/stock/SystemControlModal';
 import ActivityLogModal from '../../components/stock/ActivityLogModal';
 
 const WarehouseManagement = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [paginatedProducts, setPaginatedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
@@ -49,13 +54,25 @@ const WarehouseManagement = () => {
     productType: '',
     compatibleSystem: '',
     availability: '',
+    weightFilter: '', // NEW: weight filter
+    weightSort: '', // NEW: weight sorting
+  });
+
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 15,
+    totalItems: 0,
+    totalPages: 0,
   });
 
   // Modal states
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showWeightModal, setShowWeightModal] = useState(false);
   const [showSystemControlModal, setShowSystemControlModal] = useState(false);
   const [showActivityLogModal, setShowActivityLogModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingWeightProduct, setEditingWeightProduct] = useState(null);
 
   // Filter data
   const [categories, setCategories] = useState([]);
@@ -84,6 +101,7 @@ const WarehouseManagement = () => {
 
   const currentUser = getCurrentUser();
   const canEdit = systemEnabled && currentUser?.subRole === 'WAREHOUSE';
+  const canEditWeight = currentUser?.subRole === 'WAREHOUSE';
   const canManageSystem = ['DIRECTOR', 'IT'].includes(currentUser?.subRole);
 
   useEffect(() => {
@@ -93,6 +111,10 @@ const WarehouseManagement = () => {
   useEffect(() => {
     applyFilters();
   }, [products, searchTerm, filters]);
+
+  useEffect(() => {
+    applyPagination();
+  }, [filteredProducts, pagination.currentPage, pagination.itemsPerPage]);
 
   const initializeData = async () => {
     await Promise.all([
@@ -107,7 +129,7 @@ const WarehouseManagement = () => {
     try {
       const response = await warehouseAPI.getProductsForStock({
         page: 1,
-        limit: 1000, // Get all products for warehouse view
+        limit: 10000, // Get all products for client-side filtering/pagination
       });
 
       if (response.success) {
@@ -137,7 +159,6 @@ const WarehouseManagement = () => {
 
       if (brandResponse.success) {
         setBrands(brandResponse.data);
-        // Extract compatible systems from brands
         const systems = brandResponse.data
           .filter((brand) => brand.compatibleSystem)
           .map((brand) => ({ _id: brand._id, name: brand.name }));
@@ -256,7 +277,70 @@ const WarehouseManagement = () => {
       });
     }
 
+    // NEW: Apply weight filter
+    if (filters.weightFilter) {
+      filtered = filtered.filter((product) => {
+        switch (filters.weightFilter) {
+          case 'not-set':
+            return !product.weight || product.weight === 0;
+          case 'set':
+            return product.weight && product.weight > 0;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // NEW: Apply weight sorting
+    if (filters.weightSort) {
+      filtered.sort((a, b) => {
+        const weightA = a.weight || 0;
+        const weightB = b.weight || 0;
+
+        switch (filters.weightSort) {
+          case 'lightest':
+            return weightA - weightB;
+          case 'heaviest':
+            return weightB - weightA;
+          default:
+            return 0;
+        }
+      });
+    }
+
     setFilteredProducts(filtered);
+
+    // Update pagination
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1, // Reset to first page when filters change
+      totalItems: filtered.length,
+      totalPages: Math.ceil(filtered.length / prev.itemsPerPage),
+    }));
+  };
+
+  const applyPagination = () => {
+    const { currentPage, itemsPerPage } = pagination;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginated = filteredProducts.slice(startIndex, endIndex);
+    setPaginatedProducts(paginated);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: newPage,
+    }));
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setPagination((prev) => ({
+      ...prev,
+      itemsPerPage: newItemsPerPage,
+      currentPage: 1, // Reset to first page
+      totalPages: Math.ceil(filteredProducts.length / newItemsPerPage),
+    }));
   };
 
   const handleEditStock = (product) => {
@@ -268,6 +352,15 @@ const WarehouseManagement = () => {
     setShowEditModal(true);
   };
 
+  const handleEditWeight = (product) => {
+    if (!canEditWeight) {
+      toast.error('Only warehouse staff can edit product weights');
+      return;
+    }
+    setEditingWeightProduct(product);
+    setShowWeightModal(true);
+  };
+
   const handleSaveStock = async (productId, stockData) => {
     try {
       const response = await warehouseAPI.updateStock({
@@ -277,7 +370,7 @@ const WarehouseManagement = () => {
 
       if (response.success) {
         toast.success('Stock updated successfully');
-        await fetchProducts(); // Refresh the data
+        await fetchProducts();
         setShowEditModal(false);
         setEditingProduct(null);
       } else {
@@ -286,6 +379,24 @@ const WarehouseManagement = () => {
     } catch (error) {
       console.error('Error updating stock:', error);
       toast.error(handleApiError(error, 'Failed to update stock'));
+    }
+  };
+
+  const handleSaveWeight = async (productId, weight) => {
+    try {
+      const response = await warehouseAPI.updateWeight(productId, weight);
+
+      if (response.success) {
+        toast.success('Product weight updated successfully');
+        await fetchProducts();
+        setShowWeightModal(false);
+        setEditingWeightProduct(null);
+      } else {
+        toast.error(response.message || 'Failed to update weight');
+      }
+    } catch (error) {
+      console.error('Error updating weight:', error);
+      toast.error(handleApiError(error, 'Failed to update weight'));
     }
   };
 
@@ -331,6 +442,7 @@ const WarehouseManagement = () => {
         'Category',
         'Brand',
         'Product Type',
+        'Weight (kg)',
         'Stock on Arrival',
         'Damaged Qty',
         'Expired Qty',
@@ -348,6 +460,7 @@ const WarehouseManagement = () => {
           product.category?.name || '',
           product.brand?.map((b) => b.name).join(', ') || '',
           product.productType || '',
+          product.weight || 0,
           stock.stockOnArrival || 0,
           stock.damagedQty || 0,
           stock.expiredQty || 0,
@@ -465,6 +578,22 @@ const WarehouseManagement = () => {
         </div>
       </div>
 
+      {/* Weight Notice */}
+      <div className="p-4 rounded-lg border bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+        <div className="flex items-center gap-3">
+          <Scale className="h-5 w-5 text-orange-600" />
+          <div>
+            <p className="font-medium text-orange-800 dark:text-orange-200">
+              Product Weight Management
+            </p>
+            <p className="text-sm text-orange-600 dark:text-orange-400">
+              Warehouse staff can always update product weights without
+              additional approval.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <WarehouseStatsCards systemSettings={systemSettings} />
 
@@ -488,20 +617,109 @@ const WarehouseManagement = () => {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               Product Stock Management
             </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Package className="h-4 w-4" />
-              {filteredProducts.length} of {products.length} products
+            <div className="flex items-center gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>Show:</span>
+                <select
+                  value={pagination.itemsPerPage}
+                  onChange={(e) =>
+                    handleItemsPerPageChange(parseInt(e.target.value))
+                  }
+                  className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value={15}>15</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span>per page</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Package className="h-4 w-4" />
+                {filteredProducts.length} of {products.length} products
+              </div>
             </div>
           </div>
         </div>
 
         <WarehouseStockTable
           loading={loading}
-          filteredProducts={filteredProducts}
+          filteredProducts={paginatedProducts}
           canEdit={canEdit}
           onEditStock={handleEditStock}
+          onEditWeight={handleEditWeight}
           systemSettings={systemSettings}
         />
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                Showing{' '}
+                {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{' '}
+                {Math.min(
+                  pagination.currentPage * pagination.itemsPerPage,
+                  pagination.totalItems
+                )}{' '}
+                of {pagination.totalItems} results
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(pagination.totalPages, 5) },
+                    (_, i) => {
+                      let pageNumber;
+                      if (pagination.totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else {
+                        const start = Math.max(1, pagination.currentPage - 2);
+                        const end = Math.min(pagination.totalPages, start + 4);
+                        pageNumber = start + i;
+                        if (pageNumber > end) return null;
+                      }
+
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                            pagination.currentPage === pageNumber
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stock Edit Modal */}
@@ -514,6 +732,19 @@ const WarehouseManagement = () => {
           }}
           product={editingProduct}
           onSave={handleSaveStock}
+        />
+      )}
+
+      {/* Weight Edit Modal */}
+      {showWeightModal && editingWeightProduct && (
+        <WeightEditModal
+          isOpen={showWeightModal}
+          onClose={() => {
+            setShowWeightModal(false);
+            setEditingWeightProduct(null);
+          }}
+          product={editingWeightProduct}
+          onSave={handleSaveWeight}
         />
       )}
 

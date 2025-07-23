@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Eye,
+  Scale,
 } from 'lucide-react';
 
 const WarehouseStockTable = ({
@@ -13,6 +14,7 @@ const WarehouseStockTable = ({
   filteredProducts,
   canEdit,
   onEditStock,
+  onEditWeight,
   systemSettings,
 }) => {
   const getStockStatusBadge = (finalStock) => {
@@ -51,6 +53,10 @@ const WarehouseStockTable = ({
     return Number(number || 0).toLocaleString();
   };
 
+  const formatWeight = (weight) => {
+    return weight ? `${weight} kg` : 'Not set';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -83,6 +89,9 @@ const WarehouseStockTable = ({
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Product
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Weight
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Stock on Arrival
@@ -154,6 +163,15 @@ const WarehouseStockTable = ({
                 </td>
 
                 <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <Scale className="w-4 h-4 text-gray-400" />
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {formatWeight(product.weight)}
+                    </div>
+                  </div>
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
                     {formatNumber(stock.stockOnArrival)}
                   </div>
@@ -210,6 +228,15 @@ const WarehouseStockTable = ({
 
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => onEditWeight(product)}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium text-orange-600 hover:text-orange-800 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-900/20 transition-colors"
+                      title="Edit product weight"
+                    >
+                      <Scale className="w-4 h-4" />
+                      Weight
+                    </button>
+
                     <button
                       onClick={() => onEditStock(product)}
                       disabled={!canEdit}

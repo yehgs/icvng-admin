@@ -14,6 +14,7 @@ import {
   User,
   MessageSquare,
   AlertCircle,
+  Receipt,
 } from 'lucide-react';
 import {
   purchaseOrderAPI,
@@ -83,6 +84,15 @@ const StatusUpdateComponent = ({
       label: 'Cancelled',
       description: 'Order has been cancelled',
     },
+  };
+
+  // Add this helper function to PurchaseOrderDetailsModal.jsx
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // Fetch allowed status updates with role-based permissions
@@ -319,6 +329,56 @@ const StatusUpdateComponent = ({
               placeholder="Add any additional notes about this status change..."
             />
           </div>
+
+          {/* Receipts & Documents */}
+          {purchaseOrder.receipts && purchaseOrder.receipts.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                <Receipt className="w-5 h-5 mr-2 text-green-600" />
+                Receipts & Documents ({purchaseOrder.receipts.length})
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {purchaseOrder.receipts.map((receipt, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => window.open(receipt.url, '_blank')}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="text-gray-500 dark:text-gray-400">
+                        {receipt.type === 'pdf' ? (
+                          <FileText className="w-8 h-8" />
+                        ) : (
+                          <ImageIcon className="w-8 h-8" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {receipt.name}
+                        </p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span>{receipt.type.toUpperCase()}</span>
+                            <span>•</span>
+                            <span>{formatFileSize(receipt.size)}</span>
+                          </div>
+                          <div>
+                            Uploaded:{' '}
+                            {new Date(receipt.uploadedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <button className="w-full text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 py-2 px-3 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                        View Document
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex space-x-3">
             <button

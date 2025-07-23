@@ -54,6 +54,11 @@ import PurchaseReports from './pages/reports/PurchaseReports';
 // User Management
 import UserManagement from './pages/users/UserManagement';
 
+//blog Management
+import BlogPosts from './pages/blog/BlogPosts.jsx';
+import BlogTags from './pages/blog/BlogTags.jsx';
+import BlogCategories from './pages/blog/BlogCategories.jsx';
+
 // logistics Components and tracking
 import LogisticsManagement from './pages/logistics/LogisticsManagement';
 import TrackingManagement from './pages/logistics/TrackingManagement';
@@ -363,6 +368,38 @@ const App = () => {
                   allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT']}
                 >
                   <ExchangeRates />
+                </RoleProtectedRoute>
+              }
+            />
+
+            {/* Blog Management Routes - Editor, IT, Director roles */}
+            <Route
+              path="blog"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR']}
+                >
+                  <BlogPosts />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="blog/categories"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR']}
+                >
+                  <BlogCategories />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="blog/tags"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR']}
+                >
+                  <BlogTags />
                 </RoleProtectedRoute>
               }
             />

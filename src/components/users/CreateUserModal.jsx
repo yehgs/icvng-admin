@@ -38,6 +38,7 @@ const CreateUserModal = ({
     'MANAGER',
     'WAREHOUSE',
     'ACCOUNTANT',
+    'LOGISTICS',
     'GRAPHICS',
     'EDITOR',
   ];

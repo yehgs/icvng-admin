@@ -40,6 +40,7 @@ const EditUserModal = ({
     'MANAGER',
     'WAREHOUSE',
     'ACCOUNTANT',
+    'LOGISTICS',
     'GRAPHICS',
     'EDITOR',
   ];

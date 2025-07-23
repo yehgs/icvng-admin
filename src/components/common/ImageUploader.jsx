@@ -1,3 +1,4 @@
+// admin/src/components/ImageUploader.jsx
 import React, { useState, useRef } from 'react';
 import { Upload, X, Image, Plus, Eye, Trash2 } from 'lucide-react';
 import { fileAPI } from '../../utils/api';
@@ -41,15 +42,16 @@ const ImageUploader = ({
         }
 
         // Validate file size (2MB limit)
-        if (file.size > 1 * 1024 * 1024) {
-          toast.error(`${file.name} is too large. Maximum size is 1MB`);
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error(`${file.name} is too large. Maximum size is 2MB`);
           continue;
         }
 
         try {
           const response = await fileAPI.uploadImage(file);
           if (response.success) {
-            uploadedImages.push(response.data.secure_url);
+            // Use the URL from your Cloudinary response
+            uploadedImages.push(response.data.url || response.data.secure_url);
           }
         } catch (error) {
           console.error('Upload error:', error);
@@ -182,6 +184,10 @@ const ImageUploader = ({
                   src={imageUrl}
                   alt={`Upload ${index + 1}`}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src =
+                      'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y3ZjdmNyIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBub3QgZm91bmQ8L3RleHQ+Cjwvc3ZnPg==';
+                  }}
                 />
 
                 {/* Overlay with actions */}
@@ -236,9 +242,10 @@ const ImageUploader = ({
       {/* Upload Guidelines */}
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <p>• Supported formats: JPG, PNG, GIF, WebP</p>
-        <p>• Maximum file size: 1MB per image</p>
+        <p>• Maximum file size: 2MB per image</p>
         {multiple && <p>• Maximum {maxImages} images allowed</p>}
-        <p>• Recommended resolution: 1200x1200px or higher</p>
+        <p>• Recommended resolution: 1200x800px or higher for blog images</p>
+        <p>• Images are automatically optimized for web</p>
       </div>
     </div>
   );

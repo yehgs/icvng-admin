@@ -23,6 +23,7 @@ const PurchaseOrderForm = ({
   const [formData, setFormData] = useState({
     supplier: '',
     expectedDeliveryDate: '',
+    receipts: [], // Add receipts array
     items: [
       {
         product: '',
@@ -46,7 +47,38 @@ const PurchaseOrderForm = ({
     },
     notes: '',
   });
+  // In your component or wherever you're debugging
+  const debugAuth = () => {
+    const token = localStorage.getItem('accessToken');
+    const user = localStorage.getItem('user');
 
+    console.log('=== AUTH DEBUG ===');
+    console.log('Access token exists:', !!token);
+    console.log('User exists:', !!user);
+
+    if (token) {
+      console.log('Token starts with:', token.substring(0, 20));
+
+      // Check if token is expired
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('Token payload:', payload);
+        console.log('Token expires at:', new Date(payload.exp * 1000));
+        console.log('Current time:', new Date());
+        console.log('Token is expired:', payload.exp * 1000 < Date.now());
+      } catch (e) {
+        console.log('Could not decode token:', e);
+      }
+    }
+
+    if (user) {
+      console.log('User data:', JSON.parse(user));
+    }
+    console.log('=== END AUTH DEBUG ===');
+  };
+
+  // Call this before trying to upload
+  debugAuth();
   // Set minimum date to today
   const today = new Date().toISOString().split('T')[0];
 
@@ -72,6 +104,7 @@ const PurchaseOrderForm = ({
         expectedDeliveryDate: editingPO.expectedDeliveryDate
           ? new Date(editingPO.expectedDeliveryDate).toISOString().split('T')[0]
           : '',
+        receipts: editingPO.receipts || [],
         items: editingPO.items?.map((item) => ({
           product: item.product?._id || '',
           productDetails: item.product || null,
@@ -111,29 +144,60 @@ const PurchaseOrderForm = ({
     }
   }, [editingPO]);
 
-  const updateFormData = (section, data) => {
-    setFormData((prev) => {
-      console.log('Updating form data:', section, data); // Debug log
+  // Add this debugging to your PurchaseOrderForm.jsx updateFormData function
 
-      if (typeof section === 'string' && typeof data === 'string') {
+  // Replace your updateFormData function in PurchaseOrderForm.jsx with this:
+
+  const updateFormData = (section, data) => {
+    console.log(
+      'PurchaseOrderForm - updateFormData called with:',
+      section,
+      data
+    );
+
+    setFormData((prev) => {
+      console.log('PurchaseOrderForm - Previous formData:', prev);
+
+      let newFormData;
+
+      if (section === 'receipts' && Array.isArray(data)) {
+        // Handle receipts array specifically
+        newFormData = {
+          ...prev,
+          receipts: data,
+        };
+      } else if (typeof section === 'string' && typeof data === 'string') {
         // Handle simple field updates like notes
-        return {
+        newFormData = {
           ...prev,
           [section]: data,
         };
-      } else if (typeof section === 'string' && typeof data === 'object') {
+      } else if (
+        typeof section === 'string' &&
+        typeof data === 'object' &&
+        !Array.isArray(data)
+      ) {
         // Handle object updates like currency, logistics
-        return {
+        newFormData = {
           ...prev,
           [section]: { ...prev[section], ...data },
         };
       } else {
         // Handle other cases
-        return {
+        newFormData = {
           ...prev,
           [section]: data,
         };
       }
+
+      console.log('PurchaseOrderForm - New formData:', newFormData);
+      console.log('PurchaseOrderForm - New receipts:', newFormData.receipts);
+      console.log(
+        'PurchaseOrderForm - Is receipts array?',
+        Array.isArray(newFormData.receipts)
+      );
+
+      return newFormData;
     });
   };
 
@@ -246,10 +310,11 @@ const PurchaseOrderForm = ({
       const apiData = {
         supplier: formData.supplier,
         expectedDeliveryDate: formData.expectedDeliveryDate,
+        receipts: formData.receipts || [], // Include receipts in API data
         items: validItems.map((item) => ({
           product: item.product,
           quantity: parseInt(item.quantity) || 1,
-          unitPrice: parseFloat(item.unitCost) || 0, // API expects unitPrice
+          unitPrice: parseFloat(item.unitCost) || 0,
         })),
         currency: formData.currency.code,
         exchangeRate: parseFloat(formData.currency.exchangeRate) || 1,
@@ -304,6 +369,7 @@ const PurchaseOrderForm = ({
     setFormData({
       supplier: '',
       expectedDeliveryDate: '',
+      receipts: [],
       items: [
         {
           product: '',

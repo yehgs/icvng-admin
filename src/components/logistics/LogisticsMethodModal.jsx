@@ -1,4 +1,3 @@
-// admin/src/components/logistics/LogisticsMethodModal.jsx - Updated table shipping
 import React, { useState, useEffect } from 'react';
 import {
   X,
@@ -12,6 +11,7 @@ import {
   Check,
 } from 'lucide-react';
 import { logisticsAPI } from '../../utils/api.js';
+import PickupLocationForm from './PickupLocationForm.jsx';
 
 const LogisticsMethodModal = ({
   isOpen,
@@ -367,6 +367,7 @@ const LogisticsMethodModal = ({
   const validateForm = () => {
     const newErrors = {};
 
+    // Basic validation
     if (!formData.name.trim()) {
       newErrors.name = 'Method name is required';
     }
@@ -375,29 +376,152 @@ const LogisticsMethodModal = ({
       newErrors.code = 'Method code is required';
     }
 
-    if (formData.type === 'flat_rate' && formData.flatRate.defaultCost < 0) {
-      newErrors.flatRateCost = 'Cost cannot be negative';
+    // Type-specific validation
+    if (formData.type === 'flat_rate') {
+      const flatRate = formData.flatRate;
+
+      if (flatRate.zoneRates && flatRate.zoneRates.length > 0) {
+        // Validate zone-specific rates
+        flatRate.zoneRates.forEach((zoneRate, index) => {
+          if (!zoneRate.zone) {
+            newErrors[`flatRateZone${index}`] = `Zone is required for rate #${
+              index + 1
+            }`;
+          }
+          if (zoneRate.cost < 0) {
+            newErrors[
+              `flatRateCost${index}`
+            ] = `Cost cannot be negative for rate #${index + 1}`;
+          }
+        });
+      } else {
+        // Validate default cost
+        if (!flatRate.defaultCost && flatRate.defaultCost !== 0) {
+          newErrors.flatRateDefaultCost = 'Default cost is required';
+        }
+        if (flatRate.defaultCost < 0) {
+          newErrors.flatRateDefaultCost = 'Default cost cannot be negative';
+        }
+      }
     }
 
-    if (
-      formData.type === 'table_shipping' &&
-      formData.tableShipping.zoneRates.length === 0
-    ) {
-      newErrors.tableShippingZones =
-        'At least one zone rate is required for table shipping';
+    if (formData.type === 'table_shipping') {
+      const tableShipping = formData.tableShipping;
+
+      if (!tableShipping.zoneRates || tableShipping.zoneRates.length === 0) {
+        newErrors.tableShippingZones =
+          'At least one zone rate is required for table shipping';
+      } else {
+        // Validate each zone rate
+        tableShipping.zoneRates.forEach((zoneRate, index) => {
+          if (!zoneRate.zone) {
+            newErrors[`tableZone${index}`] = `Zone is required for rate #${
+              index + 1
+            }`;
+          }
+          if (!zoneRate.weightRanges || zoneRate.weightRanges.length === 0) {
+            newErrors[
+              `tableWeightRanges${index}`
+            ] = `At least one weight range is required for zone rate #${
+              index + 1
+            }`;
+          }
+        });
+      }
     }
 
-    if (
-      formData.type === 'pickup' &&
-      formData.pickup.defaultLocations.length === 0 &&
-      formData.pickup.zoneLocations.length === 0
-    ) {
-      newErrors.pickupLocations = 'At least one pickup location is required';
+    if (formData.type === 'pickup') {
+      const pickup = formData.pickup;
+
+      // Check if we have any valid locations
+      const hasDefaultLocations =
+        pickup.defaultLocations && pickup.defaultLocations.length > 0;
+      const hasZoneLocations =
+        pickup.zoneLocations && pickup.zoneLocations.length > 0;
+
+      if (!hasDefaultLocations && !hasZoneLocations) {
+        newErrors.pickupLocations = 'At least one pickup location is required';
+      }
+
+      // Validate default locations
+      if (hasDefaultLocations && pickup.zoneLocations.length === 0) {
+        pickup.defaultLocations.forEach((location, index) => {
+          if (!location.name || !location.name.trim()) {
+            newErrors[
+              `defaultLocation${index}Name`
+            ] = `Location name is required for location #${index + 1}`;
+          }
+          if (!location.address || !location.address.trim()) {
+            newErrors[
+              `defaultLocation${index}Address`
+            ] = `Address is required for location #${index + 1}`;
+          }
+          if (!location.city || !location.city.trim()) {
+            newErrors[
+              `defaultLocation${index}City`
+            ] = `City is required for location #${index + 1}`;
+          }
+          if (!location.state || !location.state.trim()) {
+            newErrors[
+              `defaultLocation${index}State`
+            ] = `State is required for location #${index + 1}`;
+          }
+        });
+      }
+
+      // Validate zone-specific locations
+      if (hasZoneLocations) {
+        pickup.zoneLocations.forEach((zoneLocation, zoneIndex) => {
+          if (!zoneLocation.zone) {
+            newErrors[
+              `pickupZone${zoneIndex}`
+            ] = `Zone is required for zone location #${zoneIndex + 1}`;
+          }
+
+          if (!zoneLocation.locations || zoneLocation.locations.length === 0) {
+            newErrors[
+              `pickupZoneLocations${zoneIndex}`
+            ] = `At least one location is required for zone #${zoneIndex + 1}`;
+          } else {
+            zoneLocation.locations.forEach((location, locIndex) => {
+              if (!location.name || !location.name.trim()) {
+                newErrors[
+                  `zoneLocation${zoneIndex}${locIndex}Name`
+                ] = `Location name is required for zone ${
+                  zoneIndex + 1
+                }, location ${locIndex + 1}`;
+              }
+              if (!location.address || !location.address.trim()) {
+                newErrors[
+                  `zoneLocation${zoneIndex}${locIndex}Address`
+                ] = `Address is required for zone ${zoneIndex + 1}, location ${
+                  locIndex + 1
+                }`;
+              }
+              if (!location.city || !location.city.trim()) {
+                newErrors[
+                  `zoneLocation${zoneIndex}${locIndex}City`
+                ] = `City is required for zone ${zoneIndex + 1}, location ${
+                  locIndex + 1
+                }`;
+              }
+              if (!location.state || !location.state.trim()) {
+                newErrors[
+                  `zoneLocation${zoneIndex}${locIndex}State`
+                ] = `State is required for zone ${zoneIndex + 1}, location ${
+                  locIndex + 1
+                }`;
+              }
+            });
+          }
+        });
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -871,9 +995,88 @@ const LogisticsMethodModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+
+    if (!validateForm()) {
+      // Scroll to first error
+      const errorElement = document.querySelector('.text-red-600');
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
     }
+
+    // Clean up the form data before submission
+    const cleanedFormData = { ...formData };
+
+    // For pickup method, ensure proper structure
+    if (cleanedFormData.type === 'pickup' && cleanedFormData.pickup) {
+      // Remove empty zone locations
+      if (cleanedFormData.pickup.zoneLocations) {
+        cleanedFormData.pickup.zoneLocations =
+          cleanedFormData.pickup.zoneLocations.filter((zoneLocation) => {
+            return (
+              zoneLocation.zone &&
+              zoneLocation.locations &&
+              zoneLocation.locations.length > 0 &&
+              zoneLocation.locations.some(
+                (loc) => loc.name && loc.address && loc.city && loc.state
+              )
+            );
+          });
+      }
+
+      // Remove empty default locations
+      if (cleanedFormData.pickup.defaultLocations) {
+        cleanedFormData.pickup.defaultLocations =
+          cleanedFormData.pickup.defaultLocations.filter((location) => {
+            return (
+              location.name &&
+              location.address &&
+              location.city &&
+              location.state
+            );
+          });
+      }
+
+      // Ensure assignment defaults
+      if (!cleanedFormData.pickup.assignment) {
+        cleanedFormData.pickup.assignment = 'all_products';
+      }
+    }
+
+    // Similar cleanup for other method types
+    if (cleanedFormData.type === 'flat_rate' && cleanedFormData.flatRate) {
+      if (!cleanedFormData.flatRate.assignment) {
+        cleanedFormData.flatRate.assignment = 'all_products';
+      }
+
+      // Clean up zone rates
+      if (cleanedFormData.flatRate.zoneRates) {
+        cleanedFormData.flatRate.zoneRates =
+          cleanedFormData.flatRate.zoneRates.filter((zoneRate) => {
+            return zoneRate.zone && zoneRate.zone.trim() !== '';
+          });
+      }
+    }
+
+    if (
+      cleanedFormData.type === 'table_shipping' &&
+      cleanedFormData.tableShipping
+    ) {
+      if (!cleanedFormData.tableShipping.assignment) {
+        cleanedFormData.tableShipping.assignment = 'all_products';
+      }
+
+      // Clean up zone rates
+      if (cleanedFormData.tableShipping.zoneRates) {
+        cleanedFormData.tableShipping.zoneRates =
+          cleanedFormData.tableShipping.zoneRates.filter((zoneRate) => {
+            return zoneRate.zone && zoneRate.zone.trim() !== '';
+          });
+      }
+    }
+
+    onSubmit(cleanedFormData);
   };
 
   // Close dropdowns when clicking outside
@@ -1514,7 +1717,7 @@ const LogisticsMethodModal = ({
               </h3>
 
               {/* Assignment Section */}
-              <div className="dropdown-container mb-4">
+              <div className="dropdown-container mb-6">
                 <AssignmentSection configType="pickup" />
               </div>
 
@@ -1542,32 +1745,53 @@ const LogisticsMethodModal = ({
                   </div>
                 </div>
 
-                {/* Default locations (used when no zone-specific locations) */}
+                {/* Default locations section */}
                 {formData.pickup.zoneLocations.length === 0 && (
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                     <h5 className="font-medium text-gray-900 dark:text-white mb-3">
-                      Default Locations (All Zones)
+                      Default Locations (Available in all zones)
                     </h5>
 
-                    {formData.pickup.defaultLocations.map((location, index) => (
-                      <div
-                        key={index}
-                        className="border-b border-gray-200 dark:border-gray-600 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0"
-                      >
-                        <div className="flex justify-between items-center mb-3">
-                          <h6 className="font-medium text-gray-700 dark:text-gray-300">
-                            Default Location #{index + 1}
-                          </h6>
-                          <button
-                            type="button"
-                            onClick={() => removePickupLocation(index)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        {/* Location form fields - same as before */}
+                    {formData.pickup.defaultLocations.length === 0 && (
+                      <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                        <p>
+                          No default locations added. Click "Add Default
+                          Location" to add pickup locations.
+                        </p>
                       </div>
+                    )}
+
+                    {formData.pickup.defaultLocations.map((location, index) => (
+                      <PickupLocationForm
+                        key={`default-${index}`}
+                        location={location}
+                        index={index}
+                        onUpdate={(idx, updatedLocation) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            pickup: {
+                              ...prev.pickup,
+                              defaultLocations:
+                                prev.pickup.defaultLocations.map((loc, i) =>
+                                  i === idx ? updatedLocation : loc
+                                ),
+                            },
+                          }));
+                        }}
+                        onRemove={(idx) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            pickup: {
+                              ...prev.pickup,
+                              defaultLocations:
+                                prev.pickup.defaultLocations.filter(
+                                  (_, i) => i !== idx
+                                ),
+                            },
+                          }));
+                        }}
+                        isZoneLocation={false}
+                      />
                     ))}
                   </div>
                 )}
@@ -1586,7 +1810,7 @@ const LogisticsMethodModal = ({
                         <button
                           type="button"
                           onClick={() => removePickupZoneLocation(zoneIndex)}
-                          className="text-red-600 hover:text-red-800 text-sm"
+                          className="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded hover:bg-red-50"
                         >
                           Remove Zone
                         </button>
@@ -1597,7 +1821,7 @@ const LogisticsMethodModal = ({
                           Zone *
                         </label>
                         <select
-                          value={zoneLocation.zone}
+                          value={zoneLocation.zone || ''}
                           onChange={(e) =>
                             updatePickupZoneLocation(
                               zoneIndex,
@@ -1617,138 +1841,159 @@ const LogisticsMethodModal = ({
                       </div>
 
                       {/* Locations for this zone */}
-                      {zoneLocation.locations.map((location, locIndex) => (
-                        <div
-                          key={locIndex}
-                          className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 mb-3"
-                        >
-                          <div className="flex justify-between items-center mb-3">
-                            <h6 className="font-medium text-gray-700 dark:text-gray-300">
-                              Location #{locIndex + 1}
-                            </h6>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updatedLocations =
-                                  zoneLocation.locations.filter(
-                                    (_, i) => i !== locIndex
-                                  );
-                                updatePickupZoneLocation(
-                                  zoneIndex,
-                                  'locations',
-                                  updatedLocations
-                                );
-                              }}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Remove
-                            </button>
-                          </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h6 className="font-medium text-gray-700 dark:text-gray-300">
+                            Pickup Locations in This Zone
+                          </h6>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newLocation = {
+                                name: '',
+                                address: '',
+                                city: '',
+                                state: '',
+                                postalCode: '',
+                                phone: '',
+                                operatingHours: {
+                                  monday: { open: '09:00', close: '17:00' },
+                                  tuesday: { open: '09:00', close: '17:00' },
+                                  wednesday: { open: '09:00', close: '17:00' },
+                                  thursday: { open: '09:00', close: '17:00' },
+                                  friday: { open: '09:00', close: '17:00' },
+                                  saturday: { open: '09:00', close: '14:00' },
+                                  sunday: { open: '', close: '' },
+                                },
+                                isActive: true,
+                              };
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Location Name *
-                              </label>
-                              <input
-                                type="text"
-                                value={location.name}
-                                onChange={(e) => {
-                                  const updatedLocations = [
-                                    ...zoneLocation.locations,
-                                  ];
-                                  updatedLocations[locIndex].name =
-                                    e.target.value;
-                                  updatePickupZoneLocation(
-                                    zoneIndex,
-                                    'locations',
-                                    updatedLocations
-                                  );
-                                }}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                placeholder="Store name"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Phone
-                              </label>
-                              <input
-                                type="tel"
-                                value={location.phone}
-                                onChange={(e) => {
-                                  const updatedLocations = [
-                                    ...zoneLocation.locations,
-                                  ];
-                                  updatedLocations[locIndex].phone =
-                                    e.target.value;
-                                  updatePickupZoneLocation(
-                                    zoneIndex,
-                                    'locations',
-                                    updatedLocations
-                                  );
-                                }}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                placeholder="+234 xxx xxx xxxx"
-                              />
-                            </div>
-                            {/* Add more location fields as needed */}
-                          </div>
+                              setFormData((prev) => ({
+                                ...prev,
+                                pickup: {
+                                  ...prev.pickup,
+                                  zoneLocations: prev.pickup.zoneLocations.map(
+                                    (zl, i) =>
+                                      i === zoneIndex
+                                        ? {
+                                            ...zl,
+                                            locations: [
+                                              ...(zl.locations || []),
+                                              newLocation,
+                                            ],
+                                          }
+                                        : zl
+                                  ),
+                                },
+                              }));
+                            }}
+                            className="px-2 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                          >
+                            Add Location
+                          </button>
                         </div>
-                      ))}
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newLocation = {
-                            name: '',
-                            address: '',
-                            city: '',
-                            state: '',
-                            postalCode: '',
-                            phone: '',
-                            operatingHours: {
-                              monday: { open: '09:00', close: '17:00' },
-                              tuesday: { open: '09:00', close: '17:00' },
-                              wednesday: { open: '09:00', close: '17:00' },
-                              thursday: { open: '09:00', close: '17:00' },
-                              friday: { open: '09:00', close: '17:00' },
-                              saturday: { open: '09:00', close: '14:00' },
-                              sunday: { open: '', close: '' },
-                            },
-                            isActive: true,
-                          };
-                          const updatedLocations = [
-                            ...zoneLocation.locations,
-                            newLocation,
-                          ];
-                          updatePickupZoneLocation(
-                            zoneIndex,
-                            'locations',
-                            updatedLocations
-                          );
-                        }}
-                        className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-                      >
-                        Add Location to Zone
-                      </button>
+                        {!zoneLocation.locations ||
+                        zoneLocation.locations.length === 0 ? (
+                          <div className="text-center py-4 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded">
+                            <p>
+                              No locations added for this zone. Click "Add
+                              Location" to add pickup locations.
+                            </p>
+                          </div>
+                        ) : (
+                          zoneLocation.locations.map((location, locIndex) => (
+                            <PickupLocationForm
+                              key={`zone-${zoneIndex}-loc-${locIndex}`}
+                              location={location}
+                              index={locIndex}
+                              onUpdate={(idx, updatedLocation) => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  pickup: {
+                                    ...prev.pickup,
+                                    zoneLocations:
+                                      prev.pickup.zoneLocations.map((zl, i) =>
+                                        i === zoneIndex
+                                          ? {
+                                              ...zl,
+                                              locations: zl.locations.map(
+                                                (loc, j) =>
+                                                  j === idx
+                                                    ? updatedLocation
+                                                    : loc
+                                              ),
+                                            }
+                                          : zl
+                                      ),
+                                  },
+                                }));
+                              }}
+                              onRemove={(idx) => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  pickup: {
+                                    ...prev.pickup,
+                                    zoneLocations:
+                                      prev.pickup.zoneLocations.map((zl, i) =>
+                                        i === zoneIndex
+                                          ? {
+                                              ...zl,
+                                              locations: zl.locations.filter(
+                                                (_, j) => j !== idx
+                                              ),
+                                            }
+                                          : zl
+                                      ),
+                                  },
+                                }));
+                              }}
+                              isZoneLocation={true}
+                              zoneIndex={zoneIndex}
+                            />
+                          ))
+                        )}
+                      </div>
                     </div>
                   )
                 )}
 
-                {formData.pickup.zoneLocations.length > 0 && (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                      <strong>Note:</strong> When zone-specific locations are
-                      configured, pickup will only be available in the specified
-                      zones. Remove all zone locations to make pickup available
-                      everywhere.
-                    </p>
+                {/* Information message */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <Package className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                        How Pickup Locations Work
+                      </h3>
+                      <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>
+                            <strong>Zone-specific locations:</strong> Only
+                            available in selected zones
+                          </li>
+                          <li>
+                            <strong>Default locations:</strong> Available in all
+                            zones (when no zone-specific locations exist)
+                          </li>
+                          <li>
+                            All location fields (name, address, city, state) are
+                            required
+                          </li>
+                          <li>
+                            Operating hours are optional but recommended for
+                            customer clarity
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
 
                 {errors.pickupLocations && (
-                  <p className="text-sm text-red-600 dark:text-red-400">
+                  <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
                     {errors.pickupLocations}
                   </p>
                 )}
