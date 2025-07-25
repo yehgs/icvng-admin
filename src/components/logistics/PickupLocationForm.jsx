@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas.js';
 
 const PickupLocationForm = ({
   location,
@@ -8,8 +9,49 @@ const PickupLocationForm = ({
   isZoneLocation = false,
   zoneIndex = null,
 }) => {
+  const [selectedState, setSelectedState] = useState(location?.state || '');
+  const [availableLgas, setAvailableLgas] = useState([]);
+
+  // Update available LGAs when state changes
+  useEffect(() => {
+    if (selectedState) {
+      const stateData = nigeriaStatesLgas.find(
+        (s) => s.state.toLowerCase() === selectedState.toLowerCase()
+      );
+      if (stateData) {
+        setAvailableLgas(stateData.lga);
+      } else {
+        setAvailableLgas([]);
+      }
+    } else {
+      setAvailableLgas([]);
+    }
+  }, [selectedState]);
+
+  // Initialize state on component mount
+  useEffect(() => {
+    if (location?.state && !selectedState) {
+      setSelectedState(location.state);
+    }
+  }, [location?.state]);
+
   const updateLocationField = (field, value) => {
     const updatedLocation = { ...location, [field]: value };
+
+    // If updating state, also update city to match if not already set
+    if (field === 'state') {
+      setSelectedState(value);
+      // Reset LGA when state changes
+      if (location.lga && updatedLocation.lga) {
+        const stateData = nigeriaStatesLgas.find(
+          (s) => s.state.toLowerCase() === value.toLowerCase()
+        );
+        if (stateData && !stateData.lga.includes(updatedLocation.lga)) {
+          updatedLocation.lga = '';
+        }
+      }
+    }
+
     onUpdate(index, updatedLocation, isZoneLocation, zoneIndex);
   };
 
@@ -82,8 +124,8 @@ const PickupLocationForm = ({
       </div>
 
       {/* Address Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 gap-4 mb-4">
+        <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Address *
           </label>
@@ -96,35 +138,67 @@ const PickupLocationForm = ({
             required
           />
         </div>
+      </div>
+
+      {/* State and LGA Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            City *
+            State *
+          </label>
+          <select
+            value={selectedState}
+            onChange={(e) => updateLocationField('state', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            required
+          >
+            <option value="">Select State</option>
+            {nigeriaStatesLgas.map((state) => (
+              <option key={state.state} value={state.state}>
+                {state.state}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Local Government Area (LGA) *
+          </label>
+          <select
+            value={location.lga || ''}
+            onChange={(e) => updateLocationField('lga', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            disabled={!selectedState || availableLgas.length === 0}
+            required
+          >
+            <option value="">Select LGA</option>
+            {availableLgas.map((lga) => (
+              <option key={lga} value={lga}>
+                {lga}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* City and Postal Code */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            City/Town *
           </label>
           <input
             type="text"
             value={location.city || ''}
             onChange={(e) => updateLocationField('city', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="City"
+            placeholder="City or town name"
             required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Can be same as LGA or more specific location within the LGA
+          </p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            State *
-          </label>
-          <input
-            type="text"
-            value={location.state || ''}
-            onChange={(e) => updateLocationField('state', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="State"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Postal Code
@@ -134,24 +208,25 @@ const PickupLocationForm = ({
             value={location.postalCode || ''}
             onChange={(e) => updateLocationField('postalCode', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="Postal code"
+            placeholder="6-digit postal code"
+            maxLength="6"
           />
         </div>
-        <div className="flex items-end">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={location.isActive !== false}
-              onChange={(e) =>
-                updateLocationField('isActive', e.target.checked)
-              }
-              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
-            />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              Active Location
-            </span>
-          </label>
-        </div>
+      </div>
+
+      {/* Active Status */}
+      <div className="mb-4">
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={location.isActive !== false}
+            onChange={(e) => updateLocationField('isActive', e.target.checked)}
+            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
+          />
+          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            Active Location
+          </span>
+        </label>
       </div>
 
       {/* Operating Hours */}
@@ -192,7 +267,34 @@ const PickupLocationForm = ({
             </div>
           ))}
         </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Leave time fields empty for days when the location is closed
+        </p>
       </div>
+
+      {/* Location Summary */}
+      {location.name && location.state && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+          <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">
+            Location Summary
+          </h4>
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            <strong>{location.name}</strong>
+            <br />
+            {location.address && `${location.address}, `}
+            {location.city && `${location.city}, `}
+            {location.lga && `${location.lga}, `}
+            {location.state}
+            {location.postalCode && ` ${location.postalCode}`}
+            {location.phone && (
+              <>
+                <br />
+                📞 {location.phone}
+              </>
+            )}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

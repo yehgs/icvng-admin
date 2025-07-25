@@ -3,53 +3,50 @@
 const API_BASE_URL =
   import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
 
-function cleanShippingMethodData(methodData) {
-  const cleanedData = { ...methodData };
+const cleanShippingMethodData = (methodData) => {
+  const cleaned = { ...methodData };
 
-  // Remove configurations for other method types
-  if (methodData.type !== 'pickup') {
-    delete cleanedData.pickup;
-  }
-  if (methodData.type !== 'flat_rate') {
-    delete cleanedData.flatRate;
-  }
-  if (methodData.type !== 'table_shipping') {
-    delete cleanedData.tableShipping;
-  }
-
-  // Clean pickup method data
-  if (methodData.type === 'pickup' && cleanedData.pickup) {
-    const pickupConfig = cleanedData.pickup;
-
-    // Ensure assignment defaults
-    if (!pickupConfig.assignment) {
-      pickupConfig.assignment = 'all_products';
+  // Remove empty strings and convert to appropriate types
+  Object.keys(cleaned).forEach((key) => {
+    if (cleaned[key] === '') {
+      cleaned[key] = undefined;
     }
+  });
 
-    // Clean categories and products based on assignment
-    if (pickupConfig.assignment !== 'categories') {
-      pickupConfig.categories = [];
-    }
-    if (pickupConfig.assignment !== 'specific_products') {
-      pickupConfig.products = [];
-    }
+  // Ensure code is uppercase
+  if (cleaned.code) {
+    cleaned.code = cleaned.code.toUpperCase();
+  }
 
-    // Clean and validate zone locations
+  // Clean pickup configuration
+  if (cleaned.type === 'pickup' && cleaned.pickup) {
+    const pickup = cleaned.pickup;
+
+    // FIXED: Ensure proper assignment defaults
     if (
-      pickupConfig.zoneLocations &&
-      Array.isArray(pickupConfig.zoneLocations)
+      !pickup.assignment ||
+      (pickup.assignment === 'categories' &&
+        (!pickup.categories || pickup.categories.length === 0)) ||
+      (pickup.assignment === 'specific_products' &&
+        (!pickup.products || pickup.products.length === 0))
     ) {
-      pickupConfig.zoneLocations = pickupConfig.zoneLocations.filter(
-        (zoneLocation) => {
-          // Remove zone locations without a zone selected
+      pickup.assignment = 'all_products';
+      pickup.categories = [];
+      pickup.products = [];
+    }
+
+    // Clean zone locations
+    if (pickup.zoneLocations) {
+      pickup.zoneLocations = pickup.zoneLocations
+        .map((zoneLocation) => {
           if (!zoneLocation.zone || zoneLocation.zone.trim() === '') {
-            return false;
+            return null; // Mark for removal
           }
 
-          // Filter locations within this zone to only include valid ones
-          if (zoneLocation.locations && Array.isArray(zoneLocation.locations)) {
-            zoneLocation.locations = zoneLocation.locations.filter(
-              (location) => {
+          // Clean locations within this zone
+          if (zoneLocation.locations) {
+            zoneLocation.locations = zoneLocation.locations
+              .filter((location) => {
                 return (
                   location.name &&
                   location.name.trim() !== '' &&
@@ -60,23 +57,35 @@ function cleanShippingMethodData(methodData) {
                   location.state &&
                   location.state.trim() !== ''
                 );
-              }
-            );
+              })
+              .map((location) => ({
+                ...location,
+                name: location.name.trim(),
+                address: location.address.trim(),
+                city: location.city.trim(),
+                state: location.state.trim(),
+                lga: location.lga ? location.lga.trim() : location.city.trim(),
+                postalCode: location.postalCode
+                  ? location.postalCode.trim()
+                  : '',
+                phone: location.phone ? location.phone.trim() : '',
+                isActive: location.isActive !== false,
+                operatingHours: location.operatingHours || {},
+              }));
           }
 
-          // Only keep zone locations that have at least one valid location
-          return zoneLocation.locations && zoneLocation.locations.length > 0;
-        }
-      );
+          // Only keep zone locations that have valid locations
+          return zoneLocation.locations && zoneLocation.locations.length > 0
+            ? zoneLocation
+            : null;
+        })
+        .filter(Boolean); // Remove null entries
     }
 
-    // Clean and validate default locations
-    if (
-      pickupConfig.defaultLocations &&
-      Array.isArray(pickupConfig.defaultLocations)
-    ) {
-      pickupConfig.defaultLocations = pickupConfig.defaultLocations.filter(
-        (location) => {
+    // Clean default locations
+    if (pickup.defaultLocations) {
+      pickup.defaultLocations = pickup.defaultLocations
+        .filter((location) => {
           return (
             location.name &&
             location.name.trim() !== '' &&
@@ -87,119 +96,124 @@ function cleanShippingMethodData(methodData) {
             location.state &&
             location.state.trim() !== ''
           );
-        }
-      );
+        })
+        .map((location) => ({
+          ...location,
+          name: location.name.trim(),
+          address: location.address.trim(),
+          city: location.city.trim(),
+          state: location.state.trim(),
+          lga: location.lga ? location.lga.trim() : location.city.trim(),
+          postalCode: location.postalCode ? location.postalCode.trim() : '',
+          phone: location.phone ? location.phone.trim() : '',
+          isActive: location.isActive !== false,
+          operatingHours: location.operatingHours || {},
+        }));
     }
 
-    // Ensure we have at least one location type
-    const hasValidZoneLocations =
-      pickupConfig.zoneLocations && pickupConfig.zoneLocations.length > 0;
-    const hasValidDefaultLocations =
-      pickupConfig.defaultLocations && pickupConfig.defaultLocations.length > 0;
+    // Ensure we have at least one location
+    const hasZoneLocations =
+      pickup.zoneLocations && pickup.zoneLocations.length > 0;
+    const hasDefaultLocations =
+      pickup.defaultLocations && pickup.defaultLocations.length > 0;
 
-    if (!hasValidZoneLocations && !hasValidDefaultLocations) {
-      throw new Error(
-        'At least one valid pickup location is required with name, address, city, and state filled out.'
-      );
+    if (!hasZoneLocations && !hasDefaultLocations) {
+      throw new Error('At least one valid pickup location is required');
     }
   }
 
-  // Clean flat rate method data
-  if (methodData.type === 'flat_rate' && cleanedData.flatRate) {
-    const flatRateConfig = cleanedData.flatRate;
+  // Clean flat rate configuration
+  if (cleaned.type === 'flat_rate' && cleaned.flatRate) {
+    const flatRate = cleaned.flatRate;
 
-    // Ensure assignment defaults
-    if (!flatRateConfig.assignment) {
-      flatRateConfig.assignment = 'all_products';
-    }
-
-    // Clean categories and products based on assignment
-    if (flatRateConfig.assignment !== 'categories') {
-      flatRateConfig.categories = [];
-    }
-    if (flatRateConfig.assignment !== 'specific_products') {
-      flatRateConfig.products = [];
+    // FIXED: Ensure proper assignment defaults
+    if (
+      !flatRate.assignment ||
+      (flatRate.assignment === 'categories' &&
+        (!flatRate.categories || flatRate.categories.length === 0)) ||
+      (flatRate.assignment === 'specific_products' &&
+        (!flatRate.products || flatRate.products.length === 0))
+    ) {
+      flatRate.assignment = 'all_products';
+      flatRate.categories = [];
+      flatRate.products = [];
     }
 
     // Clean zone rates
-    if (flatRateConfig.zoneRates && Array.isArray(flatRateConfig.zoneRates)) {
-      flatRateConfig.zoneRates = flatRateConfig.zoneRates.filter((zoneRate) => {
-        return zoneRate.zone && zoneRate.zone.trim() !== '';
-      });
+    if (flatRate.zoneRates) {
+      flatRate.zoneRates = flatRate.zoneRates
+        .filter((zoneRate) => zoneRate.zone && zoneRate.zone.trim() !== '')
+        .map((zoneRate) => ({
+          ...zoneRate,
+          cost: Number(zoneRate.cost) || 0,
+          freeShipping: {
+            enabled: Boolean(zoneRate.freeShipping?.enabled),
+            minimumOrderAmount:
+              Number(zoneRate.freeShipping?.minimumOrderAmount) || 0,
+          },
+        }));
     }
 
-    // Handle date formatting
-    if (flatRateConfig.validFrom) {
-      flatRateConfig.validFrom = new Date(
-        flatRateConfig.validFrom
-      ).toISOString();
-    }
-    if (flatRateConfig.validUntil) {
-      flatRateConfig.validUntil = new Date(
-        flatRateConfig.validUntil
-      ).toISOString();
+    // Ensure numeric values
+    flatRate.defaultCost =
+      Number(flatRate.defaultCost) || Number(flatRate.cost) || 0;
+    flatRate.cost = Number(flatRate.cost) || 0;
+
+    if (flatRate.freeShipping) {
+      flatRate.freeShipping.minimumOrderAmount =
+        Number(flatRate.freeShipping.minimumOrderAmount) || 0;
     }
   }
 
-  // Clean table shipping method data
-  if (methodData.type === 'table_shipping' && cleanedData.tableShipping) {
-    const tableShippingConfig = cleanedData.tableShipping;
+  // Clean table shipping configuration
+  if (cleaned.type === 'table_shipping' && cleaned.tableShipping) {
+    const tableShipping = cleaned.tableShipping;
 
-    // Ensure assignment defaults
-    if (!tableShippingConfig.assignment) {
-      tableShippingConfig.assignment = 'all_products';
-    }
-
-    // Clean categories and products based on assignment
-    if (tableShippingConfig.assignment !== 'categories') {
-      tableShippingConfig.categories = [];
-    }
-    if (tableShippingConfig.assignment !== 'specific_products') {
-      tableShippingConfig.products = [];
-    }
-
-    // Clean and validate zone rates
+    // FIXED: Ensure proper assignment defaults
     if (
-      tableShippingConfig.zoneRates &&
-      Array.isArray(tableShippingConfig.zoneRates)
+      !tableShipping.assignment ||
+      (tableShipping.assignment === 'categories' &&
+        (!tableShipping.categories || tableShipping.categories.length === 0)) ||
+      (tableShipping.assignment === 'specific_products' &&
+        (!tableShipping.products || tableShipping.products.length === 0))
     ) {
-      tableShippingConfig.zoneRates = tableShippingConfig.zoneRates.filter(
-        (zoneRate) => {
-          return (
-            zoneRate.zone &&
-            zoneRate.zone.trim() !== '' &&
-            zoneRate.weightRanges &&
-            zoneRate.weightRanges.length > 0
-          );
-        }
-      );
+      tableShipping.assignment = 'all_products';
+      tableShipping.categories = [];
+      tableShipping.products = [];
     }
 
-    // Ensure at least one zone rate exists
-    if (
-      !tableShippingConfig.zoneRates ||
-      tableShippingConfig.zoneRates.length === 0
-    ) {
-      throw new Error(
-        'At least one zone rate is required for table shipping method.'
-      );
-    }
-
-    // Handle date formatting
-    if (tableShippingConfig.validFrom) {
-      tableShippingConfig.validFrom = new Date(
-        tableShippingConfig.validFrom
-      ).toISOString();
-    }
-    if (tableShippingConfig.validUntil) {
-      tableShippingConfig.validUntil = new Date(
-        tableShippingConfig.validUntil
-      ).toISOString();
+    // Clean zone rates
+    if (tableShipping.zoneRates) {
+      tableShipping.zoneRates = tableShipping.zoneRates
+        .filter((zoneRate) => zoneRate.zone && zoneRate.zone.trim() !== '')
+        .map((zoneRate) => ({
+          ...zoneRate,
+          weightRanges: (zoneRate.weightRanges || []).map((range) => ({
+            minWeight: Number(range.minWeight) || 0,
+            maxWeight: Number(range.maxWeight) || 0,
+            shippingCost: Number(range.shippingCost) || 0,
+          })),
+        }));
     }
   }
 
-  return cleanedData;
-}
+  // Clean up type-specific data
+  if (cleaned.type !== 'pickup') {
+    delete cleaned.pickup;
+  }
+  if (cleaned.type !== 'flat_rate') {
+    delete cleaned.flatRate;
+  }
+  if (cleaned.type !== 'table_shipping') {
+    delete cleaned.tableShipping;
+  }
+
+  // Ensure required numeric fields
+  cleaned.sortOrder = Number(cleaned.sortOrder) || 0;
+  cleaned.isActive = Boolean(cleaned.isActive);
+
+  return cleaned;
+};
 
 // Enhanced error handling wrapper
 export const handleShippingMethodSubmission = async (
@@ -1636,9 +1650,27 @@ export const logisticsAPI = {
   },
 
   createShippingZone: async (zoneData) => {
+    // Clean zone data
+    const cleanedData = {
+      ...zoneData,
+      name: zoneData.name?.trim(),
+      description: zoneData.description?.trim() || '',
+      isActive: Boolean(zoneData.isActive),
+      sortOrder: Number(zoneData.sortOrder) || 0,
+      states: (zoneData.states || []).map((state) => ({
+        ...state,
+        name: state.name?.trim(),
+        code: state.code?.trim().toUpperCase(),
+        coverage_type: state.coverage_type || 'all',
+        available_lgas: state.available_lgas || [],
+        covered_lgas:
+          state.coverage_type === 'specific' ? state.covered_lgas || [] : [],
+      })),
+    };
+
     return apiCall('/shipping/zones', {
       method: 'POST',
-      body: zoneData,
+      body: cleanedData,
     });
   },
 
@@ -1670,7 +1702,7 @@ export const logisticsAPI = {
 
   createShippingMethod: async (methodData) => {
     try {
-      // Deep clean the data before sending
+      // FIXED: Enhanced data cleaning
       const cleanedData = cleanShippingMethodData(methodData);
 
       console.log(
@@ -1690,7 +1722,7 @@ export const logisticsAPI = {
 
   updateShippingMethod: async (methodId, methodData) => {
     try {
-      // Deep clean the data before sending
+      // FIXED: Enhanced data cleaning
       const cleanedData = cleanShippingMethodData(methodData);
 
       console.log(
@@ -1714,7 +1746,7 @@ export const logisticsAPI = {
     });
   },
 
-  // NEW: Categories and Products for Assignment
+  //Categories and Products for Assignment
   getCategoriesForAssignment: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -1747,7 +1779,7 @@ export const logisticsAPI = {
 
   // Calculate shipping costs
   calculateShippingCost: async (orderData) => {
-    return apiCall('/shipping/calculate', {
+    return apiCall('/shipping/calculate-checkout', {
       method: 'POST',
       body: orderData,
     });
