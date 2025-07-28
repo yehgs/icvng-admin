@@ -1650,35 +1650,177 @@ export const logisticsAPI = {
   },
 
   createShippingZone: async (zoneData) => {
-    // Clean zone data
-    const cleanedData = {
-      ...zoneData,
-      name: zoneData.name?.trim(),
-      description: zoneData.description?.trim() || '',
-      isActive: Boolean(zoneData.isActive),
-      sortOrder: Number(zoneData.sortOrder) || 0,
-      states: (zoneData.states || []).map((state) => ({
-        ...state,
-        name: state.name?.trim(),
-        code: state.code?.trim().toUpperCase(),
-        coverage_type: state.coverage_type || 'all',
-        available_lgas: state.available_lgas || [],
-        covered_lgas:
-          state.coverage_type === 'specific' ? state.covered_lgas || [] : [],
-      })),
-    };
+    try {
+      console.log('API: Creating zone with data:', zoneData);
 
-    return apiCall('/shipping/zones', {
-      method: 'POST',
-      body: cleanedData,
-    });
+      // Clean zone data to match your model structure
+      const cleanedData = {
+        name: zoneData.name?.trim(),
+        description: zoneData.description?.trim() || '',
+        isActive: Boolean(zoneData.isActive),
+        sortOrder: Number(zoneData.sortOrder) || 0,
+        states: (zoneData.states || []).map((state) => {
+          console.log('API: Cleaning state data:', state);
+
+          // Ensure covered_lgas is a string array for your model
+          let cleanedCoveredLgas = [];
+          if (state.coverage_type === 'specific' && state.covered_lgas) {
+            cleanedCoveredLgas = state.covered_lgas
+              .map((lga) => {
+                if (typeof lga === 'string') {
+                  return lga.trim();
+                } else if (lga && typeof lga === 'object' && lga.name) {
+                  return lga.name.trim();
+                }
+                return null;
+              })
+              .filter(Boolean);
+          }
+
+          // Ensure available_lgas is a string array
+          let cleanedAvailableLgas = [];
+          if (state.available_lgas) {
+            cleanedAvailableLgas = state.available_lgas
+              .map((lga) => {
+                if (typeof lga === 'string') {
+                  return lga.trim();
+                } else if (lga && typeof lga === 'object' && lga.name) {
+                  return lga.name.trim();
+                }
+                return null;
+              })
+              .filter(Boolean);
+          }
+
+          const cleanedState = {
+            name: state.name?.trim(),
+            code:
+              state.code?.trim().toUpperCase() ||
+              state.name?.trim().substring(0, 2).toUpperCase(),
+            coverage_type: state.coverage_type || 'all',
+            available_lgas: cleanedAvailableLgas,
+            covered_lgas: cleanedCoveredLgas,
+          };
+
+          console.log('API: Cleaned state:', {
+            name: cleanedState.name,
+            coverage_type: cleanedState.coverage_type,
+            available_lgas_count: cleanedState.available_lgas.length,
+            covered_lgas_count: cleanedState.covered_lgas.length,
+            covered_lgas: cleanedState.covered_lgas,
+          });
+
+          return cleanedState;
+        }),
+      };
+
+      console.log('API: Sending cleaned zone data:', {
+        ...cleanedData,
+        states: cleanedData.states.map((s) => ({
+          name: s.name,
+          coverage_type: s.coverage_type,
+          covered_lgas_count: s.covered_lgas.length,
+          covered_lgas: s.covered_lgas,
+        })),
+      });
+
+      return apiCall('/shipping/zones', {
+        method: 'POST',
+        body: cleanedData,
+      });
+    } catch (error) {
+      console.error('Create shipping zone API error:', error);
+      throw error;
+    }
   },
 
   updateShippingZone: async (zoneId, zoneData) => {
-    return apiCall(`/shipping/zones/${zoneId}`, {
-      method: 'PUT',
-      body: zoneData,
-    });
+    try {
+      console.log('API: Updating zone with data:', zoneData);
+
+      // Clean zone data for updates to match your model structure
+      const cleanedData = {
+        name: zoneData.name?.trim(),
+        description: zoneData.description?.trim() || '',
+        isActive: Boolean(zoneData.isActive),
+        sortOrder: Number(zoneData.sortOrder) || 0,
+      };
+
+      // Only process states if they are provided
+      if (zoneData.states && Array.isArray(zoneData.states)) {
+        cleanedData.states = zoneData.states.map((state) => {
+          console.log('API: Cleaning state data for update:', state);
+
+          // Ensure covered_lgas is a string array for your model
+          let cleanedCoveredLgas = [];
+          if (state.coverage_type === 'specific' && state.covered_lgas) {
+            cleanedCoveredLgas = state.covered_lgas
+              .map((lga) => {
+                if (typeof lga === 'string') {
+                  return lga.trim();
+                } else if (lga && typeof lga === 'object' && lga.name) {
+                  return lga.name.trim();
+                }
+                return null;
+              })
+              .filter(Boolean);
+          }
+
+          // Ensure available_lgas is a string array
+          let cleanedAvailableLgas = [];
+          if (state.available_lgas) {
+            cleanedAvailableLgas = state.available_lgas
+              .map((lga) => {
+                if (typeof lga === 'string') {
+                  return lga.trim();
+                } else if (lga && typeof lga === 'object' && lga.name) {
+                  return lga.name.trim();
+                }
+                return null;
+              })
+              .filter(Boolean);
+          }
+
+          const cleanedState = {
+            name: state.name?.trim(),
+            code:
+              state.code?.trim().toUpperCase() ||
+              state.name?.trim().substring(0, 2).toUpperCase(),
+            coverage_type: state.coverage_type || 'all',
+            available_lgas: cleanedAvailableLgas,
+            covered_lgas: cleanedCoveredLgas,
+          };
+
+          console.log('API: Cleaned state for update:', {
+            name: cleanedState.name,
+            coverage_type: cleanedState.coverage_type,
+            available_lgas_count: cleanedState.available_lgas.length,
+            covered_lgas_count: cleanedState.covered_lgas.length,
+            covered_lgas: cleanedState.covered_lgas,
+          });
+
+          return cleanedState;
+        });
+      }
+
+      console.log('API: Sending cleaned zone update data:', {
+        ...cleanedData,
+        states: cleanedData.states?.map((s) => ({
+          name: s.name,
+          coverage_type: s.coverage_type,
+          covered_lgas_count: s.covered_lgas?.length || 0,
+          covered_lgas: s.covered_lgas,
+        })),
+      });
+
+      return apiCall(`/shipping/zones/${zoneId}`, {
+        method: 'PUT',
+        body: cleanedData,
+      });
+    } catch (error) {
+      console.error('Update shipping zone API error:', error);
+      throw error;
+    }
   },
 
   deleteShippingZone: async (zoneId) => {

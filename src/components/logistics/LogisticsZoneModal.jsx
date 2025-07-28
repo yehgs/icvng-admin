@@ -291,21 +291,25 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
       coverage_type: 'all',
       covered_lgas: [],
     };
-    const isSelected = currentCoverage.covered_lgas.includes(lgaName);
+
+    // Ensure covered_lgas is always a string array
+    const currentLgas = Array.isArray(currentCoverage.covered_lgas)
+      ? currentCoverage.covered_lgas
+      : [];
+
+    const isSelected = currentLgas.includes(lgaName);
 
     const newCoveredLgas = isSelected
-      ? currentCoverage.covered_lgas.filter((lga) => lga !== lgaName)
-      : [...currentCoverage.covered_lgas, lgaName];
+      ? currentLgas.filter((lga) => lga !== lgaName)
+      : [...currentLgas, lgaName]; // Keep as string array
 
     setStateLgaCoverage((prev) => ({
       ...prev,
       [stateName]: {
         ...currentCoverage,
-        covered_lgas: newCoveredLgas,
+        covered_lgas: newCoveredLgas, // This remains a string array
       },
     }));
-
-    // Update formData
     const updatedStates = formData.states.map((state) => {
       if (state.name === stateName) {
         const stateData = nigerianStates.find((s) => s.name === stateName);
@@ -345,7 +349,52 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      // Prepare the data with the correct structure for your model
+      const submitData = {
+        ...formData,
+        states: selectedStates.map((stateName) => {
+          const stateData = nigerianStates.find((s) => s.name === stateName);
+          const coverage = stateLgaCoverage[stateName] || {
+            coverage_type: 'all',
+            covered_lgas: [],
+          };
+
+          console.log('Preparing state data:', {
+            stateName,
+            coverage_type: coverage.coverage_type,
+            covered_lgas: coverage.covered_lgas,
+          });
+
+          if (stateData) {
+            return {
+              name: stateData.name,
+              code: stateData.code,
+              coverage_type: coverage.coverage_type,
+              available_lgas: stateData.lgas.map((lga) => lga.name), // Convert to string array
+              covered_lgas:
+                coverage.coverage_type === 'specific'
+                  ? coverage.covered_lgas // This should already be a string array
+                  : [],
+            };
+          }
+
+          // Fallback if state data not found
+          return {
+            name: stateName,
+            code: stateName.substring(0, 2).toUpperCase(),
+            coverage_type: coverage.coverage_type,
+            available_lgas: [],
+            covered_lgas:
+              coverage.coverage_type === 'specific'
+                ? coverage.covered_lgas
+                : [],
+          };
+        }),
+      };
+
+      console.log('Final submit data:', JSON.stringify(submitData, null, 2));
+
+      onSubmit(submitData);
     }
   };
 

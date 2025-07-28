@@ -233,19 +233,19 @@ const AdminSidebar = ({
       key: 'logistics',
       title: 'Logistics',
       icon: Truck,
-      allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS'],
+      allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER'],
       items: [
         {
           title: 'Logistics Management',
           path: '/admin/logistics',
           icon: MapPin,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER'],
         },
         {
           title: 'Tracking Management',
           path: '/admin/tracking',
           icon: Navigation,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER'],
         },
       ],
     },
