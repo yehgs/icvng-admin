@@ -489,11 +489,11 @@ const WarehouseManagement = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
             Warehouse Management
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -501,39 +501,39 @@ const WarehouseManagement = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={fetchProducts}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
 
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Download className="h-4 w-4" />
-            Export CSV
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
 
           <button
             onClick={() => setShowActivityLogModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Activity className="h-4 w-4" />
-            Activity Log
+            <span className="hidden sm:inline">Activity Log</span>
           </button>
 
           <RoleBasedAccess allowedRoles={['DIRECTOR', 'IT']}>
             <button
               onClick={() => setShowSystemControlModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               <Settings className="h-4 w-4" />
-              System Control
+              <span className="hidden sm:inline">System Control</span>
             </button>
           </RoleBasedAccess>
         </div>
@@ -655,9 +655,9 @@ const WarehouseManagement = () => {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700 dark:text-gray-300">
+          <div className="px-4 md:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="text-sm text-gray-700 dark:text-gray-300 text-center md:text-left">
                 Showing{' '}
                 {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{' '}
                 {Math.min(
@@ -667,35 +667,46 @@ const WarehouseManagement = () => {
                 of {pagination.totalItems} results
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={pagination.currentPage === 1}
-                  className="flex items-center gap-1 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1 px-2 md:px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
 
+                {/* Page numbers - hide some on mobile */}
                 <div className="flex items-center gap-1">
                   {Array.from(
-                    { length: Math.min(pagination.totalPages, 5) },
+                    {
+                      length: Math.min(
+                        pagination.totalPages,
+                        window.innerWidth < 640 ? 3 : 5
+                      ),
+                    },
                     (_, i) => {
                       let pageNumber;
-                      if (pagination.totalPages <= 5) {
+                      if (
+                        pagination.totalPages <=
+                        (window.innerWidth < 640 ? 3 : 5)
+                      ) {
                         pageNumber = i + 1;
                       } else {
-                        const start = Math.max(1, pagination.currentPage - 2);
-                        const end = Math.min(pagination.totalPages, start + 4);
+                        const start = Math.max(
+                          1,
+                          pagination.currentPage -
+                            (window.innerWidth < 640 ? 1 : 2)
+                        );
                         pageNumber = start + i;
-                        if (pageNumber > end) return null;
                       }
 
                       return (
                         <button
                           key={pageNumber}
                           onClick={() => handlePageChange(pageNumber)}
-                          className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                          className={`px-2 md:px-3 py-2 text-sm rounded-lg transition-colors ${
                             pagination.currentPage === pageNumber
                               ? 'bg-blue-600 text-white'
                               : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
@@ -711,9 +722,9 @@ const WarehouseManagement = () => {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className="flex items-center gap-1 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1 px-2 md:px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>

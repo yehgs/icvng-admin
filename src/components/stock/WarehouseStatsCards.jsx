@@ -170,7 +170,7 @@ const WarehouseStatsCards = ({ systemSettings }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {statCards.map((stat, index) => {
         const colors = getColorClasses(stat.color, stat.alert);
         const StatIcon = stat.icon;
@@ -178,27 +178,31 @@ const WarehouseStatsCards = ({ systemSettings }) => {
         return (
           <div
             key={index}
-            className={`p-6 rounded-lg border ${
+            className={`p-4 md:p-6 rounded-lg border ${
               stat.alert
                 ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10'
                 : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
             } transition-all hover:shadow-md ${loading ? 'animate-pulse' : ''}`}
           >
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 truncate">
                   {stat.title}
                 </p>
-                <p className={`text-2xl font-bold ${colors.value} mb-1`}>
+                <p
+                  className={`text-xl md:text-2xl font-bold ${colors.value} mb-1`}
+                >
                   {stat.value}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                   {stat.description}
                 </p>
               </div>
 
-              <div className={`p-3 rounded-lg ${colors.bg}`}>
-                <StatIcon className={`h-6 w-6 ${colors.icon}`} />
+              <div
+                className={`p-2 md:p-3 rounded-lg ${colors.bg} flex-shrink-0`}
+              >
+                <StatIcon className={`h-5 w-5 md:h-6 md:w-6 ${colors.icon}`} />
               </div>
             </div>
 
