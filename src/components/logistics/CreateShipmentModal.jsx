@@ -1,4 +1,4 @@
-// admin/src/components/logistics/CreateShipmentModal.jsx - Enhanced with order type and print functionality
+// admin/src/components/logistics/CreateShipmentModal.jsx - Complete Fixed Version
 import React, { useState, useEffect } from 'react';
 import {
   X,
@@ -14,7 +14,10 @@ import {
   Store,
   MapPin,
   Phone,
+  Download,
 } from 'lucide-react';
+import { logisticsAPI } from '../../utils/api.js';
+import toast from 'react-hot-toast';
 
 const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
@@ -41,13 +44,14 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
     },
     deliveryInstructions: '',
     priority: 'NORMAL',
-    orderType: 'online', // New field for order type
+    orderType: 'online',
   });
 
   const [errors, setErrors] = useState({});
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const carriers = [
     { name: 'I-Coffee Logistics', code: 'ICF', phone: '+234-800-ICOFFEE' },
@@ -111,6 +115,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
     });
     setSelectedOrder(null);
     setSearchResults([]);
+    setSearchTerm('');
     setErrors({});
   };
 
@@ -122,59 +127,42 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
     setSearchLoading(true);
     try {
-      // This would be replaced with actual API call
-      // For now using mock data
-      const mockResults = [
-        {
-          _id: '1',
-          orderId: 'ORD-001',
-          userId: { name: 'John Doe', email: 'john@example.com' },
-          totalAmt: 15000,
-          payment_status: 'PAID',
-          order_status: 'CONFIRMED',
-          shipping_cost: 2000,
-          delivery_address: {
-            address_line: '123 Main St',
-            city: 'Lagos',
-            state: 'Lagos',
-            mobile: '+234-801-234-5678',
-          },
-          productId: { name: 'Coffee Beans Premium', weight: 2 },
-          quantity: 3,
-        },
-        {
-          _id: '2',
-          orderId: 'ORD-002',
-          userId: { name: 'Jane Smith', email: 'jane@example.com' },
-          totalAmt: 25000,
-          payment_status: 'PAID',
-          order_status: 'CONFIRMED',
-          shipping_cost: 1500,
-          delivery_address: {
-            address_line: '456 Oak Ave',
-            city: 'Abuja',
-            state: 'FCT',
-            mobile: '+234-802-345-6789',
-          },
-          productId: { name: 'Espresso Machine Deluxe', weight: 5 },
-          quantity: 1,
-        },
-      ];
+      const response = await logisticsAPI.getOrdersReadyForShipping({
+        page: 1,
+        limit: 20,
+        search: query.trim(),
+      });
 
-      setSearchResults(
-        mockResults.filter(
+      if (response.success) {
+        const filteredOrders = response.data.filter(
           (order) =>
             order.orderId.toLowerCase().includes(query.toLowerCase()) ||
-            order.userId.name.toLowerCase().includes(query.toLowerCase())
-        )
-      );
+            order.userId?.name?.toLowerCase().includes(query.toLowerCase()) ||
+            order.userId?.email?.toLowerCase().includes(query.toLowerCase())
+        );
+        setSearchResults(filteredOrders);
+      } else {
+        setSearchResults([]);
+        if (query.trim()) {
+          toast.error('No orders found matching your search');
+        }
+      }
     } catch (error) {
       console.error('Error searching orders:', error);
       setSearchResults([]);
+      toast.error('Failed to search orders');
     } finally {
       setSearchLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchOrders(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const selectOrder = (order) => {
     setSelectedOrder(order);
@@ -183,7 +171,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
       orderId: order._id,
       packageInfo: {
         ...prev.packageInfo,
-        weight: (order.productId?.weight || 1) * order.quantity,
+        weight: order.productId?.weight || 1,
         insured: order.totalAmt > 50000,
         insuranceValue: order.totalAmt > 50000 ? order.totalAmt : 0,
       },
@@ -291,11 +279,10 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
     }
   };
 
-  const handlePrint = () => {
-    if (!selectedOrder) return;
+  const generatePrintContent = () => {
+    if (!selectedOrder) return '';
 
-    // Generate print content with detailed shipment information
-    const printContent = `
+    return `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6;">
         <!-- Header -->
         <div style="text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px;">
@@ -374,7 +361,9 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
             
             <h4 style="color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px;">ORDER DETAILS</h4>
             <p style="margin: 5px 0;"><strong>Product:</strong> ${
-              selectedOrder.productId?.name || 'N/A'
+              selectedOrder.productId?.name ||
+              selectedOrder.product_details?.name ||
+              'N/A'
             }</p>
             <p style="margin: 5px 0;"><strong>Quantity:</strong> ${
               selectedOrder.quantity
@@ -391,13 +380,15 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
           <h3 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">📋 CUSTOMER INFORMATION</h3>
           <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
             <p style="margin: 8px 0;"><strong>Name:</strong> ${
-              selectedOrder.userId.name
+              selectedOrder.userId?.name || 'N/A'
             }</p>
             <p style="margin: 8px 0;"><strong>Email:</strong> ${
-              selectedOrder.userId.email
+              selectedOrder.userId?.email || 'N/A'
             }</p>
             <p style="margin: 8px 0;"><strong>Phone:</strong> ${
-              selectedOrder.delivery_address.mobile
+              selectedOrder.delivery_address?.mobile ||
+              selectedOrder.userId?.mobile ||
+              'N/A'
             }</p>
           </div>
         </div>
@@ -407,13 +398,14 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
           <h3 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">📍 DELIVERY ADDRESS</h3>
           <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
             <p style="margin: 8px 0; font-size: 16px;"><strong>${
-              selectedOrder.delivery_address.address_line
+              selectedOrder.delivery_address?.address_line ||
+              'Address not provided'
             }</strong></p>
-            <p style="margin: 8px 0;">${selectedOrder.delivery_address.city}, ${
-      selectedOrder.delivery_address.state
-    }</p>
+            <p style="margin: 8px 0;">${
+              selectedOrder.delivery_address?.city || 'City'
+            }, ${selectedOrder.delivery_address?.state || 'State'}</p>
             <p style="margin: 8px 0;"><strong>Contact:</strong> ${
-              selectedOrder.delivery_address.mobile
+              selectedOrder.delivery_address?.mobile || 'Phone not provided'
             }</p>
           </div>
         </div>
@@ -475,8 +467,12 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
         </div>
       </div>
     `;
+  };
 
-    // Open print window
+  const handlePrint = () => {
+    if (!selectedOrder) return;
+
+    const printContent = generatePrintContent();
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -504,6 +500,42 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
     printWindow.focus();
   };
 
+  const handleDownload = () => {
+    if (!selectedOrder) return;
+
+    const content = generatePrintContent();
+    const blob = new Blob(
+      [
+        `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Shipping Label - ${selectedOrder.orderId}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+          </style>
+        </head>
+        <body>
+          ${content}
+        </body>
+      </html>
+    `,
+      ],
+      { type: 'text/html' }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `shipping-label-${selectedOrder.orderId}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success('Shipping label downloaded successfully');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -526,14 +558,26 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
           </div>
           <div className="flex items-center gap-2">
             {selectedOrder && (
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                title="Print shipping label"
-              >
-                <Printer className="h-4 w-4" />
-                Print Label
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                  title="Print shipping label"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  className="flex items-center gap-2 px-3 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                  title="Download shipping label"
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </button>
+              </>
             )}
             <button
               onClick={onClose}
@@ -559,7 +603,8 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                   <input
                     type="text"
                     placeholder="Search by order ID or customer name..."
-                    onChange={(e) => searchOrders(e.target.value)}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                 </div>
@@ -568,7 +613,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                   <div className="flex items-center justify-center py-4">
                     <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Searching...
+                      Searching orders...
                     </span>
                   </div>
                 )}
@@ -591,14 +636,16 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                                 {order.orderId}
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {order.userId.name} • {order.userId.email}
+                                {order.userId?.name} • {order.userId?.email}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {order.delivery_address.city},{' '}
-                                {order.delivery_address.state}
+                                {order.delivery_address?.city},{' '}
+                                {order.delivery_address?.state}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {order.productId?.name} × {order.quantity}
+                                {order.productId?.name ||
+                                  order.product_details?.name}{' '}
+                                × {order.quantity}
                               </p>
                             </div>
                           </div>
@@ -615,6 +662,18 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                     ))}
                   </div>
                 )}
+
+                {searchTerm && !searchLoading && searchResults.length === 0 && (
+                  <div className="text-center py-8">
+                    <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      No orders found matching "{searchTerm}"
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Try searching by order ID or customer name
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
@@ -628,19 +687,20 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                         {selectedOrder.orderId}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {selectedOrder.userId.name} •{' '}
-                        {selectedOrder.userId.email}
+                        {selectedOrder.userId?.name} •{' '}
+                        {selectedOrder.userId?.email}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {selectedOrder.delivery_address.address_line}
+                        {selectedOrder.delivery_address?.address_line}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {selectedOrder.delivery_address.city},{' '}
-                        {selectedOrder.delivery_address.state}
+                        {selectedOrder.delivery_address?.city},{' '}
+                        {selectedOrder.delivery_address?.state}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {selectedOrder.productId?.name} ×{' '}
-                        {selectedOrder.quantity}
+                        {selectedOrder.productId?.name ||
+                          selectedOrder.product_details?.name}{' '}
+                        × {selectedOrder.quantity}
                       </p>
                     </div>
                   </div>
@@ -986,7 +1046,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !selectedOrder}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
