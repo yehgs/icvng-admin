@@ -10,6 +10,7 @@ import {
   User,
   Shield,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const EditUserModal = ({
   isOpen,
@@ -22,8 +23,9 @@ const EditUserModal = ({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'USER',
+    role: 'ADMIN',
     subRole: '',
+    userMode: '',
     mobile: '',
     address: '',
     status: 'Active',
@@ -57,8 +59,9 @@ const EditUserModal = ({
       const initialData = {
         name: user.name || '',
         email: user.email || '',
-        role: user.role || 'USER',
+        role: user.role || 'ADMIN',
         subRole: user.subRole || '',
+        userMode: user.userMode || '',
         mobile: user.mobile || '',
         address: user.address || '',
         status: user.status || 'Active',
@@ -76,8 +79,9 @@ const EditUserModal = ({
     const hasDataChanged =
       formData.name !== (user.name || '') ||
       formData.email !== (user.email || '') ||
-      formData.role !== (user.role || 'USER') ||
+      formData.role !== (user.role || 'ADMIN') ||
       formData.subRole !== (user.subRole || '') ||
+      formData.userMode !== (user.userMode || '') ||
       formData.mobile !== (user.mobile || '') ||
       formData.address !== (user.address || '') ||
       formData.status !== (user.status || 'Active');
@@ -106,6 +110,14 @@ const EditUserModal = ({
 
     if (!formData.subRole) {
       newErrors.subRole = 'Department/Sub-role is required';
+    }
+
+    if (
+      formData.role === 'ADMIN' &&
+      formData.subRole === 'SALES' &&
+      !formData.userMode
+    ) {
+      newErrors.userMode = 'Sales mode is required for ADMIN > SALES users';
     }
 
     if (!formData.status) {
@@ -157,7 +169,6 @@ const EditUserModal = ({
         onClose();
 
         // Show success message
-        // alert(result.message || 'User updated successfully!');
         toast.success(result.message || 'User updated successfully!');
       } else {
         setErrors({ submit: result.message });
@@ -173,8 +184,10 @@ const EditUserModal = ({
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-      // Reset subRole when role changes
-      ...(field === 'role' ? { subRole: '' } : {}),
+      // Reset subRole and userMode when role changes
+      ...(field === 'role' ? { subRole: '', userMode: '' } : {}),
+      // Reset userMode when subRole changes and it's not SALES
+      ...(field === 'subRole' && value !== 'SALES' ? { userMode: '' } : {}),
     }));
 
     // Clear field error when user starts typing
@@ -190,6 +203,7 @@ const EditUserModal = ({
         email: user.email || '',
         role: user.role || 'USER',
         subRole: user.subRole || '',
+        userMode: user.userMode || '',
         mobile: user.mobile || '',
         address: user.address || '',
         status: user.status || 'Active',
@@ -424,6 +438,34 @@ const EditUserModal = ({
                   </p>
                 )}
               </div>
+
+              {formData.role === 'ADMIN' && formData.subRole === 'SALES' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Sales Mode *
+                  </label>
+                  <select
+                    value={formData.userMode}
+                    onChange={(e) =>
+                      handleInputChange('userMode', e.target.value)
+                    }
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      errors.userMode
+                        ? 'border-red-300 dark:border-red-600'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <option value="">Select sales mode...</option>
+                    <option value="ONLINE">Online</option>
+                    <option value="OFFLINE">Offline</option>
+                  </select>
+                  {errors.userMode && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.userMode}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Status */}
               <div>

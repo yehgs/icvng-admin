@@ -1,4 +1,4 @@
-//admin example management system
+//admin example of my admin app structure
 // pages/Users/UserManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {

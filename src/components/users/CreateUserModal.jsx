@@ -21,7 +21,8 @@ const CreateUserModal = ({
     name: '',
     email: '',
     password: '',
-    role: 'USER',
+    role: 'ADMIN',
+    userMode: '',
     subRole: '',
     mobile: '',
     address: '',
@@ -73,6 +74,14 @@ const CreateUserModal = ({
 
     if (!formData.subRole) {
       newErrors.subRole = 'Department/Sub-role is required';
+    }
+
+    if (
+      formData.role === 'ADMIN' &&
+      formData.subRole === 'SALES' &&
+      !formData.userMode
+    ) {
+      newErrors.userMode = 'Sales mode is required for ADMIN > SALES users';
     }
 
     if (formData.mobile && !/^\+?[\d\s\-\(\)]+$/.test(formData.mobile)) {
@@ -134,6 +143,13 @@ const CreateUserModal = ({
       [field]: value,
       // Reset subRole when role changes
       ...(field === 'role' ? { subRole: '' } : {}),
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === 'role' ? { subRole: '', userMode: '' } : {}),
+      ...(field === 'subRole' && value !== 'SALES' ? { userMode: '' } : {}),
     }));
 
     // Clear field error when user starts typing
@@ -303,7 +319,7 @@ const CreateUserModal = ({
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             >
-              <option value="USER">User</option>
+              {/* <option value="USER">User</option> */}
               <option value="ADMIN">Admin</option>
             </select>
             {errors.role && (
@@ -340,6 +356,33 @@ const CreateUserModal = ({
               </p>
             )}
           </div>
+
+          {/* Sales Mode */}
+          {formData.role === 'ADMIN' && formData.subRole === 'SALES' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Sales Mode *
+              </label>
+              <select
+                value={formData.userMode}
+                onChange={(e) => handleInputChange('userMode', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  errors.userMode
+                    ? 'border-red-300 dark:border-red-600'
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                <option value="">Select sales mode...</option>
+                <option value="ONLINE">Online</option>
+                <option value="OFFLINE">Offline</option>
+              </select>
+              {errors.userMode && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.userMode}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Mobile */}
           <div>
