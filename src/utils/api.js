@@ -2708,6 +2708,94 @@ export const blogAPI = {
   },
 };
 
+export const customerAPI = {
+  getCustomers: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/admin/customers/list${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  createCustomer: async (customerData) => {
+    return apiCall('/admin/customers/create', {
+      method: 'POST',
+      body: customerData,
+    });
+  },
+
+  updateCustomer: async (customerId, customerData) => {
+    return apiCall(`/admin/customers/${customerId}`, {
+      method: 'PUT',
+      body: customerData,
+    });
+  },
+
+  getCustomerDetails: async (customerId) => {
+    return apiCall(`/admin/customers/${customerId}`);
+  },
+
+  getCustomersForOrder: async () => {
+    return apiCall('/admin/customers/for-order');
+  },
+
+  exportCustomers: async () => {
+    return apiCall('/admin/customers/export/csv');
+  },
+};
+
+// Admin order management API calls
+export const adminOrderAPI = {
+  getOrders: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    const queryString = queryParams.toString();
+    return apiCall(`/admin/orders/list${queryString ? `?${queryString}` : ''}`);
+  },
+
+  createOrder: async (orderData) => {
+    return apiCall('/admin/orders/create', {
+      method: 'POST',
+      body: orderData,
+    });
+  },
+
+  updateOrderStatus: async (orderId, statusData) => {
+    return apiCall(`/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: statusData,
+    });
+  },
+
+  generateInvoice: async (orderId) => {
+    return apiCall(`/admin/orders/${orderId}/invoice`, {
+      method: 'POST',
+    });
+  },
+
+  getAnalytics: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/admin/orders/analytics${queryString ? `?${queryString}` : ''}`
+    );
+  },
+};
+
 export const setAuthData = (accessToken, refreshToken, user) => {
   localStorage.setItem('accessToken', accessToken);
   if (refreshToken) {
@@ -2752,6 +2840,8 @@ export default {
   warehouseAPI,
   accountingAPI,
   attributeAPI,
+  customerAPI,
+  adminOrderAPI,
   getCurrentUser,
   handleApiError,
   isTokenValid,

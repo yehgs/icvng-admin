@@ -67,6 +67,12 @@ import TrackingManagement from './pages/logistics/TrackingManagement';
 import Settings from './pages/settings/Settings';
 import NotFound from './pages/NotFound';
 
+// Order Management
+import OrderManagement from './pages/order/OrderManagement.jsx';
+
+//customer Management
+import CustomerManagement from './pages/customer/CustomerManagement.jsx';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -281,7 +287,13 @@ const App = () => {
               path="stock"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER']}
+                  allowedSubRoles={[
+                    'IT',
+                    'DIRECTOR',
+                    'WAREHOUSE',
+                    'MANAGER',
+                    'HR',
+                  ]}
                 >
                   <StockManagement />
                 </RoleProtectedRoute>
@@ -301,9 +313,37 @@ const App = () => {
               path="warehouse"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER']}
+                  allowedSubRoles={[
+                    'IT',
+                    'DIRECTOR',
+                    'WAREHOUSE',
+                    'MANAGER',
+                    'HR',
+                  ]}
                 >
                   <WarehouseManagement />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="order-management"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER']}
+                >
+                  <OrderManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
+            {/* Customer Management Routes - Specific roles */}
+            <Route
+              path="customers"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER']}
+                >
+                  <CustomerManagement />
                 </RoleProtectedRoute>
               }
             />

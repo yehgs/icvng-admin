@@ -163,19 +163,26 @@ const AdminSidebar = ({
       key: 'inventory',
       title: 'Inventory Management',
       icon: Warehouse,
-      allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER'],
+      allowedSubRoles: [
+        'IT',
+        'DIRECTOR',
+        'WAREHOUSE',
+        'MANAGER',
+        'SALES',
+        'HR',
+      ],
       items: [
         {
           title: 'Quality Management',
           path: '/admin/stock',
           icon: Warehouse,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER', 'HR'],
         },
         {
           title: 'Warehouse Management',
           path: '/admin/warehouse',
           icon: Warehouse,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER', 'HR'],
         },
         // {
         //   title: 'Stock Movements',
@@ -183,6 +190,12 @@ const AdminSidebar = ({
         //   icon: ArrowUpDown,
         //   allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER'],
         // },
+        {
+          title: 'Order Management',
+          path: '/admin/order-management',
+          icon: ArrowUpDown,
+          allowedSubRoles: ['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'HR'],
+        },
       ],
     },
     {
@@ -339,6 +352,14 @@ const AdminSidebar = ({
       icon: Users,
       single: true,
       allowedSubRoles: ['IT', 'DIRECTOR', 'HR'],
+    },
+    {
+      key: 'customers',
+      title: 'Customer Management',
+      path: '/admin/customers',
+      icon: Users,
+      single: true,
+      allowedSubRoles: ['IT', 'DIRECTOR', 'HR', 'SALES'],
     },
     {
       key: 'settings',
