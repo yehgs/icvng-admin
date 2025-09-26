@@ -45,6 +45,7 @@ import PricingUtilities from './pages/pricing/PricingUtilities.jsx';
 import ExchangeRates from './pages/pricing/ExchangeRates';
 import PriceCalculation from './pages/pricing/PriceCalculation.jsx';
 import AccountingPricingManagement from './pages/pricing/AccountingPricingManagement.jsx';
+import DirectPricingManagement from './pages/pricing/DirectPricingManagement.jsx';
 
 // Reports Components
 import InventoryReports from './pages/reports/InventoryReports';
@@ -356,6 +357,17 @@ const App = () => {
                   allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
                 >
                   <PricingManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="direct-pricing"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'EDITOR']}
+                >
+                  <DirectPricingManagement />
                 </RoleProtectedRoute>
               }
             />

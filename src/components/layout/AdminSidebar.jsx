@@ -28,6 +28,7 @@ import {
   RefreshCw,
   Building2,
   Coffee,
+  Edit,
   CreditCard,
   CheckSquare,
   Archive,
@@ -215,6 +216,12 @@ const AdminSidebar = ({
           path: '/admin/pricing-lists',
           icon: Settings,
           allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+        },
+        {
+          title: 'Direct Pricing',
+          path: '/admin/direct-pricing',
+          icon: Edit,
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'EDITOR'],
         },
         {
           title: 'Pricing Configuration',

@@ -2248,6 +2248,529 @@ export const accountingAPI = {
   },
 };
 
+// Direct Pricing API calls - Independent pricing system
+export const directPricingAPI = {
+  // Create or update direct pricing for a product (bulk update)
+  createOrUpdateDirectPricing: async (pricingData) => {
+    const validatedData = {
+      productId: pricingData.productId,
+      prices: {},
+      notes: pricingData.notes || '',
+    };
+
+    if (!validatedData.productId) {
+      throw new Error('Product ID is required');
+    }
+
+    // Validate and clean price data
+    const validPriceTypes = [
+      'salePrice',
+      'btbPrice',
+      'btcPrice',
+      'price3weeksDelivery',
+      'price5weeksDelivery',
+    ];
+    let hasValidPrice = false;
+
+    validPriceTypes.forEach((priceType) => {
+      if (pricingData.prices && pricingData.prices[priceType] !== undefined) {
+        const price = parseFloat(pricingData.prices[priceType]);
+        if (!isNaN(price) && price >= 0) {
+          validatedData.prices[priceType] = price;
+          if (price > 0) hasValidPrice = true;
+        }
+      }
+    });
+
+    if (!hasValidPrice) {
+      throw new Error('At least one valid price greater than 0 is required');
+    }
+
+    return apiCall('/direct-pricing/create-update', {
+      method: 'POST',
+      body: validatedData,
+    });
+  },
+
+  // Update a single price type
+  updateSinglePrice: async (updateData) => {
+    const validatedData = {
+      productId: updateData.productId,
+      priceType: updateData.priceType,
+      price: parseFloat(updateData.price) || 0,
+      notes: updateData.notes || '',
+    };
+
+    if (!validatedData.productId) {
+      throw new Error('Product ID is required');
+    }
+
+    const validPriceTypes = [
+      'salePrice',
+      'btbPrice',
+      'btcPrice',
+      'price3weeksDelivery',
+      'price5weeksDelivery',
+    ];
+    if (!validPriceTypes.includes(validatedData.priceType)) {
+      throw new Error(
+        `Invalid price type. Must be one of: ${validPriceTypes.join(', ')}`
+      );
+    }
+
+    if (validatedData.price < 0) {
+      throw new Error('Price must be greater than or equal to 0');
+    }
+
+    return apiCall('/direct-pricing/update-single', {
+      method: 'PUT',
+      body: validatedData,
+    });
+  },
+
+  // Get direct pricing for a specific product
+  getDirectPricing: async (productId) => {
+    if (!productId) {
+      throw new Error('Product ID is required');
+    }
+
+    return apiCall(`/direct-pricing/product/${productId}`);
+  },
+
+  // Get all products with direct pricing (with filters)
+  getDirectPricingList: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/direct-pricing/list${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  // Get price history for a product
+  getPriceHistory: async (productId, limit = 50) => {
+    if (!productId) {
+      throw new Error('Product ID is required');
+    }
+
+    const queryParams = new URLSearchParams({ limit: limit.toString() });
+    return apiCall(
+      `/direct-pricing/history/${productId}?${queryParams.toString()}`
+    );
+  },
+
+  // Delete direct pricing for a product
+  deleteDirectPricing: async (productId) => {
+    if (!productId) {
+      throw new Error('Product ID is required');
+    }
+
+    return apiCall(`/direct-pricing/product/${productId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get direct pricing statistics
+  getDirectPricingStats: async () => {
+    return apiCall('/direct-pricing/stats');
+  },
+
+  // Utility: Get products that don't have direct pricing yet
+  getProductsWithoutDirectPricing: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    queryParams.append('hasDirectPricing', 'false');
+
+    const queryString = queryParams.toString();
+    return productAPI.getProducts({ ...params, hasDirectPricing: false });
+  },
+
+  // Bulk operations
+  bulkUpdatePrices: async (updates) => {
+    if (!Array.isArray(updates) || updates.length === 0) {
+      throw new Error('Updates array is required');
+    }
+
+    const validatedUpdates = updates.map((update) => {
+      if (!update.productId) {
+        throw new Error('Product ID is required for all updates');
+      }
+
+      const validatedUpdate = {
+        productId: update.productId,
+        prices: {},
+        notes: update.notes || '',
+      };
+
+      const validPriceTypes = [
+        'salePrice',
+        'btbPrice',
+        'btcPrice',
+        'price3weeksDelivery',
+        'price5weeksDelivery',
+      ];
+      validPriceTypes.forEach((priceType) => {
+        if (update.prices && update.prices[priceType] !== undefined) {
+          const price = parseFloat(update.prices[priceType]);
+          if (!isNaN(price) && price >= 0) {
+            validatedUpdate.prices[priceType] = price;
+          }
+        }
+      });
+
+      return validatedUpdate;
+    });
+
+    return apiCall('/direct-pricing/bulk-update', {
+      method: 'POST',
+      body: { updates: validatedUpdates },
+    });
+  },
+
+  // Export direct pricing data
+  exportDirectPricingData: async (filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/direct-pricing/export${queryString ? `?${queryString}` : ''}`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'text/csv',
+        },
+      }
+    );
+  },
+};
+
+// Direct pricing utility functions
+export const directPricingUtils = {
+  // Format currency for display
+  formatCurrency: (amount, currency = 'NGN') => {
+    const numAmount = parseFloat(amount) || 0;
+
+    if (currency === 'NGN') {
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+      }).format(numAmount);
+    }
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(numAmount);
+  },
+
+  // Get price types with display information
+  getPriceTypes: () => [
+    {
+      key: 'salePrice',
+      label: 'Sale Price',
+      description: 'Standard retail sale price',
+      color: 'green',
+      icon: '💰',
+    },
+    {
+      key: 'btbPrice',
+      label: 'BTB Price',
+      description: 'Business-to-Business price',
+      color: 'blue',
+      icon: '🏢',
+    },
+    {
+      key: 'btcPrice',
+      label: 'BTC Price',
+      description: 'Business-to-Consumer price',
+      color: 'purple',
+      icon: '👤',
+    },
+    {
+      key: 'price3weeksDelivery',
+      label: '3 Weeks Delivery',
+      description: 'Price for 3 weeks delivery option',
+      color: 'orange',
+      icon: '📦',
+    },
+    {
+      key: 'price5weeksDelivery',
+      label: '5 Weeks Delivery',
+      description: 'Price for 5 weeks delivery option',
+      color: 'red',
+      icon: '🚛',
+    },
+  ],
+
+  // Validate price data
+  validatePriceData: (prices) => {
+    const errors = {};
+    const validPriceTypes = [
+      'salePrice',
+      'btbPrice',
+      'btcPrice',
+      'price3weeksDelivery',
+      'price5weeksDelivery',
+    ];
+
+    let hasValidPrice = false;
+
+    validPriceTypes.forEach((priceType) => {
+      if (prices[priceType] !== undefined) {
+        const price = parseFloat(prices[priceType]);
+
+        if (isNaN(price)) {
+          errors[priceType] = 'Must be a valid number';
+        } else if (price < 0) {
+          errors[priceType] = 'Price cannot be negative';
+        } else if (price > 0) {
+          hasValidPrice = true;
+        }
+      }
+    });
+
+    if (!hasValidPrice) {
+      errors.general = 'At least one price must be greater than 0';
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+    };
+  },
+
+  // Calculate price differences
+  calculatePriceDifference: (oldPrice, newPrice) => {
+    const old = parseFloat(oldPrice) || 0;
+    const current = parseFloat(newPrice) || 0;
+
+    const difference = current - old;
+    const percentage = old > 0 ? (difference / old) * 100 : 0;
+
+    return {
+      absolute: difference,
+      percentage,
+      trend:
+        difference > 0 ? 'increase' : difference < 0 ? 'decrease' : 'stable',
+    };
+  },
+
+  // Get price change indicator
+  getPriceChangeIndicator: (difference) => {
+    if (Math.abs(difference.percentage) < 0.01) {
+      return { trend: 'stable', color: 'gray', icon: '➖' };
+    }
+
+    return difference.percentage > 0
+      ? { trend: 'increase', color: 'red', icon: '📈' }
+      : { trend: 'decrease', color: 'green', icon: '📉' };
+  },
+
+  // Generate direct pricing summary
+  generatePricingSummary: (directPricingList) => {
+    if (!Array.isArray(directPricingList) || directPricingList.length === 0) {
+      return {
+        totalProducts: 0,
+        averagePrices: {
+          salePrice: 0,
+          btbPrice: 0,
+          btcPrice: 0,
+          price3weeksDelivery: 0,
+          price5weeksDelivery: 0,
+        },
+        totalValue: 0,
+        recentUpdates: 0,
+      };
+    }
+
+    const totalProducts = directPricingList.length;
+    const priceTypes = [
+      'salePrice',
+      'btbPrice',
+      'btcPrice',
+      'price3weeksDelivery',
+      'price5weeksDelivery',
+    ];
+
+    const averagePrices = {};
+    let totalValue = 0;
+    let recentUpdates = 0;
+
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    priceTypes.forEach((priceType) => {
+      const validPrices = directPricingList
+        .map((item) => parseFloat(item.directPrices?.[priceType]) || 0)
+        .filter((price) => price > 0);
+
+      averagePrices[priceType] =
+        validPrices.length > 0
+          ? validPrices.reduce((sum, price) => sum + price, 0) /
+            validPrices.length
+          : 0;
+    });
+
+    directPricingList.forEach((item) => {
+      // Add to total value (using sale price as primary)
+      totalValue += parseFloat(item.directPrices?.salePrice) || 0;
+
+      // Count recent updates
+      if (new Date(item.lastUpdatedAt) > oneDayAgo) {
+        recentUpdates++;
+      }
+    });
+
+    return {
+      totalProducts,
+      averagePrices,
+      totalValue,
+      recentUpdates,
+    };
+  },
+
+  // Export direct pricing to CSV
+  exportDirectPricingToCSV: (directPricingData) => {
+    if (!Array.isArray(directPricingData) || directPricingData.length === 0) {
+      throw new Error('No direct pricing data to export');
+    }
+
+    const headers = [
+      'Product Name',
+      'SKU',
+      'Product Type',
+      'Sale Price',
+      'BTB Price',
+      'BTC Price',
+      '3 Weeks Delivery Price',
+      '5 Weeks Delivery Price',
+      'Last Updated',
+      'Updated By',
+      'Notes',
+      'Sale Price Updated By',
+      'Sale Price Updated At',
+      'BTB Price Updated By',
+      'BTB Price Updated At',
+      'BTC Price Updated By',
+      'BTC Price Updated At',
+      '3 Weeks Updated By',
+      '3 Weeks Updated At',
+      '5 Weeks Updated By',
+      '5 Weeks Updated At',
+    ];
+
+    const csvData = directPricingData.map((item) => {
+      const product = item.productDetails || {};
+      const prices = item.directPrices || {};
+      const priceUpdatedBy = item.priceUpdatedBy || {};
+      const lastUpdatedBy = item.lastUpdatedByDetails?.[0] || {};
+
+      return [
+        product.name || '',
+        product.sku || '',
+        product.productType || '',
+        prices.salePrice || 0,
+        prices.btbPrice || 0,
+        prices.btcPrice || 0,
+        prices.price3weeksDelivery || 0,
+        prices.price5weeksDelivery || 0,
+        new Date(item.lastUpdatedAt).toLocaleDateString(),
+        lastUpdatedBy.name || '',
+        item.notes || '',
+        priceUpdatedBy.salePrice?.updatedBy?.name || '',
+        priceUpdatedBy.salePrice?.updatedAt
+          ? new Date(priceUpdatedBy.salePrice.updatedAt).toLocaleDateString()
+          : '',
+        priceUpdatedBy.btbPrice?.updatedBy?.name || '',
+        priceUpdatedBy.btbPrice?.updatedAt
+          ? new Date(priceUpdatedBy.btbPrice.updatedAt).toLocaleDateString()
+          : '',
+        priceUpdatedBy.btcPrice?.updatedBy?.name || '',
+        priceUpdatedBy.btcPrice?.updatedAt
+          ? new Date(priceUpdatedBy.btcPrice.updatedAt).toLocaleDateString()
+          : '',
+        priceUpdatedBy.price3weeksDelivery?.updatedBy?.name || '',
+        priceUpdatedBy.price3weeksDelivery?.updatedAt
+          ? new Date(
+              priceUpdatedBy.price3weeksDelivery.updatedAt
+            ).toLocaleDateString()
+          : '',
+        priceUpdatedBy.price5weeksDelivery?.updatedBy?.name || '',
+        priceUpdatedBy.price5weeksDelivery?.updatedAt
+          ? new Date(
+              priceUpdatedBy.price5weeksDelivery.updatedAt
+            ).toLocaleDateString()
+          : '',
+      ];
+    });
+
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.map((field) => `"${field}"`).join(','))
+      .join('\n');
+
+    return csvContent;
+  },
+
+  // Download CSV file
+  downloadCSV: (csvContent, filename = 'direct_pricing_data.csv') => {
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  // Check if user can edit direct pricing
+  canEditDirectPricing: (userRole, userSubRole) => {
+    return ['ACCOUNTANT', 'DIRECTOR', 'IT'].includes(userSubRole || userRole);
+  },
+
+  // Check if user can delete direct pricing
+  canDeleteDirectPricing: (userRole, userSubRole) => {
+    return ['DIRECTOR', 'IT'].includes(userSubRole || userRole);
+  },
+
+  // Format date for display
+  formatDate: (date) => {
+    return new Date(date).toLocaleDateString('en-NG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  },
+
+  // Get price type color class for UI
+  getPriceTypeColorClass: (priceType) => {
+    const colorMap = {
+      salePrice: 'text-green-600 bg-green-50',
+      btbPrice: 'text-blue-600 bg-blue-50',
+      btcPrice: 'text-purple-600 bg-purple-50',
+      price3weeksDelivery: 'text-orange-600 bg-orange-50',
+      price5weeksDelivery: 'text-red-600 bg-red-50',
+    };
+    return colorMap[priceType] || 'text-gray-600 bg-gray-50';
+  },
+};
+
 // Utility functions
 export const isTokenValid = () => {
   const token = localStorage.getItem('accessToken');
@@ -2827,6 +3350,8 @@ export default {
   purchaseOrderAPI,
   exchangeRateAPI,
   exchangeRateUtils,
+  directPricingAPI,
+  directPricingUtils,
   fileAPI,
   brandAPI,
   productAPI,
