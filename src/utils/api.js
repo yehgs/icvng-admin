@@ -2292,6 +2292,23 @@ export const directPricingAPI = {
     });
   },
 
+  // get product for direct pricing exclude edited products
+  getAvailableProducts: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    return apiCall(
+      `/direct-pricing/available-products${
+        queryString ? `?${queryString}` : ''
+      }`
+    );
+  },
+
   // Update a single price type
   updateSinglePrice: async (updateData) => {
     const validatedData = {

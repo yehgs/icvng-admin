@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   DollarSign,
   Search,
   Edit,
-  Eye,
   History,
   Download,
   Plus,
@@ -28,6 +27,7 @@ import {
   getCurrentUser,
   handleApiError,
 } from '../../utils/api';
+import AddProductDirectPricingModal from '../../components/pricing/AddProductDirectPricingModal';
 
 const DirectPricingManagement = () => {
   const [directPricingList, setDirectPricingList] = useState([]);
@@ -68,7 +68,6 @@ const DirectPricingManagement = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
 
-  // Get current user from your existing auth system
   const currentUser = getCurrentUser();
 
   const priceTypes = [
@@ -86,6 +85,22 @@ const DirectPricingManagement = () => {
   useEffect(() => {
     fetchDirectPricingList();
   }, [filters, pagination.page]);
+
+  // Fetch products when modal filters change
+  useEffect(() => {
+    if (showAddProductModal) {
+      const timer = setTimeout(() => {
+        fetchAvailableProducts();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    showAddProductModal,
+    productFilters.category,
+    productFilters.brand,
+    productFilters.productType,
+    productSearchTerm,
+  ]);
 
   const initializeData = async () => {
     await Promise.all([fetchCategories(), fetchBrands(), fetchStats()]);
@@ -153,22 +168,33 @@ const DirectPricingManagement = () => {
     }
   };
 
-  // New function to fetch available products for direct pricing
   const fetchAvailableProducts = async () => {
     setLoadingProducts(true);
+
+    console.log('=== FETCHING AVAILABLE PRODUCTS ===');
+    console.log('Search term:', productSearchTerm);
+    console.log('Filters:', productFilters);
+
     try {
-      const response = await productAPI.getProducts({
-        search: productSearchTerm,
-        category: productFilters.category,
-        brand: productFilters.brand,
-        productType: productFilters.productType,
-        excludeDirectPricing: true, // This would exclude products that already have direct pricing
+      const params = {
+        search: productSearchTerm || undefined,
+        category: productFilters.category || undefined,
+        brand: productFilters.brand || undefined,
+        productType: productFilters.productType || undefined,
+        excludeDirectPricing: true,
         limit: 50,
         page: 1,
-      });
+      };
+
+      console.log('API params:', params);
+
+      const response = await productAPI.getProducts(params);
+
+      console.log('API response:', response);
 
       if (response.success) {
         setAvailableProducts(response.data || []);
+        console.log('Products loaded:', response.data?.length || 0);
       } else {
         toast.error('Failed to fetch products');
         setAvailableProducts([]);
@@ -182,7 +208,6 @@ const DirectPricingManagement = () => {
     }
   };
 
-  // Handle adding a product to direct pricing
   const handleAddProduct = (product) => {
     setSelectedProduct({
       productDetails: product,
@@ -195,10 +220,18 @@ const DirectPricingManagement = () => {
     setShowEditModal(true);
   };
 
-  // Reset product modal
   const resetProductModal = () => {
     setShowAddProductModal(false);
     setAvailableProducts([]);
+    setProductSearchTerm('');
+    setProductFilters({
+      category: '',
+      brand: '',
+      productType: '',
+    });
+  };
+
+  const clearModalFilters = () => {
     setProductSearchTerm('');
     setProductFilters({
       category: '',
@@ -224,7 +257,6 @@ const DirectPricingManagement = () => {
       [priceType]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[priceType]) {
       setErrors((prev) => ({ ...prev, [priceType]: '' }));
     }
@@ -251,6 +283,7 @@ const DirectPricingManagement = () => {
         toast.success('Pricing updated successfully');
         setShowEditModal(false);
         fetchDirectPricingList();
+        fetchStats();
         resetForm();
       } else {
         toast.error(response.message || 'Failed to update pricing');
@@ -301,7 +334,7 @@ const DirectPricingManagement = () => {
   };
 
   const getPriceColorClass = (priceType) => {
-    return directPricingUtils.getPriceTypeColorClass(priceType).split(' ')[0]; // Get just the text color
+    return directPricingUtils.getPriceTypeColorClass(priceType).split(' ')[0];
   };
 
   const canEdit = directPricingUtils.canEditDirectPricing(
@@ -329,7 +362,6 @@ const DirectPricingManagement = () => {
             <button
               onClick={() => {
                 setShowAddProductModal(true);
-                fetchAvailableProducts();
               }}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
@@ -520,10 +552,7 @@ const DirectPricingManagement = () => {
             </p>
             {canEdit && (
               <button
-                onClick={() => {
-                  setShowAddProductModal(true);
-                  fetchAvailableProducts();
-                }}
+                onClick={() => setShowAddProductModal(true)}
                 className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
@@ -681,188 +710,13 @@ const DirectPricingManagement = () => {
       </div>
 
       {/* Add Product Modal */}
-      {showAddProductModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Add Product Direct Pricing
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Select a product to set up direct pricing
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => resetProductModal()}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={productSearchTerm}
-                    onChange={(e) => {
-                      setProductSearchTerm(e.target.value);
-                      clearTimeout(window.productSearchTimeout);
-                      window.productSearchTimeout = setTimeout(() => {
-                        fetchAvailableProducts();
-                      }, 300);
-                    }}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-
-                <select
-                  value={productFilters.category}
-                  onChange={(e) => {
-                    setProductFilters((prev) => ({
-                      ...prev,
-                      category: e.target.value,
-                    }));
-                    fetchAvailableProducts();
-                  }}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category._id} value={category._id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={productFilters.brand}
-                  onChange={(e) => {
-                    setProductFilters((prev) => ({
-                      ...prev,
-                      brand: e.target.value,
-                    }));
-                    fetchAvailableProducts();
-                  }}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">All Brands</option>
-                  {brands.map((brand) => (
-                    <option key={brand._id} value={brand._id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={productFilters.productType}
-                  onChange={(e) => {
-                    setProductFilters((prev) => ({
-                      ...prev,
-                      productType: e.target.value,
-                    }));
-                    fetchAvailableProducts();
-                  }}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">All Product Types</option>
-                  <option value="COFFEE">Coffee</option>
-                  <option value="MACHINE">Machine</option>
-                  <option value="ACCESSORIES">Accessories</option>
-                  <option value="COFFEE_BEANS">Coffee Beans</option>
-                  <option value="TEA">Tea</option>
-                  <option value="DRINKS">Drinks</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="p-6 max-h-96 overflow-y-auto">
-              {loadingProducts ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  <span className="ml-2 text-gray-600 dark:text-gray-400">
-                    Loading products...
-                  </span>
-                </div>
-              ) : availableProducts.length === 0 ? (
-                <div className="text-center py-8">
-                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No Products Found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Try adjusting your search terms or filters
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {availableProducts.map((product) => (
-                    <div
-                      key={product._id}
-                      className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0 h-12 w-12">
-                          {product.image && product.image[0] ? (
-                            <img
-                              className="h-12 w-12 rounded-lg object-cover"
-                              src={product.image[0]}
-                              alt={product.name}
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                              <Package className="h-6 w-6 text-gray-400" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                            {product.name}
-                          </h4>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            SKU: {product.sku} • {product.productType}
-                          </p>
-                          <div className="flex items-center space-x-4 mt-1 text-xs text-gray-400">
-                            <span>
-                              Base Price: {formatCurrency(product.price)}
-                            </span>
-                            <span>
-                              Sale Price: {formatCurrency(product.salePrice)}
-                            </span>
-                            <span>Stock: {product.stock || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleAddProduct(product)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        Set Pricing
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Select a product to set up independent direct pricing. This will
-                override any config-based pricing for the selected product.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddProductDirectPricingModal
+        isOpen={showAddProductModal}
+        onClose={() => setShowAddProductModal(false)}
+        onSelectProduct={handleAddProduct}
+        categories={categories}
+        brands={brands}
+      />
 
       {/* Edit Pricing Modal */}
       {showEditModal && selectedProduct && (
@@ -1022,7 +876,7 @@ const DirectPricingManagement = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
