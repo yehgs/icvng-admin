@@ -10,6 +10,7 @@ import CurrencySection from './CurrencySection';
 import ItemsSection from './ItemsSection';
 import LogisticsSection from './LogisticsSection';
 import OrderSummary from './OrderSummary';
+import RoleBasedButton from '../layout/RoleBasedButton';
 
 const PurchaseOrderForm = ({
   showModal,
@@ -481,18 +482,20 @@ const PurchaseOrderForm = ({
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {editingPO ? 'Update Order' : 'Create Order'}
-            </button>
+            <RoleBasedButton disabledRoles={['MANAGER']}>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {editingPO ? 'Update Order' : 'Create Order'}
+              </button>
+            </RoleBasedButton>
           </div>
         </form>
 

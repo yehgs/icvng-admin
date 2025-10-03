@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast';
 import { pricingAPI, pricingUtils } from '../../utils/api';
 import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
 const PricingConfiguration = () => {
   const [config, setConfig] = useState(null);
@@ -403,7 +404,9 @@ const PricingConfiguration = () => {
       )}
 
       {/* Configuration Form */}
-      <RoleBasedAccess allowedRoles={['ACCOUNTANT', 'DIRECTOR', 'IT']}>
+      <RoleBasedAccess
+        allowedRoles={['ACCOUNTANT', 'DIRECTOR', 'IT', 'MANAGER']}
+      >
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profit Margins */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -551,18 +554,20 @@ const PricingConfiguration = () => {
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {saving ? 'Saving...' : 'Save Configuration'}
-            </button>
+            <RoleBasedButton disabledRoles={['MANAGER']}>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {saving ? 'Saving...' : 'Save Configuration'}
+              </button>
+            </RoleBasedButton>
           </div>
         </form>
       </RoleBasedAccess>
@@ -709,23 +714,25 @@ const PricingConfiguration = () => {
               >
                 Cancel
               </button>
-              <button
-                onClick={handleApprove}
-                disabled={saving}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Approving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Confirm Approval
-                  </>
-                )}
-              </button>
+              <RoleBasedButton disabledRoles={['MANAGER']}>
+                <button
+                  onClick={handleApprove}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Confirm Approval
+                    </>
+                  )}
+                </button>
+              </RoleBasedButton>
             </div>
           </div>
         </div>

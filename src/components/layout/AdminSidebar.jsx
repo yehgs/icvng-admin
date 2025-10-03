@@ -209,43 +209,49 @@ const AdminSidebar = ({
           title: 'Pricing Management',
           path: '/admin/pricing',
           icon: Settings,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER'],
         },
         {
           title: 'Price List',
           path: '/admin/pricing-lists',
           icon: Settings,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER'],
         },
         {
           title: 'Direct Pricing',
           path: '/admin/direct-pricing',
           icon: Edit,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'EDITOR'],
+          allowedSubRoles: [
+            'IT',
+            'DIRECTOR',
+            'ACCOUNTANT',
+            'EDITOR',
+            'MANAGER',
+          ],
         },
         {
           title: 'Pricing Configuration',
           path: '/admin/pricing-config',
           icon: Settings,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER'],
         },
         {
           title: 'Price Calculation',
           path: '/admin/price-calculation',
           icon: DollarSign,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER'],
         },
         {
           title: 'Price Utilities',
           path: '/admin/price-utilities',
           icon: DollarSign,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER'],
         },
         {
           title: 'Exchange Rates',
           path: '/admin/exchange-rates',
           icon: TrendingUp,
-          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT'],
+          allowedSubRoles: ['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER'],
         },
       ],
     },
@@ -358,7 +364,7 @@ const AdminSidebar = ({
       path: '/admin/users',
       icon: Users,
       single: true,
-      allowedSubRoles: ['IT', 'DIRECTOR', 'HR'],
+      allowedSubRoles: ['IT', 'DIRECTOR', 'HR', 'MANAGER'],
     },
     {
       key: 'customers',
@@ -366,7 +372,7 @@ const AdminSidebar = ({
       path: '/admin/customers',
       icon: Users,
       single: true,
-      allowedSubRoles: ['IT', 'DIRECTOR', 'HR', 'SALES'],
+      allowedSubRoles: ['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'SALES-MANAGER'],
     },
     {
       key: 'settings',
@@ -374,7 +380,7 @@ const AdminSidebar = ({
       path: '/admin/settings',
       icon: Settings,
       single: true,
-      allowedSubRoles: ['IT', 'DIRECTOR'], // All admin roles
+      allowedSubRoles: ['IT', 'DIRECTOR'],
     },
   ];
 

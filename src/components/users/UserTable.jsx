@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react';
+import RoleBasedAccess from '../layout/RoleBaseAccess';
 
 const UserTable = ({
   users,
@@ -238,15 +239,15 @@ const UserTable = ({
                     >
                       <Eye className="h-4 w-4" />
                     </button>
-
-                    <button
-                      onClick={() => onEditUser(user)}
-                      className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors"
-                      title="Edit User"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-
+                    <RoleBasedAccess allowedSubRoles={['IT', 'DIRECTOR']}>
+                      <button
+                        onClick={() => onEditUser(user)}
+                        className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                        title="Edit User"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </RoleBasedAccess>
                     {canResetPassword && (
                       <button
                         onClick={() => onResetPassword(user._id)}

@@ -21,6 +21,7 @@ import {
   getCurrentUser,
   handleApiError,
 } from '../../utils/api';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
 const AccountingPricingManagement = () => {
   const [products, setProducts] = useState([]);
@@ -732,13 +733,15 @@ const AccountingPricingManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {canEdit && (
-                        <button
-                          onClick={() => handleEditPricing(product)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="Edit Pricing"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
+                        <RoleBasedButton disabledRoles={['MANAGER']}>
+                          <button
+                            onClick={() => handleEditPricing(product)}
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="Edit Pricing"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        </RoleBasedButton>
                       )}
                     </td>
                   </tr>

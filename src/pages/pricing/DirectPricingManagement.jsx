@@ -28,6 +28,7 @@ import {
   handleApiError,
 } from '../../utils/api';
 import AddProductDirectPricingModal from '../../components/pricing/AddProductDirectPricingModal';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
 const DirectPricingManagement = () => {
   const [directPricingList, setDirectPricingList] = useState([]);
@@ -270,13 +271,15 @@ const DirectPricingManagement = () => {
 
         <div className="flex items-center gap-3">
           {canEdit && (
-            <button
-              onClick={() => setShowAddProductModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Add Product
-            </button>
+            <RoleBasedButton disabledRoles={['MANAGER']}>
+              <button
+                onClick={() => setShowAddProductModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Add Product
+              </button>
+            </RoleBasedButton>
           )}
           <button
             onClick={handleExport}
@@ -460,13 +463,15 @@ const DirectPricingManagement = () => {
               No products have direct pricing set with the current filters
             </p>
             {canEdit && (
-              <button
-                onClick={() => setShowAddProductModal(true)}
-                className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                Add Your First Product
-              </button>
+              <RoleBasedButton disabledRoles={['MANAGER']}>
+                <button
+                  onClick={() => setShowAddProductModal(true)}
+                  className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Your First Product
+                </button>
+              </RoleBasedButton>
             )}
           </div>
         ) : (
@@ -547,14 +552,16 @@ const DirectPricingManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleEditPricing(item)}
-                            disabled={!canEdit}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Edit Pricing"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
+                          <RoleBasedButton disabledRoles={['MANAGER']}>
+                            <button
+                              onClick={() => handleEditPricing(item)}
+                              disabled={!canEdit}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Edit Pricing"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          </RoleBasedButton>
                           <button
                             onClick={() => {
                               toast.info('Price history feature coming soon');

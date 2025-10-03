@@ -29,6 +29,7 @@ import {
 import toast from 'react-hot-toast';
 import PurchaseOrderForm from '../../components/purchaseOrder/PurchaseOrderForm';
 import PurchaseOrderDetailsModal from '../../components/purchaseOrder/PurchaseOrderDetailsModel';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
 const PurchaseOrderManagement = () => {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -463,13 +464,15 @@ const PurchaseOrderManagement = () => {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button
-            onClick={handleCreate}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Purchase Order
-          </button>
+          <RoleBasedButton disabledRoles={['MANAGER']}>
+            <button
+              onClick={handleCreate}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Purchase Order
+            </button>
+          </RoleBasedButton>
         </div>
       </div>
 
@@ -730,14 +733,19 @@ const PurchaseOrderManagement = () => {
                   <td className="table-cell">
                     <div className="flex gap-1">
                       {getQuickActions(po).map((action, index) => (
-                        <button
+                        <RoleBasedButton
                           key={index}
-                          onClick={action.action}
-                          className={`p-1 rounded transition-colors ${action.color}`}
-                          title={action.tooltip}
+                          disabledRoles={['MANAGER']}
                         >
-                          <action.icon className="w-4 h-4" />
-                        </button>
+                          <button
+                            key={index}
+                            onClick={action.action}
+                            className={`p-1 rounded transition-colors ${action.color}`}
+                            title={action.tooltip}
+                          >
+                            <action.icon className="w-4 h-4" />
+                          </button>
+                        </RoleBasedButton>
                       ))}
                     </div>
                   </td>

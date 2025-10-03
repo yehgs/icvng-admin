@@ -276,7 +276,7 @@ const PricingUtilities = () => {
                   Fetch latest rates from external API
                 </span>
               </div>
-              <RoleBasedAccess allowedRoles={['Account', 'Director', 'IT']}>
+              <RoleBasedAccess allowedRoles={['ACCOUNTANT', 'DIRECTOR', 'IT']}>
                 <button
                   onClick={handleFetchLatestRates}
                   disabled={updating}
@@ -320,7 +320,7 @@ const PricingUtilities = () => {
                   Update all product prices
                 </span>
               </div>
-              <RoleBasedAccess allowedRoles={['Director']}>
+              <RoleBasedAccess allowedRoles={['DIRECTOR', 'IT']}>
                 <button
                   onClick={() => handleBulkPriceUpdate()}
                   disabled={updating || !pricingConfig?.isApproved}
@@ -354,7 +354,7 @@ const PricingUtilities = () => {
                     </option>
                   ))}
                 </select>
-                <RoleBasedAccess allowedRoles={['Director']}>
+                <RoleBasedAccess allowedRoles={['DIRECTOR', 'IT']}>
                   <button
                     onClick={handleSpecificCurrencyUpdate}
                     disabled={

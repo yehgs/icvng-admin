@@ -11,6 +11,7 @@ import {
   Shield,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import RoleBasedButton from '../layout/RoleBasedButton';
 
 const EditUserModal = ({
   isOpen,
@@ -535,28 +536,30 @@ const EditUserModal = ({
             >
               {hasChanges ? 'Reset Changes' : 'Cancel'}
             </button>
-            <button
-              type="submit"
-              disabled={
-                submitting ||
-                loading ||
-                !hasChanges ||
-                !canCreateUser(formData.role, formData.subRole)
-              }
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {submitting || loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Update User
-                </>
-              )}
-            </button>
+            <RoleBasedButton disabledRoles={['HR', 'MANAGER']}>
+              <button
+                type="submit"
+                disabled={
+                  submitting ||
+                  loading ||
+                  !hasChanges ||
+                  !canCreateUser(formData.role, formData.subRole)
+                }
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submitting || loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Update User
+                  </>
+                )}
+              </button>
+            </RoleBasedButton>
           </div>
 
           {/* Help Text */}

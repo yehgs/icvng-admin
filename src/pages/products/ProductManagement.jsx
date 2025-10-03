@@ -21,6 +21,7 @@ import {
   colorAPI,
 } from '../../utils/manageApi';
 import ProductForm from '../../components/product/ProductForm';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 import toast from 'react-hot-toast';
 
 const ProductManagement = () => {
@@ -232,13 +233,15 @@ const ProductManagement = () => {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Product
-          </button>
+          <RoleBasedButton disabledRoles={['MANAGER']}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Product
+            </button>
+          </RoleBasedButton>
         </div>
       </div>
 
@@ -451,22 +454,48 @@ const ProductManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="Edit Product"
+                        <RoleBasedButton
+                          disabledRoles={[
+                            'SALES',
+                            'HR',
+                            'MANAGER',
+                            'SALES-MANAGER',
+                            'ACCOUNTANT',
+                            'GRAPHICS',
+                            'LOGISTICS',
+                            'WAREHOUSE',
+                          ]}
                         >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDelete(product._id, product.name)
-                          }
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                          title="Delete Product"
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="Edit Product"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        </RoleBasedButton>
+                        <RoleBasedButton
+                          disabledRoles={[
+                            'SALES',
+                            'HR',
+                            'MANAGER',
+                            'SALES-MANAGER',
+                            'ACCOUNTANT',
+                            'GRAPHICS',
+                            'LOGISTICS',
+                            'WAREHOUSE',
+                          ]}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                          <button
+                            onClick={() =>
+                              handleDelete(product._id, product.name)
+                            }
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            title="Delete Product"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </RoleBasedButton>
                       </div>
                     </td>
                   </tr>

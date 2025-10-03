@@ -27,6 +27,7 @@ import {
 import { exchangeRateAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
 import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
 const ExchangeRates = () => {
   const [rates, setRates] = useState([]);
@@ -350,7 +351,9 @@ const ExchangeRates = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <RoleBasedAccess allowedRoles={['IT', 'ADMIN']}>
+          <RoleBasedAccess
+            allowedRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
+          >
             <button
               onClick={() => setShowStatsModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -359,7 +362,7 @@ const ExchangeRates = () => {
               Statistics
             </button>
           </RoleBasedAccess>
-          <RoleBasedAccess allowedRoles={['IT', 'ADMIN']}>
+          <RoleBasedAccess allowedRoles={['IT', 'DIRECTOR']}>
             <button
               onClick={() => setShowProviderModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -382,16 +385,18 @@ const ExchangeRates = () => {
               Fetch API Rates
             </button>
           </RoleBasedAccess>
-          <button
-            onClick={() => {
-              resetForm();
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add Manual Rate
-          </button>
+          <RoleBasedButton disabledRoles={['MANAGER']}>
+            <button
+              onClick={() => {
+                resetForm();
+                setShowModal(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add Manual Rate
+            </button>
+          </RoleBasedButton>
         </div>
       </div>
 

@@ -18,6 +18,7 @@ import {
 import toast from 'react-hot-toast';
 import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
 import { pricingAPI, pricingUtils } from '../../utils/api';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
 const PriceCalculation = () => {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -563,23 +564,25 @@ const PriceCalculation = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => handleCalculatePrices(po._id)}
-                          disabled={calculating}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-                        >
-                          {calculating && selectedPO === po._id ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Calculating...
-                            </>
-                          ) : (
-                            <>
-                              <Calculator className="h-4 w-4" />
-                              Calculate
-                            </>
-                          )}
-                        </button>
+                        <RoleBasedButton disabledRoles={['MANAGER']}>
+                          <button
+                            onClick={() => handleCalculatePrices(po._id)}
+                            disabled={calculating}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          >
+                            {calculating && selectedPO === po._id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Calculating...
+                              </>
+                            ) : (
+                              <>
+                                <Calculator className="h-4 w-4" />
+                                Calculate
+                              </>
+                            )}
+                          </button>
+                        </RoleBasedButton>
                       </td>
                     </tr>
                   ))}

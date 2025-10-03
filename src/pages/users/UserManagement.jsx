@@ -17,6 +17,7 @@ import CreateUserModal from '../../components/users/CreateUserModal';
 import EditUserModal from '../../components/users/EditUserModal';
 import UserDetailsModal from '../../components/users/UserDetailsModal';
 import UserFilters from '../../components/users/UserFilters';
+import RoleBasedButton from '../../components/layout/RoleBasedButton';
 import toast from 'react-hot-toast';
 
 const UserManagement = () => {
@@ -312,14 +313,15 @@ const UserManagement = () => {
             <Download className="h-4 w-4" />
             Export
           </button>
-
-          <button
-            onClick={() => setShowCreateUser(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <UserPlus className="h-4 w-4" />
-            Add New User
-          </button>
+          <RoleBasedButton disabledRoles={['HR', 'MANAGER']}>
+            <button
+              onClick={() => setShowCreateUser(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add New User
+            </button>
+          </RoleBasedButton>
         </div>
       </div>
 

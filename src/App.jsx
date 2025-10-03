@@ -202,7 +202,7 @@ const App = () => {
               path="logistics"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER']}
                 >
                   <LogisticsManagement />
                 </RoleProtectedRoute>
@@ -212,7 +212,7 @@ const App = () => {
               path="tracking"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER']}
                 >
                   <TrackingManagement />
                 </RoleProtectedRoute>
@@ -365,7 +365,13 @@ const App = () => {
               path="direct-pricing"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'EDITOR']}
+                  allowedSubRoles={[
+                    'IT',
+                    'DIRECTOR',
+                    'ACCOUNTANT',
+                    'EDITOR',
+                    'MANAGER',
+                  ]}
                 >
                   <DirectPricingManagement />
                 </RoleProtectedRoute>
@@ -387,7 +393,7 @@ const App = () => {
               path="pricing-config"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
                 >
                   <PricingConfiguration />
                 </RoleProtectedRoute>
@@ -397,7 +403,7 @@ const App = () => {
               path="price-calculation"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
                 >
                   <PriceCalculation />
                 </RoleProtectedRoute>
@@ -407,7 +413,7 @@ const App = () => {
               path="price-utilities"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
                 >
                   <PricingUtilities />
                 </RoleProtectedRoute>
@@ -417,7 +423,7 @@ const App = () => {
               path="exchange-rates"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
                 >
                   <ExchangeRates />
                 </RoleProtectedRoute>
@@ -429,7 +435,7 @@ const App = () => {
               path="blog"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR']}
+                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR', 'MANAGER']}
                 >
                   <BlogPosts />
                 </RoleProtectedRoute>
@@ -439,7 +445,7 @@ const App = () => {
               path="blog/categories"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR']}
+                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR', 'MANAGER']}
                 >
                   <BlogCategories />
                 </RoleProtectedRoute>
@@ -449,7 +455,7 @@ const App = () => {
               path="blog/tags"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR']}
+                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR', 'MANAGER']}
                 >
                   <BlogTags />
                 </RoleProtectedRoute>
@@ -511,7 +517,9 @@ const App = () => {
             <Route
               path="users"
               element={
-                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'HR']}>
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'HR', 'MANAGER']}
+                >
                   <UserManagement />
                 </RoleProtectedRoute>
               }
