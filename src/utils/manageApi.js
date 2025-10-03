@@ -117,7 +117,7 @@ export const colorAPI = {
 // Product Management API
 export const productAPI = {
   getProducts: async (params = {}) => {
-    return apiCall('/product/get', {
+    return apiCall('/product/get-admin', {
       method: 'POST',
       body: JSON.stringify(params),
     });
