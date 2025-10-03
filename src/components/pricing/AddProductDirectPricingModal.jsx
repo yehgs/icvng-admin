@@ -33,7 +33,6 @@ const AddProductDirectPricingModal = ({
     totalCount: 0,
   });
 
-  // Fetch products when filters or pagination changes
   useEffect(() => {
     if (isOpen) {
       const timer = setTimeout(() => {
@@ -46,11 +45,6 @@ const AddProductDirectPricingModal = ({
   const fetchProducts = async () => {
     setLoading(true);
 
-    console.log('=== FETCHING PRODUCTS ===');
-    console.log('Search:', searchTerm);
-    console.log('Filters:', filters);
-    console.log('Page:', pagination.page);
-
     try {
       const params = {
         search: searchTerm || undefined,
@@ -61,11 +55,7 @@ const AddProductDirectPricingModal = ({
         limit: pagination.limit,
       };
 
-      console.log('API params:', params);
-
       const response = await directPricingAPI.getAvailableProducts(params);
-
-      console.log('API response:', response);
 
       if (response.success) {
         setProducts(response.data || []);
@@ -74,7 +64,6 @@ const AddProductDirectPricingModal = ({
           totalPages: response.pagination.totalPages,
           totalCount: response.pagination.totalCount,
         }));
-        console.log('Products loaded:', response.data?.length || 0);
       } else {
         toast.error('Failed to fetch products');
         setProducts([]);
@@ -90,7 +79,7 @@ const AddProductDirectPricingModal = ({
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to page 1
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const clearFilters = () => {
@@ -257,7 +246,6 @@ const AddProductDirectPricingModal = ({
                       </p>
                       <div className="flex items-center space-x-4 mt-1 text-xs text-gray-400">
                         <span>Base: {formatCurrency(product.price)}</span>
-                        <span>Sale: {formatCurrency(product.salePrice)}</span>
                         <span>Stock: {product.stock || 0}</span>
                       </div>
                     </div>
@@ -322,8 +310,9 @@ const AddProductDirectPricingModal = ({
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Select a product to set up independent direct pricing. This will
-            override any config-based pricing for the selected product.
+            Select a product to set up independent direct pricing for BTC and
+            delivery times. This will override any config-based pricing for the
+            selected product.
           </p>
         </div>
       </div>

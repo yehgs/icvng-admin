@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DollarSign,
   Search,
@@ -52,30 +52,18 @@ const DirectPricingManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [showFilters, setShowFilters] = useState(false);
-
-  // Add Product Modal States
   const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [availableProducts, setAvailableProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [productFilters, setProductFilters] = useState({
-    category: '',
-    brand: '',
-    productType: '',
-  });
 
-  // Filter options
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
 
   const currentUser = getCurrentUser();
 
+  // Updated price types - removed salePrice and btbPrice
   const priceTypes = [
-    { key: 'salePrice', label: 'Sale Price', color: 'green' },
-    { key: 'btbPrice', label: 'BTB Price', color: 'blue' },
     { key: 'btcPrice', label: 'BTC Price', color: 'purple' },
-    { key: 'price3weeksDelivery', label: '3 Weeks', color: 'orange' },
-    { key: 'price5weeksDelivery', label: '5 Weeks', color: 'red' },
+    { key: 'price3weeksDelivery', label: '3 Weeks Delivery', color: 'orange' },
+    { key: 'price5weeksDelivery', label: '5 Weeks Delivery', color: 'red' },
   ];
 
   useEffect(() => {
@@ -85,22 +73,6 @@ const DirectPricingManagement = () => {
   useEffect(() => {
     fetchDirectPricingList();
   }, [filters, pagination.page]);
-
-  // Fetch products when modal filters change
-  useEffect(() => {
-    if (showAddProductModal) {
-      const timer = setTimeout(() => {
-        fetchAvailableProducts();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [
-    showAddProductModal,
-    productFilters.category,
-    productFilters.brand,
-    productFilters.productType,
-    productSearchTerm,
-  ]);
 
   const initializeData = async () => {
     await Promise.all([fetchCategories(), fetchBrands(), fetchStats()]);
@@ -168,46 +140,6 @@ const DirectPricingManagement = () => {
     }
   };
 
-  const fetchAvailableProducts = async () => {
-    setLoadingProducts(true);
-
-    console.log('=== FETCHING AVAILABLE PRODUCTS ===');
-    console.log('Search term:', productSearchTerm);
-    console.log('Filters:', productFilters);
-
-    try {
-      const params = {
-        search: productSearchTerm || undefined,
-        category: productFilters.category || undefined,
-        brand: productFilters.brand || undefined,
-        productType: productFilters.productType || undefined,
-        excludeDirectPricing: true,
-        limit: 50,
-        page: 1,
-      };
-
-      console.log('API params:', params);
-
-      const response = await productAPI.getProducts(params);
-
-      console.log('API response:', response);
-
-      if (response.success) {
-        setAvailableProducts(response.data || []);
-        console.log('Products loaded:', response.data?.length || 0);
-      } else {
-        toast.error('Failed to fetch products');
-        setAvailableProducts([]);
-      }
-    } catch (error) {
-      console.error('Error fetching available products:', error);
-      toast.error('Failed to fetch products');
-      setAvailableProducts([]);
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
-
   const handleAddProduct = (product) => {
     setSelectedProduct({
       productDetails: product,
@@ -218,26 +150,6 @@ const DirectPricingManagement = () => {
     setErrors({});
     setShowAddProductModal(false);
     setShowEditModal(true);
-  };
-
-  const resetProductModal = () => {
-    setShowAddProductModal(false);
-    setAvailableProducts([]);
-    setProductSearchTerm('');
-    setProductFilters({
-      category: '',
-      brand: '',
-      productType: '',
-    });
-  };
-
-  const clearModalFilters = () => {
-    setProductSearchTerm('');
-    setProductFilters({
-      category: '',
-      brand: '',
-      productType: '',
-    });
   };
 
   const formatCurrency = (amount) => {
@@ -352,17 +264,14 @@ const DirectPricingManagement = () => {
             Direct Pricing Management
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Independent pricing system - Set individual prices directly without
-            calculations
+            Set BTC and delivery prices directly without calculations
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {canEdit && (
             <button
-              onClick={() => {
-                setShowAddProductModal(true);
-              }}
+              onClick={() => setShowAddProductModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
@@ -414,15 +323,15 @@ const DirectPricingManagement = () => {
 
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+                <DollarSign className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Average Sale Price
+                  Average BTC Price
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatCurrency(stats.stats.averageSalePrice)}
+                  {formatCurrency(stats.stats.averageBtcPrice)}
                 </p>
               </div>
             </div>
@@ -430,8 +339,8 @@ const DirectPricingManagement = () => {
 
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -721,7 +630,7 @@ const DirectPricingManagement = () => {
       {/* Edit Pricing Modal */}
       {showEditModal && selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -757,7 +666,7 @@ const DirectPricingManagement = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 {priceTypes.map((priceType) => (
                   <div
                     key={priceType.key}
