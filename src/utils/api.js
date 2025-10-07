@@ -3,8 +3,13 @@
 const API_BASE_URL =
   import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
 
+// admin/src/utils/api.js - FIXED cleanShippingMethodData function
+
 const cleanShippingMethodData = (methodData) => {
   const cleaned = { ...methodData };
+
+  console.log('=== CLEANING SHIPPING METHOD DATA ===');
+  console.log('Method type:', cleaned.type);
 
   // Remove empty strings and convert to appropriate types
   Object.keys(cleaned).forEach((key) => {
@@ -13,13 +18,14 @@ const cleanShippingMethodData = (methodData) => {
     }
   });
 
-  // Ensure code is uppercase
+  // Ensure code is uppercase (will be auto-generated on backend, but just in case)
   if (cleaned.code) {
     cleaned.code = cleaned.code.toUpperCase();
   }
 
-  // Clean pickup configuration
+  // ===== PICKUP METHOD CLEANING =====
   if (cleaned.type === 'pickup' && cleaned.pickup) {
+    console.log('Cleaning PICKUP method');
     const pickup = cleaned.pickup;
 
     // FIXED: Ensure proper assignment defaults
@@ -35,19 +41,23 @@ const cleanShippingMethodData = (methodData) => {
       pickup.products = [];
     }
 
-    // Clean zone locations
-    if (pickup.zoneLocations) {
+    // FIXED: Clean zone locations with MANDATORY LGA
+    if (pickup.zoneLocations && Array.isArray(pickup.zoneLocations)) {
+      console.log('Cleaning zone locations...');
+
       pickup.zoneLocations = pickup.zoneLocations
         .map((zoneLocation) => {
           if (!zoneLocation.zone || zoneLocation.zone.trim() === '') {
-            return null; // Mark for removal
+            console.log('Filtering out zone location: no zone');
+            return null;
           }
 
           // Clean locations within this zone
-          if (zoneLocation.locations) {
+          if (zoneLocation.locations && Array.isArray(zoneLocation.locations)) {
             zoneLocation.locations = zoneLocation.locations
               .filter((location) => {
-                return (
+                // CRITICAL: All fields including LGA must be present
+                const isValid =
                   location.name &&
                   location.name.trim() !== '' &&
                   location.address &&
@@ -55,16 +65,26 @@ const cleanShippingMethodData = (methodData) => {
                   location.city &&
                   location.city.trim() !== '' &&
                   location.state &&
-                  location.state.trim() !== ''
-                );
+                  location.state.trim() !== '' &&
+                  location.lga && // MUST HAVE LGA
+                  location.lga.trim() !== '';
+
+                if (!isValid) {
+                  console.log('Filtering out invalid location:', {
+                    name: location.name || 'missing',
+                    hasLga: !!location.lga,
+                    hasState: !!location.state,
+                  });
+                }
+
+                return isValid;
               })
               .map((location) => ({
-                ...location,
                 name: location.name.trim(),
                 address: location.address.trim(),
                 city: location.city.trim(),
                 state: location.state.trim(),
-                lga: location.lga ? location.lga.trim() : location.city.trim(),
+                lga: location.lga.trim(), // REQUIRED
                 postalCode: location.postalCode
                   ? location.postalCode.trim()
                   : '',
@@ -75,18 +95,29 @@ const cleanShippingMethodData = (methodData) => {
           }
 
           // Only keep zone locations that have valid locations
-          return zoneLocation.locations && zoneLocation.locations.length > 0
-            ? zoneLocation
-            : null;
+          if (!zoneLocation.locations || zoneLocation.locations.length === 0) {
+            console.log('Filtering out zone location: no valid locations');
+            return null;
+          }
+
+          return zoneLocation;
         })
         .filter(Boolean); // Remove null entries
+
+      console.log(
+        'Zone locations after cleaning:',
+        pickup.zoneLocations.length
+      );
     }
 
-    // Clean default locations
-    if (pickup.defaultLocations) {
+    // FIXED: Clean default locations with MANDATORY LGA
+    if (pickup.defaultLocations && Array.isArray(pickup.defaultLocations)) {
+      console.log('Cleaning default locations...');
+
       pickup.defaultLocations = pickup.defaultLocations
         .filter((location) => {
-          return (
+          // CRITICAL: All fields including LGA must be present
+          const isValid =
             location.name &&
             location.name.trim() !== '' &&
             location.address &&
@@ -94,36 +125,61 @@ const cleanShippingMethodData = (methodData) => {
             location.city &&
             location.city.trim() !== '' &&
             location.state &&
-            location.state.trim() !== ''
-          );
+            location.state.trim() !== '' &&
+            location.lga && // MUST HAVE LGA
+            location.lga.trim() !== '';
+
+          if (!isValid) {
+            console.log('Filtering out invalid default location:', {
+              name: location.name || 'missing',
+              hasLga: !!location.lga,
+              hasState: !!location.state,
+            });
+          }
+
+          return isValid;
         })
         .map((location) => ({
-          ...location,
           name: location.name.trim(),
           address: location.address.trim(),
           city: location.city.trim(),
           state: location.state.trim(),
-          lga: location.lga ? location.lga.trim() : location.city.trim(),
+          lga: location.lga.trim(), // REQUIRED
           postalCode: location.postalCode ? location.postalCode.trim() : '',
           phone: location.phone ? location.phone.trim() : '',
           isActive: location.isActive !== false,
           operatingHours: location.operatingHours || {},
         }));
+
+      console.log(
+        'Default locations after cleaning:',
+        pickup.defaultLocations.length
+      );
     }
 
-    // Ensure we have at least one location
+    // CRITICAL: Validate that at least one location exists
     const hasZoneLocations =
       pickup.zoneLocations && pickup.zoneLocations.length > 0;
     const hasDefaultLocations =
       pickup.defaultLocations && pickup.defaultLocations.length > 0;
 
+    console.log('Pickup validation:', {
+      hasZoneLocations,
+      hasDefaultLocations,
+      zoneCount: pickup.zoneLocations?.length || 0,
+      defaultCount: pickup.defaultLocations?.length || 0,
+    });
+
     if (!hasZoneLocations && !hasDefaultLocations) {
-      throw new Error('At least one valid pickup location is required');
+      throw new Error(
+        'At least one valid pickup location is required with name, address, city, state, and LGA.'
+      );
     }
   }
 
-  // Clean flat rate configuration
+  // ===== FLAT RATE METHOD CLEANING =====
   if (cleaned.type === 'flat_rate' && cleaned.flatRate) {
+    console.log('Cleaning FLAT RATE method');
     const flatRate = cleaned.flatRate;
 
     // FIXED: Ensure proper assignment defaults
@@ -140,7 +196,7 @@ const cleanShippingMethodData = (methodData) => {
     }
 
     // Clean zone rates
-    if (flatRate.zoneRates) {
+    if (flatRate.zoneRates && Array.isArray(flatRate.zoneRates)) {
       flatRate.zoneRates = flatRate.zoneRates
         .filter((zoneRate) => zoneRate.zone && zoneRate.zone.trim() !== '')
         .map((zoneRate) => ({
@@ -152,6 +208,7 @@ const cleanShippingMethodData = (methodData) => {
               Number(zoneRate.freeShipping?.minimumOrderAmount) || 0,
           },
         }));
+      console.log('Flat rate zone rates:', flatRate.zoneRates.length);
     }
 
     // Ensure numeric values
@@ -165,8 +222,9 @@ const cleanShippingMethodData = (methodData) => {
     }
   }
 
-  // Clean table shipping configuration
+  // ===== TABLE SHIPPING METHOD CLEANING =====
   if (cleaned.type === 'table_shipping' && cleaned.tableShipping) {
+    console.log('Cleaning TABLE SHIPPING method');
     const tableShipping = cleaned.tableShipping;
 
     // FIXED: Ensure proper assignment defaults
@@ -183,7 +241,7 @@ const cleanShippingMethodData = (methodData) => {
     }
 
     // Clean zone rates
-    if (tableShipping.zoneRates) {
+    if (tableShipping.zoneRates && Array.isArray(tableShipping.zoneRates)) {
       tableShipping.zoneRates = tableShipping.zoneRates
         .filter((zoneRate) => zoneRate.zone && zoneRate.zone.trim() !== '')
         .map((zoneRate) => ({
@@ -194,6 +252,13 @@ const cleanShippingMethodData = (methodData) => {
             shippingCost: Number(range.shippingCost) || 0,
           })),
         }));
+      console.log('Table shipping zone rates:', tableShipping.zoneRates.length);
+    }
+
+    if (!tableShipping.zoneRates || tableShipping.zoneRates.length === 0) {
+      throw new Error(
+        'At least one zone rate is required for table shipping method'
+      );
     }
   }
 
@@ -211,6 +276,14 @@ const cleanShippingMethodData = (methodData) => {
   // Ensure required numeric fields
   cleaned.sortOrder = Number(cleaned.sortOrder) || 0;
   cleaned.isActive = Boolean(cleaned.isActive);
+
+  console.log('=== CLEANING COMPLETE ===');
+  console.log('Final structure:', {
+    type: cleaned.type,
+    hasPickup: !!cleaned.pickup,
+    hasFlatRate: !!cleaned.flatRate,
+    hasTableShipping: !!cleaned.tableShipping,
+  });
 
   return cleaned;
 };
@@ -1636,7 +1709,8 @@ export const coffeeRoastAreaAPI = {
 };
 
 export const logisticsAPI = {
-  // Shipping Zones
+  // ===== SHIPPING ZONES =====
+
   getShippingZones: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -1646,190 +1720,131 @@ export const logisticsAPI = {
     });
 
     const queryString = queryParams.toString();
-    return apiCall(`/shipping/zones${queryString ? `?${queryString}` : ''}`);
+    const response = await apiCall(
+      `/shipping/zones${queryString ? `?${queryString}` : ''}`
+    );
+
+    console.log('Get zones response:', response);
+    return response;
   },
 
   createShippingZone: async (zoneData) => {
     try {
-      console.log('API: Creating zone with data:', zoneData);
+      console.log('=== API: Creating shipping zone ===');
+      console.log('Zone data to send:', JSON.stringify(zoneData, null, 2));
 
-      // Clean zone data to match your model structure
+      // Validate required fields
+      if (!zoneData.name || !zoneData.name.trim()) {
+        throw new Error('Zone name is required');
+      }
+
+      if (
+        !zoneData.states ||
+        !Array.isArray(zoneData.states) ||
+        zoneData.states.length === 0
+      ) {
+        throw new Error('At least one state is required');
+      }
+
+      // Clean the data
       const cleanedData = {
-        name: zoneData.name?.trim(),
+        name: zoneData.name.trim(),
         description: zoneData.description?.trim() || '',
-        isActive: Boolean(zoneData.isActive),
-        sortOrder: Number(zoneData.sortOrder) || 0,
-        states: (zoneData.states || []).map((state) => {
-          console.log('API: Cleaning state data:', state);
-
-          // Ensure covered_lgas is a string array for your model
-          let cleanedCoveredLgas = [];
-          if (state.coverage_type === 'specific' && state.covered_lgas) {
-            cleanedCoveredLgas = state.covered_lgas
-              .map((lga) => {
-                if (typeof lga === 'string') {
-                  return lga.trim();
-                } else if (lga && typeof lga === 'object' && lga.name) {
-                  return lga.name.trim();
-                }
-                return null;
-              })
-              .filter(Boolean);
-          }
-
-          // Ensure available_lgas is a string array
-          let cleanedAvailableLgas = [];
-          if (state.available_lgas) {
-            cleanedAvailableLgas = state.available_lgas
-              .map((lga) => {
-                if (typeof lga === 'string') {
-                  return lga.trim();
-                } else if (lga && typeof lga === 'object' && lga.name) {
-                  return lga.name.trim();
-                }
-                return null;
-              })
-              .filter(Boolean);
-          }
-
-          const cleanedState = {
-            name: state.name?.trim(),
-            code:
-              state.code?.trim().toUpperCase() ||
-              state.name?.trim().substring(0, 2).toUpperCase(),
-            coverage_type: state.coverage_type || 'all',
-            available_lgas: cleanedAvailableLgas,
-            covered_lgas: cleanedCoveredLgas,
-          };
-
-          console.log('API: Cleaned state:', {
-            name: cleanedState.name,
-            coverage_type: cleanedState.coverage_type,
-            available_lgas_count: cleanedState.available_lgas.length,
-            covered_lgas_count: cleanedState.covered_lgas.length,
-            covered_lgas: cleanedState.covered_lgas,
-          });
-
-          return cleanedState;
-        }),
+        states: zoneData.states.map((state) => ({
+          name: state.name,
+          code: state.code,
+          coverage_type: state.coverage_type || 'all',
+          available_lgas: state.available_lgas || [],
+          covered_lgas:
+            state.coverage_type === 'specific' ? state.covered_lgas || [] : [],
+        })),
+        zone_type: zoneData.zone_type || 'mixed',
+        priority: zoneData.priority || 'medium',
+        isActive: zoneData.isActive !== undefined ? zoneData.isActive : true,
+        sortOrder: zoneData.sortOrder || 0,
+        operational_notes: zoneData.operational_notes?.trim() || '',
       };
 
-      console.log('API: Sending cleaned zone data:', {
-        ...cleanedData,
-        states: cleanedData.states.map((s) => ({
-          name: s.name,
-          coverage_type: s.coverage_type,
-          covered_lgas_count: s.covered_lgas.length,
-          covered_lgas: s.covered_lgas,
-        })),
-      });
+      console.log('Cleaned zone data:', JSON.stringify(cleanedData, null, 2));
 
-      return apiCall('/shipping/zones', {
+      const response = await apiCall('/shipping/zones', {
         method: 'POST',
         body: cleanedData,
       });
+
+      console.log('Create zone response:', response);
+      return response;
     } catch (error) {
-      console.error('Create shipping zone API error:', error);
+      console.error('❌ Create shipping zone API error:', error);
       throw error;
     }
   },
 
   updateShippingZone: async (zoneId, zoneData) => {
     try {
-      console.log('API: Updating zone with data:', zoneData);
+      console.log('=== API: Updating shipping zone ===');
+      console.log('Zone ID:', zoneId);
+      console.log('Zone data to send:', JSON.stringify(zoneData, null, 2));
 
-      // Clean zone data for updates to match your model structure
+      if (!zoneId) {
+        throw new Error('Zone ID is required');
+      }
+
+      // Clean the data
       const cleanedData = {
         name: zoneData.name?.trim(),
         description: zoneData.description?.trim() || '',
-        isActive: Boolean(zoneData.isActive),
-        sortOrder: Number(zoneData.sortOrder) || 0,
+        states: zoneData.states?.map((state) => ({
+          name: state.name,
+          code: state.code,
+          coverage_type: state.coverage_type || 'all',
+          available_lgas: state.available_lgas || [],
+          covered_lgas:
+            state.coverage_type === 'specific' ? state.covered_lgas || [] : [],
+        })),
+        zone_type: zoneData.zone_type,
+        priority: zoneData.priority,
+        isActive: zoneData.isActive,
+        sortOrder: zoneData.sortOrder,
+        operational_notes: zoneData.operational_notes?.trim() || '',
       };
 
-      // Only process states if they are provided
-      if (zoneData.states && Array.isArray(zoneData.states)) {
-        cleanedData.states = zoneData.states.map((state) => {
-          console.log('API: Cleaning state data for update:', state);
+      console.log('Cleaned zone data:', JSON.stringify(cleanedData, null, 2));
 
-          // Ensure covered_lgas is a string array for your model
-          let cleanedCoveredLgas = [];
-          if (state.coverage_type === 'specific' && state.covered_lgas) {
-            cleanedCoveredLgas = state.covered_lgas
-              .map((lga) => {
-                if (typeof lga === 'string') {
-                  return lga.trim();
-                } else if (lga && typeof lga === 'object' && lga.name) {
-                  return lga.name.trim();
-                }
-                return null;
-              })
-              .filter(Boolean);
-          }
-
-          // Ensure available_lgas is a string array
-          let cleanedAvailableLgas = [];
-          if (state.available_lgas) {
-            cleanedAvailableLgas = state.available_lgas
-              .map((lga) => {
-                if (typeof lga === 'string') {
-                  return lga.trim();
-                } else if (lga && typeof lga === 'object' && lga.name) {
-                  return lga.name.trim();
-                }
-                return null;
-              })
-              .filter(Boolean);
-          }
-
-          const cleanedState = {
-            name: state.name?.trim(),
-            code:
-              state.code?.trim().toUpperCase() ||
-              state.name?.trim().substring(0, 2).toUpperCase(),
-            coverage_type: state.coverage_type || 'all',
-            available_lgas: cleanedAvailableLgas,
-            covered_lgas: cleanedCoveredLgas,
-          };
-
-          console.log('API: Cleaned state for update:', {
-            name: cleanedState.name,
-            coverage_type: cleanedState.coverage_type,
-            available_lgas_count: cleanedState.available_lgas.length,
-            covered_lgas_count: cleanedState.covered_lgas.length,
-            covered_lgas: cleanedState.covered_lgas,
-          });
-
-          return cleanedState;
-        });
-      }
-
-      console.log('API: Sending cleaned zone update data:', {
-        ...cleanedData,
-        states: cleanedData.states?.map((s) => ({
-          name: s.name,
-          coverage_type: s.coverage_type,
-          covered_lgas_count: s.covered_lgas?.length || 0,
-          covered_lgas: s.covered_lgas,
-        })),
-      });
-
-      return apiCall(`/shipping/zones/${zoneId}`, {
+      const response = await apiCall(`/shipping/zones/${zoneId}`, {
         method: 'PUT',
         body: cleanedData,
       });
+
+      console.log('Update zone response:', response);
+      return response;
     } catch (error) {
-      console.error('Update shipping zone API error:', error);
+      console.error('❌ Update shipping zone API error:', error);
       throw error;
     }
   },
 
-  deleteShippingZone: async (zoneId) => {
-    return apiCall(`/shipping/zones/${zoneId}`, {
+  getZoneDependencies: async (zoneId) => {
+    if (!zoneId) {
+      throw new Error('Zone ID is required');
+    }
+
+    return apiCall(`/shipping/zones/${zoneId}/dependencies`);
+  },
+
+  deleteShippingZone: async (zoneId, cascadeDelete = false) => {
+    if (!zoneId) {
+      throw new Error('Zone ID is required');
+    }
+
+    const queryParam = cascadeDelete ? '?cascadeDelete=true' : '';
+    return apiCall(`/shipping/zones/${zoneId}${queryParam}`, {
       method: 'DELETE',
     });
   },
 
-  // Shipping Methods
+  // ===== SHIPPING METHODS =====
+
   getShippingMethods: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -1839,56 +1854,75 @@ export const logisticsAPI = {
     });
 
     const queryString = queryParams.toString();
-    return apiCall(`/shipping/methods${queryString ? `?${queryString}` : ''}`);
+    const response = await apiCall(
+      `/shipping/methods${queryString ? `?${queryString}` : ''}`
+    );
+
+    console.log('Get methods response:', response);
+    return response;
   },
 
   createShippingMethod: async (methodData) => {
     try {
-      // FIXED: Enhanced data cleaning
+      console.log('=== API: Creating shipping method ===');
+
+      // Use the existing cleanShippingMethodData function from your api.js
       const cleanedData = cleanShippingMethodData(methodData);
 
-      console.log(
-        'Sending cleaned shipping method data:',
-        JSON.stringify(cleanedData, null, 2)
-      );
+      console.log('Sending cleaned method data to backend');
 
-      return apiCall('/shipping/methods', {
+      const response = await apiCall('/shipping/methods', {
         method: 'POST',
         body: cleanedData,
       });
+
+      console.log('Create method response:', response);
+      return response;
     } catch (error) {
-      console.error('Create shipping method API error:', error);
+      console.error('❌ Create shipping method API error:', error);
       throw error;
     }
   },
 
   updateShippingMethod: async (methodId, methodData) => {
     try {
-      // FIXED: Enhanced data cleaning
+      console.log('=== API: Updating shipping method ===');
+      console.log('Method ID:', methodId);
+
+      if (!methodId) {
+        throw new Error('Method ID is required');
+      }
+
+      // Use the existing cleanShippingMethodData function
       const cleanedData = cleanShippingMethodData(methodData);
 
-      console.log(
-        'Sending cleaned shipping method update data:',
-        JSON.stringify(cleanedData, null, 2)
-      );
+      console.log('Sending cleaned method data to backend');
 
-      return apiCall(`/shipping/methods/${methodId}`, {
+      const response = await apiCall(`/shipping/methods/${methodId}`, {
         method: 'PUT',
         body: cleanedData,
       });
+
+      console.log('Update method response:', response);
+      return response;
     } catch (error) {
-      console.error('Update shipping method API error:', error);
+      console.error('❌ Update shipping method API error:', error);
       throw error;
     }
   },
 
   deleteShippingMethod: async (methodId) => {
+    if (!methodId) {
+      throw new Error('Method ID is required');
+    }
+
     return apiCall(`/shipping/methods/${methodId}`, {
       method: 'DELETE',
     });
   },
 
-  //Categories and Products for Assignment
+  // ===== CATEGORIES AND PRODUCTS FOR ASSIGNMENT =====
+
   getCategoriesForAssignment: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -1919,7 +1953,8 @@ export const logisticsAPI = {
     );
   },
 
-  // Calculate shipping costs
+  // ===== CALCULATE SHIPPING =====
+
   calculateShippingCost: async (orderData) => {
     return apiCall('/shipping/calculate-checkout', {
       method: 'POST',
@@ -1927,7 +1962,8 @@ export const logisticsAPI = {
     });
   },
 
-  // Tracking Management
+  // ===== TRACKING =====
+
   createShipment: async (shipmentData) => {
     return apiCall('/shipping/shipments', {
       method: 'POST',
@@ -1936,6 +1972,10 @@ export const logisticsAPI = {
   },
 
   updateTracking: async (trackingId, updateData) => {
+    if (!trackingId) {
+      throw new Error('Tracking ID is required');
+    }
+
     return apiCall(`/shipping/trackings/${trackingId}`, {
       method: 'PUT',
       body: updateData,
@@ -1957,6 +1997,10 @@ export const logisticsAPI = {
   },
 
   getTrackingByNumber: async (trackingNumber) => {
+    if (!trackingNumber) {
+      throw new Error('Tracking number is required');
+    }
+
     return apiCall(`/shipping/track/${trackingNumber}`);
   },
 
@@ -1964,12 +2008,14 @@ export const logisticsAPI = {
     return apiCall('/shipping/trackings/stats');
   },
 
-  // Dashboard
+  // ===== DASHBOARD =====
+
   getShippingDashboardStats: async () => {
     return apiCall('/shipping/dashboard/stats');
   },
 
-  // Orders ready for shipping
+  // ===== ORDERS =====
+
   getOrdersReadyForShipping: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {

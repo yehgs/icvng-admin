@@ -1,5 +1,7 @@
+// admin/src/components/logistics/PickupLocationForm.jsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas.js';
+import { AlertCircle } from 'lucide-react';
 
 const PickupLocationForm = ({
   location,
@@ -11,6 +13,7 @@ const PickupLocationForm = ({
 }) => {
   const [selectedState, setSelectedState] = useState(location?.state || '');
   const [availableLgas, setAvailableLgas] = useState([]);
+  const [errors, setErrors] = useState({});
 
   // Update available LGAs when state changes
   useEffect(() => {
@@ -35,22 +38,56 @@ const PickupLocationForm = ({
     }
   }, [location?.state]);
 
+  // FIXED: Validate required fields
+  const validateLocation = (updatedLocation) => {
+    const newErrors = {};
+
+    if (!updatedLocation.name || !updatedLocation.name.trim()) {
+      newErrors.name = 'Location name is required';
+    }
+    if (!updatedLocation.address || !updatedLocation.address.trim()) {
+      newErrors.address = 'Address is required';
+    }
+    if (!updatedLocation.city || !updatedLocation.city.trim()) {
+      newErrors.city = 'City is required';
+    }
+    if (!updatedLocation.state || !updatedLocation.state.trim()) {
+      newErrors.state = 'State is required';
+    }
+    if (!updatedLocation.lga || !updatedLocation.lga.trim()) {
+      newErrors.lga = 'LGA is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const updateLocationField = (field, value) => {
     const updatedLocation = { ...location, [field]: value };
 
-    // If updating state, also update city to match if not already set
+    // If updating state, reset LGA
     if (field === 'state') {
       setSelectedState(value);
-      // Reset LGA when state changes
-      if (location.lga && updatedLocation.lga) {
-        const stateData = nigeriaStatesLgas.find(
-          (s) => s.state.toLowerCase() === value.toLowerCase()
-        );
-        if (stateData && !stateData.lga.includes(updatedLocation.lga)) {
-          updatedLocation.lga = '';
-        }
+      // Reset LGA when state changes since available LGAs change
+      const stateData = nigeriaStatesLgas.find(
+        (s) => s.state.toLowerCase() === value.toLowerCase()
+      );
+      if (stateData && location.lga && !stateData.lga.includes(location.lga)) {
+        updatedLocation.lga = '';
       }
     }
+
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+
+    // Validate before updating
+    validateLocation(updatedLocation);
 
     onUpdate(index, updatedLocation, isZoneLocation, zoneIndex);
   };
@@ -104,10 +141,20 @@ const PickupLocationForm = ({
             type="text"
             value={location.name || ''}
             onChange={(e) => updateLocationField('name', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+              errors.name
+                ? 'border-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
             placeholder="e.g., Main Store, Downtown Branch"
             required
           />
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.name}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -133,10 +180,20 @@ const PickupLocationForm = ({
             type="text"
             value={location.address || ''}
             onChange={(e) => updateLocationField('address', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+              errors.address
+                ? 'border-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
             placeholder="Street address"
             required
           />
+          {errors.address && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.address}
+            </p>
+          )}
         </div>
       </div>
 
@@ -149,7 +206,11 @@ const PickupLocationForm = ({
           <select
             value={selectedState}
             onChange={(e) => updateLocationField('state', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+              errors.state
+                ? 'border-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
             required
           >
             <option value="">Select State</option>
@@ -159,6 +220,12 @@ const PickupLocationForm = ({
               </option>
             ))}
           </select>
+          {errors.state && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.state}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -167,7 +234,11 @@ const PickupLocationForm = ({
           <select
             value={location.lga || ''}
             onChange={(e) => updateLocationField('lga', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+              errors.lga
+                ? 'border-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
             disabled={!selectedState || availableLgas.length === 0}
             required
           >
@@ -178,6 +249,17 @@ const PickupLocationForm = ({
               </option>
             ))}
           </select>
+          {errors.lga && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.lga}
+            </p>
+          )}
+          {!selectedState && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Please select a state first
+            </p>
+          )}
         </div>
       </div>
 
@@ -191,10 +273,20 @@ const PickupLocationForm = ({
             type="text"
             value={location.city || ''}
             onChange={(e) => updateLocationField('city', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+              errors.city
+                ? 'border-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
             placeholder="City or town name"
             required
           />
+          {errors.city && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.city}
+            </p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             Can be same as LGA or more specific location within the LGA
           </p>
@@ -232,7 +324,7 @@ const PickupLocationForm = ({
       {/* Operating Hours */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Operating Hours
+          Operating Hours (Optional)
         </label>
         <div className="space-y-2">
           {days.map((day) => (
@@ -273,8 +365,8 @@ const PickupLocationForm = ({
       </div>
 
       {/* Location Summary */}
-      {location.name && location.state && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+      {location.name && location.state && location.lga && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
           <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">
             Location Summary
           </h4>
@@ -293,6 +385,24 @@ const PickupLocationForm = ({
               </>
             )}
           </p>
+        </div>
+      )}
+
+      {/* Validation Warning */}
+      {Object.keys(errors).length > 0 && (
+        <div className="mt-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-medium text-red-900 dark:text-red-300 mb-1">
+                Required Fields Missing
+              </h4>
+              <p className="text-xs text-red-800 dark:text-red-200">
+                Please fill in all required fields: Name, Address, City, State,
+                and LGA
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

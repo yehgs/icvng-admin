@@ -1,43 +1,25 @@
+// admin/src/components/logistics/LogisticsZoneModal.jsx - FIXED
 import React, { useState, useEffect } from 'react';
-import {
-  X,
-  MapPin,
-  Plus,
-  Trash2,
-  AlertCircle,
-  Loader2,
-  Truck,
-  Check,
-  ChevronDown,
-  Search,
-} from 'lucide-react';
+import { X, MapPin, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
 import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas.js';
 
 const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
     description: '',
     states: [],
     isActive: true,
     sortOrder: 0,
     zone_type: 'mixed',
     priority: 'medium',
-    coverage_area_km2: 0,
-    population_estimate: 0,
     operational_notes: '',
   });
 
   const [errors, setErrors] = useState({});
-  const [nigerianStates, setNigerianStates] = useState([]);
   const [selectedStates, setSelectedStates] = useState([]);
-  const [loadingStates, setLoadingStates] = useState(false);
-
-  // State for LGA coverage management
   const [stateLgaCoverage, setStateLgaCoverage] = useState({});
   const [expandedStates, setExpandedStates] = useState({});
 
-  // Geopolitical zones mapping
   const geopoliticalZones = {
     'North Central': [
       'Benue',
@@ -71,83 +53,53 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
   };
 
   useEffect(() => {
-    if (isOpen) {
-      loadNigerianStates();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
     if (zone) {
+      // Edit mode
       setFormData({
         name: zone.name || '',
-        code: zone.code || '',
         description: zone.description || '',
         states: zone.states || [],
         isActive: zone.isActive !== undefined ? zone.isActive : true,
         sortOrder: zone.sortOrder || 0,
         zone_type: zone.zone_type || 'mixed',
         priority: zone.priority || 'medium',
-        coverage_area_km2: zone.coverage_area_km2 || 0,
-        population_estimate: zone.population_estimate || 0,
         operational_notes: zone.operational_notes || '',
       });
 
-      // Initialize state LGA coverage
+      // Initialize state selection and LGA coverage
+      const stateNames = zone.states?.map((s) => s.name) || [];
+      setSelectedStates(stateNames);
+
       const initialCoverage = {};
       zone.states?.forEach((state) => {
         initialCoverage[state.name] = {
           coverage_type: state.coverage_type || 'all',
-          covered_lgas: state.covered_lgas?.map((lga) => lga.name) || [],
+          covered_lgas: state.covered_lgas || [],
         };
       });
       setStateLgaCoverage(initialCoverage);
-      setSelectedStates(zone.states?.map((s) => s.name) || []);
     } else {
-      setFormData({
-        name: '',
-        code: '',
-        description: '',
-        states: [],
-        isActive: true,
-        sortOrder: 0,
-        zone_type: 'mixed',
-        priority: 'medium',
-        coverage_area_km2: 0,
-        population_estimate: 0,
-        operational_notes: '',
-      });
-      setSelectedStates([]);
-      setStateLgaCoverage({});
-      setExpandedStates({});
+      // Create mode
+      resetForm();
     }
     setErrors({});
   }, [zone, isOpen]);
 
-  const loadNigerianStates = async () => {
-    try {
-      setLoadingStates(true);
-
-      // Get all Nigerian states using local data
-      const statesData = nigeriaStatesLgas.map((stateInfo) => ({
-        name: stateInfo.state,
-        capital: stateInfo.capital,
-        code: stateInfo.state.substring(0, 2).toUpperCase(),
-        geopolitical_zone: stateInfo.region,
-        population: stateInfo.population,
-        lgas: stateInfo.lga.map((lgaName) => ({
-          name: lgaName,
-          major_towns: [lgaName],
-          postal_codes: [],
-        })),
-      }));
-
-      setNigerianStates(statesData);
-    } catch (error) {
-      console.error('Error loading Nigerian states:', error);
-      setErrors({ general: 'Failed to load Nigerian states data' });
-    } finally {
-      setLoadingStates(false);
-    }
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      states: [],
+      isActive: true,
+      sortOrder: 0,
+      zone_type: 'mixed',
+      priority: 'medium',
+      operational_notes: '',
+    });
+    setSelectedStates([]);
+    setStateLgaCoverage({});
+    setExpandedStates({});
+    setErrors({});
   };
 
   const validateForm = () => {
@@ -155,10 +107,6 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
 
     if (!formData.name.trim()) {
       newErrors.name = 'Zone name is required';
-    }
-
-    if (!formData.code.trim()) {
-      newErrors.code = 'Zone code is required';
     }
 
     if (selectedStates.length === 0) {
@@ -170,7 +118,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
       const coverage = stateLgaCoverage[stateName];
       if (
         coverage?.coverage_type === 'specific' &&
-        coverage.covered_lgas.length === 0
+        (!coverage.covered_lgas || coverage.covered_lgas.length === 0)
       ) {
         newErrors.states = `Please select LGAs for ${stateName} or change coverage to 'All LGAs'`;
       }
@@ -199,7 +147,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
 
     setSelectedStates(newSelectedStates);
 
-    // Initialize or remove LGA coverage for this state
+    // Initialize or remove LGA coverage
     if (newSelectedStates.includes(stateName) && !stateLgaCoverage[stateName]) {
       setStateLgaCoverage((prev) => ({
         ...prev,
@@ -214,44 +162,6 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
       setStateLgaCoverage(newCoverage);
     }
 
-    // Update formData with complete state objects
-    const stateObjects = newSelectedStates.map((name) => {
-      const stateData = nigerianStates.find((s) => s.name === name);
-      const coverage = stateLgaCoverage[name] || {
-        coverage_type: 'all',
-        covered_lgas: [],
-      };
-
-      if (stateData) {
-        return {
-          name: stateData.name,
-          code: stateData.code,
-          capital: stateData.capital,
-          geopolitical_zone: stateData.geopolitical_zone,
-          population: stateData.population,
-          coverage_type: coverage.coverage_type,
-          available_lgas: stateData.lgas,
-          covered_lgas:
-            coverage.coverage_type === 'specific'
-              ? coverage.covered_lgas.map(
-                  (lgaName) =>
-                    stateData.lgas.find((lga) => lga.name === lgaName) || {
-                      name: lgaName,
-                      major_towns: [],
-                      postal_codes: [],
-                    }
-                )
-              : [],
-        };
-      }
-      return { name, code: name.substring(0, 2).toUpperCase() };
-    });
-
-    setFormData((prev) => ({
-      ...prev,
-      states: stateObjects,
-    }));
-
     if (errors.states) {
       setErrors((prev) => ({ ...prev, states: '' }));
     }
@@ -261,28 +171,10 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
     setStateLgaCoverage((prev) => ({
       ...prev,
       [stateName]: {
-        ...prev[stateName],
         coverage_type: coverageType,
         covered_lgas:
           coverageType === 'all' ? [] : prev[stateName]?.covered_lgas || [],
       },
-    }));
-
-    // Update formData
-    const updatedStates = formData.states.map((state) => {
-      if (state.name === stateName) {
-        return {
-          ...state,
-          coverage_type: coverageType,
-          covered_lgas: coverageType === 'all' ? [] : state.covered_lgas || [],
-        };
-      }
-      return state;
-    });
-
-    setFormData((prev) => ({
-      ...prev,
-      states: updatedStates,
     }));
   };
 
@@ -292,45 +184,21 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
       covered_lgas: [],
     };
 
-    // Ensure covered_lgas is always a string array
     const currentLgas = Array.isArray(currentCoverage.covered_lgas)
       ? currentCoverage.covered_lgas
       : [];
 
     const isSelected = currentLgas.includes(lgaName);
-
     const newCoveredLgas = isSelected
       ? currentLgas.filter((lga) => lga !== lgaName)
-      : [...currentLgas, lgaName]; // Keep as string array
+      : [...currentLgas, lgaName];
 
     setStateLgaCoverage((prev) => ({
       ...prev,
       [stateName]: {
         ...currentCoverage,
-        covered_lgas: newCoveredLgas, // This remains a string array
+        covered_lgas: newCoveredLgas,
       },
-    }));
-    const updatedStates = formData.states.map((state) => {
-      if (state.name === stateName) {
-        const stateData = nigerianStates.find((s) => s.name === stateName);
-        return {
-          ...state,
-          covered_lgas: newCoveredLgas.map(
-            (lgaName) =>
-              stateData?.lgas.find((lga) => lga.name === lgaName) || {
-                name: lgaName,
-                major_towns: [],
-                postal_codes: [],
-              }
-          ),
-        };
-      }
-      return state;
-    });
-
-    setFormData((prev) => ({
-      ...prev,
-      states: updatedStates,
     }));
   };
 
@@ -342,71 +210,53 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
   };
 
   const getStateLgas = (stateName) => {
-    const stateData = nigerianStates.find((s) => s.name === stateName);
-    return stateData?.lgas || [];
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      // Prepare the data with the correct structure for your model
-      const submitData = {
-        ...formData,
-        states: selectedStates.map((stateName) => {
-          const stateData = nigerianStates.find((s) => s.name === stateName);
-          const coverage = stateLgaCoverage[stateName] || {
-            coverage_type: 'all',
-            covered_lgas: [],
-          };
-
-          console.log('Preparing state data:', {
-            stateName,
-            coverage_type: coverage.coverage_type,
-            covered_lgas: coverage.covered_lgas,
-          });
-
-          if (stateData) {
-            return {
-              name: stateData.name,
-              code: stateData.code,
-              coverage_type: coverage.coverage_type,
-              available_lgas: stateData.lgas.map((lga) => lga.name), // Convert to string array
-              covered_lgas:
-                coverage.coverage_type === 'specific'
-                  ? coverage.covered_lgas // This should already be a string array
-                  : [],
-            };
-          }
-
-          // Fallback if state data not found
-          return {
-            name: stateName,
-            code: stateName.substring(0, 2).toUpperCase(),
-            coverage_type: coverage.coverage_type,
-            available_lgas: [],
-            covered_lgas:
-              coverage.coverage_type === 'specific'
-                ? coverage.covered_lgas
-                : [],
-          };
-        }),
-      };
-
-      console.log('Final submit data:', JSON.stringify(submitData, null, 2));
-
-      onSubmit(submitData);
-    }
+    const stateData = nigeriaStatesLgas.find((s) => s.state === stateName);
+    return stateData?.lga || [];
   };
 
   const groupStatesByZone = () => {
     const grouped = {};
-    nigerianStates.forEach((state) => {
-      if (!grouped[state.geopolitical_zone]) {
-        grouped[state.geopolitical_zone] = [];
-      }
-      grouped[state.geopolitical_zone].push(state);
+    Object.entries(geopoliticalZones).forEach(([zone, states]) => {
+      grouped[zone] = states.map((stateName) => {
+        const stateData = nigeriaStatesLgas.find((s) => s.state === stateName);
+        return stateData || { state: stateName, lga: [] };
+      });
     });
     return grouped;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    // Prepare submission data
+    const submitData = {
+      ...formData,
+      states: selectedStates.map((stateName) => {
+        const stateData = nigeriaStatesLgas.find((s) => s.state === stateName);
+        const coverage = stateLgaCoverage[stateName] || {
+          coverage_type: 'all',
+          covered_lgas: [],
+        };
+
+        return {
+          name: stateName,
+          code:
+            stateData?.state.substring(0, 2).toUpperCase() ||
+            stateName.substring(0, 2).toUpperCase(),
+          coverage_type: coverage.coverage_type,
+          available_lgas: stateData?.lga || [],
+          covered_lgas:
+            coverage.coverage_type === 'specific' ? coverage.covered_lgas : [],
+        };
+      }),
+    };
+
+    console.log('Submitting zone data:', JSON.stringify(submitData, null, 2));
+    onSubmit(submitData);
   };
 
   if (!isOpen) return null;
@@ -475,30 +325,6 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Zone Code *
-              </label>
-              <input
-                type="text"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors uppercase ${
-                  errors.code
-                    ? 'border-red-300 dark:border-red-600'
-                    : 'border-gray-300 dark:border-gray-600'
-                }`}
-                placeholder="e.g., LMZ"
-              />
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.code}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Zone Type
               </label>
               <select
@@ -510,6 +336,22 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                 <option value="urban">Urban</option>
                 <option value="rural">Rural</option>
                 <option value="mixed">Mixed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Priority Level
+              </label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
           </div>
@@ -535,161 +377,151 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
               Select States & Configure LGA Coverage *
             </h3>
 
-            {loadingStates ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
-                <span className="ml-2 text-gray-600 dark:text-gray-400">
-                  Loading states...
-                </span>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(groupStatesByZone()).map(([zone, states]) => (
-                  <div
-                    key={zone}
-                    className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600"
-                  >
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                      {zone}
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        ({states.length} states)
-                      </span>
-                    </h4>
-                    <div className="space-y-3">
-                      {states.map((state) => (
-                        <div
-                          key={state.name}
-                          className="border border-gray-100 dark:border-gray-700 rounded-lg p-3"
-                        >
-                          <div className="flex items-center justify-between">
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={selectedStates.includes(state.name)}
-                                onChange={() => handleStateToggle(state.name)}
-                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
+            <div className="space-y-4">
+              {Object.entries(groupStatesByZone()).map(([zoneName, states]) => (
+                <div
+                  key={zoneName}
+                  className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600"
+                >
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    {zoneName}
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      ({states.length} states)
+                    </span>
+                  </h4>
+                  <div className="space-y-3">
+                    {states.map((state) => (
+                      <div
+                        key={state.state}
+                        className="border border-gray-100 dark:border-gray-700 rounded-lg p-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedStates.includes(state.state)}
+                              onChange={() => handleStateToggle(state.state)}
+                              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {state.state}
+                            </span>
+                          </label>
+
+                          {selectedStates.includes(state.state) && (
+                            <button
+                              type="button"
+                              onClick={() => toggleStateExpansion(state.state)}
+                              className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                            >
+                              Configure LGAs
+                              <ChevronDown
+                                className={`h-4 w-4 transition-transform ${
+                                  expandedStates[state.state]
+                                    ? 'rotate-180'
+                                    : ''
+                                }`}
                               />
-                              <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {state.name}
-                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
-                                  ({state.capital})
-                                </span>
-                              </span>
-                            </label>
+                            </button>
+                          )}
+                        </div>
 
-                            {selectedStates.includes(state.name) && (
-                              <button
-                                type="button"
-                                onClick={() => toggleStateExpansion(state.name)}
-                                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                              >
-                                Configure LGAs
-                                <ChevronDown
-                                  className={`h-4 w-4 transition-transform ${
-                                    expandedStates[state.name]
-                                      ? 'rotate-180'
-                                      : ''
-                                  }`}
-                                />
-                              </button>
-                            )}
-                          </div>
+                        {/* LGA Coverage Configuration */}
+                        {selectedStates.includes(state.state) &&
+                          expandedStates[state.state] && (
+                            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600">
+                              <div className="mb-3">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                  Coverage Type for {state.state}
+                                </label>
+                                <select
+                                  value={
+                                    stateLgaCoverage[state.state]
+                                      ?.coverage_type || 'all'
+                                  }
+                                  onChange={(e) =>
+                                    handleCoverageTypeChange(
+                                      state.state,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                                >
+                                  <option value="all">
+                                    All LGAs (Complete State Coverage)
+                                  </option>
+                                  <option value="specific">
+                                    Specific LGAs Only
+                                  </option>
+                                </select>
+                              </div>
 
-                          {/* LGA Coverage Configuration */}
-                          {selectedStates.includes(state.name) &&
-                            expandedStates[state.name] && (
-                              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600">
-                                <div className="mb-3">
+                              {stateLgaCoverage[state.state]?.coverage_type ===
+                                'specific' && (
+                                <div>
                                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Coverage Type for {state.name}
+                                    Select LGAs to Cover (
+                                    {stateLgaCoverage[state.state]?.covered_lgas
+                                      ?.length || 0}{' '}
+                                    selected)
                                   </label>
-                                  <select
-                                    value={
-                                      stateLgaCoverage[state.name]
-                                        ?.coverage_type || 'all'
-                                    }
-                                    onChange={(e) =>
-                                      handleCoverageTypeChange(
-                                        state.name,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
-                                  >
-                                    <option value="all">
-                                      All LGAs (Complete State Coverage)
-                                    </option>
-                                    <option value="specific">
-                                      Specific LGAs Only
-                                    </option>
-                                  </select>
-                                </div>
-
-                                {stateLgaCoverage[state.name]?.coverage_type ===
-                                  'specific' && (
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                      Select LGAs to Cover (
-                                      {stateLgaCoverage[state.name]
-                                        ?.covered_lgas?.length || 0}{' '}
-                                      selected)
-                                    </label>
-                                    <div className="max-h-32 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-800">
-                                      <div className="grid grid-cols-2 gap-2">
-                                        {getStateLgas(state.name).map((lga) => (
+                                  <div className="max-h-32 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-800">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {getStateLgas(state.state).map(
+                                        (lgaName) => (
                                           <label
-                                            key={lga.name}
+                                            key={lgaName}
                                             className="flex items-center cursor-pointer text-sm"
                                           >
                                             <input
                                               type="checkbox"
                                               checked={
                                                 stateLgaCoverage[
-                                                  state.name
+                                                  state.state
                                                 ]?.covered_lgas?.includes(
-                                                  lga.name
+                                                  lgaName
                                                 ) || false
                                               }
                                               onChange={() =>
                                                 handleLgaToggle(
-                                                  state.name,
-                                                  lga.name
+                                                  state.state,
+                                                  lgaName
                                                 )
                                               }
                                               className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 mr-2"
                                             />
                                             <span className="text-gray-700 dark:text-gray-300">
-                                              {lga.name}
+                                              {lgaName}
                                             </span>
                                           </label>
-                                        ))}
-                                      </div>
+                                        )
+                                      )}
                                     </div>
                                   </div>
-                                )}
-
-                                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                  {stateLgaCoverage[state.name]
-                                    ?.coverage_type === 'all'
-                                    ? `Covers all ${
-                                        getStateLgas(state.name).length
-                                      } LGAs in ${state.name}`
-                                    : `Covers ${
-                                        stateLgaCoverage[state.name]
-                                          ?.covered_lgas?.length || 0
-                                      } of ${
-                                        getStateLgas(state.name).length
-                                      } LGAs`}
                                 </div>
+                              )}
+
+                              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                {stateLgaCoverage[state.state]
+                                  ?.coverage_type === 'all'
+                                  ? `Covers all ${
+                                      getStateLgas(state.state).length
+                                    } LGAs in ${state.state}`
+                                  : `Covers ${
+                                      stateLgaCoverage[state.state]
+                                        ?.covered_lgas?.length || 0
+                                    } of ${
+                                      getStateLgas(state.state).length
+                                    } LGAs`}
                               </div>
-                            )}
-                        </div>
-                      ))}
-                    </div>
+                            </div>
+                          )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
 
             {errors.states && (
               <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
@@ -736,22 +568,6 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Priority Level
-              </label>
-              <select
-                name="priority"
-                value={formData.priority}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Sort Order
               </label>
               <input
@@ -762,6 +578,21 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
                 min="0"
               />
+            </div>
+
+            <div className="flex items-end">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  checked={formData.isActive}
+                  onChange={handleInputChange}
+                  className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Active Zone
+                </span>
+              </label>
             </div>
           </div>
 
@@ -780,22 +611,6 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
             />
           </div>
 
-          {/* Status */}
-          <div className="flex items-center">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={formData.isActive}
-                onChange={handleInputChange}
-                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Active Zone
-              </span>
-            </label>
-          </div>
-
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
@@ -808,7 +623,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || loadingStates}
+              disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}

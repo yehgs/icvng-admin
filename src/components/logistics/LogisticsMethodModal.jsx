@@ -372,10 +372,6 @@ const LogisticsMethodModal = ({
       newErrors.name = 'Method name is required';
     }
 
-    if (!formData.code.trim()) {
-      newErrors.code = 'Method code is required';
-    }
-
     // Type-specific validation
     if (formData.type === 'flat_rate') {
       const flatRate = formData.flatRate;
@@ -997,16 +993,39 @@ const LogisticsMethodModal = ({
     e.preventDefault();
 
     if (!validateForm()) {
-      // Scroll to first error
       const errorElement = document.querySelector('.text-red-600');
       if (errorElement) {
         errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       return;
     }
+    if (validateForm()) {
+      // ADD THIS DEBUGGING
+      console.log('=== FRONTEND: About to submit ===');
+      console.log(
+        'Has LGA in default locations?',
+        formData.pickup?.defaultLocations?.every(
+          (loc) => loc.lga && loc.lga.trim()
+        )
+      );
+      console.log(
+        'Default locations detail:',
+        formData.pickup?.defaultLocations?.map((loc) => ({
+          name: loc.name,
+          hasLga: !!loc.lga,
+          lga: loc.lga,
+          state: loc.state,
+          city: loc.city,
+        }))
+      );
 
+      onSubmit(formData);
+    }
     // Clean up the form data before submission
     const cleanedFormData = { ...formData };
+
+    // CRITICAL: Remove code field - it's auto-generated and cannot be updated
+    delete cleanedFormData.code;
 
     // For pickup method, ensure proper structure
     if (cleanedFormData.type === 'pickup' && cleanedFormData.pickup) {
@@ -1042,9 +1061,13 @@ const LogisticsMethodModal = ({
       if (!cleanedFormData.pickup.assignment) {
         cleanedFormData.pickup.assignment = 'all_products';
       }
+
+      // Remove unused configurations
+      delete cleanedFormData.flatRate;
+      delete cleanedFormData.tableShipping;
     }
 
-    // Similar cleanup for other method types
+    // Similar cleanup for flat rate
     if (cleanedFormData.type === 'flat_rate' && cleanedFormData.flatRate) {
       if (!cleanedFormData.flatRate.assignment) {
         cleanedFormData.flatRate.assignment = 'all_products';
@@ -1057,8 +1080,13 @@ const LogisticsMethodModal = ({
             return zoneRate.zone && zoneRate.zone.trim() !== '';
           });
       }
+
+      // Remove unused configurations
+      delete cleanedFormData.pickup;
+      delete cleanedFormData.tableShipping;
     }
 
+    // Similar cleanup for table shipping
     if (
       cleanedFormData.type === 'table_shipping' &&
       cleanedFormData.tableShipping
@@ -1074,6 +1102,10 @@ const LogisticsMethodModal = ({
             return zoneRate.zone && zoneRate.zone.trim() !== '';
           });
       }
+
+      // Remove unused configurations
+      delete cleanedFormData.pickup;
+      delete cleanedFormData.flatRate;
     }
 
     onSubmit(cleanedFormData);
@@ -1150,25 +1182,38 @@ const LogisticsMethodModal = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Method Code *
+                Method Code
               </label>
-              <input
-                type="text"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors uppercase ${
-                  errors.code
-                    ? 'border-red-300 dark:border-red-600'
-                    : 'border-gray-300 dark:border-gray-600'
-                }`}
-                placeholder="e.g., STD-DEL"
-              />
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.code}
-                </p>
-              )}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={method?.code || 'Auto-generated'}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed uppercase"
+                  placeholder="Auto-generated"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    <svg
+                      className="h-3 w-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>Auto</span>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {method?.code
+                  ? 'Method code cannot be changed after creation'
+                  : 'Code will be auto-generated based on method name and type'}
+              </p>
             </div>
 
             <div>
@@ -1179,6 +1224,7 @@ const LogisticsMethodModal = ({
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
+                disabled={!!method}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               >
                 <option value="flat_rate">Flat Rate</option>
@@ -1187,6 +1233,11 @@ const LogisticsMethodModal = ({
                 </option>
                 <option value="pickup">Store Pickup</option>
               </select>
+              {method && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Method type cannot be changed after creation
+                </p>
+              )}
             </div>
           </div>
 

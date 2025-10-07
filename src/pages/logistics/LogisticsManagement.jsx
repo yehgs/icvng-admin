@@ -1,3 +1,4 @@
+//admin/src/pages/logistics/LogisticsManagement.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Plus,
@@ -22,6 +23,7 @@ import { logisticsAPI } from '../../utils/api.js';
 import LogisticsMethodModal from '../../components/logistics/LogisticsMethodModal';
 import LogisticsZoneModal from '../../components/logistics/LogisticsZoneModal';
 import DeleteConfirmModal from '../../components/common/DeleteConfirmModal';
+import ZoneDeleteModal from '../../components/logistics/ZoneDeleteModal';
 import toast from 'react-hot-toast';
 
 const LogisticsManagement = () => {
@@ -34,9 +36,12 @@ const LogisticsManagement = () => {
   // Modal states
   const [showZoneModal, setShowZoneModal] = useState(false);
   const [showMethodModal, setShowMethodModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showZoneDeleteModal, setShowZoneDeleteModal] = useState(false);
+  const [showMethodDeleteModal, setShowMethodDeleteModal] = useState(false);
+  const [selectedZone, setSelectedZone] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [deleteType, setDeleteType] = useState('');
+  // const [deleteType, setDeleteType] = useState('');
 
   useEffect(() => {
     fetchLogisticsData();
@@ -45,11 +50,16 @@ const LogisticsManagement = () => {
   const fetchLogisticsData = async () => {
     try {
       setLoading(true);
+
       const [zonesRes, methodsRes, statsRes] = await Promise.all([
         logisticsAPI.getShippingZones(),
         logisticsAPI.getShippingMethods(),
         logisticsAPI.getTrackingStats(),
       ]);
+
+      console.log('Zones response:', zonesRes);
+      console.log('Methods response:', methodsRes);
+      console.log('Stats response:', statsRes);
 
       setZones(zonesRes.data || []);
       setMethods(methodsRes.data || []);
@@ -64,61 +74,157 @@ const LogisticsManagement = () => {
 
   const handleCreateZone = async (zoneData) => {
     try {
-      await logisticsAPI.createShippingZone(zoneData);
-      toast.success('Shipping zone created successfully');
-      setShowZoneModal(false);
-      fetchLogisticsData();
+      console.log('Creating zone with data:', zoneData);
+      setLoading(true);
+
+      const response = await logisticsAPI.createShippingZone(zoneData);
+
+      if (response.success) {
+        toast.success('Shipping zone created successfully');
+        setShowZoneModal(false);
+        setSelectedZone(null);
+        await fetchLogisticsData();
+      } else {
+        toast.error(response.message || 'Failed to create shipping zone');
+      }
     } catch (error) {
-      toast.error('Failed to create shipping zone');
+      console.error('Create zone error:', error);
+      toast.error(error.message || 'Failed to create shipping zone');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateZone = async (zoneData) => {
     try {
-      await logisticsAPI.updateShippingZone(selectedItem._id, zoneData);
-      toast.success('Shipping zone updated successfully');
-      setShowZoneModal(false);
-      fetchLogisticsData();
+      console.log('Updating zone:', selectedZone._id, 'with data:', zoneData);
+      setLoading(true);
+
+      const response = await logisticsAPI.updateShippingZone(
+        selectedZone._id,
+        zoneData
+      );
+
+      if (response.success) {
+        toast.success('Shipping zone updated successfully');
+        setShowZoneModal(false);
+        setSelectedZone(null);
+        await fetchLogisticsData();
+      } else {
+        toast.error(response.message || 'Failed to update shipping zone');
+      }
     } catch (error) {
-      toast.error('Failed to update shipping zone');
+      console.error('Update zone error:', error);
+      toast.error(error.message || 'Failed to update shipping zone');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCreateMethod = async (methodData) => {
     try {
-      await logisticsAPI.createShippingMethod(methodData);
-      toast.success('Shipping method created successfully');
-      setShowMethodModal(false);
-      fetchLogisticsData();
+      console.log('Creating method with data:', methodData);
+      setLoading(true);
+
+      const response = await logisticsAPI.createShippingMethod(methodData);
+
+      if (response.success) {
+        toast.success('Shipping method created successfully');
+        setShowMethodModal(false);
+        setSelectedMethod(null);
+        await fetchLogisticsData();
+      } else {
+        toast.error(response.message || 'Failed to create shipping method');
+      }
     } catch (error) {
-      toast.error('Failed to create shipping method');
+      console.error('Create method error:', error);
+      toast.error(error.message || 'Failed to create shipping method');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateMethod = async (methodData) => {
     try {
-      await logisticsAPI.updateShippingMethod(selectedItem._id, methodData);
-      toast.success('Shipping method updated successfully');
-      setShowMethodModal(false);
-      fetchLogisticsData();
+      console.log(
+        'Updating method:',
+        selectedMethod._id,
+        'with data:',
+        methodData
+      );
+      setLoading(true);
+
+      const response = await logisticsAPI.updateShippingMethod(
+        selectedMethod._id,
+        methodData
+      );
+
+      if (response.success) {
+        toast.success('Shipping method updated successfully');
+        setShowMethodModal(false);
+        setSelectedMethod(null);
+        await fetchLogisticsData();
+      } else {
+        toast.error(response.message || 'Failed to update shipping method');
+      }
     } catch (error) {
-      toast.error('Failed to update shipping method');
+      console.error('Update method error:', error);
+      toast.error(error.message || 'Failed to update shipping method');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
+  // ZONE DELETE HANDLER (with cascade support)
+  const handleDeleteZone = async (zoneId, cascadeDelete) => {
     try {
-      if (deleteType === 'zone') {
-        await logisticsAPI.deleteShippingZone(selectedItem._id);
-        toast.success('Shipping zone deleted successfully');
-      } else if (deleteType === 'method') {
-        await logisticsAPI.deleteShippingMethod(selectedItem._id);
-        toast.success('Shipping method deleted successfully');
+      setLoading(true);
+      const response = await logisticsAPI.deleteShippingZone(
+        zoneId,
+        cascadeDelete
+      );
+
+      if (response.success) {
+        toast.success(
+          cascadeDelete
+            ? 'Zone and dependent methods deleted successfully'
+            : 'Shipping zone deleted successfully'
+        );
+        setShowZoneDeleteModal(false);
+        setSelectedZone(null);
+        await fetchLogisticsData();
+      } else {
+        toast.error(response.message || 'Failed to delete shipping zone');
       }
-      setShowDeleteModal(false);
-      fetchLogisticsData();
     } catch (error) {
-      toast.error(`Failed to delete ${deleteType}`);
+      console.error('Delete zone error:', error);
+      toast.error(error.message || 'Failed to delete shipping zone');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // METHOD DELETE HANDLER (independent)
+  const handleDeleteMethod = async () => {
+    try {
+      setLoading(true);
+      const response = await logisticsAPI.deleteShippingMethod(
+        selectedMethod._id
+      );
+
+      if (response.success) {
+        toast.success('Shipping method deleted successfully');
+        setShowMethodDeleteModal(false);
+        setSelectedMethod(null);
+        await fetchLogisticsData();
+      } else {
+        toast.error(response.message || 'Failed to delete shipping method');
+      }
+    } catch (error) {
+      console.error('Delete method error:', error);
+      toast.error(error.message || 'Failed to delete shipping method');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -445,7 +551,7 @@ const LogisticsManagement = () => {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
-                          setSelectedItem(zone);
+                          setSelectedZone(zone);
                           setShowZoneModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
@@ -455,9 +561,8 @@ const LogisticsManagement = () => {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedItem(zone);
-                          setDeleteType('zone');
-                          setShowDeleteModal(true);
+                          setSelectedZone(zone);
+                          setShowZoneDeleteModal(true);
                         }}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                         title="Delete zone"
@@ -617,7 +722,7 @@ const LogisticsManagement = () => {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
-                          setSelectedItem(method);
+                          setSelectedMethod(method);
                           setShowMethodModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
@@ -627,9 +732,8 @@ const LogisticsManagement = () => {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedItem(method);
-                          setDeleteType('method');
-                          setShowDeleteModal(true);
+                          setSelectedMethod(method);
+                          setShowMethodDeleteModal(true);
                         }}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                         title="Delete method"
@@ -730,29 +834,48 @@ const LogisticsManagement = () => {
       {/* Modals */}
       <LogisticsZoneModal
         isOpen={showZoneModal}
-        onClose={() => setShowZoneModal(false)}
-        onSubmit={selectedItem ? handleUpdateZone : handleCreateZone}
-        zone={selectedItem}
+        onClose={() => {
+          setShowZoneModal(false);
+          setSelectedZone(null);
+        }}
+        onSubmit={selectedZone ? handleUpdateZone : handleCreateZone}
+        zone={selectedZone}
+        loading={loading}
+      />
+
+      <ZoneDeleteModal
+        isOpen={showZoneDeleteModal}
+        onClose={() => {
+          setShowZoneDeleteModal(false);
+          setSelectedZone(null);
+        }}
+        onConfirm={handleDeleteZone}
+        zone={selectedZone}
         loading={loading}
       />
 
       <LogisticsMethodModal
         isOpen={showMethodModal}
-        onClose={() => setShowMethodModal(false)}
-        onSubmit={selectedItem ? handleUpdateMethod : handleCreateMethod}
-        method={selectedItem}
+        onClose={() => {
+          setShowMethodModal(false);
+          setSelectedMethod(null);
+        }}
+        onSubmit={selectedMethod ? handleUpdateMethod : handleCreateMethod}
+        method={selectedMethod}
         zones={zones}
         loading={loading}
       />
 
+      {/* Method Delete Modal (simple delete) */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        title={`Delete ${
-          deleteType === 'zone' ? 'Shipping Zone' : 'Shipping Method'
-        }`}
-        message={`Are you sure you want to delete "${selectedItem?.name}"? This action cannot be undone.`}
+        isOpen={showMethodDeleteModal}
+        onClose={() => {
+          setShowMethodDeleteModal(false);
+          setSelectedMethod(null);
+        }}
+        onConfirm={handleDeleteMethod}
+        title="Delete Shipping Method"
+        message={`Are you sure you want to delete "${selectedMethod?.name}"? This action cannot be undone.`}
         loading={loading}
       />
     </div>
