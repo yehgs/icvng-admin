@@ -405,6 +405,8 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   </label>
                   <input
                     type="number"
+                    min="0"
+                    step="0.01"
                     value={formData.weight}
                     onChange={(e) =>
                       handleInputChange('weight', e.target.value)
