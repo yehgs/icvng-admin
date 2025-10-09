@@ -1,4 +1,3 @@
-//admin/src/pages/logistics/LogisticsManagement.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Plus,
@@ -18,6 +17,8 @@ import {
   DollarSign,
   Tag,
   ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { logisticsAPI } from '../../utils/api.js';
 import LogisticsMethodModal from '../../components/logistics/LogisticsMethodModal';
@@ -33,6 +34,18 @@ const LogisticsManagement = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Pagination states for zones
+  const [zonesPage, setZonesPage] = useState(1);
+  const [zonesLimit, setZonesLimit] = useState(10);
+  const [zonesTotalPages, setZonesTotalPages] = useState(1);
+  const [zonesTotalCount, setZonesTotalCount] = useState(0);
+
+  // Pagination states for methods
+  const [methodsPage, setMethodsPage] = useState(1);
+  const [methodsLimit, setMethodsLimit] = useState(10);
+  const [methodsTotalPages, setMethodsTotalPages] = useState(1);
+  const [methodsTotalCount, setMethodsTotalCount] = useState(0);
+
   // Modal states
   const [showZoneModal, setShowZoneModal] = useState(false);
   const [showMethodModal, setShowMethodModal] = useState(false);
@@ -41,29 +54,33 @@ const LogisticsManagement = () => {
   const [selectedZone, setSelectedZone] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  // const [deleteType, setDeleteType] = useState('');
 
   useEffect(() => {
     fetchLogisticsData();
   }, []);
 
+  // Fetch zones when pagination changes
+  useEffect(() => {
+    if (activeTab === 'zones') {
+      fetchZones();
+    }
+  }, [zonesPage, zonesLimit]);
+
+  // Fetch methods when pagination changes
+  useEffect(() => {
+    if (activeTab === 'methods') {
+      fetchMethods();
+    }
+  }, [methodsPage, methodsLimit]);
+
   const fetchLogisticsData = async () => {
     try {
       setLoading(true);
-
-      const [zonesRes, methodsRes, statsRes] = await Promise.all([
-        logisticsAPI.getShippingZones(),
-        logisticsAPI.getShippingMethods(),
-        logisticsAPI.getTrackingStats(),
-      ]);
-
-      console.log('Zones response:', zonesRes);
-      console.log('Methods response:', methodsRes);
-      console.log('Stats response:', statsRes);
-
-      setZones(zonesRes.data || []);
-      setMethods(methodsRes.data || []);
+      const statsRes = await logisticsAPI.getTrackingStats();
       setStats(statsRes.data || {});
+
+      // Fetch initial data for zones and methods
+      await Promise.all([fetchZones(), fetchMethods()]);
     } catch (error) {
       console.error('Error fetching logistics data:', error);
       toast.error('Failed to load logistics data');
@@ -72,18 +89,49 @@ const LogisticsManagement = () => {
     }
   };
 
+  const fetchZones = async () => {
+    try {
+      const zonesRes = await logisticsAPI.getShippingZones({
+        page: zonesPage,
+        limit: zonesLimit,
+      });
+
+      setZones(zonesRes.data || []);
+      setZonesTotalCount(zonesRes.totalCount || 0);
+      setZonesTotalPages(zonesRes.totalPages || 1);
+    } catch (error) {
+      console.error('Error fetching zones:', error);
+      toast.error('Failed to load zones');
+    }
+  };
+
+  const fetchMethods = async () => {
+    try {
+      const methodsRes = await logisticsAPI.getShippingMethods({
+        page: methodsPage,
+        limit: methodsLimit,
+      });
+
+      setMethods(methodsRes.data || []);
+      setMethodsTotalCount(methodsRes.totalCount || 0);
+      setMethodsTotalPages(methodsRes.totalPages || 1);
+    } catch (error) {
+      console.error('Error fetching methods:', error);
+      toast.error('Failed to load methods');
+    }
+  };
+
   const handleCreateZone = async (zoneData) => {
     try {
-      console.log('Creating zone with data:', zoneData);
       setLoading(true);
-
       const response = await logisticsAPI.createShippingZone(zoneData);
 
       if (response.success) {
         toast.success('Shipping zone created successfully');
         setShowZoneModal(false);
         setSelectedZone(null);
-        await fetchLogisticsData();
+        setZonesPage(1); // Reset to first page
+        await fetchZones();
       } else {
         toast.error(response.message || 'Failed to create shipping zone');
       }
@@ -97,9 +145,7 @@ const LogisticsManagement = () => {
 
   const handleUpdateZone = async (zoneData) => {
     try {
-      console.log('Updating zone:', selectedZone._id, 'with data:', zoneData);
       setLoading(true);
-
       const response = await logisticsAPI.updateShippingZone(
         selectedZone._id,
         zoneData
@@ -109,7 +155,7 @@ const LogisticsManagement = () => {
         toast.success('Shipping zone updated successfully');
         setShowZoneModal(false);
         setSelectedZone(null);
-        await fetchLogisticsData();
+        await fetchZones();
       } else {
         toast.error(response.message || 'Failed to update shipping zone');
       }
@@ -123,16 +169,15 @@ const LogisticsManagement = () => {
 
   const handleCreateMethod = async (methodData) => {
     try {
-      console.log('Creating method with data:', methodData);
       setLoading(true);
-
       const response = await logisticsAPI.createShippingMethod(methodData);
 
       if (response.success) {
         toast.success('Shipping method created successfully');
         setShowMethodModal(false);
         setSelectedMethod(null);
-        await fetchLogisticsData();
+        setMethodsPage(1); // Reset to first page
+        await fetchMethods();
       } else {
         toast.error(response.message || 'Failed to create shipping method');
       }
@@ -146,14 +191,7 @@ const LogisticsManagement = () => {
 
   const handleUpdateMethod = async (methodData) => {
     try {
-      console.log(
-        'Updating method:',
-        selectedMethod._id,
-        'with data:',
-        methodData
-      );
       setLoading(true);
-
       const response = await logisticsAPI.updateShippingMethod(
         selectedMethod._id,
         methodData
@@ -163,7 +201,7 @@ const LogisticsManagement = () => {
         toast.success('Shipping method updated successfully');
         setShowMethodModal(false);
         setSelectedMethod(null);
-        await fetchLogisticsData();
+        await fetchMethods();
       } else {
         toast.error(response.message || 'Failed to update shipping method');
       }
@@ -175,7 +213,6 @@ const LogisticsManagement = () => {
     }
   };
 
-  // ZONE DELETE HANDLER (with cascade support)
   const handleDeleteZone = async (zoneId, cascadeDelete) => {
     try {
       setLoading(true);
@@ -192,7 +229,7 @@ const LogisticsManagement = () => {
         );
         setShowZoneDeleteModal(false);
         setSelectedZone(null);
-        await fetchLogisticsData();
+        await fetchZones();
       } else {
         toast.error(response.message || 'Failed to delete shipping zone');
       }
@@ -204,7 +241,6 @@ const LogisticsManagement = () => {
     }
   };
 
-  // METHOD DELETE HANDLER (independent)
   const handleDeleteMethod = async () => {
     try {
       setLoading(true);
@@ -216,7 +252,7 @@ const LogisticsManagement = () => {
         toast.success('Shipping method deleted successfully');
         setShowMethodDeleteModal(false);
         setSelectedMethod(null);
-        await fetchLogisticsData();
+        await fetchMethods();
       } else {
         toast.error(response.message || 'Failed to delete shipping method');
       }
@@ -228,7 +264,103 @@ const LogisticsManagement = () => {
     }
   };
 
-  // Helper function to get assignment display text
+  // Pagination controls component
+  const PaginationControls = ({
+    currentPage,
+    totalPages,
+    totalCount,
+    itemsPerPage,
+    onPageChange,
+    onLimitChange,
+  }) => {
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalCount);
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            Showing {startItem} to {endItem} of {totalCount} results
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700 dark:text-gray-300">
+              Per page:
+            </label>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => onLimitChange(Number(e.target.value))}
+              className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={30}>30</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, idx) => {
+                const pageNum = idx + 1;
+                // Show first, last, current, and adjacent pages
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => onPageChange(pageNum)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return (
+                    <span
+                      key={pageNum}
+                      className="px-2 text-gray-500 dark:text-gray-400"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const getAssignmentDisplay = (method) => {
     const config = method[method.type];
     if (!config) return 'All Products';
@@ -245,7 +377,6 @@ const LogisticsManagement = () => {
     }
   };
 
-  // Helper function to get cost display
   const getCostDisplay = (method) => {
     switch (method.type) {
       case 'flat_rate':
@@ -312,7 +443,7 @@ const LogisticsManagement = () => {
                 {zones.filter((z) => z.isActive).length}
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                {zones.length} total
+                {zonesTotalCount} total
               </p>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
@@ -331,7 +462,7 @@ const LogisticsManagement = () => {
                 {methods.filter((m) => m.isActive).length}
               </p>
               <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">
-                {methods.length} configured
+                {methodsTotalCount} configured
               </p>
             </div>
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
@@ -455,7 +586,7 @@ const LogisticsManagement = () => {
             Shipping Zones
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage shipping zones and coverage areas ({zones.length} zones)
+            Manage shipping zones and coverage areas ({zonesTotalCount} zones)
           </p>
         </div>
         <button
@@ -598,6 +729,20 @@ const LogisticsManagement = () => {
             </button>
           </div>
         )}
+
+        {zones.length > 0 && (
+          <PaginationControls
+            currentPage={zonesPage}
+            totalPages={zonesTotalPages}
+            totalCount={zonesTotalCount}
+            itemsPerPage={zonesLimit}
+            onPageChange={setZonesPage}
+            onLimitChange={(newLimit) => {
+              setZonesLimit(newLimit);
+              setZonesPage(1);
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -610,7 +755,7 @@ const LogisticsManagement = () => {
             Shipping Methods
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Configure delivery options and pricing ({methods.length} methods)
+            Configure delivery options and pricing ({methodsTotalCount} methods)
           </p>
         </div>
         <button
@@ -769,11 +914,25 @@ const LogisticsManagement = () => {
             </button>
           </div>
         )}
+
+        {methods.length > 0 && (
+          <PaginationControls
+            currentPage={methodsPage}
+            totalPages={methodsTotalPages}
+            totalCount={methodsTotalCount}
+            itemsPerPage={methodsLimit}
+            onPageChange={setMethodsPage}
+            onLimitChange={(newLimit) => {
+              setMethodsLimit(newLimit);
+              setMethodsPage(1);
+            }}
+          />
+        )}
       </div>
     </div>
   );
 
-  if (loading) {
+  if (loading && zones.length === 0 && methods.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-600 dark:border-blue-400"></div>
@@ -866,7 +1025,6 @@ const LogisticsManagement = () => {
         loading={loading}
       />
 
-      {/* Method Delete Modal (simple delete) */}
       <DeleteConfirmModal
         isOpen={showMethodDeleteModal}
         onClose={() => {
