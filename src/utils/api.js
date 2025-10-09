@@ -1728,6 +1728,54 @@ export const logisticsAPI = {
     return response;
   },
 
+  getAllZones: async (params = {}) => {
+    try {
+      console.log('🔄 Fetching ALL zones (no pagination)...', params);
+
+      const queryParams = new URLSearchParams();
+
+      // Add query parameters if provided
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const endpoint = `/shipping/zones/all${
+        queryString ? `?${queryString}` : ''
+      }`;
+
+      console.log('📡 API Endpoint:', endpoint);
+
+      const response = await apiCall(endpoint);
+
+      console.log('✅ Get all zones response:', {
+        success: response.success,
+        count: response.data?.length,
+        totalCount: response.totalCount,
+      });
+
+      // Validate response
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch all zones');
+      }
+
+      if (!Array.isArray(response.data)) {
+        console.warn('⚠️ Response data is not an array:', response.data);
+        return {
+          ...response,
+          data: [],
+        };
+      }
+
+      return response;
+    } catch (error) {
+      console.error('❌ Get all zones API error:', error);
+      throw error;
+    }
+  },
+
   createShippingZone: async (zoneData) => {
     try {
       console.log('=== API: Creating shipping zone ===');
