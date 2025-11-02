@@ -1,22 +1,22 @@
+// src/pages/customer/CustomerManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   Plus,
-  Search,
-  Filter,
-  Download,
-  Edit,
-  Eye,
-  Building2,
-  User,
-  Globe,
-  Smartphone,
   RefreshCw,
+  Download,
   AlertCircle,
   Loader2,
 } from 'lucide-react';
 import { customerAPI, getCurrentUser } from '../../utils/api';
 import toast from 'react-hot-toast';
+
+import CustomerFilters from '../../components/customer/CustomerFilters';
+import CustomerTable from '../../components/customer/CustomerTable';
+import CustomerModal from '../../components/customer/CustomerModal';
+import CustomerDetailsModal from '../../components/customer/CustomerDetailsModal';
+import AssignCustomerModal from '../../components/customer/AssignCustomerModal';
+import Pagination from '../../components/common/Pagination';
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
@@ -30,17 +30,29 @@ const CustomerManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('');
-  const [filterMode, setFilterMode] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [filters, setFilters] = useState({
+    searchTerm: '',
+    filterType: '',
+    filterMode: '',
+    filterStatus: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
 
   const currentUser = getCurrentUser();
+
+  // Check permissions
+  const canCreate = ['DIRECTOR', 'IT', 'EDITOR', 'MANAGER', 'SALES'].includes(
+    currentUser?.subRole
+  );
+  const canExport = ['DIRECTOR', 'IT'].includes(currentUser?.subRole);
+  const canAssign = ['DIRECTOR', 'IT', 'MANAGER'].includes(
+    currentUser?.subRole
+  );
 
   // Fetch customers
   const fetchCustomers = useCallback(async () => {
@@ -51,12 +63,12 @@ const CustomerManagement = () => {
       const params = {
         page: currentPage,
         limit: customersPerPage,
-        sortBy,
-        sortOrder,
-        ...(searchTerm && { search: searchTerm }),
-        ...(filterType && { customerType: filterType }),
-        ...(filterMode && { customerMode: filterMode }),
-        ...(filterStatus && { status: filterStatus }),
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+        ...(filters.searchTerm && { search: filters.searchTerm }),
+        ...(filters.filterType && { customerType: filters.filterType }),
+        ...(filters.filterMode && { customerMode: filters.filterMode }),
+        ...(filters.filterStatus && { status: filters.filterStatus }),
       };
 
       const response = await customerAPI.getCustomers(params);
@@ -64,28 +76,39 @@ const CustomerManagement = () => {
       if (response.success) {
         setCustomers(response.data.docs || []);
         setTotalCustomers(response.data.totalDocs || 0);
+      } else {
+        throw new Error(response.message || 'Failed to load customers');
       }
     } catch (error) {
       console.error('Error fetching customers:', error);
-      setError(error.message || 'Failed to load customers');
+      const errorMessage = error.message || 'Failed to load customers';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [
-    currentPage,
-    customersPerPage,
-    sortBy,
-    sortOrder,
-    searchTerm,
-    filterType,
-    filterMode,
-    filterStatus,
-  ]);
+  }, [currentPage, customersPerPage, filters]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        fetchCustomers();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [filters.searchTerm]);
 
   // Export customers
   const handleExportCustomers = async () => {
-    if (currentUser?.subRole !== 'DIRECTOR') {
-      toast.error('Only directors can export customer data');
+    if (!canExport) {
+      toast.error('Only directors and IT can export customer data');
       return;
     }
 
@@ -123,299 +146,62 @@ const CustomerManagement = () => {
     }
   };
 
-  // Create customer modal
-  const CreateCustomerModal = () => {
-    const [formData, setFormData] = useState({
-      name: '',
-      email: '',
-      mobile: '',
-      customerType: 'BTC',
-      customerMode: 'OFFLINE',
-      companyName: '',
-      taxNumber: '',
-      address: {
-        street: '',
-        city: '',
-        state: '',
-        postalCode: '',
-      },
-      notes: '',
-    });
-    const [submitting, setSubmitting] = useState(false);
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setSubmitting(true);
-
-      try {
-        const response = await customerAPI.createCustomer(formData);
-        if (response.success) {
-          toast.success('Customer created successfully');
-          setShowCreateModal(false);
-          fetchCustomers();
-          setFormData({
-            name: '',
-            email: '',
-            mobile: '',
-            customerType: 'BTC',
-            customerMode: 'OFFLINE',
-            companyName: '',
-            taxNumber: '',
-            address: { street: '', city: '', state: '', postalCode: '' },
-            notes: '',
-          });
-        }
-      } catch (error) {
-        toast.error(error.message || 'Failed to create customer');
-      } finally {
-        setSubmitting(false);
-      }
-    };
-
-    if (!showCreateModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Create New Customer
-            </h3>
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              ✕
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Customer Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mobile *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.mobile}
-                  onChange={(e) =>
-                    setFormData({ ...formData, mobile: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Customer Type *
-                </label>
-                <select
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.customerType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customerType: e.target.value })
-                  }
-                >
-                  <option value="BTC">BTC (Business to Consumer)</option>
-                  <option value="BTB">BTB (Business to Business)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Customer Mode *
-                </label>
-                <select
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.customerMode}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customerMode: e.target.value })
-                  }
-                >
-                  <option value="OFFLINE">Offline</option>
-                  <option value="ONLINE">Online</option>
-                </select>
-              </div>
-            </div>
-
-            {/* BTB specific fields */}
-            {formData.customerType === 'BTB' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Company Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.companyName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, companyName: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Tax Number *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.taxNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, taxNumber: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Address */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Address
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  placeholder="Street"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.address.street}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      address: { ...formData.address, street: e.target.value },
-                    })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="City"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.address.city}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      address: { ...formData.address, city: e.target.value },
-                    })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="State"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.address.state}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      address: { ...formData.address, state: e.target.value },
-                    })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Postal Code"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.address.postalCode}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      address: {
-                        ...formData.address,
-                        postalCode: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Notes
-              </label>
-              <textarea
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {submitting ? 'Creating...' : 'Create Customer'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+  const handleViewDetails = (customer) => {
+    setSelectedCustomer(customer);
+    setShowDetailsModal(true);
   };
 
-  useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+  const handleEdit = (customer) => {
+    setSelectedCustomer(customer);
+    setShowEditModal(true);
+  };
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentPage(1);
-      fetchCustomers();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, filterType, filterMode, filterStatus]);
+  const handleAssign = (customer) => {
+    setSelectedCustomer(customer);
+    setShowAssignModal(true);
+  };
+
+  const handleToggleFeatured = async (customer) => {
+    // Validation: Check if customer has an image
+    if (!customer.image || customer.image === '') {
+      toast.error('Only customers with images can be featured');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await customerAPI.toggleFeaturedCustomer(customer._id);
+
+      if (response.success) {
+        toast.success(
+          customer.isFeatured
+            ? 'Customer removed from featured'
+            : 'Customer added to featured'
+        );
+        fetchCustomers();
+      } else {
+        toast.error(response.message || 'Failed to update featured status');
+      }
+    } catch (error) {
+      console.error('Toggle featured error:', error);
+      toast.error(error.message || 'Failed to update featured status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowCreateModal(false);
+    setShowEditModal(false);
+    setShowDetailsModal(false);
+    setShowAssignModal(false);
+    setSelectedCustomer(null);
+  };
+
+  const handleSuccess = () => {
+    handleModalClose();
+    fetchCustomers();
+  };
 
   const totalPages = Math.ceil(totalCustomers / customersPerPage);
 
@@ -442,7 +228,7 @@ const CustomerManagement = () => {
             Refresh
           </button>
 
-          {currentUser?.subRole === 'DIRECTOR' && (
+          {canExport && (
             <button
               onClick={handleExportCustomers}
               disabled={loading || customers.length === 0}
@@ -453,7 +239,7 @@ const CustomerManagement = () => {
             </button>
           )}
 
-          {currentUser?.subRole === 'SALES' && (
+          {canCreate && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -476,297 +262,96 @@ const CustomerManagement = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search customers..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="">All Types</option>
-            <option value="BTC">BTC</option>
-            <option value="BTB">BTB</option>
-          </select>
-
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={filterMode}
-            onChange={(e) => setFilterMode(e.target.value)}
-          >
-            <option value="">All Modes</option>
-            <option value="ONLINE">Online</option>
-            <option value="OFFLINE">Offline</option>
-          </select>
-
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="SUSPENDED">Suspended</option>
-          </select>
-        </div>
-      </div>
+      <CustomerFilters filters={filters} setFilters={setFilters} />
 
       {/* Customers Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Type & Mode
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Orders
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Created By
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
-                    <p className="mt-2 text-gray-500">Loading customers...</p>
-                  </td>
-                </tr>
-              ) : customers.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
-                    <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500">No customers found</p>
-                  </td>
-                </tr>
-              ) : (
-                customers.map((customer) => (
-                  <tr
-                    key={customer._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                            {customer.customerType === 'BTB' ? (
-                              <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            ) : (
-                              <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {customer.displayName || customer.name}
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {customer.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            customer.customerType === 'BTB'
-                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                          }`}
-                        >
-                          {customer.customerType}
-                        </span>
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            customer.customerMode === 'ONLINE'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                          }`}
-                        >
-                          <Globe className="h-3 w-3 mr-1" />
-                          {customer.customerMode}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white flex items-center">
-                        <Smartphone className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.mobile}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {customer.totalOrders || 0} orders
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        ₦{(customer.totalOrderValue || 0).toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {customer.isWebsiteCustomer
-                          ? 'Website'
-                          : customer.createdBy?.name || 'Unknown'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          customer.status === 'ACTIVE'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                            : customer.status === 'INACTIVE'
-                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                        }`}
-                      >
-                        {customer.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedCustomer(customer);
-                            setShowDetailsModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="View details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedCustomer(customer);
-                            setShowEditModal(true);
-                          }}
-                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                          title="Edit customer"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Showing{' '}
-                    <span className="font-medium">
-                      {(currentPage - 1) * customersPerPage + 1}
-                    </span>{' '}
-                    to{' '}
-                    <span className="font-medium">
-                      {Math.min(currentPage * customersPerPage, totalCustomers)}
-                    </span>{' '}
-                    of <span className="font-medium">{totalCustomers}</span>{' '}
-                    results
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() =>
-                        setCurrentPage(Math.max(1, currentPage - 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                      const page = i + 1;
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === page
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={() =>
-                        setCurrentPage(Math.min(totalPages, currentPage + 1))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
+        {loading && customers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-2" />
+            <p className="text-gray-500 dark:text-gray-400">
+              Loading customers...
+            </p>
           </div>
+        ) : customers.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">
+              No customers found
+            </p>
+            {canCreate && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Create Customer
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <CustomerTable
+              customers={customers}
+              onViewDetails={handleViewDetails}
+              onEdit={handleEdit}
+              onAssign={canAssign ? handleAssign : null}
+              onToggleFeatured={handleToggleFeatured}
+              currentUser={currentUser}
+            />
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalCustomers}
+                itemsPerPage={customersPerPage}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </>
         )}
       </div>
 
       {/* Modals */}
-      <CreateCustomerModal />
+      {showCreateModal && (
+        <CustomerModal
+          isOpen={showCreateModal}
+          onClose={handleModalClose}
+          onSuccess={handleSuccess}
+          customer={null}
+        />
+      )}
+
+      {showEditModal && (
+        <CustomerModal
+          isOpen={showEditModal}
+          onClose={handleModalClose}
+          onSuccess={handleSuccess}
+          customer={selectedCustomer}
+        />
+      )}
+
+      {showDetailsModal && (
+        <CustomerDetailsModal
+          isOpen={showDetailsModal}
+          onClose={handleModalClose}
+          customer={selectedCustomer}
+        />
+      )}
+
+      {showAssignModal && (
+        <AssignCustomerModal
+          isOpen={showAssignModal}
+          onClose={handleModalClose}
+          onSuccess={handleSuccess}
+          customer={selectedCustomer}
+        />
+      )}
 
       {/* Loading Overlay */}
-      {loading && (
+      {loading && customers.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-40">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />

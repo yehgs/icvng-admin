@@ -1,3 +1,5 @@
+//src/data/nigeria-states-lgsa.js
+
 export const nigeriaStatesLgas = [
   {
     state: 'Abia',

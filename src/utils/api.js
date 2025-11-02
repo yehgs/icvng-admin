@@ -345,20 +345,32 @@ export const handleShippingMethodSubmission = async (
 // Generic API call function with improved error handling
 export const apiCall = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
+  
+  // Default headers
+  const defaultHeaders = {
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+
+  // Only add Content-Type for non-FormData requests
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+
   const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
+    headers: defaultHeaders,
   };
 
   try {
     const processedOptions = {
       ...defaultOptions,
       ...options,
-      headers: { ...defaultOptions.headers, ...options.headers },
+      headers: { 
+        ...defaultHeaders, 
+        ...options.headers // Merge user headers but keep Authorization
+      },
     };
 
+    // Only stringify non-FormData bodies
     if (
       processedOptions.body &&
       typeof processedOptions.body !== 'string' &&
@@ -367,10 +379,22 @@ export const apiCall = async (endpoint, options = {}) => {
       processedOptions.body = JSON.stringify(processedOptions.body);
     }
 
+    console.log('🔄 API Call:', endpoint, {
+      method: processedOptions.method || 'GET',
+      hasAuth: !!processedOptions.headers.Authorization,
+      bodyType: processedOptions.body?.constructor?.name,
+    });
+
     const response = await fetch(
       `${API_BASE_URL}${endpoint}`,
       processedOptions
     );
+
+    console.log('📥 Response:', {
+      status: response.status,
+      statusText: response.statusText,
+    });
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -387,6 +411,7 @@ export const apiCall = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
+    console.error('❌ API Call Error:', error);
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new Error('Network error. Please check your connection.');
     }
@@ -1061,19 +1086,56 @@ export const exchangeRateUtils = {
 // File upload API calls
 // Update your fileAPI.uploadFile function in utils/api.js for better debugging
 
+// In your api.js file
 export const fileAPI = {
   uploadImage: async (file) => {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // console.log('=== IMAGE UPLOAD DEBUG ===');
+    // console.log('Token exists:', !!token);
+    // console.log('File to upload:', {
+    //   name: file.name,
+    //   size: file.size,
+    //   type: file.type,
+    // });
+
     const formData = new FormData();
     formData.append('image', file);
 
-    return apiCall('/file/upload', {
-      method: 'POST',
-      body: formData,
-      headers: {}, // Let browser set Content-Type for FormData
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/file/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`, // ✅ ADD THIS!
+        },
+        body: formData,
+        // Don't set Content-Type - browser will set it with boundary
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('Error response:', errorData);
+        throw new Error(
+          errorData.message || `Upload failed: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+      console.log('Upload response:', data);
+      return data;
+    } catch (error) {
+      console.error('Upload API error:', error);
+      throw error;
+    }
   },
 
-  // utils/api.js - Fix the uploadFile function
+  // Keep your existing uploadFile (it already has the Authorization header)
   uploadFile: async (file) => {
     const token = localStorage.getItem('accessToken');
 
@@ -1081,13 +1143,13 @@ export const fileAPI = {
       throw new Error('No authentication token found');
     }
 
-    console.log('=== FILE UPLOAD DEBUG ===');
-    console.log('Token exists:', !!token);
-    console.log('File to upload:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
+    // console.log('=== FILE UPLOAD DEBUG ===');
+    // console.log('Token exists:', !!token);
+    // console.log('File to upload:', {
+    //   name: file.name,
+    //   size: file.size,
+    //   type: file.type,
+    // });
 
     const formData = new FormData();
     formData.append('file', file);
@@ -1096,7 +1158,7 @@ export const fileAPI = {
       const response = await fetch(`${API_BASE_URL}/file/upload-file`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, // ✅ Already correct
         },
         body: formData,
       });
@@ -1126,9 +1188,7 @@ export const fileAPI = {
     }
 
     try {
-      // URL encode the public_id to handle special characters
       const encodedPublicId = encodeURIComponent(publicId);
-
       const response = await apiCall(`/file/delete-file/${encodedPublicId}`, {
         method: 'DELETE',
       });
@@ -3342,7 +3402,10 @@ export const blogAPI = {
   },
 };
 
+// Add this to your utils/api.js file (customerAPI section)
+
 export const customerAPI = {
+  // Get customers list
   getCustomers: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -3356,6 +3419,7 @@ export const customerAPI = {
     );
   },
 
+  // Create customer
   createCustomer: async (customerData) => {
     return apiCall('/admin/customers/create', {
       method: 'POST',
@@ -3363,6 +3427,7 @@ export const customerAPI = {
     });
   },
 
+  // Update customer
   updateCustomer: async (customerId, customerData) => {
     return apiCall(`/admin/customers/${customerId}`, {
       method: 'PUT',
@@ -3370,16 +3435,48 @@ export const customerAPI = {
     });
   },
 
+  // Get customer details
   getCustomerDetails: async (customerId) => {
     return apiCall(`/admin/customers/${customerId}`);
   },
 
+  // Get customers for order dropdown
   getCustomersForOrder: async () => {
     return apiCall('/admin/customers/for-order');
   },
 
+  // Assign customer to users (DIRECTOR, IT, MANAGER only)
+  assignCustomer: async (customerId, assignmentData) => {
+    return apiCall(`/admin/customers/${customerId}/assign`, {
+      method: 'PUT',
+      body: assignmentData,
+    });
+  },
+
+  // Get assignable users
+  getAssignableUsers: async () => {
+    return apiCall('/admin/customers/assignable-users');
+  },
+
+  // Export customers (DIRECTOR and IT only)
   exportCustomers: async () => {
     return apiCall('/admin/customers/export/csv');
+  },
+
+  toggleFeaturedCustomer: async (customerId) => {
+    if (!customerId) {
+      throw new Error('Customer ID is required');
+    }
+    
+    return apiCall(`/admin/customers/${customerId}/toggle-featured`, {
+      method: 'PATCH',
+    });
+  },
+
+  // Get featured customers (public/all users)
+  getFeaturedCustomers: async (limit = 10) => {
+    const queryParams = new URLSearchParams({ limit: limit.toString() });
+    return apiCall(`/admin/customers/featured?${queryParams.toString()}`);
   },
 };
 
