@@ -345,7 +345,7 @@ export const handleShippingMethodSubmission = async (
 // Generic API call function with improved error handling
 export const apiCall = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
-  
+
   // Default headers
   const defaultHeaders = {
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -364,9 +364,9 @@ export const apiCall = async (endpoint, options = {}) => {
     const processedOptions = {
       ...defaultOptions,
       ...options,
-      headers: { 
-        ...defaultHeaders, 
-        ...options.headers // Merge user headers but keep Authorization
+      headers: {
+        ...defaultHeaders,
+        ...options.headers, // Merge user headers but keep Authorization
       },
     };
 
@@ -483,7 +483,7 @@ export const apiCallFileUploader = async (endpoint, options = {}) => {
       processedOptions
     );
 
-    console.log('Response status:', response.status);
+    console.log('Responsse status:', response.status);
     console.log('Response headers:', response.headers);
 
     const data = await response.json();
@@ -1095,13 +1095,13 @@ export const fileAPI = {
       throw new Error('No authentication token found');
     }
 
-    // console.log('=== IMAGE UPLOAD DEBUG ===');
-    // console.log('Token exists:', !!token);
-    // console.log('File to upload:', {
-    //   name: file.name,
-    //   size: file.size,
-    //   type: file.type,
-    // });
+    console.log('=== IMAGE UPLOAD DEBUG ===');
+    console.log('Token exists:', !!token);
+    console.log('File to upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
 
     const formData = new FormData();
     formData.append('image', file);
@@ -1110,7 +1110,7 @@ export const fileAPI = {
       const response = await fetch(`${API_BASE_URL}/file/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`, // ✅ ADD THIS!
+          Authorization: `Bearer ${token}`, // ✅ ADD THIS!
         },
         body: formData,
         // Don't set Content-Type - browser will set it with boundary
@@ -1143,13 +1143,13 @@ export const fileAPI = {
       throw new Error('No authentication token found');
     }
 
-    // console.log('=== FILE UPLOAD DEBUG ===');
-    // console.log('Token exists:', !!token);
-    // console.log('File to upload:', {
-    //   name: file.name,
-    //   size: file.size,
-    //   type: file.type,
-    // });
+    console.log('=== FILE UPLOAD DEBUG ===');
+    console.log('Token exists:', !!token);
+    console.log('File to upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
 
     const formData = new FormData();
     formData.append('file', file);
@@ -1158,7 +1158,7 @@ export const fileAPI = {
       const response = await fetch(`${API_BASE_URL}/file/upload-file`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`, // ✅ Already correct
+          Authorization: `Bearer ${token}`, // ✅ Already correct
         },
         body: formData,
       });
@@ -3362,6 +3362,16 @@ export const blogAPI = {
     });
   },
 
+  toggleFeatured: async (postId) => {
+    if (!postId) {
+      throw new Error('Post ID is required');
+    }
+
+    return apiCall(`/blog/admin/posts/${postId}/toggle-featured`, {
+      method: 'PATCH',
+    });
+  },
+
   deletePost: async (postId) => {
     return apiCall(`/blog/admin/posts/${postId}`, {
       method: 'DELETE',
@@ -3467,7 +3477,7 @@ export const customerAPI = {
     if (!customerId) {
       throw new Error('Customer ID is required');
     }
-    
+
     return apiCall(`/admin/customers/${customerId}/toggle-featured`, {
       method: 'PATCH',
     });

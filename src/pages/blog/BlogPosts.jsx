@@ -222,6 +222,19 @@ const BlogPosts = () => {
     }
   };
 
+  const handleToggleFeatured = async (postId) => {
+    try {
+      const response = await blogAPI.toggleFeatured(postId);
+      if (response.success) {
+        toast.success(response.message);
+        fetchPosts();
+      }
+    } catch (error) {
+      console.error('Error toggling featured:', error);
+      toast.error(handleApiError(error, 'Failed to toggle featured status'));
+    }
+  };
+
   const handleDelete = async (postId) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
 
@@ -520,6 +533,25 @@ const BlogPosts = () => {
                   </td>
                   <td className="table-cell">
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => handleToggleFeatured(post._id)}
+                        className={`p-1 rounded transition-colors ${
+                          post.featured
+                            ? 'text-yellow-600 hover:bg-yellow-50'
+                            : 'text-gray-400 hover:bg-gray-50'
+                        }`}
+                        title={
+                          post.featured
+                            ? 'Remove from featured'
+                            : 'Mark as featured'
+                        }
+                      >
+                        <Star
+                          className={`w-4 h-4 ${
+                            post.featured ? 'fill-current' : ''
+                          }`}
+                        />
+                      </button>
                       <button
                         onClick={() => handleEdit(post)}
                         className="p-1 text-green-600 hover:bg-green-50 rounded"
