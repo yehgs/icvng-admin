@@ -69,7 +69,8 @@ import Settings from './pages/settings/Settings';
 import NotFound from './pages/NotFound';
 
 // Order Management
-import OrderManagement from './pages/order/OrderManagement.jsx';
+import OfflineOrderManagement from './pages/order/OfflineOrderManagement.jsx';
+import WebsiteOrderManagement from './pages/order/WebsiteOrderManagement.jsx';
 
 //customer Management
 import CustomerManagement from './pages/customer/CustomerManagement.jsx';
@@ -327,12 +328,22 @@ const App = () => {
               }
             />
             <Route
-              path="order-management"
+              path="offline-orders"
               element={
                 <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER']}
+                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'HR']}
                 >
-                  <OrderManagement />
+                  <OfflineOrderManagement />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="website-orders"
+              element={
+                <RoleProtectedRoute
+                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'HR']}
+                >
+                  <WebsiteOrderManagement />
                 </RoleProtectedRoute>
               }
             />
