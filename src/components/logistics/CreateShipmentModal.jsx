@@ -52,6 +52,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [applyToGroup, setApplyToGroup] = useState(true);
 
   const carriers = [
     { name: 'I-Coffee Logistics', code: 'ICF', phone: '+234-800-ICOFFEE' },
@@ -275,7 +276,10 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        applyToGroup,
+      });
     }
   };
 
@@ -846,7 +850,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                 value={formData.trackingNumber}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                placeholder="Leave blank for auto-generation"
+                placeholder="Leave empty to auto-generate (e.g., ICF123456ABC)"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 If not provided, a tracking number will be generated
@@ -1033,6 +1037,29 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
               placeholder="Special delivery instructions..."
             />
           </div>
+
+          {selectedOrder?.orderGroupId &&
+            selectedOrder.totalItemsInGroup > 1 && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={applyToGroup}
+                    onChange={(e) => setApplyToGroup(e.target.checked)}
+                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Apply tracking to all {selectedOrder.totalItemsInGroup}{' '}
+                    items in this order group
+                  </span>
+                </label>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 ml-6">
+                  This order contains {selectedOrder.totalItemsInGroup} items.
+                  Checking this will create tracking for all items with the same
+                  tracking number.
+                </p>
+              </div>
+            )}
 
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">

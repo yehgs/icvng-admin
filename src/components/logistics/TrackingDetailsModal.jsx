@@ -1,6 +1,6 @@
 // admin/src/components/logistics/TrackingDetailsModal.jsx
 import React from 'react';
-import { X, MapPin } from 'lucide-react';
+import { X, MapPin, Package } from 'lucide-react';
 const TrackingDetailsModal = ({ isOpen, onClose, tracking }) => {
   if (!isOpen || !tracking) return null;
 

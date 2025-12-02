@@ -1,6 +1,6 @@
 // admin/src/components/logistics/UpdateTrackingModal.jsx
 import React, { useState } from 'react';
-import { X, MapPin, Calendar } from 'lucide-react';
+import { X, MapPin, Calendar, Package } from 'lucide-react';
 
 const UpdateTrackingModal = ({
   isOpen,
@@ -25,6 +25,7 @@ const UpdateTrackingModal = ({
   });
 
   const [errors, setErrors] = useState({});
+  const [applyToGroup, setApplyToGroup] = useState(true);
 
   const statusOptions = [
     {
@@ -109,7 +110,10 @@ const UpdateTrackingModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        applyToGroup,
+      });
     }
   };
 
@@ -289,6 +293,27 @@ const UpdateTrackingModal = ({
               </span>
             </label>
           </div>
+
+          {tracking?.isGroupShipment && tracking.groupItemCount > 1 && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={applyToGroup}
+                  onChange={(e) => setApplyToGroup(e.target.checked)}
+                  className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Apply update to all {tracking.groupItemCount} items in this
+                  shipment
+                </span>
+              </label>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 ml-6">
+                This shipment contains {tracking.groupItemCount} items. Checking
+                this will update tracking for all items.
+              </p>
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
