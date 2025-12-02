@@ -1,4 +1,5 @@
 // icvng-admin/src/pages/order/OfflineOrderManagement.jsx
+// FIXED: Added timeout protection to prevent infinite loader
 import React, { useState, useEffect, useCallback } from 'react';
 import { adminOrderAPI, getCurrentUser } from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -96,8 +97,40 @@ const OfflineOrderManagement = () => {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  // Fetch orders - OFFLINE ONLY (isWebsiteOrder = false)
+  // Check if user can create orders
+  const canCreateOrder = () => {
+    if (!currentUser || !currentUser.subRole) return false;
+    return ['SALES', 'EDITOR', 'IT', 'MANAGER', 'DIRECTOR'].includes(
+      currentUser.subRole
+    );
+  };
+
+  // Get user's role display text
+  const getUserRoleInfo = () => {
+    if (!currentUser || !currentUser.subRole) return 'Unknown Role';
+
+    const roleInfo = {
+      SALES: 'Sales Agent',
+      EDITOR: 'Editor',
+      MANAGER: 'Manager',
+      DIRECTOR: 'Director',
+      IT: 'IT Administrator',
+    };
+
+    return roleInfo[currentUser.subRole] || currentUser.subRole;
+  };
+
+  // Check if user has full access (can see all orders)
+  const hasFullAccess = () => {
+    if (!currentUser || !currentUser.subRole) return false;
+    return ['IT', 'MANAGER', 'DIRECTOR'].includes(currentUser.subRole);
+  };
+
+  // Fetch orders - OFFLINE ONLY (isWebsiteOrder = false) with role-based filtering
   const fetchOrders = useCallback(async () => {
+    // 🔥 FIX: Get currentUser inside function to avoid infinite loop
+    const user = getCurrentUser();
+
     try {
       setLoading(true);
       setError('');
@@ -115,17 +148,69 @@ const OfflineOrderManagement = () => {
         ...(filterPaymentStatus && { paymentStatus: filterPaymentStatus }),
       };
 
-      const response = await adminOrderAPI.getOrders(params);
+      // Role-based filtering
+      // IT, MANAGER, DIRECTOR see all offline orders
+      // SALES and EDITOR only see orders they created
+      if (user?.subRole && ['SALES', 'EDITOR'].includes(user.subRole)) {
+        params.createdBy = user._id || user.id;
+      }
+
+      console.log('Fetching orders with params:', params);
+      console.log('Current user role:', user?.subRole);
+
+      // 🔥 FIX: Add 30-second timeout protection
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                'Request timeout. Server is not responding. Please check if MongoDB is connected.'
+              )
+            ),
+          30000
+        )
+      );
+
+      const apiPromise = adminOrderAPI.getOrders(params);
+      const response = await Promise.race([apiPromise, timeoutPromise]);
 
       if (response.success) {
         setOrders(response.data.docs || []);
         setTotalOrders(response.data.totalDocs || 0);
+      } else {
+        throw new Error(response.message || 'Failed to fetch orders');
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
-      setError(error.message || 'Failed to load orders');
+
+      // 🔥 FIX: Better error messages
+      let errorMessage = 'Failed to load orders';
+
+      if (
+        error.message.includes('timeout') ||
+        error.message.includes('not responding')
+      ) {
+        errorMessage =
+          'Server is not responding. Please check if MongoDB is connected and backend is running.';
+      } else if (
+        error.message.includes('Network error') ||
+        error.message.includes('fetch')
+      ) {
+        errorMessage =
+          'Cannot connect to server. Please check if the backend server is running.';
+      } else if (
+        error.message.includes('Session expired') ||
+        error.message.includes('401')
+      ) {
+        errorMessage = 'Your session has expired. Please login again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
-      setLoading(false);
+      setLoading(false); // 🔥 FIX: ALWAYS stop loading
     }
   }, [
     currentPage,
@@ -137,6 +222,7 @@ const OfflineOrderManagement = () => {
     filterMode,
     filterStatus,
     filterPaymentStatus,
+    // 🔥 FIX: Removed currentUser from dependencies to prevent infinite loop
   ]);
 
   // Generate invoice
@@ -163,15 +249,21 @@ const OfflineOrderManagement = () => {
   };
 
   const handleCreateOrder = () => {
+    if (!canCreateOrder()) {
+      toast.error('You do not have permission to create orders');
+      return;
+    }
     setShowCreateModal(true);
   };
 
   const handleOrderCreated = () => {
+    toast.success('Order created successfully!');
     fetchOrders();
     setShowCreateModal(false);
   };
 
   const handleOrderUpdated = () => {
+    toast.success('Order updated successfully!');
     fetchOrders();
     setShowDetailsModal(false);
     setSelectedOrder(null);
@@ -200,17 +292,23 @@ const OfflineOrderManagement = () => {
     filterPaymentStatus;
 
   // Effects
+  // 🔥 FIX: Only trigger on pagination/sort changes
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, ordersPerPage, sortBy, sortOrder]);
 
-  // Debounce search
+  // 🔥 FIX: Debounce filter changes separately
   useEffect(() => {
     const timer = setTimeout(() => {
-      setCurrentPage(1);
-      fetchOrders();
+      if (currentPage === 1) {
+        fetchOrders();
+      } else {
+        setCurrentPage(1); // Will trigger the above useEffect
+      }
     }, 500);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, filterType, filterMode, filterStatus, filterPaymentStatus]);
 
   const totalPages = Math.ceil(totalOrders / ordersPerPage);
@@ -221,10 +319,12 @@ const OfflineOrderManagement = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Offline Orders
+            Manual Online/Offline Orders
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage manual/sales orders ({totalOrders.toLocaleString()} total)
+            {hasFullAccess()
+              ? `All manual/sales orders (${totalOrders.toLocaleString()} total)`
+              : `Your orders as ${getUserRoleInfo()} (${totalOrders.toLocaleString()} total)`}
           </p>
         </div>
 
@@ -238,7 +338,7 @@ const OfflineOrderManagement = () => {
             Refresh
           </button>
 
-          {currentUser?.subRole === 'SALES' && (
+          {canCreateOrder() && (
             <button
               onClick={handleCreateOrder}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -249,6 +349,24 @@ const OfflineOrderManagement = () => {
           )}
         </div>
       </div>
+
+      {/* Role-based access notice */}
+      {!hasFullAccess() && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+                Limited Access View
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                As a {getUserRoleInfo()}, you can only see orders you created.
+                You can create new orders using the "Create Order" button above.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -461,8 +579,21 @@ const OfflineOrderManagement = () => {
                     <div className="flex flex-col items-center">
                       <Package className="h-12 w-12 text-gray-400 mb-4" />
                       <p className="text-gray-500 dark:text-gray-400">
-                        No offline orders found
+                        {hasActiveFilters
+                          ? 'No orders found matching your filters'
+                          : hasFullAccess()
+                          ? 'No offline orders found'
+                          : "You haven't created any orders yet"}
                       </p>
+                      {canCreateOrder() && !hasActiveFilters && (
+                        <button
+                          onClick={handleCreateOrder}
+                          className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Create Your First Order
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -584,16 +715,15 @@ const OfflineOrderManagement = () => {
                           <Eye className="w-5 h-5" />
                         </button>
 
-                        {currentUser?.subRole === 'SALES' &&
-                          !order.invoiceGenerated && (
-                            <button
-                              onClick={() => handleGenerateInvoice(order._id)}
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                              title="Generate invoice"
-                            >
-                              <FileText className="w-5 h-5" />
-                            </button>
-                          )}
+                        {canCreateOrder() && !order.invoiceGenerated && (
+                          <button
+                            onClick={() => handleGenerateInvoice(order._id)}
+                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                            title="Generate invoice"
+                          >
+                            <FileText className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -704,7 +834,7 @@ const OfflineOrderManagement = () => {
         <CreateOrderModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onOrderCreated={handleOrderCreated}
+          onSuccess={handleOrderCreated}
         />
       )}
 

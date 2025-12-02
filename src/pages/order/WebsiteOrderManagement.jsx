@@ -761,7 +761,7 @@ const WebsiteOrderManagement = () => {
       {/* Details Modal */}
       {showDetailsModal && selectedOrder && (
         <WebsiteOrderDetailsModal
-          order={selectedOrder}
+          orderGroup={selectedOrder}
           onClose={handleCloseDetailsModal}
           onUpdate={handleOrderUpdated}
           currentUser={currentUser}

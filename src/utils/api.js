@@ -1290,6 +1290,27 @@ export const productAPI = {
     return apiCall(`/product/search?${queryParams.toString()}`);
   },
 
+  searchProductAdmin: async (searchParams) => {
+    const validatedParams = {
+      search: searchParams.search || '',
+      page: parseInt(searchParams.page) || 1,
+      limit: parseInt(searchParams.limit) || 10,
+      category: searchParams.category,
+      subCategory: searchParams.subCategory,
+      brand: searchParams.brand,
+      productType: searchParams.productType,
+      productAvailability: searchParams.productAvailability,
+      minPrice: searchParams.minPrice,
+      maxPrice: searchParams.maxPrice,
+      sort: searchParams.sort,
+    };
+
+    return apiCall('/product/search-product-admin', {
+      method: 'POST',
+      body: validatedParams,
+    });
+  },
+
   getCategoryStructure: async () => {
     return apiCall('/product/category-structure');
   },
@@ -3429,6 +3450,19 @@ export const customerAPI = {
     );
   },
 
+  // Get customers for order dropdown (used in CreateOrderModal)
+  getCustomersForOrder: async () => {
+    return apiCall('/admin/customers/for-order');
+  },
+
+  // Get customer details
+  getCustomerDetails: async (customerId) => {
+    if (!customerId) {
+      throw new Error('Customer ID is required');
+    }
+    return apiCall(`/admin/customers/${customerId}`);
+  },
+
   // Create customer
   createCustomer: async (customerData) => {
     return apiCall('/admin/customers/create', {
@@ -3439,6 +3473,9 @@ export const customerAPI = {
 
   // Update customer
   updateCustomer: async (customerId, customerData) => {
+    if (!customerId) {
+      throw new Error('Customer ID is required');
+    }
     return apiCall(`/admin/customers/${customerId}`, {
       method: 'PUT',
       body: customerData,
@@ -3492,6 +3529,7 @@ export const customerAPI = {
 
 // Admin order management API calls
 export const adminOrderAPI = {
+  // Get all orders (unified - both website and manual)
   getOrders: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -3503,26 +3541,114 @@ export const adminOrderAPI = {
     return apiCall(`/admin/orders/list${queryString ? `?${queryString}` : ''}`);
   },
 
+  // Create manual order with warehouse stock deduction and email option
   createOrder: async (orderData) => {
+    // Validate required fields
+    if (!orderData.customerId) {
+      throw new Error('Customer ID is required');
+    }
+
+    if (!orderData.items || orderData.items.length === 0) {
+      throw new Error('At least one item is required');
+    }
+
+    // Process and validate data
+    const validatedData = {
+      customerId: orderData.customerId,
+      items: orderData.items.map((item) => {
+        if (!item.productId) {
+          throw new Error('Product ID is required for all items');
+        }
+        return {
+          productId: item.productId,
+          quantity: parseInt(item.quantity) || 1,
+          priceOption: item.priceOption || 'regular',
+        };
+      }),
+      orderType: orderData.orderType || 'BTC',
+      orderMode: orderData.orderMode || 'OFFLINE',
+      paymentMethod: orderData.paymentMethod || 'CASH',
+      deliveryAddress: orderData.deliveryAddress || {},
+      notes: orderData.notes || '',
+      customerNotes: orderData.customerNotes || '',
+      discountAmount: parseFloat(orderData.discountAmount) || 0,
+      taxAmount: parseFloat(orderData.taxAmount) || 0,
+      shippingCost: parseFloat(orderData.shippingCost) || 0,
+      sendInvoiceEmail: Boolean(orderData.sendInvoiceEmail),
+    };
+
     return apiCall('/admin/orders/create', {
       method: 'POST',
-      body: orderData,
+      body: validatedData,
     });
   },
 
+  // Update order status
   updateOrderStatus: async (orderId, statusData) => {
+    if (!orderId) {
+      throw new Error('Order ID is required');
+    }
+
+    const validatedData = {
+      order_status: statusData.order_status,
+      payment_status: statusData.payment_status,
+      notes: statusData.notes || '',
+    };
+
     return apiCall(`/admin/orders/${orderId}/status`, {
       method: 'PUT',
-      body: statusData,
+      body: validatedData,
     });
   },
 
-  generateInvoice: async (orderId) => {
+  // Generate invoice with optional email sending
+  generateInvoice: async (orderId, sendEmail = false) => {
+    if (!orderId) {
+      throw new Error('Order ID is required');
+    }
+
     return apiCall(`/admin/orders/${orderId}/invoice`, {
       method: 'POST',
+      body: { sendEmail: Boolean(sendEmail) },
     });
   },
 
+  // NEW: Preview invoice before creating order
+  previewInvoice: async (previewData) => {
+    // Validate preview data
+    if (!previewData.customerId) {
+      throw new Error('Customer ID is required for invoice preview');
+    }
+
+    if (!previewData.items || previewData.items.length === 0) {
+      throw new Error('At least one item is required for invoice preview');
+    }
+
+    const validatedData = {
+      customerId: previewData.customerId,
+      items: previewData.items.map((item) => ({
+        productId: item.productId,
+        quantity: parseInt(item.quantity) || 1,
+        priceOption: item.priceOption || 'regular',
+      })),
+      orderType: previewData.orderType || 'BTC',
+      orderMode: previewData.orderMode || 'OFFLINE',
+      paymentMethod: previewData.paymentMethod || 'CASH',
+      deliveryAddress: previewData.deliveryAddress || {},
+      notes: previewData.notes || '',
+      customerNotes: previewData.customerNotes || '',
+      discountAmount: parseFloat(previewData.discountAmount) || 0,
+      taxAmount: parseFloat(previewData.taxAmount) || 0,
+      shippingCost: parseFloat(previewData.shippingCost) || 0,
+    };
+
+    return apiCall('/admin/orders/preview-invoice', {
+      method: 'POST',
+      body: validatedData,
+    });
+  },
+
+  // Get analytics
   getAnalytics: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {

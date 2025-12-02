@@ -193,7 +193,7 @@ const AdminSidebar = ({
         //   allowedSubRoles: ['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER'],
         // },
         {
-          title: 'Offline Orders',
+          title: 'Manual Orders',
           path: '/admin/offline-orders',
           icon: ShoppingCart,
           allowedSubRoles: ['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'HR'],
