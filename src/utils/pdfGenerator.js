@@ -1,11 +1,7 @@
 // icvng-admin/src/utils/pdfGenerator.js
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-// Note: For logo, convert SVG to PNG/JPG or use base64 encoded image
-// You can use a tool like https://cloudconvert.com/svg-to-png
-// Or include a PNG version of your logo
-import companyLogoPNG from '../assets/web-logo.png'; // Use PNG instead of SVG
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import companyLogoPNG from '../assets/web-logo.png';
 
 /**
  * Generate PDF invoice for website orders
@@ -184,8 +180,8 @@ export const generateOrderPDF = async (orderGroup) => {
       ];
     });
 
-    // Add items table
-    doc.autoTable({
+    // Add items table using autoTable
+    autoTable(doc, {
       startY: yPos,
       head: [['Product', 'Option', 'Qty', 'Unit Price', 'Total']],
       body: tableData,
