@@ -1,12 +1,16 @@
 // icvng-admin/src/utils/pdfGenerator.js
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import companyLogo from '../assets/web-logo.svg';
+
+// Note: For logo, convert SVG to PNG/JPG or use base64 encoded image
+// You can use a tool like https://cloudconvert.com/svg-to-png
+// Or include a PNG version of your logo
+import companyLogoPNG from '../assets/web-logo.png'; // Use PNG instead of SVG
 
 /**
  * Generate PDF invoice for website orders
  * @param {Object} orderGroup - Order group object with all orders
- * @returns {Promise<void>}
+ * @returns {Promise<Object>}
  */
 export const generateOrderPDF = async (orderGroup) => {
   try {
@@ -33,24 +37,14 @@ export const generateOrderPDF = async (orderGroup) => {
     };
 
     // ===== HEADER WITH LOGO =====
+    // Option 1: Load image asynchronously (recommended for external images)
     try {
-      // Convert SVG to base64 or use as is
-      const img = new Image();
-      img.src = companyLogo;
-
-      await new Promise((resolve, reject) => {
-        img.onload = () => {
-          // Add logo (adjust dimensions as needed)
-          doc.addImage(img, 'SVG', margin, yPos, 40, 15);
-          resolve();
-        };
-        img.onerror = () => {
-          console.warn('Logo failed to load, continuing without it');
-          resolve(); // Continue even if logo fails
-        };
-      });
+      const logoImage = await loadImage(companyLogoPNG);
+      // Add logo with proper format (PNG, JPEG)
+      doc.addImage(logoImage, 'PNG', margin, yPos, 40, 15);
     } catch (error) {
-      console.warn('Error loading logo:', error);
+      console.warn('Logo failed to load, continuing without it:', error);
+      // Continue without logo
     }
 
     // Company info (right side)
@@ -85,18 +79,20 @@ export const generateOrderPDF = async (orderGroup) => {
     doc.setFont('helvetica', 'normal');
 
     // Invoice details box
-    const invoiceDetails = [
+    const invoiceDetails = [];
+
+    if (mainOrder.invoiceNumber) {
+      invoiceDetails.push(['Invoice Number:', mainOrder.invoiceNumber]);
+    }
+
+    invoiceDetails.push(
       ['Order Group ID:', orderGroup.orderGroupId],
       ['Order Date:', formatDate(summary.createdAt)],
       ['Order Status:', summary.order_status],
       ['Payment Status:', summary.payment_status],
       ['Payment Method:', mainOrder.payment_method],
-      ['Total Items:', summary.totalItems.toString()],
-    ];
-
-    if (mainOrder.invoiceNumber) {
-      invoiceDetails.unshift(['Invoice Number:', mainOrder.invoiceNumber]);
-    }
+      ['Total Items:', summary.totalItems.toString()]
+    );
 
     let leftCol = margin;
     let rightCol = pageWidth / 2 + 5;
@@ -156,8 +152,13 @@ export const generateOrderPDF = async (orderGroup) => {
         addressLines.push(`Postal Code: ${address.postalCode}`);
 
       addressLines.forEach((line) => {
-        doc.text(line, margin, yPos);
-        yPos += 5;
+        // Split long lines to prevent overflow
+        const splitLines = doc.splitTextToSize(line, pageWidth - 2 * margin);
+        splitLines.forEach((splitLine) => {
+          checkPageBreak(5);
+          doc.text(splitLine, margin, yPos);
+          yPos += 5;
+        });
       });
     }
 
@@ -197,6 +198,7 @@ export const generateOrderPDF = async (orderGroup) => {
       },
       bodyStyles: {
         textColor: 50,
+        fontSize: 9,
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
@@ -209,6 +211,10 @@ export const generateOrderPDF = async (orderGroup) => {
         4: { cellWidth: 30, halign: 'right' },
       },
       margin: { left: margin, right: margin },
+      didDrawPage: function (data) {
+        // Update yPos after table on each page
+        yPos = data.cursor.y;
+      },
     });
 
     yPos = doc.lastAutoTable.finalY + 10;
@@ -246,7 +252,9 @@ export const generateOrderPDF = async (orderGroup) => {
         `-${formatCurrency(totals.totalDiscount)}`,
         pageWidth - margin,
         yPos,
-        { align: 'right' }
+        {
+          align: 'right',
+        }
       );
       doc.setTextColor(0, 0, 0); // Reset to black
       yPos += 6;
@@ -292,8 +300,12 @@ export const generateOrderPDF = async (orderGroup) => {
           `Admin Notes: ${mainOrder.notes}`,
           pageWidth - 2 * margin
         );
-        doc.text(notesLines, margin, yPos);
-        yPos += notesLines.length * 5 + 3;
+        notesLines.forEach((line) => {
+          checkPageBreak(5);
+          doc.text(line, margin, yPos);
+          yPos += 5;
+        });
+        yPos += 3;
       }
 
       if (mainOrder.customer_notes) {
@@ -301,27 +313,42 @@ export const generateOrderPDF = async (orderGroup) => {
           `Customer Notes: ${mainOrder.customer_notes}`,
           pageWidth - 2 * margin
         );
-        doc.text(customerNotesLines, margin, yPos);
-        yPos += customerNotesLines.length * 5;
+        customerNotesLines.forEach((line) => {
+          checkPageBreak(5);
+          doc.text(line, margin, yPos);
+          yPos += 5;
+        });
       }
       yPos += 5;
     }
 
     // ===== FOOTER =====
-    const footerY = pageHeight - 20;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(128, 128, 128);
+    const totalPages = doc.internal.getNumberOfPages();
 
-    doc.text('Thank you for your business!', pageWidth / 2, footerY, {
-      align: 'center',
-    });
-    doc.text(
-      `Generated on ${new Date().toLocaleString('en-GB')}`,
-      pageWidth / 2,
-      footerY + 5,
-      { align: 'center' }
-    );
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      const footerY = pageHeight - 15;
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(128, 128, 128);
+
+      doc.text('Thank you for your business!', pageWidth / 2, footerY, {
+        align: 'center',
+      });
+      doc.text(
+        `Generated on ${new Date().toLocaleString('en-GB')}`,
+        pageWidth / 2,
+        footerY + 4,
+        { align: 'center' }
+      );
+
+      // Page number
+      doc.setFontSize(8);
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, footerY + 4, {
+        align: 'right',
+      });
+    }
 
     // Save PDF
     const filename = `Order_${orderGroup.orderGroupId}_${Date.now()}.pdf`;
@@ -330,11 +357,44 @@ export const generateOrderPDF = async (orderGroup) => {
     return { success: true, filename };
   } catch (error) {
     console.error('Error generating PDF:', error);
-    throw new Error('Failed to generate PDF invoice');
+    throw new Error('Failed to generate PDF invoice: ' + error.message);
   }
 };
 
 // ===== HELPER FUNCTIONS =====
+
+/**
+ * Load image and return as data URL
+ * @param {string} src - Image source
+ * @returns {Promise<string>}
+ */
+const loadImage = (src) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; // Handle CORS
+
+    img.onload = () => {
+      try {
+        // Create canvas to convert image to data URL
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        resolve(dataURL);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+    };
+
+    img.src = src;
+  });
+};
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-NG', {
