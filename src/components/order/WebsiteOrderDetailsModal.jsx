@@ -20,7 +20,11 @@ import {
   ChevronUp,
   Check,
   AlertCircle,
+  Download,
+  FileText,
+  Send,
 } from 'lucide-react';
+import { generateOrderPDF } from '../../utils/pdfGenerator';
 
 const WebsiteOrderDetailsModal = ({
   orderGroup,
@@ -31,6 +35,8 @@ const WebsiteOrderDetailsModal = ({
   const [updating, setUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [expandedProducts, setExpandedProducts] = useState(true);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   // Collective status update
   const [collectiveStatus, setCollectiveStatus] = useState({
@@ -198,11 +204,57 @@ const WebsiteOrderDetailsModal = ({
     }));
   };
 
+  // Generate and send invoice via email
+  const handleGenerateInvoice = async (sendEmail = false) => {
+    try {
+      setGeneratingInvoice(true);
+
+      // For grouped orders, generate invoice for parent order
+      const targetOrder = mainOrder;
+
+      const response = await adminOrderAPI.generateInvoice(
+        targetOrder._id,
+        sendEmail
+      );
+
+      if (response.success) {
+        if (sendEmail) {
+          toast.success('Invoice generated and email sent successfully');
+        } else {
+          toast.success('Invoice generated successfully');
+        }
+        onUpdate();
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to generate invoice');
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  };
+
+  // Download PDF invoice
+  const handleDownloadPDF = async () => {
+    try {
+      setDownloadingPDF(true);
+      await generateOrderPDF(orderGroup);
+      toast.success('PDF invoice downloaded successfully');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast.error('Failed to download PDF invoice');
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
   const canUpdateOrder = () => {
     if (['IT', 'MANAGER', 'DIRECTOR'].includes(currentUser?.subRole))
       return true;
     if (currentUser?.subRole === 'SALES') return true;
     return false;
+  };
+
+  const canGenerateInvoice = () => {
+    return currentUser?.subRole === 'SALES' && !mainOrder?.invoiceGenerated;
   };
 
   return (
@@ -244,6 +296,12 @@ const WebsiteOrderDetailsModal = ({
                 <Calendar className="w-4 h-4" />
                 Created on {formatDate(orderGroup.summary.createdAt)}
               </p>
+              {mainOrder?.invoiceNumber && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-1">
+                  <FileText className="w-4 h-4" />
+                  Invoice: {mainOrder.invoiceNumber}
+                </p>
+              )}
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -844,12 +902,76 @@ const WebsiteOrderDetailsModal = ({
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Last updated: {formatDate(mainOrder.updatedAt)}
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Close
-          </button>
+
+          <div className="flex flex-wrap gap-3">
+            {/* Download PDF */}
+            <button
+              onClick={handleDownloadPDF}
+              disabled={downloadingPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {downloadingPDF ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Download PDF
+                </>
+              )}
+            </button>
+
+            {/* Generate Invoice (without email) */}
+            {canGenerateInvoice() && (
+              <button
+                onClick={() => handleGenerateInvoice(false)}
+                disabled={generatingInvoice}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {generatingInvoice ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4" />
+                    Generate Invoice
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Generate & Send Invoice Email */}
+            {canGenerateInvoice() && mainOrder?.userId?.email && (
+              <button
+                onClick={() => handleGenerateInvoice(true)}
+                disabled={generatingInvoice}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {generatingInvoice ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send Invoice Email
+                  </>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
