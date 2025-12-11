@@ -33,48 +33,45 @@ export const generateOrderPDF = async (orderGroup) => {
     };
 
     // ===== HEADER WITH LOGO =====
-    // Option 1: Load image asynchronously (recommended for external images)
     try {
       const logoImage = await loadImage(companyLogoPNG);
-      // Add logo with proper format (PNG, JPEG)
       doc.addImage(logoImage, 'PNG', margin, yPos, 40, 15);
     } catch (error) {
       console.warn('Logo failed to load, continuing without it:', error);
-      // Continue without logo
     }
 
     // Company info (right side)
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     const companyInfo = [
       'I-COFFEE NIGERIA',
       'www.i-coffee.ng',
-      'support@i-coffee.ng',
-      '+234 XXX XXX XXXX',
+      'customercare@i-coffee.ng',
+      '+234 803 982 7194',
     ];
 
     let companyYPos = yPos;
     companyInfo.forEach((line) => {
       doc.text(line, pageWidth - margin, companyYPos, { align: 'right' });
-      companyYPos += 5;
+      companyYPos += 4.5;
     });
 
     yPos += 25;
 
     // ===== INVOICE TITLE =====
-    doc.setFontSize(20);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.text('ORDER INVOICE', pageWidth / 2, yPos, { align: 'center' });
-    yPos += 10;
+    yPos += 12;
 
     // ===== ORDER INFO =====
     const mainOrder = orderGroup.parentOrder || orderGroup.allOrders[0];
     const summary = orderGroup.summary;
 
-    doc.setFontSize(10);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
 
-    // Invoice details box
+    // Invoice details - Two column layout with better spacing
     const invoiceDetails = [];
 
     if (mainOrder.invoiceNumber) {
@@ -90,31 +87,39 @@ export const generateOrderPDF = async (orderGroup) => {
       ['Total Items:', summary.totalItems.toString()]
     );
 
-    let leftCol = margin;
-    let rightCol = pageWidth / 2 + 5;
+    const leftCol = margin;
+    const rightCol = pageWidth / 2 + 5;
+    const labelWidth = 32; // Reduced for label
+    const valueWidth = 55; // Space for value
 
     invoiceDetails.forEach((detail, index) => {
       const x = index % 2 === 0 ? leftCol : rightCol;
+
+      // Label (bold)
       doc.setFont('helvetica', 'bold');
       doc.text(detail[0], x, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.text(detail[1], x + 35, yPos);
 
-      if (index % 2 === 1) yPos += 6;
+      // Value (normal) - with text wrapping for long values
+      doc.setFont('helvetica', 'normal');
+      const valueText = detail[1];
+      const splitValue = doc.splitTextToSize(valueText, valueWidth);
+      doc.text(splitValue, x + labelWidth, yPos);
+
+      if (index % 2 === 1) yPos += Math.max(5, splitValue.length * 4);
     });
 
-    if (invoiceDetails.length % 2 === 1) yPos += 6;
-    yPos += 10;
+    if (invoiceDetails.length % 2 === 1) yPos += 5;
+    yPos += 8;
 
     // ===== CUSTOMER INFORMATION =====
     checkPageBreak(40);
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('CUSTOMER INFORMATION', margin, yPos);
-    yPos += 7;
+    yPos += 6;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
 
     const customer = mainOrder.userId;
@@ -126,15 +131,15 @@ export const generateOrderPDF = async (orderGroup) => {
 
     customerInfo.forEach((info) => {
       doc.text(info, margin, yPos);
-      yPos += 6;
+      yPos += 5;
     });
 
     // Delivery Address
     if (mainOrder.deliveryAddress || mainOrder.delivery_address) {
-      yPos += 3;
+      yPos += 2;
       doc.setFont('helvetica', 'bold');
       doc.text('Delivery Address:', margin, yPos);
-      yPos += 6;
+      yPos += 5;
       doc.setFont('helvetica', 'normal');
 
       const address = mainOrder.deliveryAddress || mainOrder.delivery_address;
@@ -148,25 +153,24 @@ export const generateOrderPDF = async (orderGroup) => {
         addressLines.push(`Postal Code: ${address.postalCode}`);
 
       addressLines.forEach((line) => {
-        // Split long lines to prevent overflow
         const splitLines = doc.splitTextToSize(line, pageWidth - 2 * margin);
         splitLines.forEach((splitLine) => {
           checkPageBreak(5);
           doc.text(splitLine, margin, yPos);
-          yPos += 5;
+          yPos += 4.5;
         });
       });
     }
 
-    yPos += 10;
+    yPos += 8;
 
     // ===== ORDER ITEMS TABLE =====
     checkPageBreak(60);
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('ORDER ITEMS', margin, yPos);
-    yPos += 7;
+    yPos += 6;
 
     // Prepare table data
     const tableData = orderGroup.allOrders.map((order) => {
@@ -175,8 +179,8 @@ export const generateOrderPDF = async (orderGroup) => {
         product?.name || 'Product',
         order.product_details?.priceOption || 'Regular',
         order.quantity.toString(),
-        formatCurrency(order.unitPrice),
-        formatCurrency(order.quantity * order.unitPrice),
+        formatCurrencyCompact(order.unitPrice),
+        formatCurrencyCompact(order.quantity * order.unitPrice),
       ];
     });
 
@@ -191,24 +195,25 @@ export const generateOrderPDF = async (orderGroup) => {
         textColor: 255,
         fontStyle: 'bold',
         halign: 'center',
+        fontSize: 9,
       },
       bodyStyles: {
         textColor: 50,
-        fontSize: 9,
+        fontSize: 8,
+        cellPadding: 3,
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
       columnStyles: {
-        0: { cellWidth: 70 },
-        1: { cellWidth: 35, halign: 'center' },
+        0: { cellWidth: 65, halign: 'left' },
+        1: { cellWidth: 30, halign: 'center' },
         2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 30, halign: 'right' },
-        4: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 35, halign: 'right' },
+        4: { cellWidth: 35, halign: 'right' },
       },
       margin: { left: margin, right: margin },
       didDrawPage: function (data) {
-        // Update yPos after table on each page
         yPos = data.cursor.y;
       },
     });
@@ -219,66 +224,79 @@ export const generateOrderPDF = async (orderGroup) => {
     checkPageBreak(50);
 
     const totals = summary.totals;
-    const totalsSectionX = pageWidth - 70;
+    const totalsSectionX = pageWidth - 75;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
 
     // Subtotal
     doc.setFont('helvetica', 'normal');
     doc.text('Subtotal:', totalsSectionX, yPos);
-    doc.text(formatCurrency(totals.subTotal), pageWidth - margin, yPos, {
+    doc.text(formatCurrencyCompact(totals.subTotal), pageWidth - margin, yPos, {
       align: 'right',
     });
-    yPos += 6;
+    yPos += 5.5;
 
     // Shipping
     if (totals.totalShipping > 0) {
       doc.text('Shipping:', totalsSectionX, yPos);
-      doc.text(formatCurrency(totals.totalShipping), pageWidth - margin, yPos, {
-        align: 'right',
-      });
-      yPos += 6;
-    }
-
-    // Discount
-    if (totals.totalDiscount > 0) {
-      doc.text('Discount:', totalsSectionX, yPos);
-      doc.setTextColor(220, 53, 69); // Red for discount
       doc.text(
-        `-${formatCurrency(totals.totalDiscount)}`,
+        formatCurrencyCompact(totals.totalShipping),
         pageWidth - margin,
         yPos,
         {
           align: 'right',
         }
       );
-      doc.setTextColor(0, 0, 0); // Reset to black
-      yPos += 6;
+      yPos += 5.5;
+    }
+
+    // Discount
+    if (totals.totalDiscount > 0) {
+      doc.text('Discount:', totalsSectionX, yPos);
+      doc.setTextColor(220, 53, 69);
+      doc.text(
+        `-${formatCurrencyCompact(totals.totalDiscount)}`,
+        pageWidth - margin,
+        yPos,
+        { align: 'right' }
+      );
+      doc.setTextColor(0, 0, 0);
+      yPos += 5.5;
     }
 
     // Tax
     if (totals.totalTax > 0) {
       doc.text('Tax:', totalsSectionX, yPos);
-      doc.text(formatCurrency(totals.totalTax), pageWidth - margin, yPos, {
-        align: 'right',
-      });
-      yPos += 6;
+      doc.text(
+        formatCurrencyCompact(totals.totalTax),
+        pageWidth - margin,
+        yPos,
+        {
+          align: 'right',
+        }
+      );
+      yPos += 5.5;
     }
 
     // Grand Total (bold and larger)
-    yPos += 3;
+    yPos += 2;
     doc.setLineWidth(0.5);
     doc.line(totalsSectionX, yPos, pageWidth - margin, yPos);
-    yPos += 7;
+    yPos += 6;
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('GRAND TOTAL:', totalsSectionX, yPos);
-    doc.setTextColor(40, 167, 69); // Green for total
-    doc.text(formatCurrency(totals.grandTotal), pageWidth - margin, yPos, {
-      align: 'right',
-    });
-    doc.setTextColor(0, 0, 0); // Reset to black
+    doc.setTextColor(40, 167, 69);
+    doc.text(
+      formatCurrencyCompact(totals.grandTotal),
+      pageWidth - margin,
+      yPos,
+      {
+        align: 'right',
+      }
+    );
+    doc.setTextColor(0, 0, 0);
     yPos += 10;
 
     // ===== NOTES SECTION =====
@@ -288,9 +306,11 @@ export const generateOrderPDF = async (orderGroup) => {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('NOTES:', margin, yPos);
-      yPos += 6;
+      yPos += 5;
 
+      doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
+
       if (mainOrder.notes) {
         const notesLines = doc.splitTextToSize(
           `Admin Notes: ${mainOrder.notes}`,
@@ -299,9 +319,9 @@ export const generateOrderPDF = async (orderGroup) => {
         notesLines.forEach((line) => {
           checkPageBreak(5);
           doc.text(line, margin, yPos);
-          yPos += 5;
+          yPos += 4.5;
         });
-        yPos += 3;
+        yPos += 2;
       }
 
       if (mainOrder.customer_notes) {
@@ -312,7 +332,7 @@ export const generateOrderPDF = async (orderGroup) => {
         customerNotesLines.forEach((line) => {
           checkPageBreak(5);
           doc.text(line, margin, yPos);
-          yPos += 5;
+          yPos += 4.5;
         });
       }
       yPos += 5;
@@ -325,7 +345,7 @@ export const generateOrderPDF = async (orderGroup) => {
       doc.setPage(i);
       const footerY = pageHeight - 15;
 
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(128, 128, 128);
 
@@ -340,7 +360,7 @@ export const generateOrderPDF = async (orderGroup) => {
       );
 
       // Page number
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, footerY + 4, {
         align: 'right',
       });
@@ -367,11 +387,10 @@ export const generateOrderPDF = async (orderGroup) => {
 const loadImage = (src) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'Anonymous'; // Handle CORS
+    img.crossOrigin = 'Anonymous';
 
     img.onload = () => {
       try {
-        // Create canvas to convert image to data URL
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
@@ -392,11 +411,32 @@ const loadImage = (src) => {
   });
 };
 
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
+/**
+ * Format currency with Naira symbol (compact version for PDF)
+ * Uses NGN prefix instead of symbol to avoid encoding issues
+ */
+const formatCurrencyCompact = (amount) => {
+  const formatted = new Intl.NumberFormat('en-NG', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount || 0);
+
+  // Use "NGN" prefix or you can use the actual symbol
+  return `NGN ${formatted}`;
+};
+
+/**
+ * Format currency with Naira symbol for display
+ * This version uses the actual Naira symbol
+ */
+const formatCurrency = (amount) => {
+  const formatted = new Intl.NumberFormat('en-NG', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount || 0);
+
+  // Using the actual Naira symbol
+  return `\u20A6 ${formatted}`;
 };
 
 const formatDate = (date) => {
