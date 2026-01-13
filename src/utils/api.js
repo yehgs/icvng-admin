@@ -1559,8 +1559,6 @@ export const pricingAPI = {
     return apiCall('/pricing/config/approve', {
       method: 'PATCH',
     });
-
-    console.log('=== END PRICING API ===');
   },
 
   // Calculate prices from purchase order
@@ -3450,11 +3448,6 @@ export const customerAPI = {
     );
   },
 
-  // Get customers for order dropdown (used in CreateOrderModal)
-  getCustomersForOrder: async () => {
-    return apiCall('/admin/customers/for-order');
-  },
-
   // Get customer details
   getCustomerDetails: async (customerId) => {
     if (!customerId) {
@@ -3480,11 +3473,6 @@ export const customerAPI = {
       method: 'PUT',
       body: customerData,
     });
-  },
-
-  // Get customer details
-  getCustomerDetails: async (customerId) => {
-    return apiCall(`/admin/customers/${customerId}`);
   },
 
   // Get customers for order dropdown
@@ -3714,7 +3702,6 @@ export default {
   getCurrentUser,
   handleApiError,
   isTokenValid,
-  getCurrentUser,
   setAuthData,
   clearAuthData,
 };

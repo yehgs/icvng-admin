@@ -1,7 +1,7 @@
 // icvng-admin/src/components/order/WebsiteOrderDetailsModal.jsx
-import React, { useState } from 'react';
-import { adminOrderAPI } from '../../utils/api';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { adminOrderAPI } from "../../utils/api";
+import toast from "react-hot-toast";
 import {
   X,
   User,
@@ -23,8 +23,8 @@ import {
   Download,
   FileText,
   Send,
-} from 'lucide-react';
-import { generateOrderPDF } from '../../utils/pdfGenerator';
+} from "lucide-react";
+import { generateOrderPDF } from "../../utils/pdfGenerator";
 
 const WebsiteOrderDetailsModal = ({
   orderGroup,
@@ -40,9 +40,9 @@ const WebsiteOrderDetailsModal = ({
 
   // Collective status update
   const [collectiveStatus, setCollectiveStatus] = useState({
-    order_status: orderGroup?.summary?.order_status || '',
-    payment_status: orderGroup?.summary?.payment_status || '',
-    notes: '',
+    order_status: orderGroup?.summary?.order_status || "",
+    payment_status: orderGroup?.summary?.payment_status || "",
+    notes: "",
   });
 
   // Individual status updates
@@ -52,7 +52,7 @@ const WebsiteOrderDetailsModal = ({
       statuses[order._id] = {
         order_status: order.order_status,
         payment_status: order.payment_status,
-        notes: order.admin_notes || '',
+        notes: order.admin_notes || "",
       };
     });
     return statuses;
@@ -60,7 +60,7 @@ const WebsiteOrderDetailsModal = ({
 
   // Track which orders are selected for individual update
   const [selectedOrders, setSelectedOrders] = useState(new Set());
-  const [updateMode, setUpdateMode] = useState('collective'); // 'collective' or 'individual'
+  const [updateMode, setUpdateMode] = useState("collective"); // 'collective' or 'individual'
 
   if (!orderGroup) return null;
 
@@ -68,50 +68,50 @@ const WebsiteOrderDetailsModal = ({
   const hasMultipleItems = orderGroup.summary.totalItems > 1;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
     }).format(amount || 0);
   };
 
   const formatDate = (date) => {
-    if (!date) return 'Not set';
-    return new Date(date).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    if (!date) return "Not set";
+    return new Date(date).toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
-  const getStatusBadge = (status, type = 'order') => {
+  const getStatusBadge = (status, type = "order") => {
     const statusClasses = {
       order: {
         PENDING:
-          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
         CONFIRMED:
-          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
         PROCESSING:
-          'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+          "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
         SHIPPED:
-          'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
+          "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
         DELIVERED:
-          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+          "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
         CANCELLED:
-          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+          "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
       },
       payment: {
         PENDING:
-          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-        PAID: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-        FAILED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+        PAID: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+        FAILED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
         REFUNDED:
-          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+          "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
         PENDING_BANK_TRANSFER:
-          'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+          "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
         PARTIAL:
-          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
       },
     };
 
@@ -162,7 +162,7 @@ const WebsiteOrderDetailsModal = ({
       setEditMode(false);
       onUpdate();
     } catch (error) {
-      toast.error(error.message || 'Failed to update orders');
+      toast.error(error.message || "Failed to update orders");
     } finally {
       setUpdating(false);
     }
@@ -173,7 +173,7 @@ const WebsiteOrderDetailsModal = ({
       setUpdating(true);
 
       if (selectedOrders.size === 0) {
-        toast.error('Please select at least one order to update');
+        toast.error("Please select at least one order to update");
         return;
       }
 
@@ -188,7 +188,7 @@ const WebsiteOrderDetailsModal = ({
       setSelectedOrders(new Set());
       onUpdate();
     } catch (error) {
-      toast.error(error.message || 'Failed to update orders');
+      toast.error(error.message || "Failed to update orders");
     } finally {
       setUpdating(false);
     }
@@ -219,14 +219,14 @@ const WebsiteOrderDetailsModal = ({
 
       if (response.success) {
         if (sendEmail) {
-          toast.success('Invoice generated and email sent successfully');
+          toast.success("Invoice generated and email sent successfully");
         } else {
-          toast.success('Invoice generated successfully');
+          toast.success("Invoice generated successfully");
         }
         onUpdate();
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to generate invoice');
+      toast.error(error.message || "Failed to generate invoice");
     } finally {
       setGeneratingInvoice(false);
     }
@@ -237,24 +237,24 @@ const WebsiteOrderDetailsModal = ({
     try {
       setDownloadingPDF(true);
       await generateOrderPDF(orderGroup);
-      toast.success('PDF invoice downloaded successfully');
+      toast.success("PDF invoice downloaded successfully");
     } catch (error) {
-      console.error('PDF download error:', error);
-      toast.error('Failed to download PDF invoice');
+      console.error("PDF download error:", error);
+      toast.error("Failed to download PDF invoice");
     } finally {
       setDownloadingPDF(false);
     }
   };
 
   const canUpdateOrder = () => {
-    if (['IT', 'MANAGER', 'DIRECTOR'].includes(currentUser?.subRole))
+    if (["IT", "MANAGER", "DIRECTOR"].includes(currentUser?.subRole))
       return true;
-    if (currentUser?.subRole === 'SALES') return true;
+    if (currentUser?.subRole === "SALES") return true;
     return false;
   };
 
   const canGenerateInvoice = () => {
-    return currentUser?.subRole === 'SALES' && !mainOrder?.invoiceGenerated;
+    return currentUser?.subRole === "SALES" && !mainOrder?.invoiceGenerated;
   };
 
   return (
@@ -314,8 +314,8 @@ const WebsiteOrderDetailsModal = ({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            {getStatusBadge(orderGroup.summary.order_status, 'order')}
-            {getStatusBadge(orderGroup.summary.payment_status, 'payment')}
+            {getStatusBadge(orderGroup.summary.order_status, "order")}
+            {getStatusBadge(orderGroup.summary.payment_status, "payment")}
             <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
               <Globe className="w-3 h-3" />
               Website Order
@@ -344,7 +344,7 @@ const WebsiteOrderDetailsModal = ({
                     Name
                   </p>
                   <p className="text-sm text-gray-900 dark:text-white">
-                    {mainOrder.userId?.name || 'Unknown'}
+                    {mainOrder.userId?.name || "Unknown"}
                   </p>
                 </div>
               </div>
@@ -383,12 +383,17 @@ const WebsiteOrderDetailsModal = ({
                       Delivery Address
                     </p>
                     <p className="text-sm text-gray-900 dark:text-white">
-                      {mainOrder.delivery_address.street},{' '}
-                      {mainOrder.delivery_address.city}
+                      {/* ✅ Handle both address formats */}
+                      {mainOrder.delivery_address.address_line ||
+                        mainOrder.delivery_address.street}
+                      {mainOrder.delivery_address.city &&
+                        `, ${mainOrder.delivery_address.city}`}
+                      {mainOrder.delivery_address.lga &&
+                        `, ${mainOrder.delivery_address.lga} LGA`}
                       {mainOrder.delivery_address.state &&
                         `, ${mainOrder.delivery_address.state}`}
-                      {mainOrder.delivery_address.postalCode &&
-                        ` ${mainOrder.delivery_address.postalCode}`}
+                      {mainOrder.delivery_address.postal_code &&
+                        ` ${mainOrder.delivery_address.postal_code}`}
                     </p>
                   </div>
                 </div>
@@ -446,20 +451,20 @@ const WebsiteOrderDetailsModal = ({
                           <div className="font-semibold text-gray-900 dark:text-white">
                             {order.productId?.name ||
                               order.product_details?.name ||
-                              'Unknown Product'}
+                              "Unknown Product"}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                             Order ID: {order.orderId}
                           </div>
                           <div className="flex items-center gap-4 mt-2 text-sm">
                             <span className="text-gray-600 dark:text-gray-400">
-                              Qty:{' '}
+                              Qty:{" "}
                               <span className="font-medium text-gray-900 dark:text-white">
                                 {order.quantity || 1}
                               </span>
                             </span>
                             <span className="text-gray-600 dark:text-gray-400">
-                              Unit Price:{' '}
+                              Unit Price:{" "}
                               <span className="font-medium text-gray-900 dark:text-white">
                                 {formatCurrency(order.unitPrice)}
                               </span>
@@ -477,8 +482,8 @@ const WebsiteOrderDetailsModal = ({
                             {formatCurrency(order.totalAmt)}
                           </div>
                           <div className="flex flex-col gap-1 mt-2">
-                            {getStatusBadge(order.order_status, 'order')}
-                            {getStatusBadge(order.payment_status, 'payment')}
+                            {getStatusBadge(order.order_status, "order")}
+                            {getStatusBadge(order.payment_status, "payment")}
                           </div>
                         </div>
                       </div>
@@ -556,34 +561,34 @@ const WebsiteOrderDetailsModal = ({
                   {/* Update Mode Toggle */}
                   <div className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <button
-                      onClick={() => setUpdateMode('collective')}
+                      onClick={() => setUpdateMode("collective")}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                        updateMode === 'collective'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        updateMode === "collective"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
                       }`}
                     >
                       Collective Update
                     </button>
                     <button
-                      onClick={() => setUpdateMode('individual')}
+                      onClick={() => setUpdateMode("individual")}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                        updateMode === 'individual'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        updateMode === "individual"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
                       }`}
                     >
                       Individual Update
                     </button>
                   </div>
 
-                  {updateMode === 'collective' ? (
+                  {updateMode === "collective" ? (
                     <>
                       {/* Collective Update Form */}
                       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-start gap-3">
                         <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
                         <div className="text-sm text-yellow-800 dark:text-yellow-300">
-                          This will update all {orderGroup.allOrders.length}{' '}
+                          This will update all {orderGroup.allOrders.length}{" "}
                           orders in this group with the same status.
                         </div>
                       </div>
@@ -680,7 +685,7 @@ const WebsiteOrderDetailsModal = ({
                             setCollectiveStatus({
                               order_status: orderGroup.summary.order_status,
                               payment_status: orderGroup.summary.payment_status,
-                              notes: '',
+                              notes: "",
                             });
                           }}
                           className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -706,8 +711,8 @@ const WebsiteOrderDetailsModal = ({
                             className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                           >
                             {selectedOrders.size === orderGroup.allOrders.length
-                              ? 'Deselect All'
-                              : 'Select All'}
+                              ? "Deselect All"
+                              : "Select All"}
                           </button>
                         </div>
                       </div>
@@ -720,8 +725,8 @@ const WebsiteOrderDetailsModal = ({
                               key={order._id}
                               className={`border-2 rounded-lg p-4 transition-colors ${
                                 isSelected
-                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                  : 'border-gray-200 dark:border-gray-600'
+                                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                  : "border-gray-200 dark:border-gray-600"
                               }`}
                             >
                               <div className="flex items-start gap-3">
@@ -738,7 +743,7 @@ const WebsiteOrderDetailsModal = ({
                                   <div className="flex items-start justify-between mb-3">
                                     <div>
                                       <div className="font-medium text-gray-900 dark:text-white">
-                                        {order.productId?.name || 'Product'}
+                                        {order.productId?.name || "Product"}
                                       </div>
                                       <div className="text-sm text-gray-500 dark:text-gray-400">
                                         {order.orderId}
@@ -747,11 +752,11 @@ const WebsiteOrderDetailsModal = ({
                                     <div className="flex gap-2">
                                       {getStatusBadge(
                                         order.order_status,
-                                        'order'
+                                        "order"
                                       )}
                                       {getStatusBadge(
                                         order.payment_status,
-                                        'payment'
+                                        "payment"
                                       )}
                                     </div>
                                   </div>
@@ -771,7 +776,7 @@ const WebsiteOrderDetailsModal = ({
                                           onChange={(e) =>
                                             updateIndividualStatus(
                                               order._id,
-                                              'order_status',
+                                              "order_status",
                                               e.target.value
                                             )
                                           }
@@ -810,7 +815,7 @@ const WebsiteOrderDetailsModal = ({
                                           onChange={(e) =>
                                             updateIndividualStatus(
                                               order._id,
-                                              'payment_status',
+                                              "payment_status",
                                               e.target.value
                                             )
                                           }
@@ -845,7 +850,7 @@ const WebsiteOrderDetailsModal = ({
                                           onChange={(e) =>
                                             updateIndividualStatus(
                                               order._id,
-                                              'notes',
+                                              "notes",
                                               e.target.value
                                             )
                                           }

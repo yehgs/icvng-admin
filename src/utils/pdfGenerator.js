@@ -1,7 +1,7 @@
 // icvng-admin/src/utils/pdfGenerator.js
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import companyLogoPNG from '../assets/web-logo.png';
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import companyLogoPNG from "../assets/web-logo.png";
 
 /**
  * Generate PDF invoice for website orders
@@ -12,9 +12,9 @@ export const generateOrderPDF = async (orderGroup) => {
   try {
     // Create new PDF document
     const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -35,24 +35,24 @@ export const generateOrderPDF = async (orderGroup) => {
     // ===== HEADER WITH LOGO =====
     try {
       const logoImage = await loadImage(companyLogoPNG);
-      doc.addImage(logoImage, 'PNG', margin, yPos, 40, 15);
+      doc.addImage(logoImage, "PNG", margin, yPos, 40, 15);
     } catch (error) {
-      console.warn('Logo failed to load, continuing without it:', error);
+      console.warn("Logo failed to load, continuing without it:", error);
     }
 
     // Company info (right side)
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont("helvetica", "normal");
     const companyInfo = [
-      'I-COFFEE NIGERIA',
-      'www.i-coffee.ng',
-      'customercare@i-coffee.ng',
-      '+234 803 982 7194',
+      "I-COFFEE NIGERIA",
+      "www.i-coffee.ng",
+      "customercare@i-coffee.ng",
+      "+234 803 982 7194",
     ];
 
     let companyYPos = yPos;
     companyInfo.forEach((line) => {
-      doc.text(line, pageWidth - margin, companyYPos, { align: 'right' });
+      doc.text(line, pageWidth - margin, companyYPos, { align: "right" });
       companyYPos += 4.5;
     });
 
@@ -60,8 +60,8 @@ export const generateOrderPDF = async (orderGroup) => {
 
     // ===== INVOICE TITLE =====
     doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ORDER INVOICE', pageWidth / 2, yPos, { align: 'center' });
+    doc.setFont("helvetica", "bold");
+    doc.text("ORDER INVOICE", pageWidth / 2, yPos, { align: "center" });
     yPos += 12;
 
     // ===== ORDER INFO =====
@@ -69,38 +69,38 @@ export const generateOrderPDF = async (orderGroup) => {
     const summary = orderGroup.summary;
 
     doc.setFontSize(8.5);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont("helvetica", "normal");
 
     // Invoice details - Two column layout with better spacing
     const invoiceDetails = [];
 
     if (mainOrder.invoiceNumber) {
-      invoiceDetails.push(['Invoice Number:', mainOrder.invoiceNumber]);
+      invoiceDetails.push(["Invoice Number:", mainOrder.invoiceNumber]);
     }
 
     invoiceDetails.push(
-      ['Order Group ID:', orderGroup.orderGroupId],
-      ['Order Date:', formatDate(summary.createdAt)],
-      ['Order Status:', summary.order_status],
-      ['Payment Status:', summary.payment_status],
-      ['Payment Method:', mainOrder.payment_method],
-      ['Total Items:', summary.totalItems.toString()]
+      ["Order Group ID:", orderGroup.orderGroupId],
+      ["Order Date:", formatDate(summary.createdAt)],
+      ["Order Status:", summary.order_status],
+      ["Payment Status:", summary.payment_status],
+      ["Payment Method:", mainOrder.payment_method],
+      ["Total Items:", summary.totalItems.toString()]
     );
 
     const leftCol = margin;
     const rightCol = pageWidth / 2 + 5;
-    const labelWidth = 32; // Reduced for label
-    const valueWidth = 55; // Space for value
+    const labelWidth = 32;
+    const valueWidth = 55;
 
     invoiceDetails.forEach((detail, index) => {
       const x = index % 2 === 0 ? leftCol : rightCol;
 
       // Label (bold)
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.text(detail[0], x, yPos);
 
       // Value (normal) - with text wrapping for long values
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
       const valueText = detail[1];
       const splitValue = doc.splitTextToSize(valueText, valueWidth);
       doc.text(splitValue, x + labelWidth, yPos);
@@ -115,18 +115,18 @@ export const generateOrderPDF = async (orderGroup) => {
     checkPageBreak(40);
 
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CUSTOMER INFORMATION', margin, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text("CUSTOMER INFORMATION", margin, yPos);
     yPos += 6;
 
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont("helvetica", "normal");
 
     const customer = mainOrder.userId;
     const customerInfo = [
-      `Name: ${customer?.name || 'N/A'}`,
-      `Email: ${customer?.email || 'N/A'}`,
-      `Phone: ${customer?.mobile || 'N/A'}`,
+      `Name: ${customer?.name || "N/A"}`,
+      `Email: ${customer?.email || "N/A"}`,
+      `Phone: ${customer?.mobile || "N/A"}`,
     ];
 
     customerInfo.forEach((info) => {
@@ -134,24 +134,40 @@ export const generateOrderPDF = async (orderGroup) => {
       yPos += 5;
     });
 
-    // Delivery Address
-    if (mainOrder.deliveryAddress || mainOrder.delivery_address) {
+    // ✅ DELIVERY ADDRESS - FIXED
+    if (mainOrder.delivery_address) {
       yPos += 2;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Delivery Address:', margin, yPos);
+      doc.setFont("helvetica", "bold");
+      doc.text("Delivery Address:", margin, yPos);
       yPos += 5;
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
 
-      const address = mainOrder.deliveryAddress || mainOrder.delivery_address;
+      const address = mainOrder.delivery_address;
       const addressLines = [];
 
-      if (address.street) addressLines.push(address.street);
-      if (address.city) addressLines.push(address.city);
-      if (address.state) addressLines.push(address.state);
-      if (address.lga) addressLines.push(`LGA: ${address.lga}`);
-      if (address.postalCode)
-        addressLines.push(`Postal Code: ${address.postalCode}`);
+      // ✅ Build address lines - handle both field name variations
+      if (address.address_line || address.street) {
+        addressLines.push(address.address_line || address.street);
+      }
+      if (address.city) {
+        addressLines.push(address.city);
+      }
+      if (address.lga) {
+        addressLines.push(`LGA: ${address.lga}`);
+      }
+      if (address.state) {
+        addressLines.push(address.state);
+      }
+      if (address.postal_code || address.postalCode) {
+        addressLines.push(
+          `Postal Code: ${address.postal_code || address.postalCode}`
+        );
+      }
+      if (address.country) {
+        addressLines.push(address.country);
+      }
 
+      // ✅ Render address lines with proper wrapping
       addressLines.forEach((line) => {
         const splitLines = doc.splitTextToSize(line, pageWidth - 2 * margin);
         splitLines.forEach((splitLine) => {
@@ -160,6 +176,17 @@ export const generateOrderPDF = async (orderGroup) => {
           yPos += 4.5;
         });
       });
+    } else {
+      // ✅ Show "No address provided" if missing
+      yPos += 2;
+      doc.setFont("helvetica", "bold");
+      doc.text("Delivery Address:", margin, yPos);
+      yPos += 5;
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(128, 128, 128);
+      doc.text("No delivery address provided", margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 4.5;
     }
 
     yPos += 8;
@@ -168,16 +195,16 @@ export const generateOrderPDF = async (orderGroup) => {
     checkPageBreak(60);
 
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ORDER ITEMS', margin, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text("ORDER ITEMS", margin, yPos);
     yPos += 6;
 
     // Prepare table data
     const tableData = orderGroup.allOrders.map((order) => {
       const product = order.productId;
       return [
-        product?.name || 'Product',
-        order.product_details?.priceOption || 'Regular',
+        product?.name || "Product",
+        order.product_details?.priceOption || "Regular",
         order.quantity.toString(),
         formatCurrencyCompact(order.unitPrice),
         formatCurrencyCompact(order.quantity * order.unitPrice),
@@ -187,14 +214,14 @@ export const generateOrderPDF = async (orderGroup) => {
     // Add items table using autoTable
     autoTable(doc, {
       startY: yPos,
-      head: [['Product', 'Option', 'Qty', 'Unit Price', 'Total']],
+      head: [["Product", "Option", "Qty", "Unit Price", "Total"]],
       body: tableData,
-      theme: 'grid',
+      theme: "grid",
       headStyles: {
         fillColor: [41, 128, 185],
         textColor: 255,
-        fontStyle: 'bold',
-        halign: 'center',
+        fontStyle: "bold",
+        halign: "center",
         fontSize: 9,
       },
       bodyStyles: {
@@ -206,11 +233,11 @@ export const generateOrderPDF = async (orderGroup) => {
         fillColor: [245, 245, 245],
       },
       columnStyles: {
-        0: { cellWidth: 65, halign: 'left' },
-        1: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 35, halign: 'right' },
-        4: { cellWidth: 35, halign: 'right' },
+        0: { cellWidth: 65, halign: "left" },
+        1: { cellWidth: 30, halign: "center" },
+        2: { cellWidth: 20, halign: "center" },
+        3: { cellWidth: 35, halign: "right" },
+        4: { cellWidth: 35, halign: "right" },
       },
       margin: { left: margin, right: margin },
       didDrawPage: function (data) {
@@ -229,22 +256,22 @@ export const generateOrderPDF = async (orderGroup) => {
     doc.setFontSize(9);
 
     // Subtotal
-    doc.setFont('helvetica', 'normal');
-    doc.text('Subtotal:', totalsSectionX, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text("Subtotal:", totalsSectionX, yPos);
     doc.text(formatCurrencyCompact(totals.subTotal), pageWidth - margin, yPos, {
-      align: 'right',
+      align: "right",
     });
     yPos += 5.5;
 
     // Shipping
     if (totals.totalShipping > 0) {
-      doc.text('Shipping:', totalsSectionX, yPos);
+      doc.text("Shipping:", totalsSectionX, yPos);
       doc.text(
         formatCurrencyCompact(totals.totalShipping),
         pageWidth - margin,
         yPos,
         {
-          align: 'right',
+          align: "right",
         }
       );
       yPos += 5.5;
@@ -252,13 +279,13 @@ export const generateOrderPDF = async (orderGroup) => {
 
     // Discount
     if (totals.totalDiscount > 0) {
-      doc.text('Discount:', totalsSectionX, yPos);
+      doc.text("Discount:", totalsSectionX, yPos);
       doc.setTextColor(220, 53, 69);
       doc.text(
         `-${formatCurrencyCompact(totals.totalDiscount)}`,
         pageWidth - margin,
         yPos,
-        { align: 'right' }
+        { align: "right" }
       );
       doc.setTextColor(0, 0, 0);
       yPos += 5.5;
@@ -266,13 +293,13 @@ export const generateOrderPDF = async (orderGroup) => {
 
     // Tax
     if (totals.totalTax > 0) {
-      doc.text('Tax:', totalsSectionX, yPos);
+      doc.text("Tax:", totalsSectionX, yPos);
       doc.text(
         formatCurrencyCompact(totals.totalTax),
         pageWidth - margin,
         yPos,
         {
-          align: 'right',
+          align: "right",
         }
       );
       yPos += 5.5;
@@ -285,15 +312,15 @@ export const generateOrderPDF = async (orderGroup) => {
     yPos += 6;
 
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('GRAND TOTAL:', totalsSectionX, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text("GRAND TOTAL:", totalsSectionX, yPos);
     doc.setTextColor(40, 167, 69);
     doc.text(
       formatCurrencyCompact(totals.grandTotal),
       pageWidth - margin,
       yPos,
       {
-        align: 'right',
+        align: "right",
       }
     );
     doc.setTextColor(0, 0, 0);
@@ -304,12 +331,12 @@ export const generateOrderPDF = async (orderGroup) => {
       checkPageBreak(30);
 
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('NOTES:', margin, yPos);
+      doc.setFont("helvetica", "bold");
+      doc.text("NOTES:", margin, yPos);
       yPos += 5;
 
       doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
 
       if (mainOrder.notes) {
         const notesLines = doc.splitTextToSize(
@@ -346,23 +373,23 @@ export const generateOrderPDF = async (orderGroup) => {
       const footerY = pageHeight - 15;
 
       doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'italic');
+      doc.setFont("helvetica", "italic");
       doc.setTextColor(128, 128, 128);
 
-      doc.text('Thank you for your business!', pageWidth / 2, footerY, {
-        align: 'center',
+      doc.text("Thank you for your business!", pageWidth / 2, footerY, {
+        align: "center",
       });
       doc.text(
-        `Generated on ${new Date().toLocaleString('en-GB')}`,
+        `Generated on ${new Date().toLocaleString("en-GB")}`,
         pageWidth / 2,
         footerY + 4,
-        { align: 'center' }
+        { align: "center" }
       );
 
       // Page number
       doc.setFontSize(7.5);
       doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, footerY + 4, {
-        align: 'right',
+        align: "right",
       });
     }
 
@@ -372,8 +399,8 @@ export const generateOrderPDF = async (orderGroup) => {
 
     return { success: true, filename };
   } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw new Error('Failed to generate PDF invoice: ' + error.message);
+    console.error("Error generating PDF:", error);
+    throw new Error("Failed to generate PDF invoice: " + error.message);
   }
 };
 
@@ -387,16 +414,16 @@ export const generateOrderPDF = async (orderGroup) => {
 const loadImage = (src) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'Anonymous';
+    img.crossOrigin = "Anonymous";
 
     img.onload = () => {
       try {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        const dataURL = canvas.toDataURL('image/png');
+        const dataURL = canvas.toDataURL("image/png");
         resolve(dataURL);
       } catch (error) {
         reject(error);
@@ -404,7 +431,7 @@ const loadImage = (src) => {
     };
 
     img.onerror = () => {
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     img.src = src;
@@ -416,7 +443,7 @@ const loadImage = (src) => {
  * Uses NGN prefix instead of symbol to avoid encoding issues
  */
 const formatCurrencyCompact = (amount) => {
-  const formatted = new Intl.NumberFormat('en-NG', {
+  const formatted = new Intl.NumberFormat("en-NG", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount || 0);
@@ -430,7 +457,7 @@ const formatCurrencyCompact = (amount) => {
  * This version uses the actual Naira symbol
  */
 const formatCurrency = (amount) => {
-  const formatted = new Intl.NumberFormat('en-NG', {
+  const formatted = new Intl.NumberFormat("en-NG", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount || 0);
@@ -440,13 +467,13 @@ const formatCurrency = (amount) => {
 };
 
 const formatDate = (date) => {
-  if (!date) return 'N/A';
-  return new Date(date).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
