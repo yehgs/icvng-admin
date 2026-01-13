@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+// admin/src/pages/auth/AdminLogin.jsx
+import React, { useState, useEffect } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
 import {
   Coffee,
   Eye,
@@ -9,46 +10,46 @@ import {
   Lock,
   User,
   Loader2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   authAPI,
   setAuthData,
   getCurrentUser,
   isTokenValid,
-} from '../../utils/api';
+} from "../../utils/api";
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    subRole: '',
+    email: "",
+    password: "",
+    subRole: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   // Check if already authenticated
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     const userData = getCurrentUser();
 
-    if (token && isTokenValid() && userData && userData.role === 'ADMIN') {
-      navigate('/dashboard', { replace: true });
+    if (token && isTokenValid() && userData && userData.role === "ADMIN") {
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
 
   const adminSubRoles = [
-    { value: 'IT', label: 'IT Department' },
-    { value: 'DIRECTOR', label: 'Director' },
-    { value: 'SALES', label: 'Sales Department' },
-    { value: 'HR', label: 'Human Resources' },
-    { value: 'MANAGER', label: 'Manager' },
-    { value: 'WAREHOUSE', label: 'Warehouse' },
-    { value: 'ACCOUNTANT', label: 'Accounting' },
-    { value: 'LOGISTICS', label: 'Logistics' },
-    { value: 'GRAPHICS', label: 'Graphics Design' },
-    { value: 'EDITOR', label: 'Content Editor' },
+    { value: "IT", label: "IT Department" },
+    { value: "DIRECTOR", label: "Director" },
+    { value: "SALES", label: "Sales Department" },
+    { value: "HR", label: "Human Resources" },
+    { value: "MANAGER", label: "Manager" },
+    { value: "WAREHOUSE", label: "Warehouse" },
+    { value: "ACCOUNTANT", label: "Accounting" },
+    { value: "LOGISTICS", label: "Logistics" },
+    { value: "GRAPHICS", label: "Graphics Design" },
+    { value: "EDITOR", label: "Content Editor" },
   ];
 
   const handleInputChange = (e) => {
@@ -58,22 +59,22 @@ const AdminLogin = () => {
       [name]: value,
     }));
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const validateForm = () => {
     if (!formData.email.trim()) {
-      setError('Please enter your email address');
+      setError("Please enter your email address");
       return false;
     }
 
     if (!formData.password) {
-      setError('Please enter your password');
+      setError("Please enter your password");
       return false;
     }
 
     if (!formData.subRole) {
-      setError('Please select your department');
+      setError("Please select your department");
       return false;
     }
 
@@ -88,7 +89,7 @@ const AdminLogin = () => {
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const response = await authAPI.login(formData);
@@ -102,18 +103,18 @@ const AdminLogin = () => {
         );
 
         // Navigate to dashboard
-        navigate('/dashboard', { replace: true });
+        navigate("/dashboard", { replace: true });
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please check your credentials.');
+      console.error("Login error:", error);
+      setError(error.message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
   // If already authenticated, redirect
-  if (getCurrentUser()?.role === 'ADMIN' && isTokenValid()) {
+  if (getCurrentUser()?.role === "ADMIN" && isTokenValid()) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -201,7 +202,7 @@ const AdminLogin = () => {
                   <input
                     id="password"
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     required
                     value={formData.password}
                     onChange={handleInputChange}
@@ -280,7 +281,7 @@ const AdminLogin = () => {
                     <span>Signing In...</span>
                   </div>
                 ) : (
-                  'Sign In to Dashboard'
+                  "Sign In to Dashboard"
                 )}
               </button>
             </form>
