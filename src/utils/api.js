@@ -2089,6 +2089,13 @@ export const logisticsAPI = {
     });
   },
 
+  calculateShippingCostManually: async (orderData) => {
+    return apiCall("/shipping/calculate-manual-order", {
+      method: "POST",
+      body: orderData,
+    });
+  },
+
   // ===== TRACKING =====
 
   createShipment: async (shipmentData) => {
@@ -2373,6 +2380,118 @@ export const warehouseAPI = {
     return apiCall("/warehouse/sync-all-from-stock-model", {
       method: "POST",
     });
+  },
+
+  // NEW: Get warehouse users for activity log filter
+  getWarehouseUsers: async () => {
+    return apiCall("/warehouse/warehouse-users");
+  },
+  // UPDATED: Export stock as PDF with proper filename handling
+  // admin/src/utils/api.js - FIXED exportStockPDF
+
+  exportStockPDF: async (filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("🔄 Requesting PDF export...");
+
+      const response = await fetch(
+        `${API_BASE_URL}/warehouse/export-stock-pdf${
+          queryString ? `?${queryString}` : ""
+        }`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("📥 Response status:", response.status);
+      console.log("📋 Content-Type:", response.headers.get("Content-Type"));
+      console.log(
+        "📋 Content-Disposition:",
+        response.headers.get("Content-Disposition")
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate PDF");
+      }
+
+      // Extract filename from Content-Disposition header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "warehouse-stock.pdf";
+
+      if (contentDisposition) {
+        // Try multiple patterns
+        const patterns = [
+          /filename[^;=\n]*=["']?([^"';\n]+)["']?/i,
+          /filename\*=UTF-8''([^;\n]+)/i,
+          /filename="([^"]+)"/i,
+          /filename=([^;\n]+)/i,
+        ];
+
+        for (const pattern of patterns) {
+          const match = contentDisposition.match(pattern);
+          if (match && match[1]) {
+            filename = decodeURIComponent(match[1].trim());
+            break;
+          }
+        }
+      }
+
+      console.log("📄 Filename:", filename);
+
+      // Create blob from response
+      const blob = await response.blob();
+      console.log("📦 Blob size:", blob.size, "bytes");
+      console.log("📦 Blob type:", blob.type);
+
+      // Verify it's actually a PDF
+      if (
+        !blob.type.includes("pdf") &&
+        blob.type !== "application/octet-stream"
+      ) {
+        console.warn(
+          "⚠️ Warning: Response might not be a PDF. Type:",
+          blob.type
+        );
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        console.log("✅ Download complete");
+      }, 100);
+
+      return { success: true, filename };
+    } catch (error) {
+      console.error("❌ Export PDF error:", error);
+      throw error;
+    }
   },
 };
 

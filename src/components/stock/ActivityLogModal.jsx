@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// admin/src/components/stock/ActivityLogModal.jsx
+import React, { useState, useEffect } from "react";
 import {
   X,
   Activity,
@@ -7,22 +8,28 @@ import {
   Package,
   Filter,
   Download,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { warehouseAPI } from '../../utils/api';
+  FileText,
+  Loader2,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { warehouseAPI } from "../../utils/api";
 
 const ActivityLogModal = ({ isOpen, onClose }) => {
   const [activities, setActivities] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
   });
+
   const [filters, setFilters] = useState({
-    dateRange: '7',
-    action: '',
-    user: '',
+    dateRange: "7",
+    action: "",
+    userId: "",
     page: 1,
     limit: 50,
   });
@@ -30,6 +37,7 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       fetchActivities();
+      fetchUsers();
     }
   }, [isOpen, filters]);
 
@@ -39,9 +47,9 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
       const params = {
         page: filters.page,
         limit: filters.limit,
-        dateRange: filters.dateRange === 'all' ? undefined : filters.dateRange,
+        dateRange: filters.dateRange === "all" ? undefined : filters.dateRange,
         action: filters.action || undefined,
-        user: filters.user || undefined,
+        userId: filters.userId || undefined,
       };
 
       const response = await warehouseAPI.getActivityLog(params);
@@ -54,57 +62,80 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
           totalCount: response.totalCount,
         });
       } else {
-        throw new Error(response.message || 'Failed to fetch activities');
+        throw new Error(response.message || "Failed to fetch activities");
       }
     } catch (error) {
-      console.error('Error fetching activities:', error);
-      toast.error(error.message || 'Failed to fetch activity log');
+      console.error("Error fetching activities:", error);
+      toast.error(error.message || "Failed to fetch activity log");
       setActivities([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await warehouseAPI.getWarehouseUsers();
+      if (response.success) {
+        setUsers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
   const getActionBadge = (action) => {
     const actionConfig = {
       STOCK_UPDATE: {
-        label: 'Stock Update',
-        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+        label: "Stock Update",
+        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+        icon: Package,
+      },
+      WEIGHT_UPDATE: {
+        label: "Weight Update",
+        color:
+          "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
         icon: Package,
       },
       SYSTEM_ENABLED: {
-        label: 'System Enabled',
+        label: "System Enabled",
         color:
-          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
         icon: Activity,
       },
       SYSTEM_DISABLED: {
-        label: 'System Disabled',
-        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+        label: "System Disabled",
+        color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
         icon: Activity,
       },
       BULK_STOCK_UPDATE: {
-        label: 'Bulk Update',
+        label: "Bulk Update",
         color:
-          'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+          "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
         icon: Package,
       },
       WAREHOUSE_OVERRIDE_DISABLED: {
-        label: 'Override Disabled',
+        label: "Override Disabled",
         color:
-          'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+          "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
         icon: Activity,
       },
       BULK_STOCK_SYNC: {
-        label: 'Bulk Sync',
-        color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300',
+        label: "Bulk Sync",
+        color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300",
         icon: Activity,
       },
       STOCK_RECONCILIATION: {
-        label: 'Reconciliation',
+        label: "Reconciliation",
         color:
-          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
         icon: Package,
+      },
+      SETTINGS_UPDATE: {
+        label: "Settings Update",
+        color:
+          "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
+        icon: Activity,
       },
     };
 
@@ -122,29 +153,38 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
   };
 
   const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
     const now = new Date();
-    const diffMs = now - timestamp;
+    const diffMs = now - date;
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffHours < 1) {
-      return 'Less than 1 hour ago';
+      return "Less than 1 hour ago";
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
     } else {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
   };
 
   const renderChanges = (changes) => {
-    if (!changes) return null;
+    if (!changes || Object.keys(changes).length === 0) return null;
 
     return (
       <div className="mt-2 space-y-1">
         {Object.entries(changes).map(([field, change]) => (
           <div key={field} className="text-xs text-gray-600 dark:text-gray-400">
             <span className="font-medium capitalize">
-              {field.replace(/([A-Z])/g, ' $1').trim()}:
+              {field.replace(/([A-Z])/g, " $1").trim()}:
             </span>
             <span className="text-red-600 dark:text-red-400 ml-1">
               {change.from}
@@ -160,29 +200,21 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
   };
 
   const exportToCSV = async () => {
+    setExporting(true);
     try {
       const exportFilters = {
-        dateRange: filters.dateRange === 'all' ? undefined : filters.dateRange,
+        dateRange: filters.dateRange === "all" ? undefined : filters.dateRange,
         action: filters.action || undefined,
-        user: filters.user || undefined,
+        userId: filters.userId || undefined,
       };
 
       const response = await warehouseAPI.exportActivityLog(exportFilters);
-
-      const blob = new Blob([response], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `warehouse-activity-log-${
-        new Date().toISOString().split('T')[0]
-      }.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-
-      toast.success('Activity log exported successfully');
+      toast.success("Activity log exported successfully");
     } catch (error) {
-      console.error('Error exporting activity log:', error);
-      toast.error('Failed to export activity log');
+      console.error("Error exporting activity log:", error);
+      toast.error("Failed to export activity log");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -190,7 +222,14 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      page: 1, // Reset to first page when filters change
+      page: 1,
+    }));
+  };
+
+  const handlePageChange = (newPage) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: newPage,
     }));
   };
 
@@ -204,7 +243,7 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
           onClick={onClose}
         />
 
-        <div className="inline-block w-full max-w-4xl p-6 my-8 text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
+        <div className="inline-block w-full max-w-6xl p-6 my-8 text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -223,11 +262,15 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={exportToCSV}
-                disabled={loading}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                disabled={loading || exporting}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               >
-                <Download className="w-4 h-4" />
-                Export
+                {exporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                Export CSV
               </button>
               <button
                 onClick={onClose}
@@ -248,7 +291,7 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                 <select
                   value={filters.dateRange}
                   onChange={(e) =>
-                    handleFilterChange('dateRange', e.target.value)
+                    handleFilterChange("dateRange", e.target.value)
                   }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
@@ -265,14 +308,17 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                 </label>
                 <select
                   value={filters.action}
-                  onChange={(e) =>
-                    handleFilterChange('dateRange', e.target.value)
-                  }
+                  onChange={(e) => handleFilterChange("action", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">All Actions</option>
                   <option value="STOCK_UPDATE">Stock Updates</option>
+                  <option value="WEIGHT_UPDATE">Weight Updates</option>
+                  <option value="SYSTEM_ENABLED">System Enabled</option>
                   <option value="SYSTEM_DISABLED">System Disabled</option>
+                  <option value="BULK_STOCK_UPDATE">Bulk Updates</option>
+                  <option value="STOCK_RECONCILIATION">Reconciliations</option>
+                  <option value="SETTINGS_UPDATE">Settings Updates</option>
                 </select>
               </div>
 
@@ -281,27 +327,26 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                   User
                 </label>
                 <select
-                  value={filters.user}
-                  onChange={(e) =>
-                    handleFilterChange('dateRange', e.target.value)
-                  }
+                  value={filters.userId}
+                  onChange={(e) => handleFilterChange("userId", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">All Users</option>
-                  <option value="John Doe">John Doe</option>
-                  <option value="Jane Smith">Jane Smith</option>
-                  <option value="Admin User">Admin User</option>
-                  <option value="Mike Johnson">Mike Johnson</option>
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.name} ({user.subRole || user.role})
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
           </div>
 
           {/* Activity List */}
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="space-y-4 max-h-[500px] overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                 <span className="ml-2 text-gray-600 dark:text-gray-400">
                   Loading activities...
                 </span>
@@ -327,7 +372,15 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                       <div className="flex items-center gap-3 mb-2">
                         {getActionBadge(activity.action)}
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <User className="w-4 h-4" />
+                          {activity.user.avatar ? (
+                            <img
+                              src={activity.user.avatar}
+                              alt={activity.user.name}
+                              className="w-6 h-6 rounded-full"
+                            />
+                          ) : (
+                            <User className="w-4 h-4" />
+                          )}
                           <span className="font-medium">
                             {activity.user.name}
                           </span>
@@ -367,12 +420,34 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {activities.length} activit{activities.length === 1 ? 'y' : 'ies'}{' '}
-              found
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Showing page {pagination.currentPage} of {pagination.totalPages}{" "}
+                ({pagination.totalCount} total activities)
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
             </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-end mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"

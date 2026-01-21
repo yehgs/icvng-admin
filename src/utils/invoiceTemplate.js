@@ -7,28 +7,28 @@ export const generateInvoiceTemplate = ({
 }) => {
   // Company information - update these constants as needed
   const COMPANY_INFO = {
-    name: 'I-Coffee Nigeria Limited',
-    address: '123 Coffee Street, Victoria Island',
-    city: 'Lagos, Nigeria',
-    phone: '+234-800-ICOFFEE',
-    email: 'sales@i-coffee.ng',
-    website: 'www.i-coffee.ng',
-    taxNumber: 'TIN: 12345678901',
-    rcNumber: 'RC: 1234567',
+    name: "I-Coffee Nigeria Limited",
+    address: "123 Coffee Street, Victoria Island",
+    city: "Lagos, Nigeria",
+    phone: "+234-800-ICOFFEE",
+    email: "sales@i-coffee.ng",
+    website: "www.i-coffee.ng",
+    taxNumber: "TIN: 12345678901",
+    rcNumber: "RC: 1234567",
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
     }).format(amount);
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -44,9 +44,9 @@ export const generateInvoiceTemplate = ({
           item.productName
         }</div>
         ${
-          item.priceOption !== 'regular'
+          item.priceOption !== "regular"
             ? `<div style="font-size: 12px; color: #666;">${item.priceOption} delivery</div>`
-            : ''
+            : ""
         }
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${
@@ -61,7 +61,7 @@ export const generateInvoiceTemplate = ({
     </tr>
   `
     )
-    .join('');
+    .join("");
 
   return `
     <!DOCTYPE html>
@@ -191,7 +191,7 @@ export const generateInvoiceTemplate = ({
             <!-- Header -->
             <div class="header">
                 <h1 style="margin: 0; font-size: 28px;">INVOICE</h1>
-                <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Premium Coffee Solutions</p>
+                <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Premium Coffee Solutions admin</p>
             </div>
             
             <!-- Company Information -->
@@ -235,31 +235,31 @@ export const generateInvoiceTemplate = ({
                         <h4 style="margin: 0 0 15px 0; color: #8B4513; border-bottom: 2px solid #8B4513; padding-bottom: 8px;">Bill To:</h4>
                         <p style="margin: 0; font-size: 16px; line-height: 1.6;">
                             <strong>${
-                              customer.customerType === 'BTB' &&
+                              customer.customerType === "BTB" &&
                               customer.companyName
                                 ? customer.companyName
                                 : customer.name
                             }</strong><br>
                             ${
-                              customer.customerType === 'BTB' &&
+                              customer.customerType === "BTB" &&
                               customer.companyName
                                 ? `Contact: ${customer.name}<br>`
-                                : ''
+                                : ""
                             }
                             📧 ${customer.email}<br>
                             📱 ${customer.mobile}<br>
                             ${
                               customer.address
-                                ? `📍 ${customer.address.street || ''}, ${
-                                    customer.address.city || ''
-                                  }, ${customer.address.state || ''}`
-                                : ''
+                                ? `📍 ${customer.address.street || ""}, ${
+                                    customer.address.city || ""
+                                  }, ${customer.address.state || ""}`
+                                : ""
                             }
                             ${
-                              customer.customerType === 'BTB' &&
+                              customer.customerType === "BTB" &&
                               customer.taxNumber
                                 ? `<br>Tax ID: ${customer.taxNumber}`
-                                : ''
+                                : ""
                             }
                         </p>
                     </div>
@@ -269,40 +269,40 @@ export const generateInvoiceTemplate = ({
                         <p style="margin: 0; font-size: 14px; line-height: 1.8;">
                             <strong>Order Type:</strong> 
                             <span class="status-badge" style="background: ${
-                              order.orderType === 'BTB' ? '#e3f2fd' : '#f3e5f5'
+                              order.orderType === "BTB" ? "#e3f2fd" : "#f3e5f5"
                             }; color: ${
-    order.orderType === 'BTB' ? '#1565c0' : '#7b1fa2'
+    order.orderType === "BTB" ? "#1565c0" : "#7b1fa2"
   };">
                                 ${order.orderType}
                             </span><br>
                             
                             <strong>Order Mode:</strong> 
                             <span class="status-badge" style="background: ${
-                              order.orderMode === 'ONLINE'
-                                ? '#e8f5e8'
-                                : '#fff3e0'
+                              order.orderMode === "ONLINE"
+                                ? "#e8f5e8"
+                                : "#fff3e0"
                             }; color: ${
-    order.orderMode === 'ONLINE' ? '#2e7d32' : '#ef6c00'
+    order.orderMode === "ONLINE" ? "#2e7d32" : "#ef6c00"
   };">
                                 ${order.orderMode}
                             </span><br>
                             
                             <strong>Order Status:</strong>
                             <span class="status-badge status-${
-                              order.orderStatus === 'DELIVERED'
-                                ? 'delivered'
-                                : order.orderStatus === 'PENDING'
-                                ? 'pending'
-                                : 'paid'
+                              order.orderStatus === "DELIVERED"
+                                ? "delivered"
+                                : order.orderStatus === "PENDING"
+                                ? "pending"
+                                : "paid"
                             }">
                                 ${order.orderStatus}
                             </span><br>
                             
                             <strong>Payment Status:</strong>
                             <span class="status-badge status-${
-                              order.paymentStatus === 'PAID'
-                                ? 'paid'
-                                : 'pending'
+                              order.paymentStatus === "PAID"
+                                ? "paid"
+                                : "pending"
                             }">
                                 ${order.paymentStatus}
                             </span><br>
@@ -313,12 +313,12 @@ export const generateInvoiceTemplate = ({
                             ${
                               salesAgent
                                 ? `<strong>Sales Agent:</strong> ${salesAgent.name}`
-                                : ''
+                                : ""
                             }
                             ${
                               order.isWebsiteOrder
                                 ? `<br><strong>Source:</strong> Website Order`
-                                : ''
+                                : ""
                             }
                         </p>
                     </div>
@@ -361,7 +361,7 @@ export const generateInvoiceTemplate = ({
                         )}</span>
                     </div>
                     `
-                        : ''
+                        : ""
                     }
                     
                     ${
@@ -372,7 +372,7 @@ export const generateInvoiceTemplate = ({
                         <span>${formatCurrency(order.taxAmount)}</span>
                     </div>
                     `
-                        : ''
+                        : ""
                     }
                     
                     ${
@@ -383,7 +383,7 @@ export const generateInvoiceTemplate = ({
                         <span>${formatCurrency(order.shippingCost)}</span>
                     </div>
                     `
-                        : ''
+                        : ""
                     }
                     
                     <div class="total-row final">
@@ -394,7 +394,7 @@ export const generateInvoiceTemplate = ({
                 
                 <!-- Payment Information -->
                 ${
-                  order.paymentStatus === 'PENDING'
+                  order.paymentStatus === "PENDING"
                     ? `
                 <div class="payment-info">
                     <h4 style="margin: 0 0 15px 0; color: #2e7d32;">💳 Payment Information</h4>
@@ -421,7 +421,7 @@ export const generateInvoiceTemplate = ({
                     </p>
                 </div>
                 `
-                    : ''
+                    : ""
                 }
                 
                 <!-- Order Notes -->
@@ -433,16 +433,16 @@ export const generateInvoiceTemplate = ({
                     ${
                       order.notes
                         ? `<p style="margin: 0 0 10px 0;"><strong>Internal Notes:</strong> ${order.notes}</p>`
-                        : ''
+                        : ""
                     }
                     ${
                       order.customerNotes
                         ? `<p style="margin: 0;"><strong>Customer Notes:</strong> ${order.customerNotes}</p>`
-                        : ''
+                        : ""
                     }
                 </div>
                 `
-                    : ''
+                    : ""
                 }
                 
                 <!-- Terms and Conditions -->
@@ -466,7 +466,7 @@ export const generateInvoiceTemplate = ({
                 <p style="margin: 0; font-size: 14px; opacity: 0.8;">
                     Premium coffee solutions for your business and home | 
                     Follow us on social media @icoffeeng | 
-                    Visit our website: ${COMPANY_INFO.website}
+                    Visit our websites: ${COMPANY_INFO.website}
                 </p>
                 <p style="margin: 15px 0 0 0; font-size: 12px; opacity: 0.7;">
                     This is a computer-generated invoice. No signature required.

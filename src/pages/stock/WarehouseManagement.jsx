@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Package,
   Search,
@@ -24,38 +24,39 @@ import {
   Scale,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+  FileText,
+} from "lucide-react";
+import toast from "react-hot-toast";
 import {
   warehouseAPI,
   productAPI,
   brandAPI,
   getCurrentUser,
   handleApiError,
-} from '../../utils/api';
-import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
-import WarehouseStockTable from '../../components/stock/WarehouseStockTable';
-import WarehouseStatsCards from '../../components/stock/WarehouseStatsCards';
-import WarehouseFilters from '../../components/stock/WarehouseFilters';
-import StockEditModal from '../../components/stock/StockEditModal';
-import WeightEditModal from '../../components/stock/WeightEditModal';
-import SystemControlModal from '../../components/stock/SystemControlModal';
-import ActivityLogModal from '../../components/stock/ActivityLogModal';
+} from "../../utils/api";
+import RoleBasedAccess from "../../components/layout/RoleBaseAccess";
+import WarehouseStockTable from "../../components/stock/WarehouseStockTable";
+import WarehouseStatsCards from "../../components/stock/WarehouseStatsCards";
+import WarehouseFilters from "../../components/stock/WarehouseFilters";
+import StockEditModal from "../../components/stock/StockEditModal";
+import WeightEditModal from "../../components/stock/WeightEditModal";
+import SystemControlModal from "../../components/stock/SystemControlModal";
+import ActivityLogModal from "../../components/stock/ActivityLogModal";
 
 const WarehouseManagement = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [paginatedProducts, setPaginatedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
-    category: '',
-    brand: '',
-    productType: '',
-    compatibleSystem: '',
-    availability: '',
-    weightFilter: '', // NEW: weight filter
-    weightSort: '', // NEW: weight sorting
+    category: "",
+    brand: "",
+    productType: "",
+    compatibleSystem: "",
+    availability: "",
+    weightFilter: "",
+    weightSort: "",
   });
 
   // Pagination state
@@ -100,9 +101,9 @@ const WarehouseManagement = () => {
   });
 
   const currentUser = getCurrentUser();
-  const canEdit = systemEnabled && currentUser?.subRole === 'WAREHOUSE';
-  const canEditWeight = currentUser?.subRole === 'WAREHOUSE';
-  const canManageSystem = ['DIRECTOR', 'IT'].includes(currentUser?.subRole);
+  const canEdit = systemEnabled && currentUser?.subRole === "WAREHOUSE";
+  const canEditWeight = currentUser?.subRole === "WAREHOUSE";
+  const canManageSystem = ["DIRECTOR", "IT"].includes(currentUser?.subRole);
 
   useEffect(() => {
     initializeData();
@@ -136,11 +137,11 @@ const WarehouseManagement = () => {
         setProducts(response.data);
         calculateStats(response.data);
       } else {
-        toast.error(response.message || 'Failed to fetch products');
+        toast.error(response.message || "Failed to fetch products");
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error(handleApiError(error, 'Failed to fetch products'));
+      console.error("Error fetching products:", error);
+      toast.error(handleApiError(error, "Failed to fetch products"));
     } finally {
       setLoading(false);
     }
@@ -165,7 +166,7 @@ const WarehouseManagement = () => {
         setCompatibleSystems(systems);
       }
     } catch (error) {
-      console.error('Error fetching filter data:', error);
+      console.error("Error fetching filter data:", error);
     }
   };
 
@@ -177,8 +178,8 @@ const WarehouseManagement = () => {
         setSystemSettings(response.data.settings);
       }
     } catch (error) {
-      console.error('Error checking system status:', error);
-      toast.error('Failed to load system status');
+      console.error("Error checking system status:", error);
+      toast.error("Failed to load system status");
     }
   };
 
@@ -265,11 +266,11 @@ const WarehouseManagement = () => {
       filtered = filtered.filter((product) => {
         const stock = product.warehouseStock?.finalStock || 0;
         switch (filters.availability) {
-          case 'in-stock':
+          case "in-stock":
             return stock > systemSettings.lowStockThreshold;
-          case 'low-stock':
+          case "low-stock":
             return stock > 0 && stock <= systemSettings.lowStockThreshold;
-          case 'out-of-stock':
+          case "out-of-stock":
             return stock === 0;
           default:
             return true;
@@ -281,9 +282,9 @@ const WarehouseManagement = () => {
     if (filters.weightFilter) {
       filtered = filtered.filter((product) => {
         switch (filters.weightFilter) {
-          case 'not-set':
+          case "not-set":
             return !product.weight || product.weight === 0;
-          case 'set':
+          case "set":
             return product.weight && product.weight > 0;
           default:
             return true;
@@ -298,9 +299,9 @@ const WarehouseManagement = () => {
         const weightB = b.weight || 0;
 
         switch (filters.weightSort) {
-          case 'lightest':
+          case "lightest":
             return weightA - weightB;
-          case 'heaviest':
+          case "heaviest":
             return weightB - weightA;
           default:
             return 0;
@@ -345,7 +346,7 @@ const WarehouseManagement = () => {
 
   const handleEditStock = (product) => {
     if (!canEdit) {
-      toast.error('Warehouse stock editing is disabled');
+      toast.error("Warehouse stock editing is disabled");
       return;
     }
     setEditingProduct(product);
@@ -354,7 +355,7 @@ const WarehouseManagement = () => {
 
   const handleEditWeight = (product) => {
     if (!canEditWeight) {
-      toast.error('Only warehouse staff can edit product weights');
+      toast.error("Only warehouse staff can edit product weights");
       return;
     }
     setEditingWeightProduct(product);
@@ -369,16 +370,16 @@ const WarehouseManagement = () => {
       });
 
       if (response.success) {
-        toast.success('Stock updated successfully');
+        toast.success("Stock updated successfully");
         await fetchProducts();
         setShowEditModal(false);
         setEditingProduct(null);
       } else {
-        toast.error(response.message || 'Failed to update stock');
+        toast.error(response.message || "Failed to update stock");
       }
     } catch (error) {
-      console.error('Error updating stock:', error);
-      toast.error(handleApiError(error, 'Failed to update stock'));
+      console.error("Error updating stock:", error);
+      toast.error(handleApiError(error, "Failed to update stock"));
     }
   };
 
@@ -387,16 +388,16 @@ const WarehouseManagement = () => {
       const response = await warehouseAPI.updateWeight(productId, weight);
 
       if (response.success) {
-        toast.success('Product weight updated successfully');
+        toast.success("Product weight updated successfully");
         await fetchProducts();
         setShowWeightModal(false);
         setEditingWeightProduct(null);
       } else {
-        toast.error(response.message || 'Failed to update weight');
+        toast.error(response.message || "Failed to update weight");
       }
     } catch (error) {
-      console.error('Error updating weight:', error);
-      toast.error(handleApiError(error, 'Failed to update weight'));
+      console.error("Error updating weight:", error);
+      toast.error(handleApiError(error, "Failed to update weight"));
     }
   };
 
@@ -406,18 +407,18 @@ const WarehouseManagement = () => {
         const response = await warehouseAPI.enableSystem();
         if (response.success) {
           setSystemEnabled(true);
-          toast.success('Warehouse stock system enabled');
+          toast.success("Warehouse stock system enabled");
         }
       } else {
         const response = await warehouseAPI.disableSystem();
         if (response.success) {
           setSystemEnabled(false);
-          toast.success('Warehouse stock system disabled');
+          toast.success("Warehouse stock system disabled");
         }
       }
     } catch (error) {
-      console.error('Error toggling system:', error);
-      toast.error(error.message || 'Failed to update system status');
+      console.error("Error toggling system:", error);
+      toast.error(error.message || "Failed to update system status");
     }
   };
 
@@ -426,40 +427,40 @@ const WarehouseManagement = () => {
       const response = await warehouseAPI.updateSystemSettings(settings);
       if (response.success) {
         setSystemSettings(response.data);
-        toast.success('System settings updated successfully');
+        toast.success("System settings updated successfully");
       }
     } catch (error) {
-      console.error('Error updating settings:', error);
-      toast.error(error.message || 'Failed to update settings');
+      console.error("Error updating settings:", error);
+      toast.error(error.message || "Failed to update settings");
     }
   };
 
   const exportToCSV = () => {
     const csvContent = [
       [
-        'Product Name',
-        'SKU',
-        'Category',
-        'Brand',
-        'Product Type',
-        'Weight (kg)',
-        'Stock on Arrival',
-        'Damaged Qty',
-        'Expired Qty',
-        'Refurbished Qty',
-        'Final Stock',
-        'Online Stock',
-        'Offline Stock',
-        'Last Updated',
+        "Product Name",
+        "SKU",
+        "Category",
+        "Brand",
+        "Product Type",
+        "Weight (kg)",
+        "Stock on Arrival",
+        "Damaged Qty",
+        "Expired Qty",
+        "Refurbished Qty",
+        "Final Stock",
+        "Online Stock",
+        "Offline Stock",
+        "Last Updated",
       ],
       ...filteredProducts.map((product) => {
         const stock = product.warehouseStock || {};
         return [
-          product.name || '',
-          product.sku || '',
-          product.category?.name || '',
-          product.brand?.map((b) => b.name).join(', ') || '',
-          product.productType || '',
+          product.name || "",
+          product.sku || "",
+          product.category?.name || "",
+          product.brand?.map((b) => b.name).join(", ") || "",
+          product.productType || "",
           product.weight || 0,
           stock.stockOnArrival || 0,
           stock.damagedQty || 0,
@@ -470,22 +471,43 @@ const WarehouseManagement = () => {
           stock.offlineStock || 0,
           stock.lastUpdated
             ? new Date(stock.lastUpdated).toLocaleDateString()
-            : '',
+            : "",
         ];
       }),
     ];
 
     const csvString = csvContent
-      .map((row) => row.map((field) => `"${field}"`).join(','))
-      .join('\n');
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
 
-    const blob = new Blob([csvString], { type: 'text/csv' });
+    const blob = new Blob([csvString], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'warehouse-stock-report.csv';
+    a.download = "warehouse-stock-report.csv";
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const exportToPDF = async () => {
+    try {
+      toast.loading("Generating PDF...");
+
+      const exportFilters = {
+        category: filters.category || undefined,
+        brand: filters.brand || undefined,
+        productType: filters.productType || undefined,
+        compatibleSystem: filters.compatibleSystem || undefined,
+      };
+
+      await warehouseAPI.exportStockPDF(exportFilters);
+      toast.dismiss();
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      toast.dismiss();
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    }
   };
 
   return (
@@ -507,8 +529,16 @@ const WarehouseManagement = () => {
             disabled={loading}
             className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
+          </button>
+
+          <button
+            onClick={exportToPDF}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Export PDF</span>
           </button>
 
           <button
@@ -527,7 +557,7 @@ const WarehouseManagement = () => {
             <span className="hidden sm:inline">Activity Log</span>
           </button>
 
-          <RoleBasedAccess allowedRoles={['DIRECTOR', 'IT']}>
+          <RoleBasedAccess allowedRoles={["DIRECTOR", "IT"]}>
             <button
               onClick={() => setShowSystemControlModal(true)}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -543,8 +573,8 @@ const WarehouseManagement = () => {
       <div
         className={`p-4 rounded-lg border ${
           systemEnabled
-            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
-            : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+            ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
+            : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -557,22 +587,22 @@ const WarehouseManagement = () => {
             <p
               className={`font-medium ${
                 systemEnabled
-                  ? 'text-green-800 dark:text-green-200'
-                  : 'text-red-800 dark:text-red-200'
+                  ? "text-green-800 dark:text-green-200"
+                  : "text-red-800 dark:text-red-200"
               }`}
             >
-              Warehouse Stock System: {systemEnabled ? 'Enabled' : 'Disabled'}
+              Warehouse Stock System: {systemEnabled ? "Enabled" : "Disabled"}
             </p>
             <p
               className={`text-sm ${
                 systemEnabled
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
               }`}
             >
               {systemEnabled
-                ? 'Warehouse staff can manually update stock quantities'
-                : 'Manual stock updates are disabled. Contact Director or IT to enable.'}
+                ? "Warehouse staff can manually update stock quantities"
+                : "Manual stock updates are disabled. Contact Director or IT to enable."}
             </p>
           </div>
         </div>
@@ -658,12 +688,12 @@ const WarehouseManagement = () => {
           <div className="px-4 md:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="text-sm text-gray-700 dark:text-gray-300 text-center md:text-left">
-                Showing{' '}
-                {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{' '}
+                Showing{" "}
+                {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{" "}
                 {Math.min(
                   pagination.currentPage * pagination.itemsPerPage,
                   pagination.totalItems
-                )}{' '}
+                )}{" "}
                 of {pagination.totalItems} results
               </div>
 
@@ -708,8 +738,8 @@ const WarehouseManagement = () => {
                           onClick={() => handlePageChange(pageNumber)}
                           className={`px-2 md:px-3 py-2 text-sm rounded-lg transition-colors ${
                             pagination.currentPage === pageNumber
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                              ? "bg-blue-600 text-white"
+                              : "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                           }`}
                         >
                           {pageNumber}
