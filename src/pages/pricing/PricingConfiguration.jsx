@@ -1,5 +1,5 @@
-// components/pricing/Pricing.jsx
-import React, { useState, useEffect } from 'react';
+// admin/src/pages/pricing/PricingConfiguration.jsx - PART 1
+import React, { useState, useEffect } from "react";
 import {
   Settings,
   Save,
@@ -13,11 +13,12 @@ import {
   History,
   User,
   Calendar,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { pricingAPI, pricingUtils } from '../../utils/api';
-import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
-import RoleBasedButton from '../../components/layout/RoleBasedButton';
+  Receipt, // NEW: Tax icon
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { pricingAPI, pricingUtils } from "../../utils/api";
+import RoleBasedAccess from "../../components/layout/RoleBaseAccess";
+import RoleBasedButton from "../../components/layout/RoleBasedButton";
 
 const PricingConfiguration = () => {
   const [config, setConfig] = useState(null);
@@ -34,6 +35,7 @@ const PricingConfiguration = () => {
       price5weeksDelivery: 25,
     },
     overheadPercentage: 15,
+    taxPercentage: 7.5, // NEW: Tax percentage
     autoUpdateOnExchangeRateChange: true,
   });
 
@@ -50,15 +52,16 @@ const PricingConfiguration = () => {
         setFormData({
           margins: data.data.margins,
           overheadPercentage: data.data.overheadPercentage,
+          taxPercentage: data.data.taxPercentage || 7.5, // NEW
           autoUpdateOnExchangeRateChange:
             data.data.autoUpdateOnExchangeRateChange,
         });
       } else {
-        toast.error(data.message || 'Failed to fetch pricing configuration');
+        toast.error(data.message || "Failed to fetch pricing configuration");
       }
     } catch (error) {
-      console.error('Error fetching pricing config:', error);
-      toast.error('Failed to fetch pricing configuration');
+      console.error("Error fetching pricing config:", error);
+      toast.error("Failed to fetch pricing configuration");
     } finally {
       setLoading(false);
     }
@@ -82,15 +85,15 @@ const PricingConfiguration = () => {
       const data = await pricingAPI.updatePricingConfig(formData);
       if (data.success) {
         toast.success(
-          'Pricing configuration updated successfully. Awaiting director approval.'
+          "Pricing configuration updated successfully. Awaiting director approval.",
         );
         await fetchPricingConfig();
       } else {
-        toast.error(data.message || 'Failed to update pricing configuration');
+        toast.error(data.message || "Failed to update pricing configuration");
       }
     } catch (error) {
-      console.error('Error updating pricing config:', error);
-      toast.error('Failed to update pricing configuration');
+      console.error("Error updating pricing config:", error);
+      toast.error("Failed to update pricing configuration");
     } finally {
       setSaving(false);
     }
@@ -103,15 +106,15 @@ const PricingConfiguration = () => {
       const data = await pricingAPI.approvePricingConfig();
       if (data.success) {
         toast.success(
-          'Pricing configuration approved successfully! All product prices have been updated.'
+          "Pricing configuration approved successfully! All product prices have been updated.",
         );
         await fetchPricingConfig();
       } else {
-        toast.error(data.message || 'Failed to approve pricing configuration');
+        toast.error(data.message || "Failed to approve pricing configuration");
       }
     } catch (error) {
-      console.error('Error approving pricing config:', error);
-      toast.error('Failed to approve pricing configuration');
+      console.error("Error approving pricing config:", error);
+      toast.error("Failed to approve pricing configuration");
     } finally {
       setSaving(false);
     }
@@ -119,29 +122,29 @@ const PricingConfiguration = () => {
 
   const priceTypes = [
     {
-      key: 'salePrice',
-      label: 'Sale Price',
-      description: 'Standard retail sale price',
+      key: "salePrice",
+      label: "Sale Price",
+      description: "Standard retail sale price",
     },
     {
-      key: 'btbPrice',
-      label: 'BTB Price',
-      description: 'Business-to-Business price',
+      key: "btbPrice",
+      label: "BTB Price",
+      description: "Business-to-Business price",
     },
     {
-      key: 'btcPrice',
-      label: 'BTC Price',
-      description: 'Business-to-Consumer price',
+      key: "btcPrice",
+      label: "BTC Price",
+      description: "Business-to-Consumer price",
     },
     {
-      key: 'price3weeksDelivery',
-      label: '3 Weeks Delivery',
-      description: 'Price for 3 weeks delivery option',
+      key: "price3weeksDelivery",
+      label: "3 Weeks Delivery",
+      description: "Price for 3 weeks delivery option",
     },
     {
-      key: 'price5weeksDelivery',
-      label: '5 Weeks Delivery',
-      description: 'Price for 5 weeks delivery option',
+      key: "price5weeksDelivery",
+      label: "5 Weeks Delivery",
+      description: "Price for 5 weeks delivery option",
     },
   ];
 
@@ -166,8 +169,8 @@ const PricingConfiguration = () => {
             Pricing Configuration
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Configure profit margins and overhead percentages for different
-            price types
+            Configure profit margins, overhead, and tax percentages for
+            different price types
           </p>
         </div>
 
@@ -193,7 +196,7 @@ const PricingConfiguration = () => {
 
               {/* Director Approval Button */}
               {!config.isApproved && (
-                <RoleBasedAccess allowedRoles={['DIRECTOR']}>
+                <RoleBasedAccess allowedRoles={["DIRECTOR"]}>
                   <button
                     onClick={() => setShowApprovalModal(true)}
                     disabled={saving}
@@ -217,13 +220,13 @@ const PricingConfiguration = () => {
         </div>
       </div>
 
-      {/* Enhanced Configuration Status */}
+      {/* Configuration Status */}
       {config && (
         <div
           className={`rounded-lg p-6 ${
             config.isApproved
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-              : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
+              ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+              : "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
           }`}
         >
           <div className="flex items-start justify-between">
@@ -237,13 +240,13 @@ const PricingConfiguration = () => {
                 <h3
                   className={`text-lg font-semibold ${
                     config.isApproved
-                      ? 'text-green-900 dark:text-green-200'
-                      : 'text-yellow-900 dark:text-yellow-200'
+                      ? "text-green-900 dark:text-green-200"
+                      : "text-yellow-900 dark:text-yellow-200"
                   }`}
                 >
                   {config.isApproved
-                    ? 'Configuration Approved'
-                    : 'Awaiting Director Approval'}
+                    ? "Configuration Approved"
+                    : "Awaiting Director Approval"}
                 </h3>
               </div>
 
@@ -251,19 +254,19 @@ const PricingConfiguration = () => {
                 <div
                   className={
                     config.isApproved
-                      ? 'text-green-700 dark:text-green-300'
-                      : 'text-yellow-700 dark:text-yellow-300'
+                      ? "text-green-700 dark:text-green-300"
+                      : "text-yellow-700 dark:text-yellow-300"
                   }
                 >
-                  <strong>Last Updated:</strong>{' '}
-                  {new Date(config.updatedAt).toLocaleString()} by{' '}
+                  <strong>Last Updated:</strong>{" "}
+                  {new Date(config.updatedAt).toLocaleString()} by{" "}
                   {config.lastUpdatedBy?.name}
                 </div>
 
                 {config.isApproved && config.approvedBy && (
                   <div className="text-green-700 dark:text-green-300">
-                    <strong>Approved:</strong>{' '}
-                    {new Date(config.approvedAt).toLocaleString()} by{' '}
+                    <strong>Approved:</strong>{" "}
+                    {new Date(config.approvedAt).toLocaleString()} by{" "}
                     {config.approvedBy.name}
                   </div>
                 )}
@@ -281,7 +284,7 @@ const PricingConfiguration = () => {
                   <h4 className="font-medium text-gray-900 dark:text-white mb-3">
                     Current Configuration
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 text-xs">
                     <div>
                       <span className="text-gray-600 dark:text-gray-400">
                         Sale Price:
@@ -330,6 +333,15 @@ const PricingConfiguration = () => {
                         {config.overheadPercentage}%
                       </span>
                     </div>
+                    {/* NEW: Tax display */}
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Tax:
+                      </span>
+                      <span className="ml-1 font-semibold text-gray-900 dark:text-white">
+                        {config.taxPercentage}%
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mt-3 flex items-center text-xs">
@@ -339,13 +351,13 @@ const PricingConfiguration = () => {
                     <span
                       className={`ml-2 px-2 py-1 rounded-full font-medium ${
                         config.autoUpdateOnExchangeRateChange
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                       }`}
                     >
                       {config.autoUpdateOnExchangeRateChange
-                        ? 'Enabled'
-                        : 'Disabled'}
+                        ? "Enabled"
+                        : "Disabled"}
                     </span>
                   </div>
                 </div>
@@ -355,7 +367,7 @@ const PricingConfiguration = () => {
             {/* Director Approval Section */}
             {!config.isApproved && (
               <div className="ml-6">
-                <RoleBasedAccess allowedRoles={['DIRECTOR']}>
+                <RoleBasedAccess allowedRoles={["DIRECTOR"]}>
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-300 dark:border-yellow-600 p-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
                       <User className="h-4 w-4 mr-2" />
@@ -383,7 +395,7 @@ const PricingConfiguration = () => {
 
                 {/* Non-Director Message */}
                 <RoleBasedAccess
-                  allowedRoles={['ACCOUNTANT', 'IT']}
+                  allowedRoles={["ACCOUNTANT", "IT"]}
                   fallback={true}
                 >
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 p-4">
@@ -405,7 +417,7 @@ const PricingConfiguration = () => {
 
       {/* Configuration Form */}
       <RoleBasedAccess
-        allowedRoles={['ACCOUNTANT', 'DIRECTOR', 'IT', 'MANAGER']}
+        allowedRoles={["ACCOUNTANT", "DIRECTOR", "IT", "MANAGER"]}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profit Margins */}
@@ -445,14 +457,14 @@ const PricingConfiguration = () => {
             </div>
           </div>
 
-          {/* Overhead Configuration */}
+          {/* Overhead & Tax Configuration */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
               <TrendingUp className="h-5 w-5 mr-2" />
-              Overhead Configuration
+              Overhead & Tax Configuration
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Overhead Percentage
@@ -478,6 +490,36 @@ const PricingConfiguration = () => {
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   General overhead applied to all products before profit margins
+                </p>
+              </div>
+
+              {/* NEW: Tax Percentage Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                  <Receipt className="h-4 w-4 mr-1" />
+                  Tax Percentage (VAT)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={formData.taxPercentage}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        taxPercentage: parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                    className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-gray-500 text-sm">%</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Tax added to all calculated prices (e.g., 7.5% VAT)
                 </p>
               </div>
 
@@ -510,17 +552,18 @@ const PricingConfiguration = () => {
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4 flex items-center">
               <DollarSign className="h-5 w-5 mr-2" />
-              Price Calculation Preview
+              Price Calculation Preview (With Tax)
             </h3>
 
-            <div className="text-sm text-blue-800 dark:text-blue-300">
-              <p className="mb-2">
-                <strong>Formula:</strong> Final Price = (Cost + Logistics) × (1
-                + Overhead%) × (1 + Profit Margin%)
+            <div className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
+              <p>
+                <strong>Formula:</strong> Final Price = ((Cost + Logistics) × (1
+                + Overhead%) × (1 + Profit Margin%)) × (1 + Tax%)
               </p>
               <p className="mb-4">
                 <strong>Example:</strong> If cost is ₦1,000 + ₦100 logistics,
-                with {formData.overheadPercentage}% overhead:
+                with {formData.overheadPercentage}% overhead and{" "}
+                {formData.taxPercentage}% tax:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -528,8 +571,10 @@ const PricingConfiguration = () => {
                   const baseCost = 1100; // 1000 + 100 logistics
                   const withOverhead =
                     baseCost * (1 + formData.overheadPercentage / 100);
-                  const finalPrice =
+                  const withMargin =
                     withOverhead * (1 + formData.margins[priceType.key] / 100);
+                  const finalPriceWithTax =
+                    withMargin * (1 + formData.taxPercentage / 100);
 
                   return (
                     <div
@@ -539,11 +584,15 @@ const PricingConfiguration = () => {
                       <div className="font-medium text-gray-900 dark:text-white">
                         {priceType.label}
                       </div>
+                      <div className="text-xs text-gray-500 mb-1">
+                        Before Tax: ₦{withMargin.toLocaleString()}
+                      </div>
                       <div className="text-lg font-bold text-blue-600">
-                        ₦{finalPrice.toLocaleString()}
+                        ₦{finalPriceWithTax.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500">
-                        +{formData.margins[priceType.key]}% margin
+                        +{formData.margins[priceType.key]}% margin +
+                        {formData.taxPercentage}% tax
                       </div>
                     </div>
                   );
@@ -554,7 +603,7 @@ const PricingConfiguration = () => {
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <RoleBasedButton disabledRoles={['MANAGER']}>
+            <RoleBasedButton disabledRoles={["MANAGER"]}>
               <button
                 type="submit"
                 disabled={saving}
@@ -565,7 +614,7 @@ const PricingConfiguration = () => {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {saving ? 'Saving...' : 'Save Configuration'}
+                {saving ? "Saving..." : "Save Configuration"}
               </button>
             </RoleBasedButton>
           </div>
@@ -629,7 +678,7 @@ const PricingConfiguration = () => {
                       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                         <div className="flex items-center text-sm text-green-600">
                           <CheckCircle className="h-4 w-4 mr-1" />
-                          Approved by {history.approvedBy.name} on{' '}
+                          Approved by {history.approvedBy.name} on{" "}
                           {new Date(history.approvedAt).toLocaleString()}
                         </div>
                       </div>
@@ -640,81 +689,212 @@ const PricingConfiguration = () => {
           </div>
         )}
 
+      {/* Configuration History */}
+      {showHistory && config?.configHistory && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+              <History className="h-5 w-5 mr-2" />
+              Configuration History
+            </h3>
+            <button
+              onClick={() => setShowHistory(false)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {config.configHistory.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No configuration history available
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {config.configHistory.map((history, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {new Date(history.changedAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-gray-400 mr-1" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {history.changedBy?.name || "Unknown"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Sale:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.margins.salePrice}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        BTB:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.margins.btbPrice}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        BTC:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.margins.btcPrice}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        3 Weeks:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.margins.price3weeksDelivery}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        5 Weeks:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.margins.price5weeksDelivery}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Overhead:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.overheadPercentage}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Tax:
+                      </span>
+                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                        {history.taxPercentage || 0}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Auto-Update:
+                      </span>
+                      <span
+                        className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          history.autoUpdateOnExchangeRateChange
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {history.autoUpdateOnExchangeRateChange ? "On" : "Off"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {history.notes && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <strong>Notes:</strong> {history.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Approval Confirmation Modal */}
       {showApprovalModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg mr-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Approve Pricing Configuration
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    This action will update all product prices
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Approve Pricing Configuration
-              </h3>
-            </div>
 
-            <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400">
-              <p>
-                <strong className="text-gray-900 dark:text-white">
-                  You are about to approve this pricing configuration.
-                </strong>
-              </p>
-
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                <h4 className="font-medium text-yellow-900 dark:text-yellow-200 mb-2">
-                  ⚠️ Important Notice
+              <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <h4 className="font-medium text-yellow-900 dark:text-yellow-200 mb-2 flex items-center">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Important Information
                 </h4>
-                <ul className="space-y-1 text-yellow-800 dark:text-yellow-300">
+                <ul className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
+                  <li>• All product prices will be recalculated immediately</li>
+                  <li>• This process may take a few moments</li>
+                  <li>• Price history will be preserved</li>
                   <li>
-                    • All existing product prices will be recalculated
-                    automatically
+                    • Tax of {config?.taxPercentage || 0}% will be applied to
+                    all prices
                   </li>
-                  <li>• This process may take a few minutes to complete</li>
-                  <li>• Changes will be reflected immediately in the system</li>
                   <li>• This action cannot be undone</li>
                 </ul>
               </div>
 
               {config && (
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                    Configuration to be approved:
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">
+                    Configuration to be Approved
                   </h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-blue-800 dark:text-blue-300">
                       Sale Price: <strong>{config.margins.salePrice}%</strong>
                     </div>
-                    <div>
+                    <div className="text-blue-800 dark:text-blue-300">
                       BTB Price: <strong>{config.margins.btbPrice}%</strong>
                     </div>
-                    <div>
+                    <div className="text-blue-800 dark:text-blue-300">
                       BTC Price: <strong>{config.margins.btcPrice}%</strong>
                     </div>
-                    <div>
-                      3 Weeks:{' '}
+                    <div className="text-blue-800 dark:text-blue-300">
+                      3 Weeks:{" "}
                       <strong>{config.margins.price3weeksDelivery}%</strong>
                     </div>
-                    <div>
-                      5 Weeks:{' '}
+                    <div className="text-blue-800 dark:text-blue-300">
+                      5 Weeks:{" "}
                       <strong>{config.margins.price5weeksDelivery}%</strong>
                     </div>
-                    <div>
+                    <div className="text-blue-800 dark:text-blue-300">
                       Overhead: <strong>{config.overheadPercentage}%</strong>
+                    </div>
+                    <div className="text-blue-800 dark:text-blue-300">
+                      Tax: <strong>{config.taxPercentage || 0}%</strong>
                     </div>
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowApprovalModal(false)}
-                disabled={saving}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <RoleBasedButton disabledRoles={['MANAGER']}>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowApprovalModal(false)}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleApprove}
                   disabled={saving}
@@ -728,11 +908,11 @@ const PricingConfiguration = () => {
                   ) : (
                     <>
                       <CheckCircle className="h-4 w-4" />
-                      Confirm Approval
+                      Yes, Approve & Update Prices
                     </>
                   )}
                 </button>
-              </RoleBasedButton>
+              </div>
             </div>
           </div>
         </div>

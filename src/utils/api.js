@@ -106,7 +106,7 @@ const cleanShippingMethodData = (methodData) => {
 
       console.log(
         "Zone locations after cleaning:",
-        pickup.zoneLocations.length
+        pickup.zoneLocations.length,
       );
     }
 
@@ -153,7 +153,7 @@ const cleanShippingMethodData = (methodData) => {
 
       console.log(
         "Default locations after cleaning:",
-        pickup.defaultLocations.length
+        pickup.defaultLocations.length,
       );
     }
 
@@ -172,7 +172,7 @@ const cleanShippingMethodData = (methodData) => {
 
     if (!hasZoneLocations && !hasDefaultLocations) {
       throw new Error(
-        "At least one valid pickup location is required with name, address, city, state, and LGA."
+        "At least one valid pickup location is required with name, address, city, state, and LGA.",
       );
     }
   }
@@ -257,7 +257,7 @@ const cleanShippingMethodData = (methodData) => {
 
     if (!tableShipping.zoneRates || tableShipping.zoneRates.length === 0) {
       throw new Error(
-        "At least one zone rate is required for table shipping method"
+        "At least one zone rate is required for table shipping method",
       );
     }
   }
@@ -292,7 +292,7 @@ const cleanShippingMethodData = (methodData) => {
 export const handleShippingMethodSubmission = async (
   methodData,
   isUpdate = false,
-  methodId = null
+  methodId = null,
 ) => {
   try {
     let result;
@@ -387,7 +387,7 @@ export const apiCall = async (endpoint, options = {}) => {
 
     const response = await fetch(
       `${API_BASE_URL}${endpoint}`,
-      processedOptions
+      processedOptions,
     );
 
     console.log("📥 Response:", {
@@ -405,7 +405,7 @@ export const apiCall = async (endpoint, options = {}) => {
         throw new Error("Session expired. Please login again.");
       }
       throw new Error(
-        data.message || `HTTP ${response.status}: ${response.statusText}`
+        data.message || `HTTP ${response.status}: ${response.statusText}`,
       );
     }
 
@@ -480,7 +480,7 @@ export const apiCallFileUploader = async (endpoint, options = {}) => {
 
     const response = await fetch(
       `${API_BASE_URL}${endpoint}`,
-      processedOptions
+      processedOptions,
     );
 
     console.log("Responsse status:", response.status);
@@ -497,7 +497,7 @@ export const apiCallFileUploader = async (endpoint, options = {}) => {
         throw new Error("Session expired. Please login again.");
       }
       throw new Error(
-        data.message || `HTTP ${response.status}: ${response.statusText}`
+        data.message || `HTTP ${response.status}: ${response.statusText}`,
       );
     }
 
@@ -813,7 +813,7 @@ export const exchangeRateAPI = {
   getExchangeRates: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiCall(
-      `/exchange-rates/get${queryString ? `?${queryString}` : ""}`
+      `/exchange-rates/get${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -1122,7 +1122,7 @@ export const fileAPI = {
         const errorData = await response.json();
         console.log("Error response:", errorData);
         throw new Error(
-          errorData.message || `Upload failed: ${response.status}`
+          errorData.message || `Upload failed: ${response.status}`,
         );
       }
 
@@ -1169,7 +1169,7 @@ export const fileAPI = {
         const errorData = await response.json();
         console.log("Error response:", errorData);
         throw new Error(
-          errorData.message || `Upload failed: ${response.status}`
+          errorData.message || `Upload failed: ${response.status}`,
         );
       }
 
@@ -1406,7 +1406,7 @@ export const stockAPI = {
             !location.bin
           ) {
             throw new Error(
-              `Location required for ${type.toLowerCase()} items`
+              `Location required for ${type.toLowerCase()} items`,
             );
           }
         }
@@ -1540,39 +1540,77 @@ export const stockAPI = {
   },
 };
 
+// admin/src/utils/api.js - COMPLETE UPDATED API FILE
+
+// ... (keep your existing imports and configurations)
+
+// ==========================================
+// PRICING API - COMPLETE WITH EXPORT/IMPORT
+// ==========================================
+
 export const pricingAPI = {
-  // Get pricing configuration
+  /**
+   * Get current pricing configuration
+   */
   getPricingConfig: async () => {
-    return apiCall("/pricing/config");
+    try {
+      return await apiCall("/pricing/config");
+    } catch (error) {
+      console.error("Error getting pricing config:", error);
+      throw error;
+    }
   },
 
-  // Update pricing configuration
+  /**
+   * Update pricing configuration
+   */
   updatePricingConfig: async (configData) => {
-    return apiCall("/pricing/config", {
-      method: "PUT",
-      body: configData,
-    });
+    try {
+      return await apiCall("/pricing/config", {
+        method: "PUT",
+        body: configData,
+      });
+    } catch (error) {
+      console.error("Error updating pricing config:", error);
+      throw error;
+    }
   },
 
-  // Approve pricing configuration (Director only)
+  /**
+   * Approve pricing configuration (Director only)
+   */
   approvePricingConfig: async () => {
-    return apiCall("/pricing/config/approve", {
-      method: "PATCH",
-    });
+    try {
+      return await apiCall("/pricing/config/approve", {
+        method: "PATCH",
+      });
+    } catch (error) {
+      console.error("Error approving pricing config:", error);
+      throw error;
+    }
   },
 
-  // Calculate prices from purchase order
+  /**
+   * Calculate prices from purchase order
+   */
   calculatePricesFromPurchaseOrder: async (purchaseOrderId) => {
     if (!purchaseOrderId) {
       throw new Error("Purchase order ID is required");
     }
 
-    return apiCall(`/pricing/calculate/${purchaseOrderId}`, {
-      method: "POST",
-    });
+    try {
+      return await apiCall(`/pricing/calculate/${purchaseOrderId}`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Error calculating prices:", error);
+      throw error;
+    }
   },
 
-  // Approve calculated prices (Director only)
+  /**
+   * Approve price calculations
+   */
   approvePriceCalculations: async (approvalData) => {
     const validatedData = {
       purchaseOrderId: approvalData.purchaseOrderId,
@@ -1591,13 +1629,20 @@ export const pricingAPI = {
       throw new Error("At least one calculated item is required");
     }
 
-    return apiCall("/pricing/approve", {
-      method: "POST",
-      body: validatedData,
-    });
+    try {
+      return await apiCall("/pricing/approve", {
+        method: "POST",
+        body: validatedData,
+      });
+    } catch (error) {
+      console.error("Error approving calculations:", error);
+      throw error;
+    }
   },
 
-  // NEW: Direct product price update for accountants
+  /**
+   * Update product pricing
+   */
   updateProductPricing: async (pricingData) => {
     const validatedData = {
       productId: pricingData.productId,
@@ -1613,13 +1658,20 @@ export const pricingAPI = {
       throw new Error("Price must be greater than 0");
     }
 
-    return apiCall("/pricing/update-product-price", {
-      method: "PUT",
-      body: validatedData,
-    });
+    try {
+      return await apiCall("/pricing/update-product-price", {
+        method: "PUT",
+        body: validatedData,
+      });
+    } catch (error) {
+      console.error("Error updating product pricing:", error);
+      throw error;
+    }
   },
 
-  // NEW: Direct product price creation for accountants
+  /**
+   * Create product pricing
+   */
   createProductPricing: async (pricingData) => {
     const validatedData = {
       productId: pricingData.productId,
@@ -1636,13 +1688,20 @@ export const pricingAPI = {
       throw new Error("Price must be greater than 0");
     }
 
-    return apiCall("/pricing/create-product-price", {
-      method: "POST",
-      body: validatedData,
-    });
+    try {
+      return await apiCall("/pricing/create-product-price", {
+        method: "POST",
+        body: validatedData,
+      });
+    } catch (error) {
+      console.error("Error creating product pricing:", error);
+      throw error;
+    }
   },
 
-  // Get product pricing list with filters
+  /**
+   * Get product pricing list
+   */
   getProductPricingList: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -1652,10 +1711,267 @@ export const pricingAPI = {
     });
 
     const queryString = queryParams.toString();
-    return apiCall(`/pricing/products${queryString ? `?${queryString}` : ""}`);
+    try {
+      return await apiCall(
+        `/pricing/products${queryString ? `?${queryString}` : ""}`,
+      );
+    } catch (error) {
+      console.error("Error getting product pricing list:", error);
+      throw error;
+    }
   },
 
-  // Update prices when exchange rates change
+  // ==========================================
+  // NEW: EXPORT FUNCTIONS
+  // ==========================================
+
+  /**
+   * Export product pricing to CSV
+   * @param {Object} params - Export parameters
+   * @param {string} params.columns - Comma-separated column list
+   * @param {boolean} params.allProducts - Export all products
+   * @param {number} params.limit - Number of products to export
+   * @param {string} params.search - Search filter
+   * @param {string} params.category - Category filter
+   * @param {string} params.brand - Brand filter
+   * @param {string} params.productType - Product type filter
+   */
+  exportProductPricingCSV: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = `${API_BASE_URL}/pricing/export/csv${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Exporting CSV:", url);
+
+      // Get token for authenticated request
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `product_pricing_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("CSV export error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Export product pricing to PDF
+   * @param {Object} params - Same parameters as exportProductPricingCSV
+   */
+  exportProductPricingPDF: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = `${API_BASE_URL}/pricing/export/pdf${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Exporting PDF:", url);
+
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `product_pricing_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("PDF export error:", error);
+      throw error;
+    }
+  },
+  exportProductPricingCSVPLM: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = `${API_BASE_URL}/pricing/export/csv-plm${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Exporting CSV:", url);
+
+      // Get token for authenticated request
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `product_pricing_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("CSV export error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Export product pricing to PDF
+   * @param {Object} params - Same parameters as exportProductPricingCSV
+   */
+  exportProductPricingPDFPLM: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = `${API_BASE_URL}/pricing/export/pdf-plm${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Exporting PDF:", url);
+
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `product_pricing_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("PDF export error:", error);
+      throw error;
+    }
+  },
+
+  // ==========================================
+  // NEW: IMPORT FUNCTION
+  // ==========================================
+
+  /**
+   * Import product pricing from CSV
+   * @param {Object} data - Import data
+   * @param {string} data.csvData - CSV file content as string
+   * @param {string} data.updateMode - 'basePrice' or 'fullPrices'
+   * @returns {Promise<Object>} Import results
+   */
+  importProductPricingCSV: async (data) => {
+    try {
+      console.log("Importing pricing data:", {
+        updateMode: data.updateMode,
+        dataLength: data.csvData?.length,
+      });
+
+      return await apiCall("/pricing/import/csv", {
+        method: "POST",
+        body: data,
+      });
+    } catch (error) {
+      console.error("Import error:", error);
+      throw error;
+    }
+  },
+
+  // ==========================================
+  // OTHER PRICING FUNCTIONS
+  // ==========================================
+
+  /**
+   * Update prices based on exchange rate change
+   */
   updatePricesOnExchangeRateChange: async (updateData) => {
     const validatedData = {
       currency: updateData.currency?.toUpperCase(),
@@ -1670,36 +1986,243 @@ export const pricingAPI = {
       throw new Error("Exchange rate must be greater than 0");
     }
 
-    return apiCall("/pricing/exchange-rate-update", {
-      method: "POST",
-      body: validatedData,
-    });
+    try {
+      return await apiCall("/pricing/exchange-rate-update", {
+        method: "POST",
+        body: validatedData,
+      });
+    } catch (error) {
+      console.error("Error updating exchange rate:", error);
+      throw error;
+    }
   },
 
-  // Bulk recalculate prices for specific currency
+  /**
+   * Bulk recalculate prices for currency
+   */
   bulkRecalculatePricesForCurrency: async (currency) => {
     if (!currency) {
       throw new Error("Currency is required");
     }
 
-    return apiCall("/pricing/bulk-recalculate", {
-      method: "POST",
-      body: { currency: currency.toUpperCase() },
-    });
+    try {
+      return await apiCall("/pricing/bulk-recalculate", {
+        method: "POST",
+        body: { currency: currency.toUpperCase() },
+      });
+    } catch (error) {
+      console.error("Error bulk recalculating:", error);
+      throw error;
+    }
   },
 
-  // Get delivered purchase orders ready for price calculation
+  /**
+   * Get delivered purchase orders
+   */
   getDeliveredPurchaseOrders: async () => {
-    return apiCall("/purchase-orders?status=DELIVERED");
+    try {
+      return await apiCall("/purchase-orders?status=DELIVERED");
+    } catch (error) {
+      console.error("Error getting delivered purchase orders:", error);
+      throw error;
+    }
   },
 
-  // Get purchase order details for pricing
+  /**
+   * Get purchase order for pricing
+   */
   getPurchaseOrderForPricing: async (purchaseOrderId) => {
     if (!purchaseOrderId) {
       throw new Error("Purchase order ID is required");
     }
 
-    return apiCall(`/purchase-orders/${purchaseOrderId}`);
+    try {
+      return await apiCall(`/purchase-orders/${purchaseOrderId}`);
+    } catch (error) {
+      console.error("Error getting purchase order:", error);
+      throw error;
+    }
+  },
+};
+
+// ==============================
+// UTILITY FUNCTIONS FOR PRICING
+// ==========================================
+
+export const pricingUtils = {
+  /**
+   * Format currency for display
+   */
+  formatCurrency: (amount, currency = "NGN") => {
+    const numAmount = parseFloat(amount) || 0;
+
+    if (currency === "NGN") {
+      return new Intl.NumberFormat("en-NG", {
+        style: "currency",
+        currency: "NGN",
+      }).format(numAmount);
+    }
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
+    }).format(numAmount);
+  },
+
+  /**
+   * Format number for display
+   */
+  formatNumber: (number) => {
+    return new Intl.NumberFormat("en-NG").format(parseFloat(number) || 0);
+  },
+
+  /**
+   * Calculate total from items
+   */
+  calculateTotal: (items, field = "totalPrice") => {
+    if (!Array.isArray(items)) return 0;
+    return items.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0);
+  },
+
+  /**
+   * Generate CSV content from data
+   */
+  generateCSV: (headers, data) => {
+    const csvContent = [headers, ...data]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
+
+    return csvContent;
+  },
+
+  /**
+   * Download CSV file
+   */
+  downloadCSV: (csvContent, filename = "data.csv") => {
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Parse CSV file
+   */
+  parseCSV: async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          const rows = text.split("\n").filter((row) => row.trim());
+
+          if (rows.length === 0) {
+            reject(new Error("CSV file is empty"));
+            return;
+          }
+
+          const headers = rows[0]
+            .split(",")
+            .map((h) => h.trim().replace(/"/g, ""));
+          const data = rows.slice(1).map((row) => {
+            const values = row
+              .split(",")
+              .map((v) => v.trim().replace(/"/g, ""));
+            const obj = {};
+            headers.forEach((header, index) => {
+              obj[header] = values[index] || "";
+            });
+            return obj;
+          });
+
+          resolve({ headers, data });
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsText(file);
+    });
+  },
+
+  /**
+   * Validate CSV format for pricing import
+   */
+  validatePricingCSV: (headers, updateMode = "basePrice") => {
+    const errors = [];
+
+    if (updateMode === "basePrice") {
+      const requiredHeaders = ["Product Name", "SKU", "Base Price (Sub Price)"];
+      requiredHeaders.forEach((header) => {
+        if (!headers.includes(header)) {
+          errors.push(`Missing required column: ${header}`);
+        }
+      });
+    } else if (updateMode === "fullPrices") {
+      const requiredHeaders = [
+        "Product Name",
+        "SKU",
+        "Base Price (Sub Price)",
+        "Sale Price (With Tax)",
+        "BTB Price (With Tax)",
+        "BTC Price (With Tax)",
+        "3 Weeks Delivery (With Tax)",
+        "5 Weeks Delivery (With Tax)",
+      ];
+      requiredHeaders.forEach((header) => {
+        if (!headers.includes(header)) {
+          errors.push(`Missing required column: ${header}`);
+        }
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  },
+
+  /**
+   * Calculate price with tax
+   */
+  calculatePriceWithTax: (basePrice, marginPercent, taxPercent) => {
+    const priceBeforeTax = basePrice * (1 + marginPercent / 100);
+    const finalPrice = priceBeforeTax * (1 + taxPercent / 100);
+    return Math.round(finalPrice);
+  },
+
+  /**
+   * Calculate all prices from base price
+   */
+  calculateAllPrices: (basePrice, margins, taxPercent) => {
+    const pricesBeforeTax = {
+      salePrice: basePrice * (1 + margins.salePrice / 100),
+      btbPrice: basePrice * (1 + margins.btbPrice / 100),
+      btcPrice: basePrice * (1 + margins.btcPrice / 100),
+      price3weeksDelivery: basePrice * (1 + margins.price3weeksDelivery / 100),
+      price5weeksDelivery: basePrice * (1 + margins.price5weeksDelivery / 100),
+    };
+
+    const taxMultiplier = 1 + taxPercent / 100;
+
+    return {
+      salePrice: Math.round(pricesBeforeTax.salePrice * taxMultiplier),
+      btbPrice: Math.round(pricesBeforeTax.btbPrice * taxMultiplier),
+      btcPrice: Math.round(pricesBeforeTax.btcPrice * taxMultiplier),
+      price3weeksDelivery: Math.round(
+        pricesBeforeTax.price3weeksDelivery * taxMultiplier,
+      ),
+      price5weeksDelivery: Math.round(
+        pricesBeforeTax.price5weeksDelivery * taxMultiplier,
+      ),
+    };
   },
 };
 
@@ -1800,7 +2323,7 @@ export const logisticsAPI = {
 
     const queryString = queryParams.toString();
     const response = await apiCall(
-      `/shipping/zones${queryString ? `?${queryString}` : ""}`
+      `/shipping/zones${queryString ? `?${queryString}` : ""}`,
     );
 
     console.log("Get zones response:", response);
@@ -1982,7 +2505,7 @@ export const logisticsAPI = {
 
     const queryString = queryParams.toString();
     const response = await apiCall(
-      `/shipping/methods${queryString ? `?${queryString}` : ""}`
+      `/shipping/methods${queryString ? `?${queryString}` : ""}`,
     );
 
     console.log("Get methods response:", response);
@@ -2062,7 +2585,7 @@ export const logisticsAPI = {
     return apiCall(
       `/shipping/categories/for-assignment${
         queryString ? `?${queryString}` : ""
-      }`
+      }`,
     );
   },
 
@@ -2076,7 +2599,7 @@ export const logisticsAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/shipping/products/for-assignment${queryString ? `?${queryString}` : ""}`
+      `/shipping/products/for-assignment${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -2126,7 +2649,7 @@ export const logisticsAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/shipping/trackings${queryString ? `?${queryString}` : ""}`
+      `/shipping/trackings${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -2162,7 +2685,7 @@ export const logisticsAPI = {
     return apiCall(
       `/shipping/orders/ready-for-shipping${
         queryString ? `?${queryString}` : ""
-      }`
+      }`,
     );
   },
 };
@@ -2181,7 +2704,7 @@ export const warehouseAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/warehouse/products${queryString ? `?${queryString}` : ""}`
+      `/warehouse/products${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -2242,7 +2765,7 @@ export const warehouseAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/warehouse/activity-log${queryString ? `?${queryString}` : ""}`
+      `/warehouse/activity-log${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -2291,7 +2814,7 @@ export const warehouseAPI = {
         headers: {
           Accept: "text/csv",
         },
-      }
+      },
     );
   },
 
@@ -2311,7 +2834,7 @@ export const warehouseAPI = {
         headers: {
           Accept: "text/csv",
         },
-      }
+      },
     );
   },
 
@@ -2417,14 +2940,14 @@ export const warehouseAPI = {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       console.log("📥 Response status:", response.status);
       console.log("📋 Content-Type:", response.headers.get("Content-Type"));
       console.log(
         "📋 Content-Disposition:",
-        response.headers.get("Content-Disposition")
+        response.headers.get("Content-Disposition"),
       );
 
       if (!response.ok) {
@@ -2468,7 +2991,7 @@ export const warehouseAPI = {
       ) {
         console.warn(
           "⚠️ Warning: Response might not be a PDF. Type:",
-          blob.type
+          blob.type,
         );
       }
 
@@ -2508,7 +3031,7 @@ export const accountingAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/accounting/products${queryString ? `?${queryString}` : ""}`
+      `/accounting/products${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -2597,7 +3120,7 @@ export const directPricingAPI = {
     return apiCall(
       `/direct-pricing/available-products${
         queryString ? `?${queryString}` : ""
-      }`
+      }`,
     );
   },
 
@@ -2623,7 +3146,7 @@ export const directPricingAPI = {
     ];
     if (!validPriceTypes.includes(validatedData.priceType)) {
       throw new Error(
-        `Invalid price type. Must be one of: ${validPriceTypes.join(", ")}`
+        `Invalid price type. Must be one of: ${validPriceTypes.join(", ")}`,
       );
     }
 
@@ -2657,7 +3180,7 @@ export const directPricingAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/direct-pricing/list${queryString ? `?${queryString}` : ""}`
+      `/direct-pricing/list${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -2669,7 +3192,7 @@ export const directPricingAPI = {
 
     const queryParams = new URLSearchParams({ limit: limit.toString() });
     return apiCall(
-      `/direct-pricing/history/${productId}?${queryParams.toString()}`
+      `/direct-pricing/history/${productId}?${queryParams.toString()}`,
     );
   },
 
@@ -2762,7 +3285,7 @@ export const directPricingAPI = {
         headers: {
           Accept: "text/csv",
         },
-      }
+      },
     );
   },
 };
@@ -3014,13 +3537,13 @@ export const directPricingUtils = {
         priceUpdatedBy.price3weeksDelivery?.updatedBy?.name || "",
         priceUpdatedBy.price3weeksDelivery?.updatedAt
           ? new Date(
-              priceUpdatedBy.price3weeksDelivery.updatedAt
+              priceUpdatedBy.price3weeksDelivery.updatedAt,
             ).toLocaleDateString()
           : "",
         priceUpdatedBy.price5weeksDelivery?.updatedBy?.name || "",
         priceUpdatedBy.price5weeksDelivery?.updatedAt
           ? new Date(
-              priceUpdatedBy.price5weeksDelivery.updatedAt
+              priceUpdatedBy.price5weeksDelivery.updatedAt,
             ).toLocaleDateString()
           : "",
       ];
@@ -3094,304 +3617,6 @@ export const isTokenValid = () => {
   }
 };
 
-// Pricing utility functions
-export const pricingUtils = {
-  // Format currency for display
-  formatCurrency: (amount, currency = "NGN") => {
-    const numAmount = parseFloat(amount) || 0;
-
-    if (currency === "NGN") {
-      return new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-      }).format(numAmount);
-    }
-
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-    }).format(numAmount);
-  },
-
-  // Format number for display
-  formatNumber: (number) => {
-    return new Intl.NumberFormat("en-NG").format(parseFloat(number) || 0);
-  },
-
-  // Calculate total from items
-  calculateTotal: (items, field = "totalPrice") => {
-    if (!Array.isArray(items)) return 0;
-    return items.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0);
-  },
-
-  // Validate pricing calculation data
-  validatePricingData: (calculatedItems) => {
-    if (!Array.isArray(calculatedItems) || calculatedItems.length === 0) {
-      throw new Error("No calculated items provided");
-    }
-
-    for (const item of calculatedItems) {
-      if (!item.productId) {
-        throw new Error("Product ID is required for all items");
-      }
-
-      if (!item.calculations) {
-        throw new Error("Calculations are required for all items");
-      }
-
-      const { costBreakdown, calculatedPrices, appliedMargins } =
-        item.calculations;
-
-      // Validate cost breakdown
-      if (!costBreakdown) {
-        throw new Error("Cost breakdown is required");
-      }
-
-      const requiredCostFields = [
-        "unitCostInOriginalCurrency",
-        "originalCurrency",
-        "exchangeRate",
-        "unitCostInNaira",
-        "freightAndClearingCostPerUnit",
-        "totalCostPerUnit",
-        "overheadPercentage",
-        "overheadAmount",
-        "subPrice",
-      ];
-
-      for (const field of requiredCostFields) {
-        if (
-          costBreakdown[field] === undefined ||
-          costBreakdown[field] === null
-        ) {
-          throw new Error(`Cost breakdown field '${field}' is required`);
-        }
-      }
-
-      // Validate calculated prices
-      if (!calculatedPrices) {
-        throw new Error("Calculated prices are required");
-      }
-
-      const requiredPriceFields = [
-        "salePrice",
-        "btbPrice",
-        "btcPrice",
-        "price3weeksDelivery",
-        "price5weeksDelivery",
-      ];
-
-      for (const field of requiredPriceFields) {
-        if (
-          calculatedPrices[field] === undefined ||
-          calculatedPrices[field] === null
-        ) {
-          throw new Error(`Price field '${field}' is required`);
-        }
-
-        if (parseFloat(calculatedPrices[field]) <= 0) {
-          throw new Error(`Price field '${field}' must be greater than 0`);
-        }
-      }
-
-      // Validate applied margins
-      if (!appliedMargins) {
-        throw new Error("Applied margins are required");
-      }
-
-      for (const field of requiredPriceFields) {
-        if (
-          appliedMargins[field] === undefined ||
-          appliedMargins[field] === null
-        ) {
-          throw new Error(`Margin field '${field}' is required`);
-        }
-
-        if (parseFloat(appliedMargins[field]) < 0) {
-          throw new Error(`Margin field '${field}' cannot be negative`);
-        }
-      }
-    }
-
-    return true; // All validations passed
-  },
-
-  // Get price types with display information
-  getPriceTypes: () => [
-    {
-      key: "salePrice",
-      label: "Sale Price",
-      description: "Standard retail sale price",
-      color: "green",
-    },
-    {
-      key: "btbPrice",
-      label: "BTB Price",
-      description: "Business-to-Business price",
-      color: "blue",
-    },
-    {
-      key: "btcPrice",
-      label: "BTC Price",
-      description: "Business-to-Consumer price",
-      color: "purple",
-    },
-    {
-      key: "price3weeksDelivery",
-      label: "3 Weeks Delivery",
-      description: "Price for 3 weeks delivery option",
-      color: "orange",
-    },
-    {
-      key: "price5weeksDelivery",
-      label: "5 Weeks Delivery",
-      description: "Price for 5 weeks delivery option",
-      color: "red",
-    },
-  ],
-
-  // Calculate percentage difference between two prices
-  calculatePriceChangePercentage: (oldPrice, newPrice) => {
-    const old = parseFloat(oldPrice) || 0;
-    const current = parseFloat(newPrice) || 0;
-
-    if (old === 0) return current > 0 ? 100 : 0;
-    return ((current - old) / old) * 100;
-  },
-
-  // Get price change indicator
-  getPriceChangeIndicator: (percentage) => {
-    if (Math.abs(percentage) < 1) return { trend: "stable", color: "gray" };
-    return percentage > 0
-      ? { trend: "increase", color: "red" }
-      : { trend: "decrease", color: "green" };
-  },
-
-  // Generate pricing summary for display
-  generatePricingSummary: (calculatedItems) => {
-    if (!Array.isArray(calculatedItems) || calculatedItems.length === 0) {
-      return {
-        totalItems: 0,
-        averageSalePrice: 0,
-        totalValue: 0,
-        averageMargin: 0,
-      };
-    }
-
-    const totalItems = calculatedItems.length;
-    const totalSalePrice = calculatedItems.reduce(
-      (sum, item) =>
-        sum + (parseFloat(item.calculations?.calculatedPrices?.salePrice) || 0),
-      0
-    );
-    const averageSalePrice = totalSalePrice / totalItems;
-
-    const totalCost = calculatedItems.reduce(
-      (sum, item) =>
-        sum +
-        (parseFloat(item.calculations?.costBreakdown?.totalCostPerUnit) || 0),
-      0
-    );
-
-    const averageMargin =
-      totalCost > 0 ? ((totalSalePrice - totalCost) / totalCost) * 100 : 0;
-
-    return {
-      totalItems,
-      averageSalePrice,
-      totalValue: totalSalePrice,
-      averageMargin,
-    };
-  },
-
-  // Export pricing data to CSV
-  exportPricingToCSV: (pricingData) => {
-    if (!Array.isArray(pricingData) || pricingData.length === 0) {
-      throw new Error("No pricing data to export");
-    }
-
-    const headers = [
-      "Product Name",
-      "SKU",
-      "Product Type",
-      "Original Cost",
-      "Original Currency",
-      "Exchange Rate",
-      "Cost in NGN",
-      "Logistics Cost",
-      "Total Cost",
-      "Overhead %",
-      "Overhead Amount",
-      "Sub Price",
-      "Sale Price",
-      "BTB Price",
-      "BTC Price",
-      "3 Weeks Price",
-      "5 Weeks Price",
-      "Sale Margin %",
-      "BTB Margin %",
-      "BTC Margin %",
-      "3 Weeks Margin %",
-      "5 Weeks Margin %",
-      "Status",
-      "Calculated Date",
-    ];
-
-    const csvData = pricingData.map((item) => {
-      const product = item.productDetails || item.product || {};
-      const costBreakdown = item.costBreakdown || {};
-      const calculatedPrices = item.calculatedPrices || {};
-      const appliedMargins = item.appliedMargins || {};
-
-      return [
-        product.name || "",
-        product.sku || "",
-        product.productType || "",
-        costBreakdown.unitCostInOriginalCurrency || 0,
-        costBreakdown.originalCurrency || "",
-        costBreakdown.exchangeRate || 0,
-        costBreakdown.unitCostInNaira || 0,
-        costBreakdown.freightAndClearingCostPerUnit || 0,
-        costBreakdown.totalCostPerUnit || 0,
-        costBreakdown.overheadPercentage || 0,
-        costBreakdown.overheadAmount || 0,
-        costBreakdown.subPrice || 0,
-        calculatedPrices.salePrice || 0,
-        calculatedPrices.btbPrice || 0,
-        calculatedPrices.btcPrice || 0,
-        calculatedPrices.price3weeksDelivery || 0,
-        calculatedPrices.price5weeksDelivery || 0,
-        appliedMargins.salePrice || 0,
-        appliedMargins.btbPrice || 0,
-        appliedMargins.btcPrice || 0,
-        appliedMargins.price3weeksDelivery || 0,
-        appliedMargins.price5weeksDelivery || 0,
-        item.isApproved ? "Approved" : "Pending",
-        new Date(item.calculatedAt || Date.now()).toLocaleDateString(),
-      ];
-    });
-
-    const csvContent = [headers, ...csvData]
-      .map((row) => row.map((field) => `"${field}"`).join(","))
-      .join("\n");
-
-    return csvContent;
-  },
-
-  // Download CSV file
-  downloadCSV: (csvContent, filename = "pricing_data.csv") => {
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  },
-};
-
 export const blogAPI = {
   // Categories
   getCategories: async (params = {}) => {
@@ -3404,7 +3629,7 @@ export const blogAPI = {
 
     const queryString = queryParams.toString();
     return apiCall(
-      `/blog/admin/categories${queryString ? `?${queryString}` : ""}`
+      `/blog/admin/categories${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -3563,7 +3788,7 @@ export const customerAPI = {
     });
     const queryString = queryParams.toString();
     return apiCall(
-      `/admin/customers/list${queryString ? `?${queryString}` : ""}`
+      `/admin/customers/list${queryString ? `?${queryString}` : ""}`,
     );
   },
 
@@ -3765,7 +3990,7 @@ export const adminOrderAPI = {
     });
     const queryString = queryParams.toString();
     return apiCall(
-      `/admin/orders/analytics${queryString ? `?${queryString}` : ""}`
+      `/admin/orders/analytics${queryString ? `?${queryString}` : ""}`,
     );
   },
 };
