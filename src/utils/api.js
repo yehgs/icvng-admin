@@ -2708,6 +2708,10 @@ export const warehouseAPI = {
     );
   },
 
+  getSuppliers: async () => {
+    return apiCall("/warehouse/suppliers");
+  },
+
   // Update stock quantities (warehouse only)
   updateStock: async (stockData) => {
     if (!stockData.productId) {
@@ -2912,6 +2916,62 @@ export const warehouseAPI = {
   // UPDATED: Export stock as PDF with proper filename handling
   // admin/src/utils/api.js - FIXED exportStockPDF
 
+  exportStockCSV: async (filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/warehouse/export-stock-csv${
+          queryString ? `?${queryString}` : ""
+        }`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `warehouse-stock-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Export CSV error:", error);
+      throw error;
+    }
+  },
+
+  // UPDATED: Export stock PDF with color indicators
   exportStockPDF: async (filters = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -2944,23 +3004,16 @@ export const warehouseAPI = {
       );
 
       console.log("📥 Response status:", response.status);
-      console.log("📋 Content-Type:", response.headers.get("Content-Type"));
-      console.log(
-        "📋 Content-Disposition:",
-        response.headers.get("Content-Disposition"),
-      );
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to generate PDF");
       }
 
-      // Extract filename from Content-Disposition header
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = "warehouse-stock.pdf";
 
       if (contentDisposition) {
-        // Try multiple patterns
         const patterns = [
           /filename[^;=\n]*=["']?([^"';\n]+)["']?/i,
           /filename\*=UTF-8''([^;\n]+)/i,
@@ -2977,25 +3030,7 @@ export const warehouseAPI = {
         }
       }
 
-      console.log("📄 Filename:", filename);
-
-      // Create blob from response
       const blob = await response.blob();
-      console.log("📦 Blob size:", blob.size, "bytes");
-      console.log("📦 Blob type:", blob.type);
-
-      // Verify it's actually a PDF
-      if (
-        !blob.type.includes("pdf") &&
-        blob.type !== "application/octet-stream"
-      ) {
-        console.warn(
-          "⚠️ Warning: Response might not be a PDF. Type:",
-          blob.type,
-        );
-      }
-
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -3003,16 +3038,29 @@ export const warehouseAPI = {
       document.body.appendChild(a);
       a.click();
 
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        console.log("✅ Download complete");
       }, 100);
 
       return { success: true, filename };
     } catch (error) {
       console.error("❌ Export PDF error:", error);
+      throw error;
+    }
+  },
+
+  // NEW: Import stock from CSV
+  importStockCSV: async (data) => {
+    try {
+      console.log("Importing stock data...");
+
+      return await apiCall("/warehouse/import-stock-csv", {
+        method: "POST",
+        body: data,
+      });
+    } catch (error) {
+      console.error("Import error:", error);
       throw error;
     }
   },

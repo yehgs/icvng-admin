@@ -6,6 +6,7 @@ import {
   Download,
   Edit,
   Save,
+  Upload,
   X,
   BarChart3,
   TrendingUp,
@@ -42,6 +43,7 @@ import StockEditModal from "../../components/stock/StockEditModal";
 import WeightEditModal from "../../components/stock/WeightEditModal";
 import SystemControlModal from "../../components/stock/SystemControlModal";
 import ActivityLogModal from "../../components/stock/ActivityLogModal";
+import ImportExportModal from "../../components/stock/ImportExportModal";
 
 const WarehouseManagement = () => {
   const [products, setProducts] = useState([]);
@@ -49,6 +51,8 @@ const WarehouseManagement = () => {
   const [paginatedProducts, setPaginatedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showImportExportModal, setShowImportExportModal] = useState(false);
+  const [importExportType, setImportExportType] = useState("import");
   const [filters, setFilters] = useState({
     category: "",
     brand: "",
@@ -213,7 +217,7 @@ const WarehouseManagement = () => {
         outOfStockItems: 0,
         damagedItems: 0,
         refurbishedItems: 0,
-      }
+      },
     );
 
     setStats(stats);
@@ -229,35 +233,35 @@ const WarehouseManagement = () => {
         (product) =>
           product.name?.toLowerCase().includes(searchLower) ||
           product.sku?.toLowerCase().includes(searchLower) ||
-          product.description?.toLowerCase().includes(searchLower)
+          product.description?.toLowerCase().includes(searchLower),
       );
     }
 
     // Apply category filter
     if (filters.category) {
       filtered = filtered.filter(
-        (product) => product.category?._id === filters.category
+        (product) => product.category?._id === filters.category,
       );
     }
 
     // Apply brand filter
     if (filters.brand) {
       filtered = filtered.filter((product) =>
-        product.brand?.some((b) => b._id === filters.brand)
+        product.brand?.some((b) => b._id === filters.brand),
       );
     }
 
     // Apply product type filter
     if (filters.productType) {
       filtered = filtered.filter(
-        (product) => product.productType === filters.productType
+        (product) => product.productType === filters.productType,
       );
     }
 
     // Apply compatible system filter
     if (filters.compatibleSystem) {
       filtered = filtered.filter(
-        (product) => product.compatibleSystem?._id === filters.compatibleSystem
+        (product) => product.compatibleSystem?._id === filters.compatibleSystem,
       );
     }
 
@@ -435,6 +439,71 @@ const WarehouseManagement = () => {
     }
   };
 
+  const handleExportModal = async (config) => {
+    try {
+      const { format, columns, allProducts, limit } = config;
+
+      const queryParams = {
+        columns: columns,
+        category: filters.category || undefined,
+        brand: filters.brand || undefined,
+        productType: filters.productType || undefined,
+        compatibleSystem: filters.compatibleSystem || undefined,
+        limit: allProducts ? undefined : limit,
+      };
+
+      // Remove undefined values
+      Object.keys(queryParams).forEach(
+        (key) => queryParams[key] === undefined && delete queryParams[key],
+      );
+
+      if (format === "csv") {
+        toast.loading("Exporting CSV...");
+        await warehouseAPI.exportStockCSV(queryParams);
+        toast.dismiss();
+        toast.success("CSV exported successfully");
+      } else if (format === "pdf") {
+        toast.loading("Generating PDF...");
+        await warehouseAPI.exportStockPDF(queryParams);
+        toast.dismiss();
+        toast.success("PDF exported successfully");
+      }
+
+      // Close modal after successful export
+      setShowImportExportModal(false);
+    } catch (error) {
+      toast.dismiss();
+      console.error("Export error:", error);
+      toast.error(handleApiError(error, "Failed to export data"));
+    }
+  };
+
+  const handleImportModal = async (data) => {
+    try {
+      const { csvData, notificationEmails = [] } = data;
+
+      const emails =
+        notificationEmails.length > 0
+          ? notificationEmails
+          : [currentUser?.email].filter(Boolean);
+
+      const response = await warehouseAPI.importStockCSV({
+        csvData,
+        notificationEmails: emails,
+      });
+
+      if (response.success) {
+        await fetchProducts();
+        return response;
+      } else {
+        throw new Error(response.message || "Import failed");
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      throw error;
+    }
+  };
+
   const exportToCSV = () => {
     const csvContent = [
       [
@@ -547,6 +616,16 @@ const WarehouseManagement = () => {
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export CSV</span>
+          </button>
+          <button
+            onClick={() => {
+              setImportExportType("import");
+              setShowImportExportModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            Import Stock
           </button>
 
           <button
@@ -692,7 +771,7 @@ const WarehouseManagement = () => {
                 {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{" "}
                 {Math.min(
                   pagination.currentPage * pagination.itemsPerPage,
-                  pagination.totalItems
+                  pagination.totalItems,
                 )}{" "}
                 of {pagination.totalItems} results
               </div>
@@ -713,7 +792,7 @@ const WarehouseManagement = () => {
                     {
                       length: Math.min(
                         pagination.totalPages,
-                        window.innerWidth < 640 ? 3 : 5
+                        window.innerWidth < 640 ? 3 : 5,
                       ),
                     },
                     (_, i) => {
@@ -727,7 +806,7 @@ const WarehouseManagement = () => {
                         const start = Math.max(
                           1,
                           pagination.currentPage -
-                            (window.innerWidth < 640 ? 1 : 2)
+                            (window.innerWidth < 640 ? 1 : 2),
                         );
                         pageNumber = start + i;
                       }
@@ -745,7 +824,7 @@ const WarehouseManagement = () => {
                           {pageNumber}
                         </button>
                       );
-                    }
+                    },
                   )}
                 </div>
 
@@ -798,6 +877,16 @@ const WarehouseManagement = () => {
           systemSettings={systemSettings}
           onToggleSystem={handleSystemToggle}
           onUpdateSettings={handleUpdateSettings}
+        />
+      )}
+
+      {showImportExportModal && (
+        <ImportExportModal
+          isOpen={showImportExportModal}
+          onClose={() => setShowImportExportModal(false)}
+          type={importExportType}
+          onExport={handleExportModal}
+          onImport={handleImportModal}
         />
       )}
 
