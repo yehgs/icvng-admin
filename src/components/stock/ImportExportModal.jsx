@@ -18,7 +18,7 @@ const ImportExportModal = ({
   onClose,
   onExport,
   onImport,
-  type = "import",
+  type = "import", // 'import' or 'export'
 }) => {
   const [exportConfig, setExportConfig] = useState({
     format: "csv",
@@ -37,14 +37,14 @@ const ImportExportModal = ({
   const columnOptions = [
     { value: "all", label: "All Columns" },
     {
-      value: "supplier,weight,unit,packaging,finalStock,online,offline",
-      label: "Essential + Supplier",
+      value: "final,online,offline",
+      label: "Essential Only (+ Stock Distribution)",
     },
     {
-      value: "stockInHouse,damaged,expired,refurb,finalStock",
-      label: "Stock Details Only",
+      value: "damaged,expired,refurb,final",
+      label: "Essential + Stock Details",
     },
-    { value: "finalStock,online,offline", label: "Distribution Only" },
+    { value: "final", label: "Essential + Final Stock Only" },
   ];
 
   const handleFileChange = (e) => {
@@ -216,6 +216,10 @@ const ImportExportModal = ({
                     </option>
                   ))}
                 </select>
+                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
+                  <strong>Always included:</strong> Product Name, SKU, Supplier,
+                  Weight, Unit, Packaging, Stock In House
+                </div>
               </div>
 
               {/* Pagination Options */}
@@ -405,7 +409,7 @@ const ImportExportModal = ({
                   {/* Notification Emails */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Notification Emails (comma-separated)
+                      Additional Notification Emails (Optional)
                     </label>
                     <input
                       type="text"
@@ -416,11 +420,22 @@ const ImportExportModal = ({
                           notificationEmails: e.target.value,
                         }))
                       }
-                      placeholder="admin@example.com, warehouse@example.com"
+                      placeholder="extra@example.com, another@example.com"
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Leave blank to use your email address
+                    <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                      <p className="text-xs text-green-700 dark:text-green-300 font-medium mb-1">
+                        ✅ Default Recipients (Always Notified):
+                      </p>
+                      <ul className="text-xs text-green-600 dark:text-green-400 list-disc list-inside space-y-0.5">
+                        <li>shipment2@yehgs.co.uk (Warehouse Admin)</li>
+                        <li>md@yehgs.co.uk (Director)</li>
+                        <li>webmaster@yehgs.co.uk (IT Admin)</li>
+                      </ul>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Add extra emails above if you want additional people to be
+                      notified
                     </p>
                   </div>
 

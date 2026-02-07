@@ -504,81 +504,6 @@ const WarehouseManagement = () => {
     }
   };
 
-  const exportToCSV = () => {
-    const csvContent = [
-      [
-        "Product Name",
-        "SKU",
-        "Category",
-        "Brand",
-        "Product Type",
-        "Weight (kg)",
-        "Stock on Arrival",
-        "Damaged Qty",
-        "Expired Qty",
-        "Refurbished Qty",
-        "Final Stock",
-        "Online Stock",
-        "Offline Stock",
-        "Last Updated",
-      ],
-      ...filteredProducts.map((product) => {
-        const stock = product.warehouseStock || {};
-        return [
-          product.name || "",
-          product.sku || "",
-          product.category?.name || "",
-          product.brand?.map((b) => b.name).join(", ") || "",
-          product.productType || "",
-          product.weight || 0,
-          stock.stockOnArrival || 0,
-          stock.damagedQty || 0,
-          stock.expiredQty || 0,
-          stock.refurbishedQty || 0,
-          stock.finalStock || 0,
-          stock.onlineStock || 0,
-          stock.offlineStock || 0,
-          stock.lastUpdated
-            ? new Date(stock.lastUpdated).toLocaleDateString()
-            : "",
-        ];
-      }),
-    ];
-
-    const csvString = csvContent
-      .map((row) => row.map((field) => `"${field}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csvString], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "warehouse-stock-report.csv";
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const exportToPDF = async () => {
-    try {
-      toast.loading("Generating PDF...");
-
-      const exportFilters = {
-        category: filters.category || undefined,
-        brand: filters.brand || undefined,
-        productType: filters.productType || undefined,
-        compatibleSystem: filters.compatibleSystem || undefined,
-      };
-
-      await warehouseAPI.exportStockPDF(exportFilters);
-      toast.dismiss();
-      toast.success("PDF exported successfully");
-    } catch (error) {
-      toast.dismiss();
-      console.error("Error exporting PDF:", error);
-      toast.error("Failed to export PDF");
-    }
-  };
-
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
@@ -603,20 +528,16 @@ const WarehouseManagement = () => {
           </button>
 
           <button
-            onClick={exportToPDF}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Export PDF</span>
-          </button>
-
-          <button
-            onClick={exportToCSV}
+            onClick={() => {
+              setImportExportType("export");
+              setShowImportExportModal(true);
+            }}
             className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export CSV</span>
+            <span className="hidden sm:inline">Export</span>
           </button>
+
           <button
             onClick={() => {
               setImportExportType("import");
