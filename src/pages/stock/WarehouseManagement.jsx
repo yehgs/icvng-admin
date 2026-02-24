@@ -372,18 +372,20 @@ const WarehouseManagement = () => {
         productId,
         ...stockData,
       });
-
       if (response.success) {
         toast.success("Stock updated successfully");
         await fetchProducts();
         setShowEditModal(false);
         setEditingProduct(null);
-      } else {
-        toast.error(response.message || "Failed to update stock");
       }
     } catch (error) {
-      console.error("Error updating stock:", error);
-      toast.error(handleApiError(error, "Failed to update stock"));
+      const backendErrors = error?.response?.data?.errors;
+      const backendMessage = error?.response?.data?.message;
+
+      // Re-throw with full data so StockEditModal can catch it
+      const enrichedError = new Error(backendMessage || error.message);
+      enrichedError.response = error.response;
+      throw enrichedError;
     }
   };
 

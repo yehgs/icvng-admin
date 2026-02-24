@@ -396,7 +396,6 @@ export const apiCall = async (endpoint, options = {}) => {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       if (response.status === 401) {
         localStorage.removeItem("accessToken");
@@ -404,9 +403,14 @@ export const apiCall = async (endpoint, options = {}) => {
         window.location.href = "/login";
         throw new Error("Session expired. Please login again.");
       }
-      throw new Error(
+
+      console.log("❌ Backend error response:", data); // helps debug
+
+      const error = new Error(
         data.message || `HTTP ${response.status}: ${response.statusText}`,
       );
+      error.response = { data, status: response.status }; // ← CRITICAL: preserves errors array
+      throw error;
     }
 
     return data;
@@ -2718,9 +2722,11 @@ export const warehouseAPI = {
       throw new Error("Product ID is required");
     }
 
+    // FIX: stockInHouse was missing — backend received 0 so validation always failed
     const validatedData = {
       productId: stockData.productId,
       stockOnArrival: parseInt(stockData.stockOnArrival) || 0,
+      stockInHouse: parseInt(stockData.stockInHouse) || 0, // ← WAS MISSING
       damagedQty: parseInt(stockData.damagedQty) || 0,
       expiredQty: parseInt(stockData.expiredQty) || 0,
       refurbishedQty: parseInt(stockData.refurbishedQty) || 0,
@@ -2728,6 +2734,9 @@ export const warehouseAPI = {
       onlineStock: parseInt(stockData.onlineStock) || 0,
       offlineStock: parseInt(stockData.offlineStock) || 0,
       notes: stockData.notes || "",
+      unit: stockData.unit || "",
+      packaging: stockData.packaging || "",
+      supplierName: stockData.supplierName || "",
     };
 
     return apiCall("/warehouse/update-stock", {
