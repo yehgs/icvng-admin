@@ -13,10 +13,8 @@ import {
   X,
   Save,
   Package,
-  Filter,
   FileText,
   FileSpreadsheet,
-  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -71,7 +69,7 @@ const AccountingPricingManagement = () => {
   // Import state
   const [importConfig, setImportConfig] = useState({
     file: null,
-    updateMode: "basePrice",
+    updateMode: "directOverride",
     importing: false,
     results: null,
   });
@@ -80,10 +78,8 @@ const AccountingPricingManagement = () => {
   const currentUser = getCurrentUser();
 
   useEffect(() => {
-    // Check user permissions
     const userRole = currentUser?.subRole || currentUser?.role;
     setCanEdit(["ACCOUNTANT", "DIRECTOR", "IT"].includes(userRole));
-
     initializeData();
   }, []);
 
@@ -106,7 +102,6 @@ const AccountingPricingManagement = () => {
       if (response.success) {
         setPricingConfig(response.data);
       } else {
-        // Fallback to default config if API fails
         setPricingConfig({
           margins: {
             salePrice: 15,
@@ -140,9 +135,7 @@ const AccountingPricingManagement = () => {
   const fetchCategories = async () => {
     try {
       const response = await productAPI.getCategoryStructure();
-      if (response.success) {
-        setCategories(response.data);
-      }
+      if (response.success) setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -196,11 +189,9 @@ const AccountingPricingManagement = () => {
 
   const calculatePrices = (basePrice) => {
     if (!basePrice || !pricingConfig?.margins) return {};
-
     const price = parseFloat(basePrice);
     const { margins, taxPercentage } = pricingConfig;
 
-    // Calculate prices before tax
     const pricesBeforeTax = {
       salePrice: Math.round(price * (1 + margins.salePrice / 100)),
       btbPrice: Math.round(price * (1 + margins.btbPrice / 100)),
@@ -213,7 +204,6 @@ const AccountingPricingManagement = () => {
       ),
     };
 
-    // Apply tax to all prices
     return {
       salePrice: Math.round(
         pricesBeforeTax.salePrice * (1 + taxPercentage / 100),
@@ -236,41 +226,30 @@ const AccountingPricingManagement = () => {
   const validatePricingData = () => {
     const newErrors = {};
     const price = parseFloat(pricingData.price);
-
     if (!pricingData.price || isNaN(price) || price <= 0) {
       newErrors.price = "Price must be a valid number greater than 0";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleEditPricing = (product) => {
     setSelectedProduct(product);
-    setPricingData({
-      price: product.price?.toString() || "",
-      notes: "",
-    });
+    setPricingData({ price: product.price?.toString() || "", notes: "" });
     setErrors({});
     setShowEditModal(true);
   };
 
   const handleSubmit = async () => {
-    if (!validatePricingData()) {
-      return;
-    }
-
+    if (!validatePricingData()) return;
     setSubmitting(true);
-
     try {
       const updateData = {
         productId: selectedProduct._id,
         price: parseFloat(pricingData.price),
         notes: pricingData.notes,
       };
-
       const response = await pricingAPI.updateProductPricing(updateData);
-
       if (response.success) {
         toast.success("Product pricing updated successfully");
         await fetchProducts();
@@ -288,25 +267,17 @@ const AccountingPricingManagement = () => {
   };
 
   const resetForm = () => {
-    setPricingData({
-      price: "",
-      notes: "",
-    });
+    setPricingData({ price: "", notes: "" });
     setSelectedProduct(null);
     setErrors({});
   };
 
   const handleInputChange = (field, value) => {
     setPricingData((prev) => ({ ...prev, [field]: value }));
-
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  // ==========================================
-  // EXPORT FUNCTIONALITY
-  // ==========================================
+  // ── EXPORT ──────────────────────────────────────────────────────────────────
 
   const columnOptions = [
     { value: "all", label: "All Columns" },
@@ -324,7 +295,6 @@ const AccountingPricingManagement = () => {
         columns: exportConfig.columns.join(","),
         allProducts: exportConfig.allProducts,
         limit: exportConfig.limit,
-        // Include current filters
         search: searchTerm || undefined,
         category: filters.category || undefined,
         brand: filters.brand || undefined,
@@ -338,7 +308,6 @@ const AccountingPricingManagement = () => {
         await pricingAPI.exportProductPricingPDFPLM(params);
         toast.success("PDF exported successfully");
       }
-
       setShowExportModal(false);
     } catch (error) {
       console.error("Export error:", error);
@@ -362,9 +331,7 @@ const AccountingPricingManagement = () => {
     }
   };
 
-  // ==========================================
-  // IMPORT FUNCTIONALITY
-  // ==========================================
+  // ── IMPORT ──────────────────────────────────────────────────────────────────
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -390,16 +357,25 @@ const AccountingPricingManagement = () => {
 
     try {
       const fileContent = await importConfig.file.text();
+      let response;
 
-      const response = await pricingAPI.importProductPricingCSV({
-        csvData: fileContent,
-        updateMode: importConfig.updateMode,
-      });
+      if (importConfig.updateMode === "directOverride") {
+        // NEW: bypass all calculations — write cells directly
+        response = await pricingAPI.importDirectProductPricingCSV({
+          csvData: fileContent,
+        });
+      } else {
+        // EXISTING: basePrice or fullPrices modes untouched
+        response = await pricingAPI.importProductPricingCSV({
+          csvData: fileContent,
+          updateMode: importConfig.updateMode,
+        });
+      }
 
       if (response.success) {
         setImportConfig((prev) => ({ ...prev, results: response.data }));
         toast.success(response.message);
-        await fetchProducts(); // Refresh the list
+        await fetchProducts();
       } else {
         toast.error(response.message);
       }
@@ -414,19 +390,20 @@ const AccountingPricingManagement = () => {
   const resetImport = () => {
     setImportConfig({
       file: null,
-      updateMode: "basePrice",
+      updateMode: "directOverride",
       importing: false,
       results: null,
     });
     setShowImportModal(false);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-NG", {
+  // ── HELPERS ─────────────────────────────────────────────────────────────────
+
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
     }).format(amount || 0);
-  };
 
   const handleSearch = (value) => {
     setSearchTerm(value);
@@ -434,10 +411,7 @@ const AccountingPricingManagement = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
@@ -452,17 +426,14 @@ const AccountingPricingManagement = () => {
     setCurrentPage(1);
   };
 
-  const filteredProducts = products;
   const totalValue = products.reduce(
     (sum, product) => sum + (product.salePrice || product.price || 0),
     0,
   );
-  const availableProducts = products.filter(
-    (product) => product.productAvailability,
-  );
-  const outOfStockProducts = products.filter(
-    (product) => (product.stock || 0) === 0,
-  );
+  const availableProducts = products.filter((p) => p.productAvailability);
+  const outOfStockProducts = products.filter((p) => (p.stock || 0) === 0);
+
+  // ── RENDER ───────────────────────────────────────────────────────────────────
 
   return (
     <div className="p-6">
@@ -478,7 +449,6 @@ const AccountingPricingManagement = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          {/* Export Button */}
           <button
             onClick={() => setShowExportModal(true)}
             disabled={loading || products.length === 0}
@@ -488,7 +458,6 @@ const AccountingPricingManagement = () => {
             Export
           </button>
 
-          {/* Import Button */}
           {canEdit && (
             <RoleBasedButton disabledRoles={["MANAGER"]}>
               <button
@@ -503,6 +472,7 @@ const AccountingPricingManagement = () => {
           )}
         </div>
       </div>
+
       {/* Permission Notice */}
       {!canEdit && (
         <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -515,6 +485,7 @@ const AccountingPricingManagement = () => {
           </div>
         </div>
       )}
+
       {/* Search and Filters */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="md:col-span-2 relative">
@@ -601,6 +572,7 @@ const AccountingPricingManagement = () => {
           </button>
         </div>
       </div>
+
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -659,6 +631,7 @@ const AccountingPricingManagement = () => {
           </div>
         </div>
       </div>
+
       {/* Pricing Configuration Display */}
       {pricingConfig && (
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -671,7 +644,7 @@ const AccountingPricingManagement = () => {
                 Sale Price:
               </span>
               <span className="ml-1 font-medium text-gray-900 dark:text-white">
-                +{pricingConfig.margins.salePrice}%
+                +{pricingConfig.margins?.salePrice}%
               </span>
             </div>
             <div>
@@ -679,7 +652,7 @@ const AccountingPricingManagement = () => {
                 BTB Price:
               </span>
               <span className="ml-1 font-medium text-gray-900 dark:text-white">
-                +{pricingConfig.margins.btbPrice}%
+                +{pricingConfig.margins?.btbPrice}%
               </span>
             </div>
             <div>
@@ -687,19 +660,19 @@ const AccountingPricingManagement = () => {
                 BTC Price:
               </span>
               <span className="ml-1 font-medium text-gray-900 dark:text-white">
-                +{pricingConfig.margins.btcPrice}%
+                +{pricingConfig.margins?.btcPrice}%
               </span>
             </div>
             <div>
               <span className="text-gray-600 dark:text-gray-400">3 Weeks:</span>
               <span className="ml-1 font-medium text-gray-900 dark:text-white">
-                +{pricingConfig.margins.price3weeksDelivery}%
+                +{pricingConfig.margins?.price3weeksDelivery}%
               </span>
             </div>
             <div>
               <span className="text-gray-600 dark:text-gray-400">5 Weeks:</span>
               <span className="ml-1 font-medium text-gray-900 dark:text-white">
-                +{pricingConfig.margins.price5weeksDelivery}%
+                +{pricingConfig.margins?.price5weeksDelivery}%
               </span>
             </div>
             <div>
@@ -734,7 +707,7 @@ const AccountingPricingManagement = () => {
               Loading products...
             </span>
           </div>
-        ) : filteredProducts.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="text-center py-12">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -749,37 +722,30 @@ const AccountingPricingManagement = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Base Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Sale Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    BTB Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    BTC Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    3 Weeks
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    5 Weeks
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  {[
+                    "Product",
+                    "Base Price",
+                    "Sale Price",
+                    "BTB Price",
+                    "BTC Price",
+                    "3 Weeks",
+                    "5 Weeks",
+                    "Stock",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
+                        h === "Actions" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <tr
                     key={product._id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -787,7 +753,7 @@ const AccountingPricingManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-12 w-12">
-                          {product.image && product.image[0] ? (
+                          {product.image?.[0] ? (
                             <img
                               className="h-12 w-12 rounded-lg object-cover"
                               src={product.image[0]}
@@ -905,9 +871,8 @@ const AccountingPricingManagement = () => {
           </div>
         )}
       </div>
-      {/* ========================================== */}
-      {/* EXPORT MODAL */}
-      {/* ========================================== */}
+
+      {/* ── EXPORT MODAL ──────────────────────────────────────────────────────── */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1050,7 +1015,7 @@ const AccountingPricingManagement = () => {
                 )}
               </div>
 
-              {/* Current Filters Info */}
+              {/* Active Filters Info */}
               {(searchTerm ||
                 filters.category ||
                 filters.brand ||
@@ -1070,7 +1035,6 @@ const AccountingPricingManagement = () => {
                 </div>
               )}
 
-              {/* Action Buttons */}
               <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
                   onClick={() => setShowExportModal(false)}
@@ -1091,9 +1055,8 @@ const AccountingPricingManagement = () => {
           </div>
         </div>
       )}
-      {/* ========================================== */}
-      {/* IMPORT MODAL */}
-      {/* ========================================== */}
+
+      {/* ── IMPORT MODAL ──────────────────────────────────────────────────────── */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1122,13 +1085,55 @@ const AccountingPricingManagement = () => {
             <div className="p-6">
               {!importConfig.results ? (
                 <div className="space-y-6">
-                  {/* Update Mode Selection */}
+                  {/* ── Import Mode Selection ── */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                       Import Mode
                     </label>
                     <div className="space-y-3">
-                      <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      {/* NEW: Direct Override */}
+                      <label
+                        className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                          importConfig.updateMode === "directOverride"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "hover:bg-gray-50 dark:hover:bg-gray-700 border-transparent"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value="directOverride"
+                          checked={importConfig.updateMode === "directOverride"}
+                          onChange={(e) =>
+                            setImportConfig((prev) => ({
+                              ...prev,
+                              updateMode: e.target.value,
+                            }))
+                          }
+                          className="mr-3 mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                            Direct Price Override
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-normal">
+                              New
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Prices are written exactly as entered — no VAT, no
+                            margins, no calculations. Each row can have any mix
+                            of price columns; empty cells are skipped entirely.
+                          </div>
+                        </div>
+                      </label>
+
+                      {/* EXISTING: Base Price Only */}
+                      <label
+                        className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                          importConfig.updateMode === "basePrice"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "hover:bg-gray-50 dark:hover:bg-gray-700 border-transparent"
+                        }`}
+                      >
                         <input
                           type="radio"
                           value="basePrice"
@@ -1143,7 +1148,7 @@ const AccountingPricingManagement = () => {
                         />
                         <div className="flex-1">
                           <div className="font-medium text-gray-900 dark:text-white">
-                            Base Price Only (Recommended)
+                            Base Price Only (Auto-calculate)
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                             Import Product Name, SKU, and Base Price only.
@@ -1153,7 +1158,14 @@ const AccountingPricingManagement = () => {
                         </div>
                       </label>
 
-                      <label className="flex items-start p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      {/* EXISTING: Full Prices */}
+                      <label
+                        className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                          importConfig.updateMode === "fullPrices"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "hover:bg-gray-50 dark:hover:bg-gray-700 border-transparent"
+                        }`}
+                      >
                         <input
                           type="radio"
                           value="fullPrices"
@@ -1180,7 +1192,7 @@ const AccountingPricingManagement = () => {
                     </div>
                   </div>
 
-                  {/* File Upload */}
+                  {/* ── File Upload ── */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Select CSV File
@@ -1199,13 +1211,59 @@ const AccountingPricingManagement = () => {
                     )}
                   </div>
 
-                  {/* CSV Format Info */}
+                  {/* ── CSV Format Info (contextual) ── */}
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
                       CSV Format Requirements:
                     </h4>
-                    {importConfig.updateMode === "basePrice" ? (
+
+                    {importConfig.updateMode === "directOverride" && (
+                      <div className="text-sm space-y-2">
+                        <div className="text-gray-700 dark:text-gray-300">
+                          <strong>Required:</strong> <code>SKU</code> column.{" "}
+                          <strong>Optional price columns</strong> — include only
+                          what you want to update:
+                        </div>
+                        <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border leading-5">
+                          SKU, Base Price, Sale Price, BTB Price, BTC Price, 3
+                          Weeks Delivery, 5 Weeks Delivery
+                        </div>
+                        <div className="text-gray-600 dark:text-gray-400 space-y-1">
+                          <div>
+                            • Leave a cell <strong>empty</strong> to skip that
+                            price for that product.
+                          </div>
+                          <div>
+                            • Rows can have different columns filled — fully
+                            flexible per product.
+                          </div>
+                          <div>
+                            • Values are written directly, no VAT or margins
+                            applied.
+                          </div>
+                          <div>
+                            • Negative values or non-numbers will cause that row
+                            to be skipped.
+                          </div>
+                        </div>
+                        <div className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
+                          Example:
+                        </div>
+                        <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border leading-5 overflow-x-auto whitespace-pre">
+                          {`SKU,Sale Price,BTB Price,BTC Price
+PROD-001,45000,38000,
+PROD-002,,22000,19000
+PROD-003,12000,,`}
+                        </div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs">
+                          PROD-001 updates Sale + BTB only. PROD-002 updates BTB
+                          + BTC only. PROD-003 updates Sale Price only.
+                        </div>
+                      </div>
+                    )}
+
+                    {importConfig.updateMode === "basePrice" && (
                       <div className="text-sm space-y-2">
                         <div className="text-gray-700 dark:text-gray-300">
                           Required columns:
@@ -1219,7 +1277,9 @@ const AccountingPricingManagement = () => {
                           tax applied)
                         </div>
                       </div>
-                    ) : (
+                    )}
+
+                    {importConfig.updateMode === "fullPrices" && (
                       <div className="text-sm space-y-2">
                         <div className="text-gray-700 dark:text-gray-300">
                           Required columns:
@@ -1234,19 +1294,22 @@ const AccountingPricingManagement = () => {
                     )}
                   </div>
 
-                  {/* Warning */}
+                  {/* ── Warning ── */}
                   <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <div className="flex items-start">
                       <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
                       <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>Important:</strong> Products are matched by SKU.
-                        Make sure SKU values in your CSV exactly match products
-                        in the database (case-sensitive).
+                        <strong>Important:</strong> Products are matched by{" "}
+                        <strong>SKU</strong> (case-sensitive). Make sure SKU
+                        values in your CSV exactly match products in the
+                        database.{" "}
+                        {importConfig.updateMode === "directOverride" &&
+                          "Empty cells are safely ignored — only filled cells update the product."}
                       </div>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* ── Action Buttons ── */}
                   <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button
                       onClick={resetImport}
@@ -1275,7 +1338,7 @@ const AccountingPricingManagement = () => {
                   </div>
                 </div>
               ) : (
-                /* Import Results */
+                /* ── Import Results ── */
                 <div className="space-y-6">
                   <div className="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
@@ -1287,7 +1350,7 @@ const AccountingPricingManagement = () => {
                     </div>
                   </div>
 
-                  {/* Successful Updates */}
+                  {/* Successful */}
                   {importConfig.results.successful.length > 0 && (
                     <div>
                       <h4 className="font-medium text-green-600 dark:text-green-400 mb-2 flex items-center">
@@ -1301,14 +1364,19 @@ const AccountingPricingManagement = () => {
                             key={index}
                             className="text-sm text-gray-700 dark:text-gray-300 py-1"
                           >
-                            ✓ {item.sku} - {item.name}
+                            ✓ {item.sku} – {item.name}
+                            {item.updatedFields && (
+                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                ({item.updatedFields.join(", ")})
+                              </span>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Failed Updates */}
+                  {/* Failed */}
                   {importConfig.results.failed.length > 0 && (
                     <div>
                       <h4 className="font-medium text-red-600 dark:text-red-400 mb-2 flex items-center">
@@ -1321,14 +1389,13 @@ const AccountingPricingManagement = () => {
                             key={index}
                             className="text-sm text-gray-700 dark:text-gray-300 py-1"
                           >
-                            ✗ {item.sku} - {item.reason}
+                            ✗ {item.sku} – {item.reason}
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Done Button */}
                   <button
                     onClick={resetImport}
                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -1341,13 +1408,11 @@ const AccountingPricingManagement = () => {
           </div>
         </div>
       )}
-      {/* ========================================== */}
-      {/* EDIT PRICING MODAL */}
-      {/* ========================================== */}
+
+      {/* ── EDIT PRICING MODAL ────────────────────────────────────────────────── */}
       {showEditModal && selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -1370,7 +1435,6 @@ const AccountingPricingManagement = () => {
               </button>
             </div>
 
-            {/* Form */}
             <div className="p-6 space-y-6">
               {/* Base Price Input */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -1431,15 +1495,14 @@ const AccountingPricingManagement = () => {
                             price3weeksDelivery: "3 Weeks Delivery",
                             price5weeksDelivery: "5 Weeks Delivery",
                           };
-
                           const margins = {
-                            salePrice: pricingConfig.margins.salePrice,
-                            btbPrice: pricingConfig.margins.btbPrice,
-                            btcPrice: pricingConfig.margins.btcPrice,
+                            salePrice: pricingConfig.margins?.salePrice,
+                            btbPrice: pricingConfig.margins?.btbPrice,
+                            btcPrice: pricingConfig.margins?.btcPrice,
                             price3weeksDelivery:
-                              pricingConfig.margins.price3weeksDelivery,
+                              pricingConfig.margins?.price3weeksDelivery,
                             price5weeksDelivery:
-                              pricingConfig.margins.price5weeksDelivery,
+                              pricingConfig.margins?.price5weeksDelivery,
                           };
 
                           return (
@@ -1452,7 +1515,7 @@ const AccountingPricingManagement = () => {
                                   {labels[key]}
                                 </span>
                                 <span className="text-xs text-gray-500 dark:text-gray-500">
-                                  +{margins[key]}% +{" "}
+                                  +{margins[key]}% +
                                   {pricingConfig.taxPercentage}% tax
                                 </span>
                               </div>

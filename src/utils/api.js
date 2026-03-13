@@ -2047,6 +2047,19 @@ export const pricingAPI = {
       throw error;
     }
   },
+
+  // Direct import for PLM system (no validation, for internal use only)
+  importDirectProductPricingCSV: async (data) => {
+    try {
+      return await apiCall("/pricing/import/csv-direct", {
+        method: "POST",
+        body: data,
+      });
+    } catch (error) {
+      console.error("Direct import error:", error);
+      throw error;
+    }
+  },
 };
 
 // ==============================
