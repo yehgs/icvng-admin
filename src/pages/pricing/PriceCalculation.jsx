@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Calculator,
   DollarSign,
@@ -14,11 +14,12 @@ import {
   FileText,
   User,
   Calendar,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
-import { pricingAPI, pricingUtils } from '../../utils/api';
-import RoleBasedButton from '../../components/layout/RoleBasedButton';
+  X,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import RoleBasedAccess from "../../components/layout/RoleBaseAccess";
+import { pricingAPI, pricingUtils } from "../../utils/api";
+import RoleBasedButton from "../../components/layout/RoleBasedButton";
 
 const PriceCalculation = () => {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -42,11 +43,11 @@ const PriceCalculation = () => {
       if (data.success) {
         setPurchaseOrders(data.data || []);
       } else {
-        toast.error(data.message || 'Failed to fetch purchase orders');
+        toast.error(data.message || "Failed to fetch purchase orders");
       }
     } catch (error) {
-      console.error('Error fetching purchase orders:', error);
-      toast.error(error.message || 'Failed to fetch purchase orders');
+      console.error("Error fetching purchase orders:", error);
+      toast.error(error.message || "Failed to fetch purchase orders");
     } finally {
       setLoading(false);
     }
@@ -61,13 +62,13 @@ const PriceCalculation = () => {
         setCalculatedPrices(data.data);
         setSelectedPO(poId);
         setShowPreview(true);
-        toast.success('Prices calculated successfully!');
+        toast.success("Prices calculated successfully!");
       } else {
-        toast.error(data.message || 'Failed to calculate prices');
+        toast.error(data.message || "Failed to calculate prices");
       }
     } catch (error) {
-      console.error('Error calculating prices:', error);
-      toast.error(error.message || 'Failed to calculate prices');
+      console.error("Error calculating prices:", error);
+      toast.error(error.message || "Failed to calculate prices");
     } finally {
       setCalculating(false);
     }
@@ -94,17 +95,17 @@ const PriceCalculation = () => {
       const data = await pricingAPI.approvePriceCalculations(approvalData);
 
       if (data.success) {
-        toast.success('Prices approved and products updated successfully!');
+        toast.success("Prices approved and products updated successfully!");
         setShowPreview(false);
         setCalculatedPrices(null);
         setSelectedPO(null);
         fetchPurchaseOrders();
       } else {
-        toast.error(data.message || 'Failed to approve prices');
+        toast.error(data.message || "Failed to approve prices");
       }
     } catch (error) {
-      console.error('Error approving prices:', error);
-      toast.error(error.message || 'Failed to approve prices');
+      console.error("Error approving prices:", error);
+      toast.error(error.message || "Failed to approve prices");
     } finally {
       setApproving(false);
     }
@@ -138,7 +139,7 @@ const PriceCalculation = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <RoleBasedAccess allowedRoles={['Director']}>
+                <RoleBasedAccess allowedRoles={["Director"]}>
                   <button
                     onClick={handleApprovePrices}
                     disabled={approving}
@@ -149,7 +150,7 @@ const PriceCalculation = () => {
                     ) : (
                       <CheckCircle className="h-4 w-4" />
                     )}
-                    {approving ? 'Approving...' : 'Approve Prices'}
+                    {approving ? "Approving..." : "Approve Prices"}
                   </button>
                 </RoleBasedAccess>
                 <button
@@ -171,7 +172,7 @@ const PriceCalculation = () => {
                   Exchange Rate
                 </h4>
                 <p className="text-2xl font-bold text-blue-600">
-                  1 {purchaseOrder.currency} ={' '}
+                  1 {purchaseOrder.currency} ={" "}
                   {formatCurrency(purchaseOrder.exchangeRate)}
                 </p>
               </div>
@@ -268,7 +269,7 @@ const PriceCalculation = () => {
                         {item.product.name}
                       </h5>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        SKU: {item.product.sku} | Quantity:{' '}
+                        SKU: {item.product.sku} | Quantity:{" "}
                         {formatNumber(item.quantity)}
                       </p>
                     </div>
@@ -298,7 +299,7 @@ const PriceCalculation = () => {
                           <span className="font-medium">
                             {formatNumber(
                               item.calculations.costBreakdown
-                                .unitCostInOriginalCurrency
+                                .unitCostInOriginalCurrency,
                             )}
                           </span>
                         </div>
@@ -308,7 +309,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-medium">
                             {formatNumber(
-                              item.calculations.costBreakdown.exchangeRate
+                              item.calculations.costBreakdown.exchangeRate,
                             )}
                           </span>
                         </div>
@@ -318,7 +319,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-medium">
                             {formatCurrency(
-                              item.calculations.costBreakdown.unitCostInNaira
+                              item.calculations.costBreakdown.unitCostInNaira,
                             )}
                           </span>
                         </div>
@@ -329,7 +330,7 @@ const PriceCalculation = () => {
                           <span className="font-medium">
                             {formatCurrency(
                               item.calculations.costBreakdown
-                                .freightAndClearingCostPerUnit
+                                .freightAndClearingCostPerUnit,
                             )}
                           </span>
                         </div>
@@ -339,7 +340,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-medium">
                             {formatCurrency(
-                              item.calculations.costBreakdown.totalCostPerUnit
+                              item.calculations.costBreakdown.totalCostPerUnit,
                             )}
                           </span>
                         </div>
@@ -351,7 +352,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-medium">
                             {formatCurrency(
-                              item.calculations.costBreakdown.overheadAmount
+                              item.calculations.costBreakdown.overheadAmount,
                             )}
                           </span>
                         </div>
@@ -361,7 +362,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="text-blue-600">
                             {formatCurrency(
-                              item.calculations.costBreakdown.subPrice
+                              item.calculations.costBreakdown.subPrice,
                             )}
                           </span>
                         </div>
@@ -380,7 +381,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-semibold text-green-600">
                             {formatCurrency(
-                              item.calculations.calculatedPrices.salePrice
+                              item.calculations.calculatedPrices.salePrice,
                             )}
                           </span>
                         </div>
@@ -390,7 +391,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-semibold text-blue-600">
                             {formatCurrency(
-                              item.calculations.calculatedPrices.btbPrice
+                              item.calculations.calculatedPrices.btbPrice,
                             )}
                           </span>
                         </div>
@@ -400,7 +401,7 @@ const PriceCalculation = () => {
                           </span>
                           <span className="font-semibold text-purple-600">
                             {formatCurrency(
-                              item.calculations.calculatedPrices.btcPrice
+                              item.calculations.calculatedPrices.btcPrice,
                             )}
                           </span>
                         </div>
@@ -411,7 +412,7 @@ const PriceCalculation = () => {
                           <span className="font-semibold text-orange-600">
                             {formatCurrency(
                               item.calculations.calculatedPrices
-                                .price3weeksDelivery
+                                .price3weeksDelivery,
                             )}
                           </span>
                         </div>
@@ -422,7 +423,7 @@ const PriceCalculation = () => {
                           <span className="font-semibold text-red-600">
                             {formatCurrency(
                               item.calculations.calculatedPrices
-                                .price5weeksDelivery
+                                .price5weeksDelivery,
                             )}
                           </span>
                         </div>
@@ -537,7 +538,7 @@ const PriceCalculation = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-gray-600 dark:text-gray-400">
-                          {po.supplier?.name || 'N/A'}
+                          {po.supplier?.name || "N/A"}
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -552,19 +553,19 @@ const PriceCalculation = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-medium text-gray-900 dark:text-white">
-                          {po.currency}{' '}
+                          {po.currency}{" "}
                           {formatNumber(po.grandTotal || po.totalAmount || 0)}
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           {new Date(
-                            po.receivedDate || po.updatedAt
+                            po.receivedDate || po.updatedAt,
                           ).toLocaleDateString()}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <RoleBasedButton disabledRoles={['MANAGER']}>
+                        <RoleBasedButton disabledRoles={["MANAGER"]}>
                           <button
                             onClick={() => handleCalculatePrices(po._id)}
                             disabled={calculating}

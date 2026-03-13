@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   DollarSign,
   Search,
@@ -17,19 +17,20 @@ import {
   User,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { pricingAPI, productAPI, brandAPI } from '../../utils/api';
+  X,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { pricingAPI, productAPI, brandAPI } from "../../utils/api";
 
 const PricingManagement = () => {
   const [productPricing, setProductPricing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    brand: '',
-    isApproved: '',
-    productType: '',
+    search: "",
+    category: "",
+    brand: "",
+    isApproved: "",
+    productType: "",
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -42,15 +43,15 @@ const PricingManagement = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showProductDetail, setShowProductDetail] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const productTypes = [
-    'COFFEE',
-    'MACHINE',
-    'ACCESSORIES',
-    'COFFEE_BEANS',
-    'TEA',
-    'DRINKS',
+    "COFFEE",
+    "MACHINE",
+    "ACCESSORIES",
+    "COFFEE_BEANS",
+    "TEA",
+    "DRINKS",
   ];
 
   useEffect(() => {
@@ -77,11 +78,11 @@ const PricingManagement = () => {
           totalCount: data.totalCount,
         }));
       } else {
-        toast.error(data.message || 'Failed to fetch product pricing');
+        toast.error(data.message || "Failed to fetch product pricing");
       }
     } catch (error) {
-      console.error('Error fetching product pricing:', error);
-      toast.error('Failed to fetch product pricing');
+      console.error("Error fetching product pricing:", error);
+      toast.error("Failed to fetch product pricing");
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,7 @@ const PricingManagement = () => {
         setCategories(data.data);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     }
   };
 
@@ -105,7 +106,7 @@ const PricingManagement = () => {
         setBrands(data.data);
       }
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
     }
   };
 
@@ -115,23 +116,23 @@ const PricingManagement = () => {
   };
 
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
 
     const sortedData = [...productPricing].sort((a, b) => {
-      let aValue = key.includes('.') ? getNestedValue(a, key) : a[key];
-      let bValue = key.includes('.') ? getNestedValue(b, key) : b[key];
+      let aValue = key.includes(".") ? getNestedValue(a, key) : a[key];
+      let bValue = key.includes(".") ? getNestedValue(b, key) : b[key];
 
-      if (typeof aValue === 'string') {
+      if (typeof aValue === "string") {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
 
-      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+      if (aValue < bValue) return direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return direction === "asc" ? 1 : -1;
       return 0;
     });
 
@@ -139,28 +140,28 @@ const PricingManagement = () => {
   };
 
   const getNestedValue = (obj, path) => {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+    return path.split(".").reduce((current, key) => current?.[key], obj);
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
     }).format(amount || 0);
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-NG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("en-NG", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getStatusColor = (isApproved) => {
     return isApproved
-      ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
+      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
   };
 
   const getStatusIcon = (isApproved) => {
@@ -174,39 +175,39 @@ const PricingManagement = () => {
   const exportToCsv = () => {
     try {
       const csvData = productPricing.map((item) => ({
-        'Product Name': item.productDetails?.name || 'N/A',
-        SKU: item.productDetails?.sku || 'N/A',
-        'Product Type': item.productDetails?.productType || 'N/A',
-        'Sale Price': item.calculatedPrices?.salePrice || 0,
-        'BTB Price': item.calculatedPrices?.btbPrice || 0,
-        'BTC Price': item.calculatedPrices?.btcPrice || 0,
-        '3 Weeks Delivery': item.calculatedPrices?.price3weeksDelivery || 0,
-        '5 Weeks Delivery': item.calculatedPrices?.price5weeksDelivery || 0,
-        Status: item.isApproved ? 'Approved' : 'Pending',
-        'Last Updated': formatDate(item.calculatedAt),
+        "Product Name": item.productDetails?.name || "N/A",
+        SKU: item.productDetails?.sku || "N/A",
+        "Product Type": item.productDetails?.productType || "N/A",
+        "Sale Price": item.calculatedPrices?.salePrice || 0,
+        "BTB Price": item.calculatedPrices?.btbPrice || 0,
+        "BTC Price": item.calculatedPrices?.btcPrice || 0,
+        "3 Weeks Delivery": item.calculatedPrices?.price3weeksDelivery || 0,
+        "5 Weeks Delivery": item.calculatedPrices?.price5weeksDelivery || 0,
+        Status: item.isApproved ? "Approved" : "Pending",
+        "Last Updated": formatDate(item.calculatedAt),
       }));
 
       const csv = [
-        Object.keys(csvData[0]).join(','),
-        ...csvData.map((row) => Object.values(row).join(',')),
-      ].join('\n');
+        Object.keys(csvData[0]).join(","),
+        ...csvData.map((row) => Object.values(row).join(",")),
+      ].join("\n");
 
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('hidden', '');
-      a.setAttribute('href', url);
+      const a = document.createElement("a");
+      a.setAttribute("hidden", "");
+      a.setAttribute("href", url);
       a.setAttribute(
-        'download',
-        `product-pricing-${new Date().toISOString().split('T')[0]}.csv`
+        "download",
+        `product-pricing-${new Date().toISOString().split("T")[0]}.csv`,
       );
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error exporting CSV:', error);
-      toast.error('Failed to export CSV');
+      console.error("Error exporting CSV:", error);
+      toast.error("Failed to export CSV");
     }
   };
 
@@ -259,11 +260,11 @@ const PricingManagement = () => {
                     </span>
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${getStatusColor(
-                        selectedProduct.isApproved
+                        selectedProduct.isApproved,
                       )}`}
                     >
                       {getStatusIcon(selectedProduct.isApproved)}
-                      {selectedProduct.isApproved ? 'Approved' : 'Pending'}
+                      {selectedProduct.isApproved ? "Approved" : "Pending"}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -327,7 +328,7 @@ const PricingManagement = () => {
                     </span>
                     <span className="font-medium">
                       {formatCurrency(
-                        selectedProduct.costBreakdown?.unitCostInNaira
+                        selectedProduct.costBreakdown?.unitCostInNaira,
                       )}
                     </span>
                   </div>
@@ -338,7 +339,7 @@ const PricingManagement = () => {
                     <span className="font-medium">
                       {formatCurrency(
                         selectedProduct.costBreakdown
-                          ?.freightAndClearingCostPerUnit
+                          ?.freightAndClearingCostPerUnit,
                       )}
                     </span>
                   </div>
@@ -348,7 +349,7 @@ const PricingManagement = () => {
                     </span>
                     <span className="font-medium">
                       {formatCurrency(
-                        selectedProduct.costBreakdown?.totalCostPerUnit
+                        selectedProduct.costBreakdown?.totalCostPerUnit,
                       )}
                     </span>
                   </div>
@@ -359,7 +360,7 @@ const PricingManagement = () => {
                     </span>
                     <span className="font-medium">
                       {formatCurrency(
-                        selectedProduct.costBreakdown?.overheadAmount
+                        selectedProduct.costBreakdown?.overheadAmount,
                       )}
                     </span>
                   </div>
@@ -405,7 +406,7 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-green-600">
                         {formatCurrency(
-                          selectedProduct.calculatedPrices?.salePrice
+                          selectedProduct.calculatedPrices?.salePrice,
                         )}
                       </td>
                     </tr>
@@ -418,7 +419,7 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-blue-600">
                         {formatCurrency(
-                          selectedProduct.calculatedPrices?.btbPrice
+                          selectedProduct.calculatedPrices?.btbPrice,
                         )}
                       </td>
                     </tr>
@@ -431,7 +432,7 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-purple-600">
                         {formatCurrency(
-                          selectedProduct.calculatedPrices?.btcPrice
+                          selectedProduct.calculatedPrices?.btcPrice,
                         )}
                       </td>
                     </tr>
@@ -444,7 +445,7 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-orange-600">
                         {formatCurrency(
-                          selectedProduct.calculatedPrices?.price3weeksDelivery
+                          selectedProduct.calculatedPrices?.price3weeksDelivery,
                         )}
                       </td>
                     </tr>
@@ -457,7 +458,7 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-red-600">
                         {formatCurrency(
-                          selectedProduct.calculatedPrices?.price5weeksDelivery
+                          selectedProduct.calculatedPrices?.price5weeksDelivery,
                         )}
                       </td>
                     </tr>
@@ -496,7 +497,7 @@ const PricingManagement = () => {
                               </span>
                               <span className="ml-1 font-medium">
                                 {formatCurrency(
-                                  history.calculatedPrices?.salePrice
+                                  history.calculatedPrices?.salePrice,
                                 )}
                               </span>
                             </div>
@@ -506,7 +507,7 @@ const PricingManagement = () => {
                               </span>
                               <span className="ml-1 font-medium">
                                 {formatCurrency(
-                                  history.calculatedPrices?.btbPrice
+                                  history.calculatedPrices?.btbPrice,
                                 )}
                               </span>
                             </div>
@@ -516,7 +517,7 @@ const PricingManagement = () => {
                               </span>
                               <span className="ml-1 font-medium">
                                 {formatCurrency(
-                                  history.calculatedPrices?.btcPrice
+                                  history.calculatedPrices?.btcPrice,
                                 )}
                               </span>
                             </div>
@@ -629,8 +630,8 @@ const PricingManagement = () => {
                   ? formatCurrency(
                       productPricing.reduce(
                         (sum, p) => sum + (p.calculatedPrices?.salePrice || 0),
-                        0
-                      ) / productPricing.length
+                        0,
+                      ) / productPricing.length,
                     )
                   : formatCurrency(0)}
               </p>
@@ -667,7 +668,7 @@ const PricingManagement = () => {
                 type="text"
                 placeholder="Search products..."
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -675,7 +676,7 @@ const PricingManagement = () => {
             {/* Category Filter */}
             <select
               value={filters.category}
-              onChange={(e) => handleFilterChange('category', e.target.value)}
+              onChange={(e) => handleFilterChange("category", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Categories</option>
@@ -689,7 +690,7 @@ const PricingManagement = () => {
             {/* Brand Filter */}
             <select
               value={filters.brand}
-              onChange={(e) => handleFilterChange('brand', e.target.value)}
+              onChange={(e) => handleFilterChange("brand", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Brands</option>
@@ -704,14 +705,14 @@ const PricingManagement = () => {
             <select
               value={filters.productType}
               onChange={(e) =>
-                handleFilterChange('productType', e.target.value)
+                handleFilterChange("productType", e.target.value)
               }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Types</option>
               {productTypes.map((type) => (
                 <option key={type} value={type}>
-                  {type.replace('_', ' ')}
+                  {type.replace("_", " ")}
                 </option>
               ))}
             </select>
@@ -719,7 +720,7 @@ const PricingManagement = () => {
             {/* Status Filter */}
             <select
               value={filters.isApproved}
-              onChange={(e) => handleFilterChange('isApproved', e.target.value)}
+              onChange={(e) => handleFilterChange("isApproved", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Status</option>
@@ -757,11 +758,11 @@ const PricingManagement = () => {
                   <tr>
                     <th
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                      onClick={() => handleSort('productDetails.name')}
+                      onClick={() => handleSort("productDetails.name")}
                     >
                       Product Name
-                      {sortConfig.key === 'productDetails.name' &&
-                        (sortConfig.direction === 'asc' ? (
+                      {sortConfig.key === "productDetails.name" &&
+                        (sortConfig.direction === "asc" ? (
                           <ChevronUp className="inline h-4 w-4 ml-1" />
                         ) : (
                           <ChevronDown className="inline h-4 w-4 ml-1" />
@@ -772,11 +773,11 @@ const PricingManagement = () => {
                     </th>
                     <th
                       className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                      onClick={() => handleSort('calculatedPrices.salePrice')}
+                      onClick={() => handleSort("calculatedPrices.salePrice")}
                     >
                       Sale Price
-                      {sortConfig.key === 'calculatedPrices.salePrice' &&
-                        (sortConfig.direction === 'asc' ? (
+                      {sortConfig.key === "calculatedPrices.salePrice" &&
+                        (sortConfig.direction === "asc" ? (
                           <ChevronUp className="inline h-4 w-4 ml-1" />
                         ) : (
                           <ChevronDown className="inline h-4 w-4 ml-1" />
@@ -796,11 +797,11 @@ const PricingManagement = () => {
                     </th>
                     <th
                       className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                      onClick={() => handleSort('isApproved')}
+                      onClick={() => handleSort("isApproved")}
                     >
                       Status
-                      {sortConfig.key === 'isApproved' &&
-                        (sortConfig.direction === 'asc' ? (
+                      {sortConfig.key === "isApproved" &&
+                        (sortConfig.direction === "asc" ? (
                           <ChevronUp className="inline h-4 w-4 ml-1" />
                         ) : (
                           <ChevronDown className="inline h-4 w-4 ml-1" />
@@ -808,11 +809,11 @@ const PricingManagement = () => {
                     </th>
                     <th
                       className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                      onClick={() => handleSort('calculatedAt')}
+                      onClick={() => handleSort("calculatedAt")}
                     >
                       Last Updated
-                      {sortConfig.key === 'calculatedAt' &&
-                        (sortConfig.direction === 'asc' ? (
+                      {sortConfig.key === "calculatedAt" &&
+                        (sortConfig.direction === "asc" ? (
                           <ChevronUp className="inline h-4 w-4 ml-1" />
                         ) : (
                           <ChevronDown className="inline h-4 w-4 ml-1" />
@@ -832,7 +833,7 @@ const PricingManagement = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {product.productDetails?.name || 'N/A'}
+                            {product.productDetails?.name || "N/A"}
                           </div>
                           {product.categoryDetails?.[0] && (
                             <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -843,10 +844,10 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-white">
-                          {product.productDetails?.sku || 'N/A'}
+                          {product.productDetails?.sku || "N/A"}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {product.productDetails?.productType || 'N/A'}
+                          {product.productDetails?.productType || "N/A"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
@@ -860,22 +861,22 @@ const PricingManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-orange-600">
                         {formatCurrency(
-                          product.calculatedPrices?.price3weeksDelivery
+                          product.calculatedPrices?.price3weeksDelivery,
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-red-600">
                         {formatCurrency(
-                          product.calculatedPrices?.price5weeksDelivery
+                          product.calculatedPrices?.price5weeksDelivery,
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                            product.isApproved
+                            product.isApproved,
                           )}`}
                         >
                           {getStatusIcon(product.isApproved)}
-                          {product.isApproved ? 'Approved' : 'Pending'}
+                          {product.isApproved ? "Approved" : "Pending"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
@@ -907,11 +908,11 @@ const PricingManagement = () => {
             <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-600">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                  Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                   {Math.min(
                     pagination.page * pagination.limit,
-                    pagination.totalCount
-                  )}{' '}
+                    pagination.totalCount,
+                  )}{" "}
                   of {pagination.totalCount} results
                 </div>
                 <div className="flex items-center gap-2">

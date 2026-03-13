@@ -13,6 +13,7 @@ import {
   History,
   User,
   Calendar,
+  X,
   Receipt, // NEW: Tax icon
 } from "lucide-react";
 import toast from "react-hot-toast";
