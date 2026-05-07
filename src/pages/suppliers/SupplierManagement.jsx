@@ -31,6 +31,8 @@ const SupplierManagement = () => {
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [viewingSupplier, setViewingSupplier] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -38,6 +40,7 @@ const SupplierManagement = () => {
     name: '',
     email: '',
     phone: '',
+    supplierType: 'FULL',
     address: {
       street: '',
       city: '',
@@ -81,7 +84,7 @@ const SupplierManagement = () => {
 
   useEffect(() => {
     fetchSuppliers();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, filterStatus, filterType]);
 
   const fetchSuppliers = async () => {
     setLoading(true);
@@ -90,6 +93,8 @@ const SupplierManagement = () => {
         page: currentPage,
         limit: 10,
         ...(searchTerm && { search: searchTerm }),
+        ...(filterStatus && { status: filterStatus }),
+        ...(filterType && { supplierType: filterType }),
       };
 
       const response = await supplierAPI.getSuppliers(params);
@@ -186,6 +191,7 @@ const SupplierManagement = () => {
       },
       paymentTerms: supplier.paymentTerms || 'NET_30',
       status: supplier.status || 'ACTIVE',
+      supplierType: supplier.supplierType || 'FULL',
       notes: supplier.notes || '',
     });
     setShowModal(true);
@@ -233,6 +239,7 @@ const SupplierManagement = () => {
       },
       paymentTerms: 'NET_30',
       status: 'ACTIVE',
+      supplierType: 'FULL',
       notes: '',
     });
     setEditingSupplier(null);
@@ -340,10 +347,43 @@ const SupplierManagement = () => {
                 placeholder="Search suppliers..."
                 className="form-input pl-10"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
             </div>
           </div>
+
+          {/* Filter by Status */}
+          <select
+            className="form-select min-w-36"
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="">All Statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="BLACKLISTED">Blacklisted</option>
+          </select>
+
+          {/* Filter by Type */}
+          <select
+            className="form-select min-w-40"
+            value={filterType}
+            onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="">All Types</option>
+            <option value="FULL">Full Supplier</option>
+            <option value="PARTNER">Partner Supplier</option>
+          </select>
+
+          {/* Clear filters */}
+          {(filterStatus || filterType || searchTerm) && (
+            <button
+              onClick={() => { setFilterStatus(''); setFilterType(''); setSearchTerm(''); setCurrentPage(1); }}
+              className="btn-outline text-sm"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
@@ -669,8 +709,13 @@ const SupplierManagement = () => {
                         <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
+                        <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                           {supplier.name}
+                          {supplier.supplierType === 'PARTNER' && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium">
+                              Partner
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">
                           ID: {supplier._id.slice(-8)}
@@ -805,9 +850,46 @@ const SupplierManagement = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Basic Information */}
               <div>
-                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">
-                  Basic Information
-                </h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white">
+                    Basic Information
+                  </h4>
+                  {/* Supplier type toggle */}
+                  <div className="flex items-center gap-3 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <button
+                      type="button"
+                      onClick={() => updateFormData(null, 'supplierType', 'FULL')}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        formData.supplierType === 'FULL'
+                          ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      Full Supplier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateFormData(null, 'supplierType', 'PARTNER')}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        formData.supplierType === 'PARTNER'
+                          ? 'bg-purple-600 text-white shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      Partner
+                    </button>
+                  </div>
+                </div>
+
+                {/* Partner info banner */}
+                {formData.supplierType === 'PARTNER' && (
+                  <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded-lg text-sm text-purple-800 dark:text-purple-300">
+                    <strong>Partner Supplier</strong> — for products held by partners or sourced externally.
+                    Email and phone are required. Status is always Active.
+                    Bank details and payment terms are optional.
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -829,7 +911,8 @@ const SupplierManagement = () => {
                     </label>
                     <select
                       className="form-select"
-                      value={formData.status}
+                      value={formData.supplierType === 'PARTNER' ? 'ACTIVE' : formData.status}
+                      disabled={formData.supplierType === 'PARTNER'}
                       onChange={(e) =>
                         updateFormData(null, 'status', e.target.value)
                       }
@@ -840,6 +923,9 @@ const SupplierManagement = () => {
                         </option>
                       ))}
                     </select>
+                    {formData.supplierType === 'PARTNER' && (
+                      <p className="text-xs text-purple-600 mt-1">Partner suppliers are always Active</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

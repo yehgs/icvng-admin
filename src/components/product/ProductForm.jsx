@@ -32,6 +32,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   // Quick-create supplier inline
   const [showNewSupplier, setShowNewSupplier] = useState(false);
   const [newSupplierName, setNewSupplierName] = useState('');
+  const [newSupplierEmail, setNewSupplierEmail] = useState('');
   const [newSupplierPhone, setNewSupplierPhone] = useState('');
   const [creatingSupplier, setCreatingSupplier] = useState(false);
 
@@ -178,24 +179,28 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
   const handleCreateSupplier = async () => {
     if (!newSupplierName.trim()) { toast.error('Supplier name is required'); return; }
+    if (!newSupplierEmail.trim()) { toast.error('Email is required'); return; }
+    if (!newSupplierPhone.trim()) { toast.error('Phone is required'); return; }
     setCreatingSupplier(true);
     try {
       const slug = newSupplierName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       const res = await supplierAPI.createSupplier({
         name: newSupplierName.trim(),
         slug: `${slug}-${Date.now()}`,
+        email: newSupplierEmail.trim(),
         phone: newSupplierPhone.trim(),
         status: 'ACTIVE',
+        supplierType: 'PARTNER',
       });
       if (res.success) {
         const newSupplier = res.data;
         setSuppliers((prev) => [...prev, newSupplier]);
-        // Auto-select the newly created supplier
         handleInputChange('partnerStock', {
           ...(formData.partnerStock || {}),
           supplier: newSupplier._id,
         });
         setNewSupplierName('');
+        setNewSupplierEmail('');
         setNewSupplierPhone('');
         setShowNewSupplier(false);
         toast.success(`Supplier "${newSupplier.name}" created and selected`);
@@ -1017,7 +1022,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       </button>
                     </div>
 
-                    {/* Supplier dropdown */}
+                    {/* Existing partner suppliers dropdown */}
                     {!showNewSupplier && (
                       <select
                         value={formData.partnerStock?.supplier || ''}
@@ -1027,35 +1032,46 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                       >
-                        <option value="">Select supplier...</option>
-                        {suppliers.map((s) => (
-                          <option key={s._id} value={s._id}>
-                            {s.name}{s.contactPerson?.phone ? ` — ${s.contactPerson.phone}` : ''}
-                          </option>
-                        ))}
+                        <option value="">Select partner supplier...</option>
+                        {suppliers
+                          .filter((s) => s.supplierType === 'PARTNER' || !s.supplierType)
+                          .map((s) => (
+                            <option key={s._id} value={s._id}>
+                              {s.name}{s.phone ? ` — ${s.phone}` : ''}
+                            </option>
+                          ))}
+                        {suppliers.filter((s) => s.supplierType === 'PARTNER' || !s.supplierType).length === 0 && (
+                          <option disabled value="">No partner suppliers yet — create one below</option>
+                        )}
                       </select>
                     )}
 
-                    {/* Quick-create supplier inline */}
+                    {/* Quick-create partner supplier — email + phone required */}
                     {showNewSupplier && (
                       <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 space-y-2">
-                        <p className="text-xs font-semibold text-blue-700">New Supplier</p>
+                        <p className="text-xs font-semibold text-blue-700">New Partner Supplier</p>
                         <input type="text"
                           value={newSupplierName}
                           onChange={(e) => setNewSupplierName(e.target.value)}
-                          placeholder="Supplier name *"
+                          placeholder="Company / partner name *"
                           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
-                        <input type="text"
+                        <input type="email"
+                          value={newSupplierEmail}
+                          onChange={(e) => setNewSupplierEmail(e.target.value)}
+                          placeholder="Email *"
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <input type="tel"
                           value={newSupplierPhone}
                           onChange={(e) => setNewSupplierPhone(e.target.value)}
-                          placeholder="Phone (optional)"
+                          placeholder="Phone *"
                           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <button
                           type="button"
                           onClick={handleCreateSupplier}
-                          disabled={creatingSupplier || !newSupplierName.trim()}
+                          disabled={creatingSupplier || !newSupplierName.trim() || !newSupplierEmail.trim() || !newSupplierPhone.trim()}
                           className="w-full py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {creatingSupplier
