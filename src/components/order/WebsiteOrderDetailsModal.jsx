@@ -251,7 +251,7 @@ const generateAddressPDF = async (
   doc.setFont("helvetica", "italic");
   doc.setTextColor(160, 160, 160);
   doc.text(
-    `Generated ${new Date().toLocaleString("en-GB")}  •  customercare@i-coffee.ng  •  +234 803 982 7194`,
+    `Generated ${new Date().toLocaleString("en-GB")}  •  customercare@i-coffee.ng  •  +234 805 242 3935`,
     pageWidth / 2,
     footerY,
     { align: "center" },

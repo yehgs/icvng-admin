@@ -47,7 +47,7 @@ export const generateOrderPDF = async (orderGroup) => {
       "I-COFFEE NIGERIA",
       "www.i-coffee.ng",
       "customercare@i-coffee.ng",
-      "+234 803 982 7194",
+      "+234 805 242 3935",
     ];
 
     let companyYPos = yPos;
@@ -84,7 +84,7 @@ export const generateOrderPDF = async (orderGroup) => {
       ["Order Status:", summary.order_status],
       ["Payment Status:", summary.payment_status],
       ["Payment Method:", mainOrder.payment_method],
-      ["Total Items:", summary.totalItems.toString()]
+      ["Total Items:", summary.totalItems.toString()],
     );
 
     const leftCol = margin;
@@ -160,7 +160,7 @@ export const generateOrderPDF = async (orderGroup) => {
       }
       if (address.postal_code || address.postalCode) {
         addressLines.push(
-          `Postal Code: ${address.postal_code || address.postalCode}`
+          `Postal Code: ${address.postal_code || address.postalCode}`,
         );
       }
       if (address.country) {
@@ -272,7 +272,7 @@ export const generateOrderPDF = async (orderGroup) => {
         yPos,
         {
           align: "right",
-        }
+        },
       );
       yPos += 5.5;
     }
@@ -285,7 +285,7 @@ export const generateOrderPDF = async (orderGroup) => {
         `-${formatCurrencyCompact(totals.totalDiscount)}`,
         pageWidth - margin,
         yPos,
-        { align: "right" }
+        { align: "right" },
       );
       doc.setTextColor(0, 0, 0);
       yPos += 5.5;
@@ -300,7 +300,7 @@ export const generateOrderPDF = async (orderGroup) => {
         yPos,
         {
           align: "right",
-        }
+        },
       );
       yPos += 5.5;
     }
@@ -321,7 +321,7 @@ export const generateOrderPDF = async (orderGroup) => {
       yPos,
       {
         align: "right",
-      }
+      },
     );
     doc.setTextColor(0, 0, 0);
     yPos += 10;
@@ -341,7 +341,7 @@ export const generateOrderPDF = async (orderGroup) => {
       if (mainOrder.notes) {
         const notesLines = doc.splitTextToSize(
           `Admin Notes: ${mainOrder.notes}`,
-          pageWidth - 2 * margin
+          pageWidth - 2 * margin,
         );
         notesLines.forEach((line) => {
           checkPageBreak(5);
@@ -354,7 +354,7 @@ export const generateOrderPDF = async (orderGroup) => {
       if (mainOrder.customer_notes) {
         const customerNotesLines = doc.splitTextToSize(
           `Customer Notes: ${mainOrder.customer_notes}`,
-          pageWidth - 2 * margin
+          pageWidth - 2 * margin,
         );
         customerNotesLines.forEach((line) => {
           checkPageBreak(5);
@@ -383,7 +383,7 @@ export const generateOrderPDF = async (orderGroup) => {
         `Generated on ${new Date().toLocaleString("en-GB")}`,
         pageWidth / 2,
         footerY + 4,
-        { align: "center" }
+        { align: "center" },
       );
 
       // Page number
