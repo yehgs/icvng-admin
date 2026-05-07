@@ -167,10 +167,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       }
     } catch (error) {
       console.error('Error fetching form data:', error);
-      try { const cats = await getCategories(); setCategories(cats); } catch {}
-      try { const r = await brandAPI.getBrands(); if (r.success) setBrands(r.data); } catch {}
-      try { const r = await colorAPI.getColors(); if (r.success) setColors(r.data); } catch {}
-      try { const r = await supplierAPI.getSuppliers({ status: 'ACTIVE' }); if (r.success) setSuppliers(r.data || []); } catch {}
+      try { const cats = await getCategories(); setCategories(cats); } catch (_) { /* ignore */ }
+      try { const r = await brandAPI.getBrands(); if (r.success) setBrands(r.data); } catch (_) { /* ignore */ }
+      try { const r = await colorAPI.getColors(); if (r.success) setColors(r.data); } catch (_) { /* ignore */ }
+      try { const r = await supplierAPI.getSuppliers({ status: 'ACTIVE' }); if (r.success) setSuppliers(r.data || []); } catch (_) { /* ignore */ }
     } finally {
       setLoading(false);
     }
@@ -202,7 +202,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       } else {
         toast.error(res.message || 'Failed to create supplier');
       }
-    } catch (e) {
+    } catch (_) {
       toast.error('Failed to create supplier');
     } finally {
       setCreatingSupplier(false);
