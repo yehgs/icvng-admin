@@ -661,6 +661,20 @@ const DirectPricingManagement = () => {
             </div>
 
             <div className="p-6">
+              {/* Info banner — makes clear this updates the actual product fields */}
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">These prices update the product directly</p>
+                  <ul className="space-y-0.5 text-blue-700">
+                    <li>• <strong>BTC Price</strong> → <code className="bg-blue-100 px-1 rounded">product.btcPrice</code> (shown as the regular price on the website)</li>
+                    <li>• <strong>3 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price3weeksDelivery</code></li>
+                    <li>• <strong>5 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price5weeksDelivery</code></li>
+                  </ul>
+                  <p className="mt-1 text-blue-600">Changes take effect immediately on the website.</p>
+                </div>
+              </div>
+
               {errors.general && (
                 <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                   <div className="flex items-center">

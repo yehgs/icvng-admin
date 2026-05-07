@@ -7,12 +7,15 @@ import {
   CheckCircle,
   Star,
   Package,
+  Plus,
 } from 'lucide-react';
 import ImageUploader from '../common/ImageUploader';
 import {
+  productAPI,
   brandAPI,
   colorAPI,
 } from '../../utils/manageApi';
+import { supplierAPI } from '../../utils/api';
 import { getCategories, getSubCategories } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 
@@ -23,7 +26,14 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const [subCategories, setSubCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [errors, setErrors] = useState({});
+
+  // Quick-create supplier inline
+  const [showNewSupplier, setShowNewSupplier] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+  const [newSupplierPhone, setNewSupplierPhone] = useState('');
+  const [creatingSupplier, setCreatingSupplier] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -54,6 +64,19 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     seoTitle: '',
     seoDescription: '',
     publish: 'PENDING',
+    // Prices
+    btbPrice: '',
+    btcPrice: '',
+    price3weeksDelivery: '',
+    price5weeksDelivery: '',
+    discount: '',
+    // Partner/online stock
+    partnerStock: {
+      enabled: false,
+      quantity: 0,
+      supplier: '',
+      notes: '',
+    },
   });
 
   const productTypes = [
@@ -128,19 +151,61 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [cats, brandsRes, colorsRes] = await Promise.all([
+      const [cats, brandsRes, colorsRes, suppliersRes] = await Promise.all([
         getCategories(),
         brandAPI.getBrands(),
         colorAPI.getColors(),
+        supplierAPI.getSuppliers({ status: 'ACTIVE', limit: 200 }),
       ]);
       setCategories(cats);
       if (brandsRes.success) setBrands(brandsRes.data);
       if (colorsRes.success) setColors(colorsRes.data);
+      if (suppliersRes.success) setSuppliers(suppliersRes.data || []);
+
+      if (!cats || cats.length === 0) {
+        toast.error('Categories not loaded. Check server connection.');
+      }
     } catch (error) {
       console.error('Error fetching form data:', error);
-      toast.error('Failed to load form data');
+      try { const cats = await getCategories(); setCategories(cats); } catch {}
+      try { const r = await brandAPI.getBrands(); if (r.success) setBrands(r.data); } catch {}
+      try { const r = await colorAPI.getColors(); if (r.success) setColors(r.data); } catch {}
+      try { const r = await supplierAPI.getSuppliers({ status: 'ACTIVE' }); if (r.success) setSuppliers(r.data || []); } catch {}
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateSupplier = async () => {
+    if (!newSupplierName.trim()) { toast.error('Supplier name is required'); return; }
+    setCreatingSupplier(true);
+    try {
+      const slug = newSupplierName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const res = await supplierAPI.createSupplier({
+        name: newSupplierName.trim(),
+        slug: `${slug}-${Date.now()}`,
+        phone: newSupplierPhone.trim(),
+        status: 'ACTIVE',
+      });
+      if (res.success) {
+        const newSupplier = res.data;
+        setSuppliers((prev) => [...prev, newSupplier]);
+        // Auto-select the newly created supplier
+        handleInputChange('partnerStock', {
+          ...(formData.partnerStock || {}),
+          supplier: newSupplier._id,
+        });
+        setNewSupplierName('');
+        setNewSupplierPhone('');
+        setShowNewSupplier(false);
+        toast.success(`Supplier "${newSupplier.name}" created and selected`);
+      } else {
+        toast.error(res.message || 'Failed to create supplier');
+      }
+    } catch (e) {
+      toast.error('Failed to create supplier');
+    } finally {
+      setCreatingSupplier(false);
     }
   };
 
@@ -186,6 +251,24 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       seoTitle: productData.seoTitle || '',
       seoDescription: productData.seoDescription || '',
       publish: productData.publish || 'PENDING',
+      // Prices
+      btbPrice: productData.btbPrice || '',
+      btcPrice: productData.btcPrice || '',
+      price3weeksDelivery: productData.price3weeksDelivery || '',
+      price5weeksDelivery: productData.price5weeksDelivery || '',
+      discount: productData.discount || '',
+      // Partner/online stock — supplier may be a populated object or just an ID
+      partnerStock: productData.partnerStock ? {
+        enabled: productData.partnerStock.enabled || false,
+        quantity: productData.partnerStock.quantity || 0,
+        supplier: productData.partnerStock.supplier?._id || productData.partnerStock.supplier || '',
+        notes: productData.partnerStock.notes || '',
+      } : {
+        enabled: false,
+        quantity: 0,
+        supplier: '',
+        notes: '',
+      },
     });
   };
 
@@ -219,6 +302,17 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       seoTitle: '',
       seoDescription: '',
       publish: 'PENDING',
+      btbPrice: '',
+      btcPrice: '',
+      price3weeksDelivery: '',
+      price5weeksDelivery: '',
+      discount: '',
+      partnerStock: {
+        enabled: false,
+        quantity: 0,
+        supplier: '',
+        notes: '',
+      },
     });
     setErrors({});
   };
@@ -240,6 +334,14 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
     if (!formData.shortDescription.trim()) {
       newErrors.shortDescription = 'Short description is required';
+    }
+
+    // At least one of BTC, 3-week, or 5-week price must be set
+    const btc = parseFloat(formData.btcPrice) || 0;
+    const w3 = parseFloat(formData.price3weeksDelivery) || 0;
+    const w5 = parseFloat(formData.price5weeksDelivery) || 0;
+    if (btc === 0 && w3 === 0 && w5 === 0) {
+      newErrors.prices = 'At least one of BTC Price, 3-Week Price, or 5-Week Price must be greater than 0';
     }
 
     setErrors(newErrors);
@@ -753,6 +855,232 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* ── Pricing ── */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+                Pricing
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                At least one of BTC, 3-Week, or 5-Week price is required.
+              </p>
+
+              {/* Price required warning */}
+              {errors.prices && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {errors.prices}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* BTB Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    BTB Price (Business-to-Business) <span className="text-gray-400 font-normal">— optional</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₦</span>
+                    <input type="number" min="0" step="0.01"
+                      value={formData.btbPrice || ''}
+                      onChange={(e) => handleInputChange('btbPrice', e.target.value)}
+                      className="w-full pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* BTC Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    BTC Price <span className="text-red-500">*</span>
+                    <span className="text-gray-400 font-normal ml-1">— shown as regular price on website</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₦</span>
+                    <input type="number" min="0" step="0.01"
+                      value={formData.btcPrice || ''}
+                      onChange={(e) => handleInputChange('btcPrice', e.target.value)}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errors.btcPrice && <p className="mt-1 text-xs text-red-600">{errors.btcPrice}</p>}
+                </div>
+
+                {/* 3-Week Delivery Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    3-Week Delivery Price <span className="text-red-500">*</span>
+                    <span className="text-gray-400 font-normal ml-1">— most categories</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₦</span>
+                    <input type="number" min="0" step="0.01"
+                      value={formData.price3weeksDelivery || ''}
+                      onChange={(e) => handleInputChange('price3weeksDelivery', e.target.value)}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price3weeksDelivery ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errors.price3weeksDelivery && <p className="mt-1 text-xs text-red-600">{errors.price3weeksDelivery}</p>}
+                </div>
+
+                {/* 5-Week Delivery Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    5-Week Delivery Price <span className="text-red-500">*</span>
+                    <span className="text-gray-400 font-normal ml-1">— Capsule Machines & Coffee Makers</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₦</span>
+                    <input type="number" min="0" step="0.01"
+                      value={formData.price5weeksDelivery || ''}
+                      onChange={(e) => handleInputChange('price5weeksDelivery', e.target.value)}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price5weeksDelivery ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errors.price5weeksDelivery && <p className="mt-1 text-xs text-red-600">{errors.price5weeksDelivery}</p>}
+                </div>
+
+                {/* Discount */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Discount (%) <span className="text-gray-400 font-normal">— applied to all prices</span>
+                  </label>
+                  <input type="number" min="0" max="100" step="1"
+                    value={formData.discount || ''}
+                    onChange={(e) => handleInputChange('discount', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Partner Stock (Editor-managed online stock) ── */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Partner / Online Stock
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    For products held by partners or sourced externally. This sets the online stock visible to customers.
+                    Warehouse staff can <strong>view</strong> this but cannot manage it — only editors can.
+                    No offline stock applies to these products.
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Enable</span>
+                  <input type="checkbox"
+                    checked={formData.partnerStock?.enabled || false}
+                    onChange={(e) => handleInputChange('partnerStock', {
+                      ...(formData.partnerStock || {}),
+                      enabled: e.target.checked,
+                    })}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                </label>
+              </div>
+
+              {formData.partnerStock?.enabled && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Online Stock Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input type="number" min="0"
+                      value={formData.partnerStock?.quantity ?? ''}
+                      onChange={(e) => handleInputChange('partnerStock', {
+                        ...(formData.partnerStock || {}),
+                        quantity: parseInt(e.target.value) || 0,
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Supplier <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewSupplier((p) => !p)}
+                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        {showNewSupplier ? 'Cancel' : 'Create New'}
+                      </button>
+                    </div>
+
+                    {/* Supplier dropdown */}
+                    {!showNewSupplier && (
+                      <select
+                        value={formData.partnerStock?.supplier || ''}
+                        onChange={(e) => handleInputChange('partnerStock', {
+                          ...(formData.partnerStock || {}),
+                          supplier: e.target.value,
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      >
+                        <option value="">Select supplier...</option>
+                        {suppliers.map((s) => (
+                          <option key={s._id} value={s._id}>
+                            {s.name}{s.contactPerson?.phone ? ` — ${s.contactPerson.phone}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {/* Quick-create supplier inline */}
+                    {showNewSupplier && (
+                      <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 space-y-2">
+                        <p className="text-xs font-semibold text-blue-700">New Supplier</p>
+                        <input type="text"
+                          value={newSupplierName}
+                          onChange={(e) => setNewSupplierName(e.target.value)}
+                          placeholder="Supplier name *"
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <input type="text"
+                          value={newSupplierPhone}
+                          onChange={(e) => setNewSupplierPhone(e.target.value)}
+                          placeholder="Phone (optional)"
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateSupplier}
+                          disabled={creatingSupplier || !newSupplierName.trim()}
+                          className="w-full py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {creatingSupplier
+                            ? <><Loader2 className="w-3 h-3 animate-spin" /> Creating...</>
+                            : <><Plus className="w-3 h-3" /> Create & Select</>}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Notes
+                    </label>
+                    <input type="text"
+                      value={formData.partnerStock?.notes || ''}
+                      onChange={(e) => handleInputChange('partnerStock', {
+                        ...(formData.partnerStock || {}),
+                        notes: e.target.value,
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="e.g. Restocked monthly"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* SEO & Publishing */}

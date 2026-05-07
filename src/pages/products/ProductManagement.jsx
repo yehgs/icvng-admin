@@ -45,6 +45,8 @@ const ProductManagement = () => {
     productType: '',
     publish: '',
     featured: '',
+    lowStock: '',      // 'true' = online stock <= 5
+    priceFilter: '',   // 'hasbtc', 'has3week', 'has5week', 'noPrice'
   });
 
   const productTypes = [
@@ -72,7 +74,13 @@ const ProductManagement = () => {
         page: currentPage,
         limit: 10,
         search: searchTerm,
-        ...filters,
+        category: filters.category,
+        brand: filters.brand,
+        productType: filters.productType,
+        publish: filters.publish,
+        featured: filters.featured,
+        lowStock: filters.lowStock,
+        priceFilter: filters.priceFilter,
       };
 
       const response = await productAPI.getProducts(params);
@@ -316,6 +324,30 @@ const ProductManagement = () => {
             ))}
           </select>
 
+          {/* Low Stock Filter */}
+          <select
+            value={filters.lowStock}
+            onChange={(e) => handleFilterChange('lowStock', e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          >
+            <option value="">All Stock Levels</option>
+            <option value="true">Low Online Stock (≤5)</option>
+            <option value="critical">Out of Stock Online</option>
+          </select>
+
+          {/* Price Filter */}
+          <select
+            value={filters.priceFilter}
+            onChange={(e) => handleFilterChange('priceFilter', e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          >
+            <option value="">All Price States</option>
+            <option value="hasbtc">Has BTC Price</option>
+            <option value="has3week">Has 3-Week Price</option>
+            <option value="has5week">Has 5-Week Price</option>
+            <option value="noPrice">Missing All Prices</option>
+          </select>
+
           {/* Clear Filters */}
           {hasActiveFilters && (
             <button
@@ -369,11 +401,23 @@ const ProductManagement = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Price
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    BTB
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Stock
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    BTC
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    3-Wk
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    5-Wk
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Online
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Offline
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
@@ -433,19 +477,51 @@ const ProductManagement = () => {
                         {product.productType}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      ${product.price || 'N/A'}
+                    {/* BTB Price */}
+                    <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {(product.btbPrice && product.btbPrice > 0) ? `₦${Number(product.btbPrice).toLocaleString()}` : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          (product.currentStock || 0) > 0
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                        }`}
-                      >
-                        {product.currentStock || 0}
-                      </span>
+                    {/* BTC Price */}
+                    <td className="px-4 py-4 whitespace-nowrap text-xs font-medium text-green-700 dark:text-green-400">
+                      {(product.btcPrice && product.btcPrice > 0) ? `₦${Number(product.btcPrice).toLocaleString()}` : <span className="text-red-400 font-normal">0</span>}
+                    </td>
+                    {/* 3-Week Price */}
+                    <td className="px-4 py-4 whitespace-nowrap text-xs text-orange-700 dark:text-orange-400">
+                      {(product.price3weeksDelivery && product.price3weeksDelivery > 0) ? `₦${Number(product.price3weeksDelivery).toLocaleString()}` : <span className="text-gray-300">—</span>}
+                    </td>
+                    {/* 5-Week Price */}
+                    <td className="px-4 py-4 whitespace-nowrap text-xs text-red-700 dark:text-red-400">
+                      {(product.price5weeksDelivery && product.price5weeksDelivery > 0) ? `₦${Number(product.price5weeksDelivery).toLocaleString()}` : <span className="text-gray-300">—</span>}
+                    </td>
+                    {/* Online Stock */}
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {(() => {
+                        const online = product.partnerStock?.enabled
+                          ? (product.partnerStock?.quantity || 0)
+                          : (product.warehouseStock?.onlineStock || 0);
+                        return (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            online === 0 ? 'bg-red-100 text-red-700' :
+                            online <= 5 ? 'bg-orange-100 text-orange-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {online}
+                            {product.partnerStock?.enabled && <span className="ml-1 text-purple-600" title="Partner stock">P</span>}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    {/* Offline Stock */}
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {product.partnerStock?.enabled ? (
+                        <span className="text-xs text-gray-400 italic">N/A</span>
+                      ) : (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          (product.warehouseStock?.offlineStock || 0) === 0 ? 'bg-gray-100 text-gray-500' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {product.warehouseStock?.offlineStock || 0}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(product.publish)}

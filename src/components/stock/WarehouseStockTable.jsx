@@ -274,19 +274,33 @@ const WarehouseStockTable = ({
                   <div className="flex items-center justify-center gap-1">
                     <Globe className="h-3 w-3 text-blue-500" />
                     <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {stock.onlineStock || 0}
+                      {product.partnerStock?.enabled
+                        ? (product.partnerStock?.quantity || 0)
+                        : (stock.onlineStock || 0)}
                     </span>
+                    {product.partnerStock?.enabled && (
+                      <span
+                        className="ml-1 text-xs bg-purple-100 text-purple-700 px-1 rounded font-medium"
+                        title={`Partner stock — managed by editor only. Supplier: ${product.partnerStock?.supplier?.name || 'N/A'}`}
+                      >
+                        P
+                      </span>
+                    )}
                   </div>
                 </td>
 
                 {/* Offline Stock */}
                 <td className="px-4 py-3 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Monitor className="h-3 w-3 text-purple-500" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {stock.offlineStock || 0}
-                    </span>
-                  </div>
+                  {product.partnerStock?.enabled ? (
+                    <span className="text-xs text-gray-400 italic">N/A</span>
+                  ) : (
+                    <div className="flex items-center justify-center gap-1">
+                      <Monitor className="h-3 w-3 text-purple-500" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {stock.offlineStock || 0}
+                      </span>
+                    </div>
+                  )}
                 </td>
 
                 {/* Status */}
@@ -304,10 +318,12 @@ const WarehouseStockTable = ({
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => onEditStock(product)}
-                      disabled={!canEdit}
+                      disabled={!canEdit || product.partnerStock?.enabled}
                       className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title={
-                        canEdit
+                        product.partnerStock?.enabled
+                          ? "Partner stock — managed by editors only"
+                          : canEdit
                           ? "Edit stock quantities"
                           : "Stock editing disabled"
                       }
