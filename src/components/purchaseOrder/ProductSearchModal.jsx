@@ -12,6 +12,7 @@ import {
   AlignVerticalJustifyEnd,
 } from 'lucide-react';
 import { productAPI, handleApiError } from '../../utils/api';
+import { getCategoryStructure } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 
 const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
@@ -52,33 +53,31 @@ const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
 
   const fetchCategoryStructure = async () => {
     try {
-      const response = await productAPI.getCategoryStructure();
-      if (response.success) {
-        setCategories(response.data);
+      const data = await getCategoryStructure();
+      setCategories(data);
 
-        // Extract unique brands from categories
-        const allBrands = [];
-        response.data.forEach((category) => {
-          if (category.brands && Array.isArray(category.brands)) {
-            allBrands.push(...category.brands);
-          }
-          if (category.subcategories && Array.isArray(category.subcategories)) {
-            category.subcategories.forEach((subcat) => {
-              if (subcat.brands && Array.isArray(subcat.brands)) {
-                allBrands.push(...subcat.brands);
-              }
-            });
-          }
-        });
+      // Extract unique brands from categories
+      const allBrands = [];
+      data.forEach((category) => {
+        if (category.brands && Array.isArray(category.brands)) {
+          allBrands.push(...category.brands);
+        }
+        if (category.subcategories && Array.isArray(category.subcategories)) {
+          category.subcategories.forEach((subcat) => {
+            if (subcat.brands && Array.isArray(subcat.brands)) {
+              allBrands.push(...subcat.brands);
+            }
+          });
+        }
+      });
 
-        // Remove duplicates
-        const uniqueBrands = allBrands.filter(
-          (brand, index, self) =>
-            index === self.findIndex((b) => b._id === brand._id)
-        );
+      // Remove duplicates
+      const uniqueBrands = allBrands.filter(
+        (brand, index, self) =>
+          index === self.findIndex((b) => b._id === brand._id)
+      );
 
-        setBrands(uniqueBrands);
-      }
+      setBrands(uniqueBrands);
     } catch (error) {
       console.error('Error fetching category structure:', error);
     }

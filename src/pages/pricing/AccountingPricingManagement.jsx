@@ -24,6 +24,7 @@ import {
   getCurrentUser,
   handleApiError,
 } from "../../utils/api";
+import { getCategoryStructure } from "../../utils/categoryService";
 import RoleBasedButton from "../../components/layout/RoleBasedButton";
 
 const AccountingPricingManagement = () => {
@@ -134,8 +135,8 @@ const AccountingPricingManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await productAPI.getCategoryStructure();
-      if (response.success) setCategories(response.data);
+      const cats = await getCategoryStructure();
+      setCategories(cats);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }

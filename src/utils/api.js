@@ -4088,6 +4088,22 @@ export const clearAuthData = () => {
   localStorage.removeItem("user");
 };
 
+// ===== ACTIVITY LOG API =====
+export const activityLogAPI = {
+  getLogs: async (params = {}) => {
+    const queryString = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v != null))
+    ).toString();
+    return apiCall(`/activity-logs${queryString ? `?${queryString}` : ''}`);
+  },
+  getSummary: async () => {
+    return apiCall('/activity-logs/summary');
+  },
+  getActionTypes: async () => {
+    return apiCall('/activity-logs/actions');
+  },
+};
+
 export default {
   blogAPI,
   authAPI,
@@ -4118,4 +4134,5 @@ export default {
   isTokenValid,
   setAuthData,
   clearAuthData,
+  activityLogAPI,
 };

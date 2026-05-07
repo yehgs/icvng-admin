@@ -27,6 +27,7 @@ import {
   getCurrentUser,
   handleApiError,
 } from '../../utils/api';
+import { getCategoryStructure } from '../../utils/categoryService';
 import AddProductDirectPricingModal from '../../components/pricing/AddProductDirectPricingModal';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
 
@@ -121,10 +122,8 @@ const DirectPricingManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await productAPI.getCategoryStructure();
-      if (response.success) {
-        setCategories(response.data);
-      }
+      const cats = await getCategoryStructure();
+      setCategories(cats);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }

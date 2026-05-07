@@ -28,6 +28,7 @@ import {
   ArrowUpDown,
   RefreshCw,
   Building2,
+  Activity,
   Coffee,
   Edit,
   CreditCard,
@@ -380,6 +381,14 @@ const AdminSidebar = ({
       icon: Users,
       single: true,
       allowedSubRoles: ['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'SALES-MANAGER'],
+    },
+    {
+      key: 'activity-log',
+      title: 'Activity Log',
+      path: '/admin/activity',
+      icon: Activity,
+      single: true,
+      allowedSubRoles: ['IT', 'DIRECTOR'],
     },
     {
       key: 'settings',

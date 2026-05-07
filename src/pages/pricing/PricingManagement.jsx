@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { pricingAPI, productAPI, brandAPI } from "../../utils/api";
+import { getCategoryStructure } from "../../utils/categoryService";
 
 const PricingManagement = () => {
   const [productPricing, setProductPricing] = useState([]);
@@ -63,13 +64,13 @@ const PricingManagement = () => {
   const fetchProductPricing = async () => {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams({
+      // Pass plain object — pricingAPI.getProductPricingList handles URLSearchParams internally
+      // Empty string values are excluded by the API function
+      const data = await pricingAPI.getProductPricingList({
         page: pagination.page,
         limit: pagination.limit,
         ...filters,
       });
-
-      const data = await pricingAPI.getProductPricingList(queryParams);
       if (data.success) {
         setProductPricing(data.data);
         setPagination((prev) => ({
@@ -90,10 +91,8 @@ const PricingManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const data = await productAPI.getCategoryStructure();
-      if (data.success) {
-        setCategories(data.data);
-      }
+      const cats = await getCategoryStructure();
+      setCategories(cats);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }

@@ -35,6 +35,7 @@ import {
   getCurrentUser,
   handleApiError,
 } from "../../utils/api";
+import { getCategoryStructure } from "../../utils/categoryService";
 import RoleBasedAccess from "../../components/layout/RoleBaseAccess";
 import WarehouseStockTable from "../../components/stock/WarehouseStockTable";
 import WarehouseStatsCards from "../../components/stock/WarehouseStatsCards";
@@ -153,14 +154,12 @@ const WarehouseManagement = () => {
 
   const fetchFilterData = async () => {
     try {
-      const [categoryResponse, brandResponse] = await Promise.all([
-        productAPI.getCategoryStructure(),
+      const [cats, brandResponse] = await Promise.all([
+        getCategoryStructure(),
         brandAPI.getBrands(),
       ]);
 
-      if (categoryResponse.success) {
-        setCategories(categoryResponse.data);
-      }
+      setCategories(cats);
 
       if (brandResponse.success) {
         setBrands(brandResponse.data);

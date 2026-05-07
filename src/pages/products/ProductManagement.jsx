@@ -16,10 +16,10 @@ import {
 } from 'lucide-react';
 import {
   productAPI,
-  categoryAPI,
   brandAPI,
   colorAPI,
 } from '../../utils/manageApi';
+import { getCategories } from '../../utils/categoryService';
 import ProductForm from '../../components/product/ProductForm';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
 import toast from 'react-hot-toast';
@@ -91,10 +91,8 @@ const ProductManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await categoryAPI.getCategories();
-      if (response.success) {
-        setCategories(response.data);
-      }
+      const cats = await getCategories();
+      setCategories(cats);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }

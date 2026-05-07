@@ -12,7 +12,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import ImageUploader from '../../components/common/ImageUploader.jsx';
-import { subCategoryAPI, categoryAPI } from '../../utils/manageApi.js';
+import { subCategoryAPI } from '../../utils/manageApi.js';
+import { getCategories } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 
 const SubCategoryManagement = () => {
@@ -54,10 +55,8 @@ const SubCategoryManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await categoryAPI.getCategories();
-      if (response.success) {
-        setCategories(response.data);
-      }
+      const cats = await getCategories();
+      setCategories(cats);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to load categories');

@@ -956,6 +956,9 @@ const ExchangeRates = () => {
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                  ⚠️ Recommended: Set Base = <strong>NGN</strong>, Target = foreign currency (e.g. EUR), Rate = how many EUR per 1 NGN (e.g. 0.000625). Or Base = EUR, Target = NGN, Rate = how many NGN per 1 EUR (e.g. 1600). Both directions are supported.
+                </p>
               </div>
 
               <div>
@@ -990,18 +993,44 @@ const ExchangeRates = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Exchange Rate
+                  {formData.baseCurrency && formData.targetCurrency && (
+                    <span className="ml-2 text-xs font-normal text-gray-500">
+                      — 1 {formData.baseCurrency} = ? {formData.targetCurrency}
+                    </span>
+                  )}
                 </label>
                 <input
                   type="number"
-                  step="0.0001"
+                  step="0.000001"
+                  min="0.000001"
                   value={formData.rate}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, rate: e.target.value }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter exchange rate"
+                  placeholder={
+                    formData.baseCurrency === 'NGN'
+                      ? formData.targetCurrency === 'EUR' ? 'e.g. 0.000606 (1 NGN = 0.000606 EUR)'
+                        : formData.targetCurrency === 'USD' ? 'e.g. 0.000645 (1 NGN = 0.000645 USD)'
+                        : formData.targetCurrency === 'GBP' ? 'e.g. 0.000513 (1 NGN = 0.000513 GBP)'
+                        : 'Enter rate: how many target per 1 NGN'
+                      : formData.targetCurrency === 'NGN'
+                      ? `e.g. 1650 (1 ${formData.baseCurrency} = 1650 NGN)`
+                      : 'Enter exchange rate'
+                  }
                   required
                 />
+                {formData.baseCurrency && formData.targetCurrency && formData.rate && (
+                  <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                    Preview: 1 {formData.baseCurrency} = {Number(formData.rate).toFixed(6)} {formData.targetCurrency}
+                    {formData.targetCurrency === 'NGN' && Number(formData.rate) < 100 && (
+                      <span className="text-red-500 ml-2">⚠️ Very low — did you mean {Math.round(1/Number(formData.rate))} NGN per {formData.baseCurrency}?</span>
+                    )}
+                    {formData.baseCurrency === 'NGN' && Number(formData.rate) > 1 && (
+                      <span className="text-red-500 ml-2">⚠️ Very high — 1 NGN usually buys less than 1 of any major currency</span>
+                    )}
+                  </p>
+                )}
               </div>
 
               <div>

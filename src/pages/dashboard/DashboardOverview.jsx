@@ -32,15 +32,27 @@ import {
   Heart,
   Star,
 } from 'lucide-react';
-import { authAPI, getCurrentUser } from '../../utils/api';
+import { authAPI, getCurrentUser, activityLogAPI } from '../../utils/api';
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [recentLogs, setRecentLogs] = useState([]);
   const currentUser = getCurrentUser();
   const navigate = useNavigate();
+
+  // Fetch real activity logs for the dashboard panel (DIRECTOR + IT only)
+  const fetchRecentLogs = async () => {
+    if (!['DIRECTOR', 'IT'].includes(currentUser?.subRole)) return;
+    try {
+      const data = await activityLogAPI.getLogs({ page: 1, limit: 6 });
+      if (data.success) setRecentLogs(data.data || []);
+    } catch (e) {
+      // Non-critical — panel will just stay empty
+    }
+  };
 
   // Fetch dashboard stats
   const fetchStats = async (isRefresh = false) => {
@@ -67,10 +79,12 @@ const DashboardOverview = () => {
 
   useEffect(() => {
     fetchStats();
+    fetchRecentLogs();
   }, []);
 
   const handleRefresh = () => {
     fetchStats(true);
+    fetchRecentLogs();
   };
 
   // Common Components
@@ -962,58 +976,62 @@ const DashboardOverview = () => {
             <Bell className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-1">
-            <ActivityItem
-              icon={UserPlus}
-              title="New user registered"
-              description="Mike Johnson joined as BTC user"
-              time="2 hours ago"
-              type="success"
-            />
-            <ActivityItem
-              icon={Key}
-              title="Password reset requested"
-              description="Sarah Wilson requested password reset"
-              time="4 hours ago"
-              type="warning"
-            />
-            <ActivityItem
-              icon={CheckCircle}
-              title="System backup completed"
-              description="Daily backup completed successfully"
-              time="6 hours ago"
-              type="success"
-            />
-            <ActivityItem
-              icon={Activity}
-              title="High login activity"
-              description="Above normal login volume detected"
-              time="8 hours ago"
-              type="info"
-            />
+            {['DIRECTOR', 'IT'].includes(currentUser?.subRole) ? (
+              recentLogs.length > 0 ? (
+                recentLogs.map((log) => (
+                  <div key={log._id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {log.action?.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {log.description}
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        {log.user?.name || 'Unknown'} · {new Date(log.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-gray-400 dark:text-gray-500">
+                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No activity recorded yet</p>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-6 text-gray-400 dark:text-gray-500">
+                <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Activity log is visible to Directors &amp; IT only</p>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <Link
-              to="/admin/activity"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-            >
-              View all activity
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {['DIRECTOR', 'IT'].includes(currentUser?.subRole) ? (
+              <Link
+                to="/admin/activity"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              >
+                View full activity log
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Activity log visible to Directors &amp; IT only
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Conditional System Health (only for admin roles) */}
+      {/* Conditional System Health (only for DIRECTOR and IT) */}
       {[
         'IT',
         'DIRECTOR',
-        'HR',
-        'SALES',
-        'MANAGER',
-        'ACCOUNTANT',
-        'GRAPHICS',
-        'EDITOR',
       ].includes(currentUser?.subRole) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* System Health */}

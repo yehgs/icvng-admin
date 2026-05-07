@@ -10,12 +10,10 @@ import {
 } from 'lucide-react';
 import ImageUploader from '../common/ImageUploader';
 import {
-  productAPI,
-  categoryAPI,
   brandAPI,
   colorAPI,
-  subCategoryAPI,
 } from '../../utils/manageApi';
+import { getCategories, getSubCategories } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 
 const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
@@ -130,17 +128,16 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [categoriesRes, brandsRes, colorsRes] = await Promise.all([
-        categoryAPI.getCategories(),
+      const [cats, brandsRes, colorsRes] = await Promise.all([
+        getCategories(),
         brandAPI.getBrands(),
         colorAPI.getColors(),
       ]);
-
-      if (categoriesRes.success) setCategories(categoriesRes.data);
+      setCategories(cats);
       if (brandsRes.success) setBrands(brandsRes.data);
       if (colorsRes.success) setColors(colorsRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching form data:', error);
       toast.error('Failed to load form data');
     } finally {
       setLoading(false);
@@ -149,13 +146,8 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
   const fetchSubCategories = async (categoryId) => {
     try {
-      const response = await subCategoryAPI.getSubCategories();
-      if (response.success) {
-        const filteredSubCategories = response.data.filter(
-          (sub) => sub.category._id === categoryId
-        );
-        setSubCategories(filteredSubCategories);
-      }
+      const subs = await getSubCategories(categoryId);
+      setSubCategories(subs);
     } catch (error) {
       console.error('Error fetching subcategories:', error);
     }

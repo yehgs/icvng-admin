@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import ImageUploader from '../../components/common/ImageUploader';
 import { categoryAPI } from '../../utils/manageApi';
+import { getCategories, clearCategoryCache } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 
 const CategoryManagement = () => {
@@ -37,10 +38,8 @@ const CategoryManagement = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await categoryAPI.getCategories();
-      if (response.success) {
-        setCategories(response.data);
-      }
+      const cats = await getCategories();
+      setCategories(cats);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to load categories');
@@ -85,6 +84,7 @@ const CategoryManagement = () => {
       if (response.success) {
         setShowModal(false);
         resetForm();
+        clearCategoryCache(); // invalidate cache so next fetch gets fresh data
         fetchCategories();
         toast.success(
           editingCategory
@@ -121,6 +121,7 @@ const CategoryManagement = () => {
       setLoading(true);
       const response = await categoryAPI.deleteCategory(categoryId);
       if (response.success) {
+        clearCategoryCache(); // invalidate cache
         fetchCategories();
         toast.success('Category deleted successfully!');
       } else {

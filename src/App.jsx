@@ -18,6 +18,7 @@ import AdminLogin from './pages/auth/AdminLogin';
 
 // Dashboard Components
 import DashboardOverview from './pages/dashboard/DashboardOverview';
+import ActivityLog from './pages/activity/ActivityLog';
 
 // Product Management Components
 import ProductManagement from './pages/products/ProductManagement';
@@ -164,6 +165,7 @@ const App = () => {
             {/* Dashboard - Accessible to all admin roles */}
             <Route index element={<DashboardOverview />} />
             <Route path="dashboard" element={<DashboardOverview />} />
+            <Route path="activity" element={<ActivityLog />} />
 
             {/* Product Management Routes - All admin roles */}
             <Route path="products" element={<ProductManagement />} />
