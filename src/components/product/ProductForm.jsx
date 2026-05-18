@@ -26,6 +26,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const [subCategories, setSubCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
+  // Derived: split brands into regular brands and compatible systems
+  const compatibleSystems = brands.filter((b) => b.compatibleSystem);
+  const regularBrands = brands.filter((b) => !b.compatibleSystem);
   const [suppliers, setSuppliers] = useState([]);
   const [errors, setErrors] = useState({});
 
@@ -624,7 +627,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     Brands
                   </label>
                   <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
-                    {brands.map((brand) => (
+                    {regularBrands.length === 0 ? (
+                      <p className="text-xs text-gray-400 py-1 px-1">No regular brands available</p>
+                    ) : regularBrands.map((brand) => (
                       <label
                         key={brand._id}
                         className="flex items-center space-x-2 py-1"
@@ -641,12 +646,66 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                           }
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
+                        {brand.image && (
+                          <img src={brand.image} alt={brand.name} className="w-5 h-5 rounded object-contain" />
+                        )}
                         <span className="text-sm text-gray-700 dark:text-gray-300">
                           {brand.name}
                         </span>
                       </label>
                     ))}
                   </div>
+                </div>
+
+                {/* Compatible System — single select, only brands marked as compatible systems */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Compatible System
+                    <span className="ml-1 text-xs font-normal text-gray-400">— e.g. Nespresso&reg;, Dolce Gusto&reg;</span>
+                  </label>
+                  {compatibleSystems.length === 0 ? (
+                    <p className="text-xs text-gray-400 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-2">
+                      No compatible system brands available. Go to Brand Management and mark a brand as a Compatible System first.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {/* None option */}
+                      <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${!formData.compatibleSystem ? 'border-gray-400 bg-gray-100 dark:bg-gray-700 dark:border-gray-500' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'}`}>
+                        <input
+                          type="radio"
+                          name="compatibleSystem"
+                          value=""
+                          checked={!formData.compatibleSystem}
+                          onChange={() => handleInputChange('compatibleSystem', '')}
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">None</span>
+                      </label>
+                      {compatibleSystems.map((brand) => (
+                        <label
+                          key={brand._id}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                            formData.compatibleSystem === brand._id
+                              ? 'border-green-400 bg-green-50 dark:border-green-600 dark:bg-green-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="compatibleSystem"
+                            value={brand._id}
+                            checked={formData.compatibleSystem === brand._id}
+                            onChange={() => handleInputChange('compatibleSystem', brand._id)}
+                            className="text-green-600 focus:ring-green-500"
+                          />
+                          {brand.image && (
+                            <img src={brand.image} alt={brand.name} className="w-5 h-5 rounded object-contain flex-shrink-0" />
+                          )}
+                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{brand.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
