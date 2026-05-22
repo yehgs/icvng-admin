@@ -232,8 +232,8 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       image: productData.image || [],
       weight: productData.weight || '',
       brand: productData.brand?.map((b) => b._id) || [],
-      compatibleSystem: productData.compatibleSystem || '',
-      producer: productData.producer || '',
+      compatibleSystem: productData.compatibleSystem?._id || productData.compatibleSystem || '',
+      producer: productData.producer?._id || productData.producer || '',
       productType: productData.productType || 'COFFEE',
       roastLevel: productData.roastLevel || '',
       roastOrigin: productData.roastOrigin || '',
@@ -364,14 +364,21 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     setSubmitting(true);
 
     try {
+      // Safety: ensure compatibleSystem and producer are plain ID strings, not objects
+      const sanitizedData = {
+        ...formData,
+        compatibleSystem: formData.compatibleSystem?._id || formData.compatibleSystem || '',
+        producer: formData.producer?._id || formData.producer || '',
+      };
+
       let response;
       if (product) {
         response = await productAPI.updateProduct({
           _id: product._id,
-          ...formData,
+          ...sanitizedData,
         });
       } else {
-        response = await productAPI.createProduct(formData);
+        response = await productAPI.createProduct(sanitizedData);
       }
 
       if (response.success) {
@@ -937,6 +944,30 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   {errors.prices}
                 </div>
               )}
+
+              {/* Live visibility warning: BTC price only + no stock + no partner = hidden from shop */}
+              {(() => {
+                const btc = parseFloat(formData.btcPrice) || 0;
+                const w3 = parseFloat(formData.price3weeksDelivery) || 0;
+                const w5 = parseFloat(formData.price5weeksDelivery) || 0;
+                const isPartner = formData.partnerStock?.enabled === true;
+                const willBeHidden = btc > 0 && w3 === 0 && w5 === 0 && !isPartner;
+                if (!willBeHidden) return null;
+                return (
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-300 rounded-md text-sm text-amber-800 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+                    <div>
+                      <p className="font-semibold">⚠️ This product will be hidden from the shop</p>
+                      <p className="text-xs mt-1 text-amber-700">
+                        It has a BTC price but no online stock, no partner stock, and no 3-week or 5-week delivery price.
+                        Customers would see "Pricing Unavailable". To make it visible, either:
+                        <strong> add a 3-week or 5-week delivery price</strong>, or
+                        <strong> enable partner stock</strong>.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* BTB Price */}

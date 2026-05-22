@@ -47,6 +47,7 @@ const ProductManagement = () => {
     featured: '',
     lowStock: '',      // 'true' = online stock <= 5
     priceFilter: '',   // 'hasbtc', 'has3week', 'has5week', 'noPrice'
+    hiddenFromShop: '', // 'true' = published but invisible to customers
   });
 
   const productTypes = [
@@ -81,6 +82,7 @@ const ProductManagement = () => {
         featured: filters.featured,
         lowStock: filters.lowStock,
         priceFilter: filters.priceFilter,
+        hiddenFromShop: filters.hiddenFromShop,
       };
 
       const response = await productAPI.getProducts(params);
@@ -195,6 +197,20 @@ const ProductManagement = () => {
     a.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  // Returns true if this product will NOT appear in the client shop
+  // because it has no online stock, no partner stock, and no delivery price options
+  const isHiddenFromShop = (product) => {
+    if (product.publish !== 'PUBLISHED') return false; // non-published are expected to be hidden
+    const onlineStock = product.warehouseStock?.onlineStock || 0;
+    const isPartner = product.partnerStock?.enabled === true;
+    const has3weeks = (product.price3weeksDelivery || 0) > 0;
+    const has5weeks = (product.price5weeksDelivery || 0) > 0;
+    if (onlineStock > 0) return false;
+    if (isPartner) return false;
+    if (has3weeks || has5weeks) return false;
+    return true; // PUBLISHED but invisible to customers
   };
 
   const getStatusBadge = (status) => {
@@ -348,6 +364,17 @@ const ProductManagement = () => {
             <option value="noPrice">Missing All Prices</option>
           </select>
 
+          {/* Hidden from shop filter */}
+          <select
+            value={filters.hiddenFromShop}
+            onChange={(e) => handleFilterChange('hiddenFromShop', e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="">All Visibility</option>
+            <option value="true">🚫 Hidden from shop</option>
+            <option value="false">✅ Visible in shop</option>
+          </select>
+
           {/* Clear Filters */}
           {hasActiveFilters && (
             <button
@@ -452,6 +479,13 @@ const ProductManagement = () => {
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {product.name}
                           </div>
+                          {isHiddenFromShop(product) && (
+                            <div className="flex items-center mt-1 gap-1">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 border border-red-300" title="This product is PUBLISHED but hidden from the client shop: no online stock, no partner stock, and no delivery price options.">
+                                🚫 Hidden from shop
+                              </span>
+                            </div>
+                          )}
                           {product.featured && (
                             <div className="flex items-center mt-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
