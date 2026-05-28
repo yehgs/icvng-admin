@@ -20,6 +20,7 @@ import {
   colorAPI,
 } from '../../utils/manageApi';
 import { getCategories } from '../../utils/categoryService';
+import ProductExportModal from '../../components/product/ProductExportModal';
 import ProductForm from '../../components/product/ProductForm';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
 import toast from 'react-hot-toast';
@@ -30,6 +31,8 @@ const ProductManagement = () => {
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -174,29 +177,198 @@ const ProductManagement = () => {
     setCurrentPage(1);
   };
 
-  const exportProducts = () => {
-    const csvContent = [
-      ['Name', 'SKU', 'Category', 'Brand', 'Type', 'Price', 'Stock', 'Status'],
-      ...products.map((product) => [
-        product.name,
-        product.sku,
-        product.category?.name || '',
-        product.brand?.map((b) => b.name).join(', ') || '',
-        product.productType,
-        product.price || 0,
-        product.currentStock || 0,
-        product.publish,
-      ]),
-    ];
+  // ── Column value extractor ───────────────────────────────────────────────
+  const getColValue = (p, key) => {
+    const onlineStock = p.partnerStock?.enabled
+      ? (p.partnerStock?.quantity || 0)
+      : (p.warehouseStock?.onlineStock || 0);
+    const offlineStock = p.partnerStock?.enabled ? '' : (p.warehouseStock?.offlineStock || 0);
+    const isPartner = p.partnerStock?.enabled === true;
+    const has3weeks = (p.price3weeksDelivery || 0) > 0;
+    const has5weeks = (p.price5weeksDelivery || 0) > 0;
+    const publishedNoStock = p.publish === 'PUBLISHED' && onlineStock === 0 && !isPartner && !has3weeks && !has5weeks;
+    const visibleInShop = p.publish === 'PUBLISHED' && !publishedNoStock ? 'Yes' : 'No';
 
-    const csvString = csvContent.map((row) => row.join(',')).join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    const map = {
+      name: p.name,
+      sku: p.sku,
+      category: p.category?.name || '',
+      subCategory: p.subCategory?.name || '',
+      brand: Array.isArray(p.brand) ? p.brand.map(b => b?.name || b).join('; ') : (p.brand?.name || ''),
+      compatibleSystem: p.compatibleSystem?.name || '',
+      producer: p.producer?.name || '',
+      productType: p.productType || '',
+      publish: p.publish || '',
+      featured: p.featured ? 'Yes' : 'No',
+      visibleInShop,
+      btbPrice: p.btbPrice > 0 ? p.btbPrice : '',
+      btcPrice: p.btcPrice > 0 ? p.btcPrice : '',
+      price3weeks: p.price3weeksDelivery > 0 ? p.price3weeksDelivery : '',
+      price5weeks: p.price5weeksDelivery > 0 ? p.price5weeksDelivery : '',
+      onlineStock,
+      offlineStock,
+      partnerEnabled: isPartner ? 'Yes' : 'No',
+      partnerQty: isPartner ? (p.partnerStock?.quantity || 0) : '',
+      roastLevel: p.roastLevel || '',
+      blend: p.blend || '',
+      intensity: p.intensity || '',
+      coffeeOrigin: p.coffeeOrigin || '',
+      aromaticProfile: p.aromaticProfile || '',
+      weight: p.weight ? `${p.weight}kg` : '',
+      unit: p.unit || '',
+      packaging: p.packaging || '',
+      seoTitle: p.seoTitle || '',
+      seoDescription: p.seoDescription || '',
+      shortDescription: p.shortDescription || '',
+      createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '',
+    };
+    return map[key] ?? '';
+  };
+
+  // Column display labels (same order as ALL_COLUMNS in modal)
+  const COL_LABELS = {
+    name: 'Product Name', sku: 'SKU', category: 'Category', subCategory: 'Sub Category',
+    brand: 'Brand(s)', compatibleSystem: 'Compatible System', producer: 'Producer',
+    productType: 'Product Type', publish: 'Publish Status', featured: 'Featured',
+    visibleInShop: 'Visible in Shop', btbPrice: 'BTB Price (₦)', btcPrice: 'BTC Price (₦)',
+    price3weeks: '3-Week Price (₦)', price5weeks: '5-Week Price (₦)',
+    onlineStock: 'Online Stock', offlineStock: 'Offline Stock',
+    partnerEnabled: 'Partner Enabled', partnerQty: 'Partner Qty',
+    roastLevel: 'Roast Level', blend: 'Blend', intensity: 'Intensity',
+    coffeeOrigin: 'Coffee Origin', aromaticProfile: 'Aromatic Profile',
+    weight: 'Weight', unit: 'Unit', packaging: 'Packaging',
+    seoTitle: 'SEO Title', seoDescription: 'SEO Description',
+    shortDescription: 'Short Description', createdAt: 'Created At',
+  };
+
+  // ── Fetch data for export ─────────────────────────────────────────────────
+  const fetchExportData = async ({ scope, customLimit, customPage }) => {
+    const base = {
+      search: searchTerm,
+      category: filters.category,
+      brand: filters.brand,
+      productType: filters.productType,
+      publish: filters.publish,
+      featured: filters.featured,
+      lowStock: filters.lowStock,
+      priceFilter: filters.priceFilter,
+      hiddenFromShop: filters.hiddenFromShop,
+    };
+
+    if (scope === 'page') {
+      return products; // already loaded
+    }
+    if (scope === 'filtered') {
+      const r = await productAPI.getProducts({ ...base, page: 1, limit: totalProducts || 10000 });
+      return r.success ? r.data : products;
+    }
+    if (scope === 'all') {
+      const r = await productAPI.getProducts({ page: 1, limit: 10000 });
+      return r.success ? r.data : products;
+    }
+    if (scope === 'custom') {
+      const r = await productAPI.getProducts({ ...base, page: customPage, limit: customLimit });
+      return r.success ? r.data : [];
+    }
+    return products;
+  };
+
+  // ── CSV export ────────────────────────────────────────────────────────────
+  const exportCSV = (data, selectedColumns) => {
+    const esc = (val) => {
+      const str = String(val ?? '');
+      return str.includes(',') || str.includes('"') || str.includes('\n')
+        ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+    const headers = selectedColumns.map(k => esc(COL_LABELS[k] || k));
+    const rows = data.map(p => selectedColumns.map(k => esc(getColValue(p, k))).join(','));
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.download = `products_${dateStr}.csv`;
     a.click();
-    window.URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url);
+  };
+
+  // ── PDF export (pure HTML→print, no library needed) ──────────────────────
+  const exportPDF = (data, selectedColumns) => {
+    const dateStr = new Date().toLocaleDateString('en-GB');
+    const stockStatus = (p) => {
+      const stock = p.partnerStock?.enabled ? (p.partnerStock?.quantity || 0) : (p.warehouseStock?.onlineStock || 0);
+      const visible = p.publish === 'PUBLISHED' && (stock > 0 || p.partnerStock?.enabled || p.price3weeksDelivery > 0 || p.price5weeksDelivery > 0);
+      if (p.publish !== 'PUBLISHED') return '#9ca3af'; // grey
+      if (!visible) return '#ef4444';                  // red
+      if (stock === 0) return '#f97316';               // orange (special order)
+      if (stock <= 5) return '#f59e0b';               // amber (low)
+      return '#22c55e';                               // green
+    };
+
+    const rows = data.map(p => `
+      <tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:6px 8px;border-right:1px solid #f0f0f0">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${stockStatus(p)};margin-right:6px;vertical-align:middle"></span>
+        </td>
+        ${selectedColumns.map(k => `<td style="padding:6px 8px;border-right:1px solid #f0f0f0;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis">${String(getColValue(p, k) ?? '').replace(/</g,'&lt;')}</td>`).join('')}
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><title>Product Export — ${dateStr}</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:11px;color:#222;margin:0;padding:16px}
+      h1{font-size:16px;margin-bottom:4px;color:#7B3F1C}
+      p.meta{font-size:10px;color:#888;margin-bottom:12px}
+      table{border-collapse:collapse;width:100%;table-layout:auto}
+      th{background:#7B3F1C;color:white;padding:7px 8px;text-align:left;font-size:10px;border-right:1px solid rgba(255,255,255,0.2);white-space:nowrap}
+      tr:nth-child(even){background:#fdf8f5}
+      .legend{margin-top:16px;display:flex;gap:16px;font-size:10px}
+      .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+      @media print{@page{size:landscape;margin:10mm}}
+    </style></head><body>
+    <h1>Product Catalog Export</h1>
+    <p class="meta">Generated: ${dateStr} · ${data.length} products · ${selectedColumns.length} columns</p>
+    <table>
+      <thead><tr>
+        <th style="width:18px"></th>
+        ${selectedColumns.map(k => `<th>${COL_LABELS[k] || k}</th>`).join('')}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="legend">
+      <span><span class="dot" style="background:#22c55e"></span>In Stock</span>
+      <span><span class="dot" style="background:#f59e0b"></span>Low Stock</span>
+      <span><span class="dot" style="background:#f97316"></span>Special Order</span>
+      <span><span class="dot" style="background:#ef4444"></span>Hidden / No Stock</span>
+      <span><span class="dot" style="background:#9ca3af"></span>Not Published</span>
+    </div>
+    <script>window.onload=()=>{window.print();}</script>
+    </body></html>`;
+
+    const w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+  };
+
+  // ── Main export handler (called by modal) ─────────────────────────────────
+  const handleExportFromModal = async ({ format, scope, customLimit, customPage, selectedColumns }) => {
+    setExporting(true);
+    try {
+      const data = await fetchExportData({ scope, customLimit, customPage });
+      if (format === 'csv') {
+        exportCSV(data, selectedColumns);
+      } else {
+        exportPDF(data, selectedColumns);
+      }
+      toast.success(`Exported ${data.length} products as ${format.toUpperCase()}`);
+      return data.length;
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Export failed. Please try again.');
+      return 0;
+    } finally {
+      setExporting(false);
+    }
   };
 
   // Returns true if this product will NOT appear in the client shop
@@ -248,12 +420,12 @@ const ProductManagement = () => {
         </div>
         <div className="flex gap-3">
           <button
-            onClick={exportProducts}
+            onClick={() => setShowExportModal(true)}
             disabled={loading || products.length === 0}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            Export
+            Export {totalProducts > 0 ? `(${totalProducts})` : ''}
           </button>
           <RoleBasedButton disabledRoles={['MANAGER']}>
             <button
@@ -724,6 +896,18 @@ const ProductManagement = () => {
           setShowEditModal(false);
           setSelectedProduct(null);
         }}
+      />
+
+      {/* Export Modal */}
+      <ProductExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExportFromModal}
+        totalProducts={totalProducts}
+        currentPageCount={products.length}
+        activeFilterCount={hasActiveFilters ? Object.values(filters).filter(v => v && v !== '').length : 0}
+        currentPage={currentPage}
+        totalPages={totalPages}
       />
     </div>
   );
