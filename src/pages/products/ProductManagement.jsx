@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -13,17 +13,13 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import {
-  productAPI,
-  brandAPI,
-  colorAPI,
-} from '../../utils/manageApi';
-import { getCategories } from '../../utils/categoryService';
-import ProductExportModal from '../../components/product/ProductExportModal';
-import ProductForm from '../../components/product/ProductForm';
-import RoleBasedButton from '../../components/layout/RoleBasedButton';
-import toast from 'react-hot-toast';
+} from "lucide-react";
+import { productAPI, brandAPI, colorAPI } from "../../utils/manageApi";
+import { getCategories } from "../../utils/categoryService";
+import ProductExportModal from "../../components/product/ProductExportModal";
+import ProductForm from "../../components/product/ProductForm";
+import RoleBasedButton from "../../components/layout/RoleBasedButton";
+import toast from "react-hot-toast";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -33,7 +29,7 @@ const ProductManagement = () => {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -43,26 +39,26 @@ const ProductManagement = () => {
 
   // Filters
   const [filters, setFilters] = useState({
-    category: '',
-    brand: '',
-    productType: '',
-    publish: '',
-    featured: '',
-    lowStock: '',      // 'true' = online stock <= 5
-    priceFilter: '',   // 'hasbtc', 'has3week', 'has5week', 'noPrice'
-    hiddenFromShop: '', // 'true' = published but invisible to customers
+    category: "",
+    brand: "",
+    productType: "",
+    publish: "",
+    featured: "",
+    lowStock: "", // 'true' = online stock <= 5
+    priceFilter: "", // 'hasbtc', 'has3week', 'has5week', 'noPrice'
+    hiddenFromShop: "", // 'true' = published but invisible to customers
   });
 
   const productTypes = [
-    'COFFEE',
-    'MACHINE',
-    'ACCESSORIES',
-    'COFFEE_BEANS',
-    'TEA',
-    'DRINKS',
+    "COFFEE",
+    "MACHINE",
+    "ACCESSORIES",
+    "COFFEE_BEANS",
+    "TEA",
+    "DRINKS",
   ];
 
-  const publishStates = ['PUBLISHED', 'PENDING', 'DRAFT'];
+  const publishStates = ["PUBLISHED", "PENDING", "DRAFT"];
 
   useEffect(() => {
     fetchProducts();
@@ -95,8 +91,8 @@ const ProductManagement = () => {
         setTotalProducts(response.totalCount || 0);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -107,7 +103,7 @@ const ProductManagement = () => {
       const cats = await getCategories();
       setCategories(cats);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     }
   };
 
@@ -118,7 +114,7 @@ const ProductManagement = () => {
         setBrands(response.data);
       }
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
     }
   };
 
@@ -129,7 +125,7 @@ const ProductManagement = () => {
         setColors(response.data);
       }
     } catch (error) {
-      console.error('Error fetching colors:', error);
+      console.error("Error fetching colors:", error);
     }
   };
 
@@ -143,13 +139,13 @@ const ProductManagement = () => {
       const response = await productAPI.deleteProduct(productId);
       if (response.success) {
         fetchProducts();
-        toast.success('Product deleted successfully!');
+        toast.success("Product deleted successfully!");
       } else {
-        toast.error(response.message || 'Failed to delete product');
+        toast.error(response.message || "Failed to delete product");
       }
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error(error.message || 'Failed to delete product');
+      console.error("Error deleting product:", error);
+      toast.error(error.message || "Failed to delete product");
     } finally {
       setLoading(false);
     }
@@ -167,78 +163,109 @@ const ProductManagement = () => {
 
   const clearFilters = () => {
     setFilters({
-      category: '',
-      brand: '',
-      productType: '',
-      publish: '',
-      featured: '',
+      category: "",
+      brand: "",
+      productType: "",
+      publish: "",
+      featured: "",
     });
-    setSearchTerm('');
+    setSearchTerm("");
     setCurrentPage(1);
   };
 
   // ── Column value extractor ───────────────────────────────────────────────
   const getColValue = (p, key) => {
     const onlineStock = p.partnerStock?.enabled
-      ? (p.partnerStock?.quantity || 0)
-      : (p.warehouseStock?.onlineStock || 0);
-    const offlineStock = p.partnerStock?.enabled ? '' : (p.warehouseStock?.offlineStock || 0);
+      ? p.partnerStock?.quantity || 0
+      : p.warehouseStock?.onlineStock || 0;
+    const offlineStock = p.partnerStock?.enabled
+      ? ""
+      : p.warehouseStock?.offlineStock || 0;
     const isPartner = p.partnerStock?.enabled === true;
     const has3weeks = (p.price3weeksDelivery || 0) > 0;
     const has5weeks = (p.price5weeksDelivery || 0) > 0;
-    const publishedNoStock = p.publish === 'PUBLISHED' && onlineStock === 0 && !isPartner && !has3weeks && !has5weeks;
-    const visibleInShop = p.publish === 'PUBLISHED' && !publishedNoStock ? 'Yes' : 'No';
+    const publishedNoStock =
+      p.publish === "PUBLISHED" &&
+      onlineStock === 0 &&
+      !isPartner &&
+      !has3weeks &&
+      !has5weeks;
+    const visibleInShop =
+      p.publish === "PUBLISHED" && !publishedNoStock ? "Yes" : "No";
 
     const map = {
       name: p.name,
       sku: p.sku,
-      category: p.category?.name || '',
-      subCategory: p.subCategory?.name || '',
-      brand: Array.isArray(p.brand) ? p.brand.map(b => b?.name || b).join('; ') : (p.brand?.name || ''),
-      compatibleSystem: p.compatibleSystem?.name || '',
-      producer: p.producer?.name || '',
-      productType: p.productType || '',
-      publish: p.publish || '',
-      featured: p.featured ? 'Yes' : 'No',
+      category: p.category?.name || "",
+      subCategory: p.subCategory?.name || "",
+      brand: Array.isArray(p.brand)
+        ? p.brand.map((b) => b?.name || b).join("; ")
+        : p.brand?.name || "",
+      compatibleSystem: p.compatibleSystem?.name || "",
+      producer: p.producer?.name || "",
+      productType: p.productType || "",
+      publish: p.publish || "",
+      featured: p.featured ? "Yes" : "No",
       visibleInShop,
-      btbPrice: p.btbPrice > 0 ? p.btbPrice : '',
-      btcPrice: p.btcPrice > 0 ? p.btcPrice : '',
-      price3weeks: p.price3weeksDelivery > 0 ? p.price3weeksDelivery : '',
-      price5weeks: p.price5weeksDelivery > 0 ? p.price5weeksDelivery : '',
+      btbPrice: p.btbPrice > 0 ? p.btbPrice : "",
+      btcPrice: p.btcPrice > 0 ? p.btcPrice : "",
+      price3weeks: p.price3weeksDelivery > 0 ? p.price3weeksDelivery : "",
+      price5weeks: p.price5weeksDelivery > 0 ? p.price5weeksDelivery : "",
       onlineStock,
       offlineStock,
-      partnerEnabled: isPartner ? 'Yes' : 'No',
-      partnerQty: isPartner ? (p.partnerStock?.quantity || 0) : '',
-      roastLevel: p.roastLevel || '',
-      blend: p.blend || '',
-      intensity: p.intensity || '',
-      coffeeOrigin: p.coffeeOrigin || '',
-      aromaticProfile: p.aromaticProfile || '',
-      weight: p.weight ? `${p.weight}kg` : '',
-      unit: p.unit || '',
-      packaging: p.packaging || '',
-      seoTitle: p.seoTitle || '',
-      seoDescription: p.seoDescription || '',
-      shortDescription: p.shortDescription || '',
-      createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '',
+      partnerEnabled: isPartner ? "Yes" : "No",
+      partnerQty: isPartner ? p.partnerStock?.quantity || 0 : "",
+      roastLevel: p.roastLevel || "",
+      blend: p.blend || "",
+      intensity: p.intensity || "",
+      coffeeOrigin: p.coffeeOrigin || "",
+      aromaticProfile: p.aromaticProfile || "",
+      weight: p.weight ? `${p.weight}kg` : "",
+      unit: p.unit || "",
+      packaging: p.packaging || "",
+      seoTitle: p.seoTitle || "",
+      seoDescription: p.seoDescription || "",
+      shortDescription: p.shortDescription || "",
+      createdAt: p.createdAt
+        ? new Date(p.createdAt).toLocaleDateString("en-GB")
+        : "",
     };
-    return map[key] ?? '';
+    return map[key] ?? "";
   };
 
   // Column display labels (same order as ALL_COLUMNS in modal)
   const COL_LABELS = {
-    name: 'Product Name', sku: 'SKU', category: 'Category', subCategory: 'Sub Category',
-    brand: 'Brand(s)', compatibleSystem: 'Compatible System', producer: 'Producer',
-    productType: 'Product Type', publish: 'Publish Status', featured: 'Featured',
-    visibleInShop: 'Visible in Shop', btbPrice: 'BTB Price (₦)', btcPrice: 'BTC Price (₦)',
-    price3weeks: '3-Week Price (₦)', price5weeks: '5-Week Price (₦)',
-    onlineStock: 'Online Stock', offlineStock: 'Offline Stock',
-    partnerEnabled: 'Partner Enabled', partnerQty: 'Partner Qty',
-    roastLevel: 'Roast Level', blend: 'Blend', intensity: 'Intensity',
-    coffeeOrigin: 'Coffee Origin', aromaticProfile: 'Aromatic Profile',
-    weight: 'Weight', unit: 'Unit', packaging: 'Packaging',
-    seoTitle: 'SEO Title', seoDescription: 'SEO Description',
-    shortDescription: 'Short Description', createdAt: 'Created At',
+    name: "Product Name",
+    sku: "SKU",
+    category: "Category",
+    subCategory: "Sub Category",
+    brand: "Brand(s)",
+    compatibleSystem: "Compatible System",
+    producer: "Producer",
+    productType: "Product Type",
+    publish: "Publish Status",
+    featured: "Featured",
+    visibleInShop: "Visible in Shop",
+    btbPrice: "BTB Price (₦)",
+    btcPrice: "BTC Price (₦)",
+    price3weeks: "3-Week Price (₦)",
+    price5weeks: "5-Week Price (₦)",
+    onlineStock: "Online Stock",
+    offlineStock: "Offline Stock",
+    partnerEnabled: "Partner Enabled",
+    partnerQty: "Partner Qty",
+    roastLevel: "Roast Level",
+    blend: "Blend",
+    intensity: "Intensity",
+    coffeeOrigin: "Coffee Origin",
+    aromaticProfile: "Aromatic Profile",
+    weight: "Weight",
+    unit: "Unit",
+    packaging: "Packaging",
+    seoTitle: "SEO Title",
+    seoDescription: "SEO Description",
+    shortDescription: "Short Description",
+    createdAt: "Created At",
   };
 
   // ── Fetch data for export ─────────────────────────────────────────────────
@@ -255,19 +282,27 @@ const ProductManagement = () => {
       hiddenFromShop: filters.hiddenFromShop,
     };
 
-    if (scope === 'page') {
+    if (scope === "page") {
       return products; // already loaded
     }
-    if (scope === 'filtered') {
-      const r = await productAPI.getProducts({ ...base, page: 1, limit: totalProducts || 10000 });
+    if (scope === "filtered") {
+      const r = await productAPI.getProducts({
+        ...base,
+        page: 1,
+        limit: totalProducts || 10000,
+      });
       return r.success ? r.data : products;
     }
-    if (scope === 'all') {
+    if (scope === "all") {
       const r = await productAPI.getProducts({ page: 1, limit: 10000 });
       return r.success ? r.data : products;
     }
-    if (scope === 'custom') {
-      const r = await productAPI.getProducts({ ...base, page: customPage, limit: customLimit });
+    if (scope === "custom") {
+      const r = await productAPI.getProducts({
+        ...base,
+        page: customPage,
+        limit: customLimit,
+      });
       return r.success ? r.data : [];
     }
     return products;
@@ -276,18 +311,21 @@ const ProductManagement = () => {
   // ── CSV export ────────────────────────────────────────────────────────────
   const exportCSV = (data, selectedColumns) => {
     const esc = (val) => {
-      const str = String(val ?? '');
-      return str.includes(',') || str.includes('"') || str.includes('\n')
-        ? `"${str.replace(/"/g, '""')}"` : str;
+      const str = String(val ?? "");
+      return str.includes(",") || str.includes('"') || str.includes("\n")
+        ? `"${str.replace(/"/g, '""')}"`
+        : str;
     };
-    const headers = selectedColumns.map(k => esc(COL_LABELS[k] || k));
-    const rows = data.map(p => selectedColumns.map(k => esc(getColValue(p, k))).join(','));
-    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const headers = selectedColumns.map((k) => esc(COL_LABELS[k] || k));
+    const rows = data.map((p) =>
+      selectedColumns.map((k) => esc(getColValue(p, k))).join(","),
+    );
+    const csv = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    const dateStr = new Date().toISOString().split('T')[0];
+    const dateStr = new Date().toISOString().split("T")[0];
     a.download = `products_${dateStr}.csv`;
     a.click();
     URL.revokeObjectURL(url);
@@ -295,24 +333,35 @@ const ProductManagement = () => {
 
   // ── PDF export (pure HTML→print, no library needed) ──────────────────────
   const exportPDF = (data, selectedColumns) => {
-    const dateStr = new Date().toLocaleDateString('en-GB');
+    const dateStr = new Date().toLocaleDateString("en-GB");
     const stockStatus = (p) => {
-      const stock = p.partnerStock?.enabled ? (p.partnerStock?.quantity || 0) : (p.warehouseStock?.onlineStock || 0);
-      const visible = p.publish === 'PUBLISHED' && (stock > 0 || p.partnerStock?.enabled || p.price3weeksDelivery > 0 || p.price5weeksDelivery > 0);
-      if (p.publish !== 'PUBLISHED') return '#9ca3af'; // grey
-      if (!visible) return '#ef4444';                  // red
-      if (stock === 0) return '#f97316';               // orange (special order)
-      if (stock <= 5) return '#f59e0b';               // amber (low)
-      return '#22c55e';                               // green
+      const stock = p.partnerStock?.enabled
+        ? p.partnerStock?.quantity || 0
+        : p.warehouseStock?.onlineStock || 0;
+      const visible =
+        p.publish === "PUBLISHED" &&
+        (stock > 0 ||
+          p.partnerStock?.enabled ||
+          p.price3weeksDelivery > 0 ||
+          p.price5weeksDelivery > 0);
+      if (p.publish !== "PUBLISHED") return "#9ca3af"; // grey
+      if (!visible) return "#ef4444"; // red
+      if (stock === 0) return "#f97316"; // orange (special order)
+      if (stock <= 5) return "#f59e0b"; // amber (low)
+      return "#22c55e"; // green
     };
 
-    const rows = data.map(p => `
+    const rows = data
+      .map(
+        (p) => `
       <tr style="border-bottom:1px solid #f0f0f0">
         <td style="padding:6px 8px;border-right:1px solid #f0f0f0">
           <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${stockStatus(p)};margin-right:6px;vertical-align:middle"></span>
         </td>
-        ${selectedColumns.map(k => `<td style="padding:6px 8px;border-right:1px solid #f0f0f0;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis">${String(getColValue(p, k) ?? '').replace(/</g,'&lt;')}</td>`).join('')}
-      </tr>`).join('');
+        ${selectedColumns.map((k) => `<td style="padding:6px 8px;border-right:1px solid #f0f0f0;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis">${String(getColValue(p, k) ?? "").replace(/</g, "&lt;")}</td>`).join("")}
+      </tr>`,
+      )
+      .join("");
 
     const html = `<!DOCTYPE html><html><head><title>Product Export — ${dateStr}</title>
     <style>
@@ -331,7 +380,7 @@ const ProductManagement = () => {
     <table>
       <thead><tr>
         <th style="width:18px"></th>
-        ${selectedColumns.map(k => `<th>${COL_LABELS[k] || k}</th>`).join('')}
+        ${selectedColumns.map((k) => `<th>${COL_LABELS[k] || k}</th>`).join("")}
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -345,26 +394,34 @@ const ProductManagement = () => {
     <script>window.onload=()=>{window.print();}</script>
     </body></html>`;
 
-    const w = window.open('', '_blank');
+    const w = window.open("", "_blank");
     w.document.write(html);
     w.document.close();
   };
 
   // ── Main export handler (called by modal) ─────────────────────────────────
-  const handleExportFromModal = async ({ format, scope, customLimit, customPage, selectedColumns }) => {
+  const handleExportFromModal = async ({
+    format,
+    scope,
+    customLimit,
+    customPage,
+    selectedColumns,
+  }) => {
     setExporting(true);
     try {
       const data = await fetchExportData({ scope, customLimit, customPage });
-      if (format === 'csv') {
+      if (format === "csv") {
         exportCSV(data, selectedColumns);
       } else {
         exportPDF(data, selectedColumns);
       }
-      toast.success(`Exported ${data.length} products as ${format.toUpperCase()}`);
+      toast.success(
+        `Exported ${data.length} products as ${format.toUpperCase()}`,
+      );
       return data.length;
     } catch (err) {
-      console.error('Export error:', err);
-      toast.error('Export failed. Please try again.');
+      console.error("Export error:", err);
+      toast.error("Export failed. Please try again.");
       return 0;
     } finally {
       setExporting(false);
@@ -374,7 +431,7 @@ const ProductManagement = () => {
   // Returns true if this product will NOT appear in the client shop
   // because it has no online stock, no partner stock, and no delivery price options
   const isHiddenFromShop = (product) => {
-    if (product.publish !== 'PUBLISHED') return false; // non-published are expected to be hidden
+    if (product.publish !== "PUBLISHED") return false; // non-published are expected to be hidden
     const onlineStock = product.warehouseStock?.onlineStock || 0;
     const isPartner = product.partnerStock?.enabled === true;
     const has3weeks = (product.price3weeksDelivery || 0) > 0;
@@ -388,10 +445,10 @@ const ProductManagement = () => {
   const getStatusBadge = (status) => {
     const statusClasses = {
       PUBLISHED:
-        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
       PENDING:
-        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-      DRAFT: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+      DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
     };
 
     return (
@@ -404,7 +461,7 @@ const ProductManagement = () => {
   };
 
   const hasActiveFilters =
-    Object.values(filters).some((value) => value !== '') || searchTerm !== '';
+    Object.values(filters).some((value) => value !== "") || searchTerm !== "";
 
   return (
     <div className="p-6">
@@ -425,9 +482,9 @@ const ProductManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            Export {totalProducts > 0 ? `(${totalProducts})` : ''}
+            Export {totalProducts > 0 ? `(${totalProducts})` : ""}
           </button>
-          <RoleBasedButton disabledRoles={['MANAGER']}>
+          <RoleBasedButton disabledRoles={["MANAGER"]}>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -456,10 +513,23 @@ const ProductManagement = () => {
             </div>
           </div>
 
+          {/* Hidden from shop filter */}
+          <select
+            value={filters.hiddenFromShop}
+            onChange={(e) =>
+              handleFilterChange("hiddenFromShop", e.target.value)
+            }
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="">All Visibility</option>
+            <option value="true">🚫 Hidden from shop</option>
+            <option value="false">✅ Visible in shop</option>
+          </select>
+
           {/* Category Filter */}
           <select
             value={filters.category}
-            onChange={(e) => handleFilterChange('category', e.target.value)}
+            onChange={(e) => handleFilterChange("category", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Categories</option>
@@ -473,7 +543,7 @@ const ProductManagement = () => {
           {/* Brand Filter */}
           <select
             value={filters.brand}
-            onChange={(e) => handleFilterChange('brand', e.target.value)}
+            onChange={(e) => handleFilterChange("brand", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Brands</option>
@@ -487,7 +557,7 @@ const ProductManagement = () => {
           {/* Product Type Filter */}
           <select
             value={filters.productType}
-            onChange={(e) => handleFilterChange('productType', e.target.value)}
+            onChange={(e) => handleFilterChange("productType", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Types</option>
@@ -501,7 +571,7 @@ const ProductManagement = () => {
           {/* Publish Status Filter */}
           <select
             value={filters.publish}
-            onChange={(e) => handleFilterChange('publish', e.target.value)}
+            onChange={(e) => handleFilterChange("publish", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Status</option>
@@ -515,7 +585,7 @@ const ProductManagement = () => {
           {/* Low Stock Filter */}
           <select
             value={filters.lowStock}
-            onChange={(e) => handleFilterChange('lowStock', e.target.value)}
+            onChange={(e) => handleFilterChange("lowStock", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Stock Levels</option>
@@ -526,7 +596,7 @@ const ProductManagement = () => {
           {/* Price Filter */}
           <select
             value={filters.priceFilter}
-            onChange={(e) => handleFilterChange('priceFilter', e.target.value)}
+            onChange={(e) => handleFilterChange("priceFilter", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Price States</option>
@@ -534,17 +604,6 @@ const ProductManagement = () => {
             <option value="has3week">Has 3-Week Price</option>
             <option value="has5week">Has 5-Week Price</option>
             <option value="noPrice">Missing All Prices</option>
-          </select>
-
-          {/* Hidden from shop filter */}
-          <select
-            value={filters.hiddenFromShop}
-            onChange={(e) => handleFilterChange('hiddenFromShop', e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="">All Visibility</option>
-            <option value="true">🚫 Hidden from shop</option>
-            <option value="false">✅ Visible in shop</option>
           </select>
 
           {/* Clear Filters */}
@@ -572,12 +631,12 @@ const ProductManagement = () => {
           <div className="text-center py-12">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {hasActiveFilters ? 'No products found' : 'No products yet'}
+              {hasActiveFilters ? "No products found" : "No products yet"}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {hasActiveFilters
-                ? 'Try adjusting your search or filters'
-                : 'Get started by creating your first product'}
+                ? "Try adjusting your search or filters"
+                : "Get started by creating your first product"}
             </p>
           </div>
         ) : (
@@ -653,7 +712,10 @@ const ProductManagement = () => {
                           </div>
                           {isHiddenFromShop(product) && (
                             <div className="flex items-center mt-1 gap-1">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 border border-red-300" title="This product is PUBLISHED but hidden from the client shop: no online stock, no partner stock, and no delivery price options.">
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 border border-red-300"
+                                title="This product is PUBLISHED but hidden from the client shop: no online stock, no partner stock, and no delivery price options."
+                              >
                                 🚫 Hidden from shop
                               </span>
                             </div>
@@ -673,10 +735,10 @@ const ProductManagement = () => {
                       {product.sku}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {product.category?.name || 'N/A'}
+                      {product.category?.name || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {product.brand?.map((b) => b.name).join(', ') || 'N/A'}
+                      {product.brand?.map((b) => b.name).join(", ") || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-xs font-medium">
@@ -685,34 +747,63 @@ const ProductManagement = () => {
                     </td>
                     {/* BTB Price */}
                     <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
-                      {(product.btbPrice && product.btbPrice > 0) ? `₦${Number(product.btbPrice).toLocaleString()}` : <span className="text-gray-300">—</span>}
+                      {product.btbPrice && product.btbPrice > 0 ? (
+                        `₦${Number(product.btbPrice).toLocaleString()}`
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
                     {/* BTC Price */}
                     <td className="px-4 py-4 whitespace-nowrap text-xs font-medium text-green-700 dark:text-green-400">
-                      {(product.btcPrice && product.btcPrice > 0) ? `₦${Number(product.btcPrice).toLocaleString()}` : <span className="text-red-400 font-normal">0</span>}
+                      {product.btcPrice && product.btcPrice > 0 ? (
+                        `₦${Number(product.btcPrice).toLocaleString()}`
+                      ) : (
+                        <span className="text-red-400 font-normal">0</span>
+                      )}
                     </td>
                     {/* 3-Week Price */}
                     <td className="px-4 py-4 whitespace-nowrap text-xs text-orange-700 dark:text-orange-400">
-                      {(product.price3weeksDelivery && product.price3weeksDelivery > 0) ? `₦${Number(product.price3weeksDelivery).toLocaleString()}` : <span className="text-gray-300">—</span>}
+                      {product.price3weeksDelivery &&
+                      product.price3weeksDelivery > 0 ? (
+                        `₦${Number(product.price3weeksDelivery).toLocaleString()}`
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
                     {/* 5-Week Price */}
                     <td className="px-4 py-4 whitespace-nowrap text-xs text-red-700 dark:text-red-400">
-                      {(product.price5weeksDelivery && product.price5weeksDelivery > 0) ? `₦${Number(product.price5weeksDelivery).toLocaleString()}` : <span className="text-gray-300">—</span>}
+                      {product.price5weeksDelivery &&
+                      product.price5weeksDelivery > 0 ? (
+                        `₦${Number(product.price5weeksDelivery).toLocaleString()}`
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
                     {/* Online Stock */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       {(() => {
                         const online = product.partnerStock?.enabled
-                          ? (product.partnerStock?.quantity || 0)
-                          : (product.warehouseStock?.onlineStock || 0);
+                          ? product.partnerStock?.quantity || 0
+                          : product.warehouseStock?.onlineStock || 0;
                         return (
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            online === 0 ? 'bg-red-100 text-red-700' :
-                            online <= 5 ? 'bg-orange-100 text-orange-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              online === 0
+                                ? "bg-red-100 text-red-700"
+                                : online <= 5
+                                  ? "bg-orange-100 text-orange-700"
+                                  : "bg-green-100 text-green-700"
+                            }`}
+                          >
                             {online}
-                            {product.partnerStock?.enabled && <span className="ml-1 text-purple-600" title="Partner stock">P</span>}
+                            {product.partnerStock?.enabled && (
+                              <span
+                                className="ml-1 text-purple-600"
+                                title="Partner stock"
+                              >
+                                P
+                              </span>
+                            )}
                           </span>
                         );
                       })()}
@@ -720,11 +811,17 @@ const ProductManagement = () => {
                     {/* Offline Stock */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       {product.partnerStock?.enabled ? (
-                        <span className="text-xs text-gray-400 italic">N/A</span>
+                        <span className="text-xs text-gray-400 italic">
+                          N/A
+                        </span>
                       ) : (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          (product.warehouseStock?.offlineStock || 0) === 0 ? 'bg-gray-100 text-gray-500' : 'bg-blue-100 text-blue-700'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            (product.warehouseStock?.offlineStock || 0) === 0
+                              ? "bg-gray-100 text-gray-500"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
                           {product.warehouseStock?.offlineStock || 0}
                         </span>
                       )}
@@ -736,14 +833,14 @@ const ProductManagement = () => {
                       <div className="flex items-center justify-end gap-2">
                         <RoleBasedButton
                           disabledRoles={[
-                            'SALES',
-                            'HR',
-                            'MANAGER',
-                            'SALES-MANAGER',
-                            'ACCOUNTANT',
-                            'GRAPHICS',
-                            'LOGISTICS',
-                            'WAREHOUSE',
+                            "SALES",
+                            "HR",
+                            "MANAGER",
+                            "SALES-MANAGER",
+                            "ACCOUNTANT",
+                            "GRAPHICS",
+                            "LOGISTICS",
+                            "WAREHOUSE",
                           ]}
                         >
                           <button
@@ -756,14 +853,14 @@ const ProductManagement = () => {
                         </RoleBasedButton>
                         <RoleBasedButton
                           disabledRoles={[
-                            'SALES',
-                            'HR',
-                            'MANAGER',
-                            'SALES-MANAGER',
-                            'ACCOUNTANT',
-                            'GRAPHICS',
-                            'LOGISTICS',
-                            'WAREHOUSE',
+                            "SALES",
+                            "HR",
+                            "MANAGER",
+                            "SALES-MANAGER",
+                            "ACCOUNTANT",
+                            "GRAPHICS",
+                            "LOGISTICS",
+                            "WAREHOUSE",
                           ]}
                         >
                           <button
@@ -810,15 +907,15 @@ const ProductManagement = () => {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Showing{' '}
+                    Showing{" "}
                     <span className="font-medium">
                       {(currentPage - 1) * 10 + 1}
-                    </span>{' '}
-                    to{' '}
+                    </span>{" "}
+                    to{" "}
                     <span className="font-medium">
                       {Math.min(currentPage * 10, totalProducts)}
-                    </span>{' '}
-                    of <span className="font-medium">{totalProducts}</span>{' '}
+                    </span>{" "}
+                    of <span className="font-medium">{totalProducts}</span>{" "}
                     results
                   </p>
                 </div>
@@ -851,8 +948,8 @@ const ProductManagement = () => {
                           onClick={() => setCurrentPage(pageNumber)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                             currentPage === pageNumber
-                              ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300'
-                              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                              ? "z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300"
+                              : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                           }`}
                         >
                           {pageNumber}
@@ -905,7 +1002,11 @@ const ProductManagement = () => {
         onExport={handleExportFromModal}
         totalProducts={totalProducts}
         currentPageCount={products.length}
-        activeFilterCount={hasActiveFilters ? Object.values(filters).filter(v => v && v !== '').length : 0}
+        activeFilterCount={
+          hasActiveFilters
+            ? Object.values(filters).filter((v) => v && v !== "").length
+            : 0
+        }
         currentPage={currentPage}
         totalPages={totalPages}
       />
