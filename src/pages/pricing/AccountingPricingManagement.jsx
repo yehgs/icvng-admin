@@ -286,7 +286,7 @@ const AccountingPricingManagement = () => {
     { value: "salePrice", label: "Sale Price" },
     { value: "btbPrice", label: "BTB Price" },
     { value: "btcPrice", label: "BTC Price" },
-    { value: "price3weeks", label: "3 Weeks Delivery" },
+    { value: "price3weeks", label: "2 Weeks Delivery" },
     { value: "price5weeks", label: "5 Weeks Delivery" },
   ];
 
@@ -665,7 +665,7 @@ const AccountingPricingManagement = () => {
               </span>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">3 Weeks:</span>
+              <span className="text-gray-600 dark:text-gray-400">2 Weeks:</span>
               <span className="ml-1 font-medium text-gray-900 dark:text-white">
                 +{pricingConfig.margins?.price3weeksDelivery}%
               </span>
@@ -729,7 +729,7 @@ const AccountingPricingManagement = () => {
                     "Sale Price",
                     "BTB Price",
                     "BTC Price",
-                    "3 Weeks",
+                    "2 Weeks",
                     "5 Weeks",
                     "Stock",
                     "Actions",
@@ -1274,7 +1274,7 @@ PROD-003,12000,,`}
                         </div>
                         <div className="text-gray-600 dark:text-gray-400">
                           The system will calculate: Sale Price, BTB Price, BTC
-                          Price, 3 Weeks Delivery, 5 Weeks Delivery (all with
+                          Price, 2 Weeks Delivery, 5 Weeks Delivery (all with
                           tax applied)
                         </div>
                       </div>
@@ -1288,7 +1288,7 @@ PROD-003,12000,,`}
                         <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border break-all">
                           Product Name, SKU, Base Price (Sub Price), Sale Price
                           (With Tax), BTB Price (With Tax), BTC Price (With
-                          Tax), 3 Weeks Delivery (With Tax), 5 Weeks Delivery
+                          Tax), 2 Weeks Delivery (With Tax), 5 Weeks Delivery
                           (With Tax)
                         </div>
                       </div>
@@ -1493,7 +1493,7 @@ PROD-003,12000,,`}
                             salePrice: "Sale Price",
                             btbPrice: "BTB Price",
                             btcPrice: "BTC Price",
-                            price3weeksDelivery: "3 Weeks Delivery",
+                            price3weeksDelivery: "2 Weeks Delivery",
                             price5weeksDelivery: "5 Weeks Delivery",
                           };
                           const margins = {

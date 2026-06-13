@@ -64,7 +64,7 @@ const DirectPricingManagement = () => {
   // Updated price types - removed salePrice and btbPrice
   const priceTypes = [
     { key: 'btcPrice', label: 'BTC Price', color: 'purple' },
-    { key: 'price3weeksDelivery', label: '3 Weeks Delivery', color: 'orange' },
+    { key: 'price3weeksDelivery', label: '2 Weeks Delivery', color: 'orange' },
     { key: 'price5weeksDelivery', label: '5 Weeks Delivery', color: 'red' },
   ];
 
@@ -668,7 +668,7 @@ const DirectPricingManagement = () => {
                   <p className="font-semibold mb-1">These prices update the product directly</p>
                   <ul className="space-y-0.5 text-blue-700">
                     <li>• <strong>BTC Price</strong> → <code className="bg-blue-100 px-1 rounded">product.btcPrice</code> (shown as the regular price on the website)</li>
-                    <li>• <strong>3 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price3weeksDelivery</code></li>
+                    <li>• <strong>2 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price3weeksDelivery</code></li>
                     <li>• <strong>5 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price5weeksDelivery</code></li>
                   </ul>
                   <p className="mt-1 text-blue-600">Changes take effect immediately on the website.</p>

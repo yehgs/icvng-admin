@@ -9,6 +9,7 @@ import {
   Package,
   Eye,
   Star,
+  Sparkles,
   Tag,
   Loader2,
   ChevronLeft,
@@ -725,6 +726,17 @@ const ProductManagement = () => {
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
                               <span className="text-xs text-yellow-600 dark:text-yellow-400 ml-1">
                                 Featured
+                              </span>
+                            </div>
+                          )}
+                          {product.limitedEdition?.isLimitedEdition && (
+                            <div className="flex items-center mt-1">
+                              <Sparkles className="h-3 w-3 text-red-500" />
+                              <span
+                                className="text-xs ml-1 font-medium"
+                                style={{ color: product.limitedEdition?.bannerColor || '#c8102e' }}
+                              >
+                                {product.limitedEdition?.bannerText || 'Limited Edition'}
                               </span>
                             </div>
                           )}

@@ -8,6 +8,8 @@ import {
   Star,
   Package,
   Plus,
+  Lock,
+  Sparkles,
 } from 'lucide-react';
 import ImageUploader from '../common/ImageUploader';
 import {
@@ -15,7 +17,7 @@ import {
   brandAPI,
   colorAPI,
 } from '../../utils/manageApi';
-import { supplierAPI } from '../../utils/api';
+import { supplierAPI, directPricingAPI } from '../../utils/api';
 import { getCategories, getSubCategories } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 
@@ -31,6 +33,14 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const regularBrands = brands.filter((b) => !b.compatibleSystem);
   const [suppliers, setSuppliers] = useState([]);
   const [errors, setErrors] = useState({});
+
+  // ── DirectPricing lock ────────────────────────────────────────────────────
+  // When an active DirectPricing record exists, the accountant owns the price
+  // fields. This form should display them as read-only so no one accidentally
+  // overwrites them from the general product editor.
+  const [directPricingLocked, setDirectPricingLocked] = useState(false);
+  const [directPricingData, setDirectPricingData] = useState(null);
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Quick-create supplier inline
   const [showNewSupplier, setShowNewSupplier] = useState(false);
@@ -51,6 +61,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     roastOrigin: '',
     blend: '',
     featured: false,
+    limitedEdition: {
+      isLimitedEdition: false,
+      bannerText: 'Limited Edition',
+      bannerColor: '#c8102e',
+      totalUnits: 0,
+      carouselOrder: 0,
+    },
     aromaticProfile: '',
     alcoholLevel: '',
     coffeeOrigin: '',
@@ -138,8 +155,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       fetchData();
       if (product) {
         populateForm(product);
+        // Check for active DirectPricing record — if found, lock price fields
+        checkDirectPricingLock(product._id);
       } else {
         resetForm();
+        setDirectPricingLocked(false);
+        setDirectPricingData(null);
       }
     }
   }, [isOpen, product]);
@@ -151,6 +172,36 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       setSubCategories([]);
     }
   }, [formData.category]);
+
+  // ── Check if an active DirectPricing record owns this product's prices ─────
+  const checkDirectPricingLock = async (productId) => {
+    if (!productId) return;
+    try {
+      const res = await directPricingAPI.getDirectPricing(productId);
+      if (res.success && res.data && res.data.isActive) {
+        setDirectPricingLocked(true);
+        setDirectPricingData(res.data.directPrices);
+        // Sync the form fields to show the authoritative DirectPricing values
+        setFormData((prev) => ({
+          ...prev,
+          btcPrice: res.data.directPrices.btcPrice > 0 ? String(res.data.directPrices.btcPrice) : prev.btcPrice,
+          price3weeksDelivery: res.data.directPrices.price3weeksDelivery > 0
+            ? String(res.data.directPrices.price3weeksDelivery)
+            : prev.price3weeksDelivery,
+          price5weeksDelivery: res.data.directPrices.price5weeksDelivery > 0
+            ? String(res.data.directPrices.price5weeksDelivery)
+            : prev.price5weeksDelivery,
+        }));
+      } else {
+        setDirectPricingLocked(false);
+        setDirectPricingData(null);
+      }
+    } catch (_) {
+      setDirectPricingLocked(false);
+      setDirectPricingData(null);
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const fetchData = async () => {
     setLoading(true);
@@ -239,6 +290,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       roastOrigin: productData.roastOrigin || '',
       blend: productData.blend || '',
       featured: productData.featured || false,
+      limitedEdition: {
+        isLimitedEdition: productData.limitedEdition?.isLimitedEdition || false,
+        bannerText: productData.limitedEdition?.bannerText || 'Limited Edition',
+        bannerColor: productData.limitedEdition?.bannerColor || '#c8102e',
+        totalUnits: productData.limitedEdition?.totalUnits || 0,
+        carouselOrder: productData.limitedEdition?.carouselOrder || 0,
+      },
       aromaticProfile: productData.aromaticProfile || '',
       alcoholLevel: productData.alcoholLevel || '',
       coffeeOrigin: productData.coffeeOrigin || '',
@@ -293,6 +351,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       roastOrigin: '',
       blend: '',
       featured: false,
+      limitedEdition: {
+        isLimitedEdition: false,
+        bannerText: 'Limited Edition',
+        bannerColor: '#c8102e',
+        totalUnits: 0,
+        carouselOrder: 0,
+      },
       aromaticProfile: '',
       alcoholLevel: '',
       coffeeOrigin: '',
@@ -349,7 +414,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     const w3 = parseFloat(formData.price3weeksDelivery) || 0;
     const w5 = parseFloat(formData.price5weeksDelivery) || 0;
     if (btc === 0 && w3 === 0 && w5 === 0) {
-      newErrors.prices = 'At least one of BTC Price, 3-Week Price, or 5-Week Price must be greater than 0';
+      newErrors.prices = 'At least one of BTC Price, 2-Week Price, or 5-Week Price must be greater than 0';
     }
 
     setErrors(newErrors);
@@ -411,6 +476,17 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
+  };
+
+  // Update a nested field inside formData.limitedEdition
+  const handleLimitedEditionChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      limitedEdition: {
+        ...prev.limitedEdition,
+        [field]: value,
+      },
+    }));
   };
 
   const handleMultiSelectChange = (field, value, checked) => {
@@ -934,8 +1010,24 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 Pricing
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                At least one of BTC, 3-Week, or 5-Week price is required.
+                At least one of BTC, 2-Week, or 5-Week price is required.
               </p>
+
+              {/* ── DirectPricing lock banner ──────────────────────────────── */}
+              {directPricingLocked && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2 text-sm">
+                  <Lock className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Prices managed by Direct Pricing</p>
+                    <p className="text-blue-700 text-xs mt-0.5">
+                      BTC Price, 3-Week, and 5-Week Delivery prices are locked because an Accountant
+                      has set them via <strong>Direct Pricing</strong>. To change them, go to{' '}
+                      <strong>Pricing Management → Direct Pricing</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {/* ─────────────────────────────────────────────────────────── */}
 
               {/* Price required warning */}
               {errors.prices && (
@@ -991,23 +1083,25 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     BTC Price <span className="text-red-500">*</span>
                     <span className="text-gray-400 font-normal ml-1">— shown as regular price on website</span>
+                    {directPricingLocked && <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1"><Lock className="w-3 h-3" /> Locked</span>}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₦</span>
                     <input type="number" min="0" step="0.01"
                       value={formData.btcPrice || ''}
-                      onChange={(e) => handleInputChange('btcPrice', e.target.value)}
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                      onChange={(e) => !directPricingLocked && handleInputChange('btcPrice', e.target.value)}
+                      readOnly={directPricingLocked}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'} ${directPricingLocked ? 'bg-blue-50 cursor-not-allowed opacity-75' : ''}`}
                       placeholder="0.00"
                     />
                   </div>
                   {errors.btcPrice && <p className="mt-1 text-xs text-red-600">{errors.btcPrice}</p>}
                 </div>
 
-                {/* 3-Week Delivery Price */}
+                {/* 2-Week Delivery Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    3-Week Delivery Price <span className="text-red-500">*</span>
+                    2-Week Delivery Price <span className="text-red-500">*</span>
                     <span className="text-gray-400 font-normal ml-1">— most categories</span>
                   </label>
                   <div className="relative">
@@ -1266,6 +1360,112 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     Featured Product
                   </span>
                 </label>
+
+                {/* ── Limited Edition ─────────────────────────────────────── */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mt-1">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.limitedEdition?.isLimitedEdition || false}
+                      onChange={(e) =>
+                        handleLimitedEditionChange('isLimitedEdition', e.target.checked)
+                      }
+                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    />
+                    <Sparkles className="ml-2 mr-1 h-4 w-4 text-red-500" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Limited Edition Product
+                    </span>
+                  </label>
+
+                  {formData.limitedEdition?.isLimitedEdition && (
+                    <div className="mt-3 pl-1 space-y-3">
+                      <p className="text-xs text-gray-400">
+                        Limited Edition products are shown in a dedicated banner + carousel on the homepage.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* Banner Text */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Banner Text
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.limitedEdition?.bannerText || ''}
+                            onChange={(e) => handleLimitedEditionChange('bannerText', e.target.value)}
+                            placeholder="e.g. Limited Edition"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                          />
+                        </div>
+
+                        {/* Banner Color */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Banner Color
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={formData.limitedEdition?.bannerColor || '#c8102e'}
+                              onChange={(e) => handleLimitedEditionChange('bannerColor', e.target.value)}
+                              className="w-10 h-9 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer p-0.5"
+                            />
+                            <input
+                              type="text"
+                              value={formData.limitedEdition?.bannerColor || '#c8102e'}
+                              onChange={(e) => handleLimitedEditionChange('bannerColor', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Total Units */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Total Units Available
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={formData.limitedEdition?.totalUnits || 0}
+                            onChange={(e) => handleLimitedEditionChange('totalUnits', parseInt(e.target.value) || 0)}
+                            placeholder="0"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                          />
+                        </div>
+
+                        {/* Carousel Order */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Carousel Order
+                            <span className="text-gray-400 font-normal ml-1">— lower shows first</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={formData.limitedEdition?.carouselOrder || 0}
+                            onChange={(e) => handleLimitedEditionChange('carouselOrder', parseInt(e.target.value) || 0)}
+                            placeholder="0"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Live preview */}
+                      <div
+                        className="rounded-lg px-4 py-3 flex items-center gap-2"
+                        style={{ background: formData.limitedEdition?.bannerColor || '#c8102e' }}
+                      >
+                        <Sparkles className="text-white w-4 h-4 flex-shrink-0" />
+                        <span className="text-white text-sm font-semibold">
+                          {formData.limitedEdition?.bannerText || 'Limited Edition'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* ─────────────────────────────────────────────────────────── */}
 
                 <label className="flex items-center">
                   <input

@@ -76,6 +76,14 @@ import WebsiteOrderManagement from './pages/order/WebsiteOrderManagement.jsx';
 //customer Management
 import CustomerManagement from './pages/customer/CustomerManagement.jsx';
 
+// Content Management
+import SliderManagement from './pages/content/SliderManagement.jsx';
+import BannerManagement from './pages/content/BannerManagement.jsx';
+import FomoManagement from './pages/content/FomoManagement.jsx';
+
+// Product Requests
+import ProductRequestManagement from './pages/products/ProductRequestManagement.jsx';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -540,6 +548,42 @@ const App = () => {
 
             {/* Settings - Accessible to all admin roles */}
             <Route path="settings" element={<Settings />} />
+
+            {/* Content Management Routes - Editor, IT, Director, Designer */}
+            <Route
+              path="sliders"
+              element={
+                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR', 'DESIGNER']}>
+                  <SliderManagement />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="banners"
+              element={
+                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR', 'DESIGNER']}>
+                  <BannerManagement />
+                </RoleProtectedRoute>
+              }
+            />
+            <Route
+              path="fomo"
+              element={
+                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}>
+                  <FomoManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
+            {/* Product Request Management - Sales, IT, Director */}
+            <Route
+              path="product-requests"
+              element={
+                <RoleProtectedRoute allowedSubRoles={['SALES', 'IT', 'DIRECTOR']}>
+                  <ProductRequestManagement />
+                </RoleProtectedRoute>
+              }
+            />
           </Route>
 
           {/* Redirect Routes */}

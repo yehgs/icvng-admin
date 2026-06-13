@@ -172,7 +172,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
               ) : (
                 <>
                   <strong>BTC Orders:</strong> Showing products with BTC pricing
-                  + online stock, or dropship options (3/5 weeks delivery).
+                  + online stock, or dropship options (2/5 weeks delivery).
                 </>
               )}
             </p>
@@ -342,14 +342,14 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
                             </div>
                           </div>
 
-                          {/* 3-Week Delivery Price */}
+                          {/* 2-Week Delivery Price */}
                           {priceOptions.threeWeeks && (
                             <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                               <div className="font-medium text-purple-600 dark:text-purple-400">
                                 ₦{priceOptions.threeWeeks.toLocaleString()}
                               </div>
                               <div className="text-xs text-purple-600 dark:text-purple-400">
-                                3 Weeks Delivery
+                                2 Weeks Delivery
                               </div>
                             </div>
                           )}

@@ -678,7 +678,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                                 )
                               </option>
                               <option value="3weeks">
-                                3 Weeks Delivery - Dropship (₦
+                                2 Weeks Delivery - Dropship (₦
                                 {item.productDetails.price3weeksDelivery?.toLocaleString() ||
                                   "0"}
                                 )

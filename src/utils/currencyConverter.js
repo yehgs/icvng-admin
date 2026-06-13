@@ -17,6 +17,7 @@ export class CurrencyConverter {
         GBP: 0.73,
         NGN: 1500,
         CNY: 7.2,
+        XOF: 600, // approx 1 USD ≈ 600 XOF
       };
     }
   }
