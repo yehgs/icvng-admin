@@ -642,7 +642,7 @@ const App = () => {
                     </RoleProtectedRoute>
                   }
                 />
-                
+
                 <Route
                   path="fomo"
                   element={
