@@ -89,6 +89,7 @@ import NotificationManagement from "./pages/notifications/NotificationManagement
 import SupportTicketManagement from "./pages/support/SupportTicketManagement";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
+import FinanceManagement from "./pages/finance/FinanceManagement";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -190,6 +191,15 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <PasswordVaultManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="dashboard/finance"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["DIRECTOR"]}>
+                      <FinanceManagement />
                     </RoleProtectedRoute>
                   }
                 />
