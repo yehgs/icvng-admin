@@ -42,6 +42,9 @@ import {
   Layout,
   Zap,
   Inbox,
+  Bell,
+  LifeBuoy,
+  Lock,
 } from "lucide-react";
 
 const AdminSidebar = ({
@@ -425,6 +428,30 @@ const AdminSidebar = ({
       title: "Activity Log",
       path: "/admin/activity",
       icon: Activity,
+      single: true,
+      allowedSubRoles: ["IT", "DIRECTOR"],
+    },
+    {
+      key: "notifications",
+      title: "Notifications",
+      path: "/admin/dashboard/notifications",
+      icon: Bell,
+      single: true,
+      allowedSubRoles: [],
+    },
+    {
+      key: "support-tickets",
+      title: "Support Tickets",
+      path: "/admin/dashboard/support-tickets",
+      icon: LifeBuoy,
+      single: true,
+      allowedSubRoles: [],
+    },
+    {
+      key: "password-vault",
+      title: "Password Vault",
+      path: "/admin/dashboard/password-vault",
+      icon: Lock,
       single: true,
       allowedSubRoles: ["IT", "DIRECTOR"],
     },

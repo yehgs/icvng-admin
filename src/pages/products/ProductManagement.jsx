@@ -690,7 +690,8 @@ const ProductManagement = () => {
                 {products.map((product) => (
                   <tr
                     key={product._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => handleEdit(product)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -734,9 +735,14 @@ const ProductManagement = () => {
                               <Sparkles className="h-3 w-3 text-red-500" />
                               <span
                                 className="text-xs ml-1 font-medium"
-                                style={{ color: product.limitedEdition?.bannerColor || '#c8102e' }}
+                                style={{
+                                  color:
+                                    product.limitedEdition?.bannerColor ||
+                                    "#c8102e",
+                                }}
                               >
-                                {product.limitedEdition?.bannerText || 'Limited Edition'}
+                                {product.limitedEdition?.bannerText ||
+                                  "Limited Edition"}
                               </span>
                             </div>
                           )}
@@ -856,7 +862,10 @@ const ProductManagement = () => {
                           ]}
                         >
                           <button
-                            onClick={() => handleEdit(product)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(product);
+                            }}
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                             title="Edit Product"
                           >
@@ -876,9 +885,10 @@ const ProductManagement = () => {
                           ]}
                         >
                           <button
-                            onClick={() =>
-                              handleDelete(product._id, product.name)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(product._id, product.name);
+                            }}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                             title="Delete Product"
                           >

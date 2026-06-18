@@ -1,88 +1,94 @@
 //admin
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
-} from 'react-router-dom';
-import { isTokenValid, getCurrentUser, clearAuthData } from './utils/api.js';
-import toast, { Toaster } from 'react-hot-toast';
+} from "react-router-dom";
+import { isTokenValid, getCurrentUser, clearAuthData } from "./utils/api.js";
+import toast, { Toaster } from "react-hot-toast";
 
 // Layout Component
-import DashboardLayout from './components/layout/DashboardLayout';
-import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
+import DashboardLayout from "./components/layout/DashboardLayout";
+import RoleProtectedRoute from "./components/auth/RoleProtectedRoute";
 
 // Auth Components
-import AdminLogin from './pages/auth/AdminLogin';
+import AdminLogin from "./pages/auth/AdminLogin";
 
 // Dashboard Components
-import DashboardOverview from './pages/dashboard/DashboardOverview';
-import ActivityLog from './pages/activity/ActivityLog';
+import DashboardOverview from "./pages/dashboard/DashboardOverview";
+import ActivityLog from "./pages/activity/ActivityLog";
 
 // Product Management Components
-import ProductManagement from './pages/products/ProductManagement';
-import CategoryManagement from './pages/products/CategoryManagement';
-import BrandManagement from './pages/products/BrandManagement';
-import ColorManagement from './pages/products/ColorManagement';
-import SubCategoryManagement from './pages/products/SubCategoryManagement.jsx';
-import TagManagement from './pages/products/TagManagement.jsx';
-import AttributeManagement from './pages/products/AttributeMangament.jsx';
-import CoffeeRoastAreaManagement from './pages/products/CoffeeRoastedArea.jsx';
+import ProductManagement from "./pages/products/ProductManagement";
+import CategoryManagement from "./pages/products/CategoryManagement";
+import BrandManagement from "./pages/products/BrandManagement";
+import ColorManagement from "./pages/products/ColorManagement";
+import SubCategoryManagement from "./pages/products/SubCategoryManagement.jsx";
+import TagManagement from "./pages/products/TagManagement.jsx";
+import AttributeManagement from "./pages/products/AttributeMangament.jsx";
+import CoffeeRoastAreaManagement from "./pages/products/CoffeeRoastedArea.jsx";
 
 // Procurement Components
-import SupplierManagement from './pages/suppliers/SupplierManagement';
-import PurchaseOrderManagement from './pages/purchase-order/PurchaseOrderManagement';
+import SupplierManagement from "./pages/suppliers/SupplierManagement";
+import PurchaseOrderManagement from "./pages/purchase-order/PurchaseOrderManagement";
 
 // Inventory Components
-import StockManagement from './pages/stock/StockManagement';
-import StockMovements from './pages/stock/StockMovements.jsx';
-import WarehouseManagement from './pages/stock/WarehouseManagement.jsx';
+import StockManagement from "./pages/stock/StockManagement";
+import StockMovements from "./pages/stock/StockMovements.jsx";
+import WarehouseManagement from "./pages/stock/WarehouseManagement.jsx";
 
 // Pricing Components
-import PricingManagement from './pages/pricing/PricingManagement';
-import PricingConfiguration from './pages/pricing/PricingConfiguration';
-import PricingUtilities from './pages/pricing/PricingUtilities.jsx';
-import ExchangeRates from './pages/pricing/ExchangeRates';
-import PriceCalculation from './pages/pricing/PriceCalculation.jsx';
-import AccountingPricingManagement from './pages/pricing/AccountingPricingManagement.jsx';
-import DirectPricingManagement from './pages/pricing/DirectPricingManagement.jsx';
+import PricingManagement from "./pages/pricing/PricingManagement";
+import PricingConfiguration from "./pages/pricing/PricingConfiguration";
+import PricingUtilities from "./pages/pricing/PricingUtilities.jsx";
+import ExchangeRates from "./pages/pricing/ExchangeRates";
+import PriceCalculation from "./pages/pricing/PriceCalculation.jsx";
+import AccountingPricingManagement from "./pages/pricing/AccountingPricingManagement.jsx";
+import DirectPricingManagement from "./pages/pricing/DirectPricingManagement.jsx";
 
 // Reports Components
-import InventoryReports from './pages/reports/InventoryReports';
-import PricingReports from './pages/reports/PricingReports';
-import PurchaseReports from './pages/reports/PurchaseReports';
+import InventoryReports from "./pages/reports/InventoryReports";
+import PricingReports from "./pages/reports/PricingReports";
+import PurchaseReports from "./pages/reports/PurchaseReports";
 
 // User Management
-import UserManagement from './pages/users/UserManagement';
+import UserManagement from "./pages/users/UserManagement";
 
 //blog Management
-import BlogPosts from './pages/blog/BlogPosts.jsx';
-import BlogTags from './pages/blog/BlogTags.jsx';
-import BlogCategories from './pages/blog/BlogCategories.jsx';
+import BlogPosts from "./pages/blog/BlogPosts.jsx";
+import BlogTags from "./pages/blog/BlogTags.jsx";
+import BlogCategories from "./pages/blog/BlogCategories.jsx";
 
 // logistics Components and tracking
-import LogisticsManagement from './pages/logistics/LogisticsManagement';
-import TrackingManagement from './pages/logistics/TrackingManagement';
+import LogisticsManagement from "./pages/logistics/LogisticsManagement";
+import TrackingManagement from "./pages/logistics/TrackingManagement";
 
 // Settings & Other
-import Settings from './pages/settings/Settings';
-import NotFound from './pages/NotFound';
+import Settings from "./pages/settings/Settings";
+import NotFound from "./pages/NotFound";
 
 // Order Management
-import OfflineOrderManagement from './pages/order/OfflineOrderManagement.jsx';
-import WebsiteOrderManagement from './pages/order/WebsiteOrderManagement.jsx';
+import OfflineOrderManagement from "./pages/order/OfflineOrderManagement.jsx";
+import WebsiteOrderManagement from "./pages/order/WebsiteOrderManagement.jsx";
 
 //customer Management
-import CustomerManagement from './pages/customer/CustomerManagement.jsx';
+import CustomerManagement from "./pages/customer/CustomerManagement.jsx";
 
 // Content Management
-import SliderManagement from './pages/content/SliderManagement.jsx';
-import BannerManagement from './pages/content/BannerManagement.jsx';
-import FomoManagement from './pages/content/FomoManagement.jsx';
+import SliderManagement from "./pages/content/SliderManagement.jsx";
+import BannerManagement from "./pages/content/BannerManagement.jsx";
+import FomoManagement from "./pages/content/FomoManagement.jsx";
 
 // Product Requests
-import ProductRequestManagement from './pages/products/ProductRequestManagement.jsx';
+import ProductRequestManagement from "./pages/products/ProductRequestManagement.jsx";
+
+import { NotificationProvider } from "./contexts/NotificationContext";
+import NotificationManagement from "./pages/notifications/NotificationManagement";
+import SupportTicketManagement from "./pages/support/SupportTicketManagement";
+import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
+import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -91,10 +97,10 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       const userData = getCurrentUser();
 
-      if (token && isTokenValid() && userData && userData.role === 'ADMIN') {
+      if (token && isTokenValid() && userData && userData.role === "ADMIN") {
         setIsAuthenticated(true);
       } else {
         clearAuthData();
@@ -106,15 +112,14 @@ const ProtectedRoute = ({ children }) => {
 
     checkAuth();
 
-    // Listen for storage changes (logout from another tab)
     const handleStorageChange = (e) => {
-      if (e.key === 'accessToken' && !e.newValue) {
+      if (e.key === "accessToken" && !e.newValue) {
         setIsAuthenticated(false);
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   if (isLoading) {
@@ -137,467 +142,544 @@ const ProtectedRoute = ({ children }) => {
 // Main App Component
 const App = () => {
   return (
-    <Router>
-      <div className="">
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-            success: {
-              duration: 3000,
-              theme: {
-                primary: 'green',
-                secondary: 'black',
-              },
-            },
-          }}
-        />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<AdminLogin />} />
-          <Route path="/login" element={<AdminLogin />} />
+    <NotificationProvider>
+      <div>
+        <Router>
+          <div className="">
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: { background: "#363636", color: "#fff" },
+                success: {
+                  duration: 3000,
+                  theme: { primary: "green", secondary: "black" },
+                },
+              }}
+            />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<AdminLogin />} />
+              <Route path="/login" element={<AdminLogin />} />
 
-          {/* Protected Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }
-          >
-            {/* Dashboard - Accessible to all admin roles */}
-            <Route index element={<DashboardOverview />} />
-            <Route path="dashboard" element={<DashboardOverview />} />
-            <Route path="activity" element={<ActivityLog />} />
-
-            {/* Product Management Routes - All admin roles */}
-            <Route path="products" element={<ProductManagement />} />
-            <Route
-              path="categories"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <CategoryManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="brands"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <BrandManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="colors"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <ColorManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="logistics"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER']}
-                >
-                  <LogisticsManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="tracking"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'LOGISTICS', 'MANAGER']}
-                >
-                  <TrackingManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="sub-categories"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <SubCategoryManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="tags"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <TagManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="attributes"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <AttributeManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="coffee-roasted-areas"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}
-                >
-                  <CoffeeRoastAreaManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Procurement Routes - Specific roles */}
-            <Route
-              path="suppliers"
-              element={
-                <RoleProtectedRoute allowedSubRoles={['DIRECTOR', 'IT']}>
-                  <SupplierManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="purchase-orders"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'MANAGER', 'WAREHOUSE']}
-                >
-                  <PurchaseOrderManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Inventory Management Routes - Warehouse and management roles */}
-            <Route
-              path="stock"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={[
-                    'IT',
-                    'DIRECTOR',
-                    'WAREHOUSE',
-                    'MANAGER',
-                    'HR',
-                  ]}
-                >
-                  <StockManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="stock-movements"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'WAREHOUSE', 'MANAGER']}
-                >
-                  <StockMovements />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="warehouse"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={[
-                    'IT',
-                    'DIRECTOR',
-                    'WAREHOUSE',
-                    'MANAGER',
-                    'HR',
-                  ]}
-                >
-                  <WarehouseManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="offline-orders"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'HR']}
-                >
-                  <OfflineOrderManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="website-orders"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER', 'HR']}
-                >
-                  <WebsiteOrderManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Customer Management Routes - Specific roles */}
-            <Route
-              path="customers"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'SALES', 'MANAGER']}
-                >
-                  <CustomerManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Pricing Management Routes - Financial roles */}
-            <Route
-              path="pricing"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
-                >
-                  <PricingManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="direct-pricing"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={[
-                    'IT',
-                    'DIRECTOR',
-                    'ACCOUNTANT',
-                    'EDITOR',
-                    'MANAGER',
-                  ]}
-                >
-                  <DirectPricingManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="pricing-lists"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
-                >
-                  <AccountingPricingManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="pricing-config"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
-                >
-                  <PricingConfiguration />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="price-calculation"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
-                >
-                  <PriceCalculation />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="price-utilities"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
-                >
-                  <PricingUtilities />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="exchange-rates"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'ACCOUNTANT', 'MANAGER']}
-                >
-                  <ExchangeRates />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Blog Management Routes - Editor, IT, Director roles */}
-            <Route
-              path="blog"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR', 'MANAGER']}
-                >
-                  <BlogPosts />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="blog/categories"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR', 'MANAGER']}
-                >
-                  <BlogCategories />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="blog/tags"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['EDITOR', 'IT', 'DIRECTOR', 'MANAGER']}
-                >
-                  <BlogTags />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Reports Routes - Most roles can view reports */}
-            <Route path="reports">
+              {/* Protected Admin Routes */}
               <Route
-                path="inventory"
+                path="/admin"
                 element={
-                  <RoleProtectedRoute
-                    allowedSubRoles={[
-                      'IT',
-                      'DIRECTOR',
-                      'WAREHOUSE',
-                      'MANAGER',
-                      'ACCOUNTANT',
-                    ]}
-                  >
-                    <InventoryReports />
-                  </RoleProtectedRoute>
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
                 }
-              />
+              >
+                {/* Dashboard */}
+                <Route index element={<DashboardOverview />} />
+                <Route path="dashboard" element={<DashboardOverview />} />
+                <Route path="activity" element={<ActivityLog />} />
+
+                {/* Notifications, Support, Password Vault — nested inside /admin */}
+                <Route
+                  path="dashboard/notifications"
+                  element={<NotificationManagement />}
+                />
+                <Route
+                  path="dashboard/support-tickets"
+                  element={<SupportTicketManagement />}
+                />
+                <Route
+                  path="dashboard/password-vault"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                      <PasswordVaultManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Product Management Routes */}
+                <Route path="products" element={<ProductManagement />} />
+                <Route
+                  path="categories"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <CategoryManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="brands"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <BrandManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="colors"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <ColorManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="logistics"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "LOGISTICS",
+                        "MANAGER",
+                      ]}
+                    >
+                      <LogisticsManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="tracking"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "LOGISTICS",
+                        "MANAGER",
+                      ]}
+                    >
+                      <TrackingManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="sub-categories"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <SubCategoryManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="tags"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <TagManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="attributes"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <AttributeManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="coffee-roasted-areas"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <CoffeeRoastAreaManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Procurement */}
+                <Route
+                  path="suppliers"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["DIRECTOR", "IT"]}>
+                      <SupplierManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="purchase-orders"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "MANAGER",
+                        "WAREHOUSE",
+                      ]}
+                    >
+                      <PurchaseOrderManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Inventory */}
+                <Route
+                  path="stock"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "WAREHOUSE",
+                        "MANAGER",
+                        "HR",
+                      ]}
+                    >
+                      <StockManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="stock-movements"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "WAREHOUSE",
+                        "MANAGER",
+                      ]}
+                    >
+                      <StockMovements />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="warehouse"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "WAREHOUSE",
+                        "MANAGER",
+                        "HR",
+                      ]}
+                    >
+                      <WarehouseManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="offline-orders"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "SALES",
+                        "MANAGER",
+                        "HR",
+                      ]}
+                    >
+                      <OfflineOrderManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="website-orders"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "SALES",
+                        "MANAGER",
+                        "HR",
+                      ]}
+                    >
+                      <WebsiteOrderManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Customers */}
+                <Route
+                  path="customers"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "SALES", "MANAGER"]}
+                    >
+                      <CustomerManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Pricing */}
+                <Route
+                  path="pricing"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "MANAGER",
+                      ]}
+                    >
+                      <PricingManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="direct-pricing"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "EDITOR",
+                        "MANAGER",
+                      ]}
+                    >
+                      <DirectPricingManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="pricing-lists"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "MANAGER",
+                      ]}
+                    >
+                      <AccountingPricingManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="pricing-config"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "MANAGER",
+                      ]}
+                    >
+                      <PricingConfiguration />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="price-calculation"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "MANAGER",
+                      ]}
+                    >
+                      <PriceCalculation />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="price-utilities"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "MANAGER",
+                      ]}
+                    >
+                      <PricingUtilities />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="exchange-rates"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "ACCOUNTANT",
+                        "MANAGER",
+                      ]}
+                    >
+                      <ExchangeRates />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Blog */}
+                <Route
+                  path="blog"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["EDITOR", "IT", "DIRECTOR", "MANAGER"]}
+                    >
+                      <BlogPosts />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="blog/categories"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["EDITOR", "IT", "DIRECTOR", "MANAGER"]}
+                    >
+                      <BlogCategories />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="blog/tags"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["EDITOR", "IT", "DIRECTOR", "MANAGER"]}
+                    >
+                      <BlogTags />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Reports */}
+                <Route path="reports">
+                  <Route
+                    path="inventory"
+                    element={
+                      <RoleProtectedRoute
+                        allowedSubRoles={[
+                          "IT",
+                          "DIRECTOR",
+                          "WAREHOUSE",
+                          "MANAGER",
+                          "ACCOUNTANT",
+                        ]}
+                      >
+                        <InventoryReports />
+                      </RoleProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="pricing"
+                    element={
+                      <RoleProtectedRoute
+                        allowedSubRoles={[
+                          "IT",
+                          "DIRECTOR",
+                          "ACCOUNTANT",
+                          "MANAGER",
+                        ]}
+                      >
+                        <PricingReports />
+                      </RoleProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="purchase"
+                    element={
+                      <RoleProtectedRoute
+                        allowedSubRoles={[
+                          "IT",
+                          "DIRECTOR",
+                          "WAREHOUSE",
+                          "MANAGER",
+                          "ACCOUNTANT",
+                        ]}
+                      >
+                        <PurchaseReports />
+                      </RoleProtectedRoute>
+                    }
+                  />
+                </Route>
+
+                {/* Users */}
+                <Route
+                  path="users"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "HR", "MANAGER"]}
+                    >
+                      <UserManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Settings */}
+                <Route path="settings" element={<Settings />} />
+
+                {/* Content */}
+                <Route
+                  path="sliders"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                    >
+                      <SliderManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="banners"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                    >
+                      <BannerManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="fomo"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                    >
+                      <FomoManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Product Requests */}
+                <Route
+                  path="product-requests"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["SALES", "IT", "DIRECTOR"]}
+                    >
+                      <ProductRequestManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Redirect Routes */}
+              <Route path="/" element={<Navigate to="/admin" replace />} />
               <Route
-                path="pricing"
-                element={
-                  <RoleProtectedRoute
-                    allowedSubRoles={[
-                      'IT',
-                      'DIRECTOR',
-                      'ACCOUNTANT',
-                      'MANAGER',
-                    ]}
-                  >
-                    <PricingReports />
-                  </RoleProtectedRoute>
-                }
+                path="/dashboard"
+                element={<Navigate to="/admin/dashboard" replace />}
               />
-              <Route
-                path="purchase"
-                element={
-                  <RoleProtectedRoute
-                    allowedSubRoles={[
-                      'IT',
-                      'DIRECTOR',
-                      'WAREHOUSE',
-                      'MANAGER',
-                      'ACCOUNTANT',
-                    ]}
-                  >
-                    <PurchaseReports />
-                  </RoleProtectedRoute>
-                }
-              />
-            </Route>
 
-            {/* User Management - HR, IT, Director only */}
-            <Route
-              path="users"
-              element={
-                <RoleProtectedRoute
-                  allowedSubRoles={['IT', 'DIRECTOR', 'HR', 'MANAGER']}
-                >
-                  <UserManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Settings - Accessible to all admin roles */}
-            <Route path="settings" element={<Settings />} />
-
-            {/* Content Management Routes - Editor, IT, Director, Designer */}
-            <Route
-              path="sliders"
-              element={
-                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR', 'DESIGNER']}>
-                  <SliderManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="banners"
-              element={
-                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR', 'DESIGNER']}>
-                  <BannerManagement />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="fomo"
-              element={
-                <RoleProtectedRoute allowedSubRoles={['IT', 'DIRECTOR', 'EDITOR']}>
-                  <FomoManagement />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Product Request Management - Sales, IT, Director */}
-            <Route
-              path="product-requests"
-              element={
-                <RoleProtectedRoute allowedSubRoles={['SALES', 'IT', 'DIRECTOR']}>
-                  <ProductRequestManagement />
-                </RoleProtectedRoute>
-              }
-            />
-          </Route>
-
-          {/* Redirect Routes */}
-          <Route path="/" element={<Navigate to="/admin" replace />} />
-          <Route
-            path="/dashboard"
-            element={<Navigate to="/admin/dashboard" replace />}
-          />
-
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </Router>
       </div>
-    </Router>
+    </NotificationProvider>
   );
 };
 

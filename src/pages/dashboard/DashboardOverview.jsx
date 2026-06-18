@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Users,
   Shield,
@@ -31,13 +31,14 @@ import {
   Folder,
   Heart,
   Star,
-} from 'lucide-react';
-import { authAPI, getCurrentUser, activityLogAPI } from '../../utils/api';
+} from "lucide-react";
+import AnnouncementPopup from "../../components/notifications/AnnouncementPopup";
+import { authAPI, getCurrentUser, activityLogAPI } from "../../utils/api";
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [recentLogs, setRecentLogs] = useState([]);
   const currentUser = getCurrentUser();
@@ -45,7 +46,7 @@ const DashboardOverview = () => {
 
   // Fetch real activity logs for the dashboard panel (DIRECTOR + IT only)
   const fetchRecentLogs = async () => {
-    if (!['DIRECTOR', 'IT'].includes(currentUser?.subRole)) return;
+    if (!["DIRECTOR", "IT"].includes(currentUser?.subRole)) return;
     try {
       const data = await activityLogAPI.getLogs({ page: 1, limit: 6 });
       if (data.success) setRecentLogs(data.data || []);
@@ -62,15 +63,15 @@ const DashboardOverview = () => {
       } else {
         setLoading(true);
       }
-      setError('');
+      setError("");
 
       const response = await authAPI.getStats();
       if (response.success) {
         setStats(response.data);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      setError('Failed to load dashboard statistics');
+      console.error("Error fetching stats:", error);
+      setError("Failed to load dashboard statistics");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -157,8 +158,8 @@ const DashboardOverview = () => {
         disabled={disabled}
         className={`w-full text-left p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all ${
           disabled
-            ? 'opacity-50 cursor-not-allowed'
-            : 'hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-0.5'
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-0.5"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -184,13 +185,13 @@ const DashboardOverview = () => {
     title,
     description,
     time,
-    type = 'info',
+    type = "info",
   }) => {
     const typeColors = {
-      success: 'text-green-600 bg-green-100 dark:bg-green-900',
-      warning: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900',
-      error: 'text-red-600 bg-red-100 dark:bg-red-900',
-      info: 'text-blue-600 bg-blue-100 dark:bg-blue-900',
+      success: "text-green-600 bg-green-100 dark:bg-green-900",
+      warning: "text-yellow-600 bg-yellow-100 dark:bg-yellow-900",
+      error: "text-red-600 bg-red-100 dark:bg-red-900",
+      info: "text-blue-600 bg-blue-100 dark:bg-blue-900",
     };
 
     return (
@@ -215,659 +216,659 @@ const DashboardOverview = () => {
   const getDashboardConfig = (subRole) => {
     const configs = {
       IT: {
-        title: 'System Administration Dashboard',
+        title: "System Administration Dashboard",
         description:
-          'Monitor system health, manage users, and maintain infrastructure',
+          "Monitor system health, manage users, and maintain infrastructure",
         stats: [
           {
-            title: 'Total Users',
+            title: "Total Users",
             value: stats.overview?.totalUsers,
             icon: Users,
-            color: 'text-blue-600',
+            color: "text-blue-600",
             trend: `+${stats.activity?.recentRegistrations || 0} this month`,
-            description: 'All registered users',
+            description: "All registered users",
           },
           {
-            title: 'System Health',
-            value: loading ? '...' : 'Optimal',
+            title: "System Health",
+            value: loading ? "..." : "Optimal",
             icon: Monitor,
-            color: 'text-green-600',
-            description: 'All systems operational',
+            color: "text-green-600",
+            description: "All systems operational",
           },
           {
-            title: 'Database',
-            value: loading ? '...' : '99.9%',
+            title: "Database",
+            value: loading ? "..." : "99.9%",
             icon: Database,
-            color: 'text-purple-600',
-            description: 'Uptime this month',
+            color: "text-purple-600",
+            description: "Uptime this month",
           },
           {
-            title: 'Active Sessions',
+            title: "Active Sessions",
             value: stats.activity?.recentLogins,
             icon: Activity,
-            color: 'text-amber-600',
-            description: 'Current active users',
+            color: "text-amber-600",
+            description: "Current active users",
           },
         ],
         quickActions: [
           {
-            title: 'User Management',
-            description: 'Manage all user accounts and permissions',
+            title: "User Management",
+            description: "Manage all user accounts and permissions",
             icon: Users,
-            color: 'bg-blue-600',
-            link: '/admin/users',
+            color: "bg-blue-600",
+            link: "/admin/users",
           },
           {
-            title: 'System Settings',
-            description: 'Configure system-wide settings',
+            title: "System Settings",
+            description: "Configure system-wide settings",
             icon: Settings,
-            color: 'bg-gray-600',
-            link: '/admin/settings',
+            color: "bg-gray-600",
+            link: "/admin/settings",
           },
           {
-            title: 'Database Management',
-            description: 'Monitor and maintain database',
+            title: "Database Management",
+            description: "Monitor and maintain database",
             icon: Database,
-            color: 'bg-purple-600',
-            link: '/admin/database',
+            color: "bg-purple-600",
+            link: "/admin/database",
           },
           {
-            title: 'Product Management',
-            description: 'Manage product catalog',
+            title: "Product Management",
+            description: "Manage product catalog",
             icon: Package,
-            color: 'bg-green-600',
-            link: '/admin/products',
+            color: "bg-green-600",
+            link: "/admin/products",
           },
         ],
       },
       DIRECTOR: {
-        title: 'Executive Dashboard',
+        title: "Executive Dashboard",
         description:
-          'Executive overview of business performance and strategic metrics',
+          "Executive overview of business performance and strategic metrics",
         stats: [
           {
-            title: 'Monthly Revenue',
-            value: '$48,432',
+            title: "Monthly Revenue",
+            value: "$48,432",
             icon: DollarSign,
-            color: 'text-green-600',
-            trend: '+12% from last month',
-            description: 'Total revenue',
+            color: "text-green-600",
+            trend: "+12% from last month",
+            description: "Total revenue",
           },
           {
-            title: 'Total Users',
+            title: "Total Users",
             value: stats.overview?.totalUsers,
             icon: Users,
-            color: 'text-blue-600',
+            color: "text-blue-600",
             trend: `+${stats.activity?.recentRegistrations || 0} new users`,
-            description: 'Customer base',
+            description: "Customer base",
           },
           {
-            title: 'Orders',
-            value: '1,847',
+            title: "Orders",
+            value: "1,847",
             icon: ShoppingCart,
-            color: 'text-purple-600',
-            trend: '+8% this month',
-            description: 'Total orders',
+            color: "text-purple-600",
+            trend: "+8% this month",
+            description: "Total orders",
           },
           {
-            title: 'Growth Rate',
-            value: '15.3%',
+            title: "Growth Rate",
+            value: "15.3%",
             icon: TrendingUp,
-            color: 'text-amber-600',
-            description: 'Monthly growth',
+            color: "text-amber-600",
+            description: "Monthly growth",
           },
         ],
         quickActions: [
           {
-            title: 'Analytics Overview',
-            description: 'View business performance metrics',
+            title: "Analytics Overview",
+            description: "View business performance metrics",
             icon: BarChart3,
-            color: 'bg-blue-600',
-            link: '/admin/analytics',
+            color: "bg-blue-600",
+            link: "/admin/analytics",
           },
           {
-            title: 'User Management',
-            description: 'Manage all staff and customers',
+            title: "User Management",
+            description: "Manage all staff and customers",
             icon: Users,
-            color: 'bg-green-600',
-            link: '/admin/users',
+            color: "bg-green-600",
+            link: "/admin/users",
           },
           {
-            title: 'Financial Reports',
-            description: 'Revenue and financial analytics',
+            title: "Financial Reports",
+            description: "Revenue and financial analytics",
             icon: DollarSign,
-            color: 'bg-purple-600',
-            link: '/admin/finance',
+            color: "bg-purple-600",
+            link: "/admin/finance",
           },
           {
-            title: 'Product Strategy',
-            description: 'Product performance and planning',
+            title: "Product Strategy",
+            description: "Product performance and planning",
             icon: Package,
-            color: 'bg-amber-600',
-            link: '/admin/products',
+            color: "bg-amber-600",
+            link: "/admin/products",
           },
         ],
       },
       HR: {
-        title: 'Human Resources Dashboard',
+        title: "Human Resources Dashboard",
         description:
-          'Manage staff, recruitment, and human resources operations',
+          "Manage staff, recruitment, and human resources operations",
         stats: [
           {
-            title: 'Total Staff',
+            title: "Total Staff",
             value: stats.overview?.totalAdmins,
             icon: Users,
-            color: 'text-blue-600',
-            description: 'Active employees',
+            color: "text-blue-600",
+            description: "Active employees",
           },
           {
-            title: 'New Hires',
+            title: "New Hires",
             value: stats.activity?.recentRegistrations,
             icon: UserPlus,
-            color: 'text-green-600',
-            description: 'This month',
+            color: "text-green-600",
+            description: "This month",
           },
           {
-            title: 'Departments',
+            title: "Departments",
             value: stats.adminsBySubRole?.length || 8,
             icon: Shield,
-            color: 'text-purple-600',
-            description: 'Active departments',
+            color: "text-purple-600",
+            description: "Active departments",
           },
           {
-            title: 'Active Today',
+            title: "Active Today",
             value: stats.activity?.recentLogins,
             icon: Activity,
-            color: 'text-amber-600',
-            description: 'Staff logged in today',
+            color: "text-amber-600",
+            description: "Staff logged in today",
           },
         ],
         quickActions: [
           {
-            title: 'Staff Management',
-            description: 'Manage employee accounts',
+            title: "Staff Management",
+            description: "Manage employee accounts",
             icon: Users,
-            color: 'bg-blue-600',
-            link: '/admin/users',
+            color: "bg-blue-600",
+            link: "/admin/users",
           },
           {
-            title: 'New Employee',
-            description: 'Onboard new team members',
+            title: "New Employee",
+            description: "Onboard new team members",
             icon: UserPlus,
-            color: 'bg-green-600',
-            link: '/admin/users',
-            onClick: () => navigate('/admin/users?action=create'),
+            color: "bg-green-600",
+            link: "/admin/users",
+            onClick: () => navigate("/admin/users?action=create"),
           },
           {
-            title: 'Employee Reports',
-            description: 'Staff performance and attendance',
+            title: "Employee Reports",
+            description: "Staff performance and attendance",
             icon: FileText,
-            color: 'bg-purple-600',
-            link: '/admin/hr-reports',
+            color: "bg-purple-600",
+            link: "/admin/hr-reports",
           },
           {
-            title: 'Customer Accounts',
-            description: 'Manage customer registrations',
+            title: "Customer Accounts",
+            description: "Manage customer registrations",
             icon: Coffee,
-            color: 'bg-orange-600',
-            link: '/admin/customers',
+            color: "bg-orange-600",
+            link: "/admin/customers",
           },
         ],
       },
       SALES: {
-        title: 'Sales Dashboard',
-        description: 'Track sales performance, customer relations, and revenue',
+        title: "Sales Dashboard",
+        description: "Track sales performance, customer relations, and revenue",
         stats: [
           {
-            title: 'Monthly Sales',
-            value: '$32,847',
+            title: "Monthly Sales",
+            value: "$32,847",
             icon: DollarSign,
-            color: 'text-green-600',
-            trend: '+15% from last month',
+            color: "text-green-600",
+            trend: "+15% from last month",
             description: "This month's revenue",
           },
           {
-            title: 'Orders',
-            value: '1,432',
+            title: "Orders",
+            value: "1,432",
             icon: ShoppingCart,
-            color: 'text-blue-600',
-            trend: '+8% increase',
-            description: 'Total orders',
+            color: "text-blue-600",
+            trend: "+8% increase",
+            description: "Total orders",
           },
           {
-            title: 'Customers',
+            title: "Customers",
             value: stats.overview?.totalCustomers,
             icon: Coffee,
-            color: 'text-purple-600',
-            description: 'Active customers',
+            color: "text-purple-600",
+            description: "Active customers",
           },
           {
-            title: 'Conversion Rate',
-            value: '3.2%',
+            title: "Conversion Rate",
+            value: "3.2%",
             icon: TrendingUp,
-            color: 'text-amber-600',
-            trend: '+0.5% this week',
-            description: 'Lead conversion',
+            color: "text-amber-600",
+            trend: "+0.5% this week",
+            description: "Lead conversion",
           },
         ],
         quickActions: [
           {
-            title: 'Customer Management',
-            description: 'Manage customer accounts',
+            title: "Customer Management",
+            description: "Manage customer accounts",
             icon: Users,
-            color: 'bg-blue-600',
-            link: '/admin/customers',
+            color: "bg-blue-600",
+            link: "/admin/customers",
           },
           {
-            title: 'Order Management',
-            description: 'View and process orders',
+            title: "Order Management",
+            description: "View and process orders",
             icon: ShoppingCart,
-            color: 'bg-green-600',
-            link: '/admin/orders',
+            color: "bg-green-600",
+            link: "/admin/orders",
           },
           {
-            title: 'Sales Reports',
-            description: 'Sales analytics and reports',
+            title: "Sales Reports",
+            description: "Sales analytics and reports",
             icon: BarChart3,
-            color: 'bg-purple-600',
-            link: '/admin/sales-reports',
+            color: "bg-purple-600",
+            link: "/admin/sales-reports",
           },
           {
-            title: 'Product Catalog',
-            description: 'View product information',
+            title: "Product Catalog",
+            description: "View product information",
             icon: Package,
-            color: 'bg-amber-600',
-            link: '/admin/products',
+            color: "bg-amber-600",
+            link: "/admin/products",
           },
         ],
       },
       MANAGER: {
-        title: 'Operations Dashboard',
+        title: "Operations Dashboard",
         description:
-          'Oversee daily operations, team management, and service quality',
+          "Oversee daily operations, team management, and service quality",
         stats: [
           {
-            title: 'Team Members',
-            value: '24',
+            title: "Team Members",
+            value: "24",
             icon: Users,
-            color: 'text-blue-600',
-            description: 'Direct reports',
+            color: "text-blue-600",
+            description: "Direct reports",
           },
           {
-            title: 'Daily Operations',
-            value: '98.5%',
+            title: "Daily Operations",
+            value: "98.5%",
             icon: Activity,
-            color: 'text-green-600',
-            description: 'Efficiency rate',
+            color: "text-green-600",
+            description: "Efficiency rate",
           },
           {
-            title: 'Customer Satisfaction',
-            value: '4.8/5',
+            title: "Customer Satisfaction",
+            value: "4.8/5",
             icon: Coffee,
-            color: 'text-purple-600',
-            description: 'Average rating',
+            color: "text-purple-600",
+            description: "Average rating",
           },
           {
-            title: 'Tasks Completed',
-            value: '147',
+            title: "Tasks Completed",
+            value: "147",
             icon: CheckCircle,
-            color: 'text-amber-600',
-            description: 'This week',
+            color: "text-amber-600",
+            description: "This week",
           },
         ],
         quickActions: [
           {
-            title: 'Team Overview',
-            description: 'Monitor team performance',
+            title: "Team Overview",
+            description: "Monitor team performance",
             icon: Users,
-            color: 'bg-blue-600',
-            link: '/admin/team',
+            color: "bg-blue-600",
+            link: "/admin/team",
           },
           {
-            title: 'Customer Service',
-            description: 'Customer support dashboard',
+            title: "Customer Service",
+            description: "Customer support dashboard",
             icon: Coffee,
-            color: 'bg-green-600',
-            link: '/admin/customer-service',
+            color: "bg-green-600",
+            link: "/admin/customer-service",
           },
           {
-            title: 'Operations Reports',
-            description: 'Daily operations analytics',
+            title: "Operations Reports",
+            description: "Daily operations analytics",
             icon: BarChart3,
-            color: 'bg-purple-600',
-            link: '/admin/operations',
+            color: "bg-purple-600",
+            link: "/admin/operations",
           },
           {
-            title: 'Quality Control',
-            description: 'Monitor service quality',
+            title: "Quality Control",
+            description: "Monitor service quality",
             icon: CheckCircle,
-            color: 'bg-amber-600',
-            link: '/admin/quality',
+            color: "bg-amber-600",
+            link: "/admin/quality",
           },
         ],
       },
       ACCOUNTANT: {
-        title: 'Financial Dashboard',
+        title: "Financial Dashboard",
         description:
-          'Financial management, reporting, and accounting operations',
+          "Financial management, reporting, and accounting operations",
         stats: [
           {
-            title: 'Monthly Revenue',
-            value: '$45,230',
+            title: "Monthly Revenue",
+            value: "$45,230",
             icon: DollarSign,
-            color: 'text-green-600',
-            trend: '+8.5% vs last month',
-            description: 'Total income',
+            color: "text-green-600",
+            trend: "+8.5% vs last month",
+            description: "Total income",
           },
           {
-            title: 'Expenses',
-            value: '$12,450',
+            title: "Expenses",
+            value: "$12,450",
             icon: FileText,
-            color: 'text-red-600',
-            description: 'Monthly expenses',
+            color: "text-red-600",
+            description: "Monthly expenses",
           },
           {
-            title: 'Profit Margin',
-            value: '72.5%',
+            title: "Profit Margin",
+            value: "72.5%",
             icon: TrendingUp,
-            color: 'text-purple-600',
-            trend: '+2.1% this month',
-            description: 'Net profit margin',
+            color: "text-purple-600",
+            trend: "+2.1% this month",
+            description: "Net profit margin",
           },
           {
-            title: 'Outstanding',
-            value: '$3,240',
+            title: "Outstanding",
+            value: "$3,240",
             icon: Clock,
-            color: 'text-amber-600',
-            description: 'Pending payments',
+            color: "text-amber-600",
+            description: "Pending payments",
           },
         ],
         quickActions: [
           {
-            title: 'Financial Reports',
-            description: 'Generate financial statements',
+            title: "Financial Reports",
+            description: "Generate financial statements",
             icon: FileText,
-            color: 'bg-blue-600',
-            link: '/admin/financial-reports',
+            color: "bg-blue-600",
+            link: "/admin/financial-reports",
           },
           {
-            title: 'Revenue Analytics',
-            description: 'Track income and growth',
+            title: "Revenue Analytics",
+            description: "Track income and growth",
             icon: DollarSign,
-            color: 'bg-green-600',
-            link: '/admin/revenue',
+            color: "bg-green-600",
+            link: "/admin/revenue",
           },
           {
-            title: 'Expense Management',
-            description: 'Monitor and categorize expenses',
+            title: "Expense Management",
+            description: "Monitor and categorize expenses",
             icon: BarChart3,
-            color: 'bg-red-600',
-            link: '/admin/expenses',
+            color: "bg-red-600",
+            link: "/admin/expenses",
           },
           {
-            title: 'Payment Processing',
-            description: 'Handle payments and invoices',
+            title: "Payment Processing",
+            description: "Handle payments and invoices",
             icon: CheckCircle,
-            color: 'bg-purple-600',
-            link: '/admin/payments',
+            color: "bg-purple-600",
+            link: "/admin/payments",
           },
         ],
       },
       GRAPHICS: {
-        title: 'Design & Graphics Dashboard',
+        title: "Design & Graphics Dashboard",
         description:
-          'Design management, brand assets, and visual content creation',
+          "Design management, brand assets, and visual content creation",
         stats: [
           {
-            title: 'Design Projects',
-            value: '32',
+            title: "Design Projects",
+            value: "32",
             icon: Palette,
-            color: 'text-purple-600',
-            description: 'Active projects',
+            color: "text-purple-600",
+            description: "Active projects",
           },
           {
-            title: 'Product Images',
-            value: '248',
+            title: "Product Images",
+            value: "248",
             icon: Package,
-            color: 'text-blue-600',
-            description: 'Product catalog images',
+            color: "text-blue-600",
+            description: "Product catalog images",
           },
           {
-            title: 'Brand Assets',
-            value: '156',
+            title: "Brand Assets",
+            value: "156",
             icon: Tag,
-            color: 'text-green-600',
-            description: 'Brand materials',
+            color: "text-green-600",
+            description: "Brand materials",
           },
           {
-            title: 'Campaigns',
-            value: '12',
+            title: "Campaigns",
+            value: "12",
             icon: TrendingUp,
-            color: 'text-amber-600',
-            description: 'Marketing campaigns',
+            color: "text-amber-600",
+            description: "Marketing campaigns",
           },
         ],
         quickActions: [
           {
-            title: 'Product Images',
-            description: 'Manage product photography',
+            title: "Product Images",
+            description: "Manage product photography",
             icon: Package,
-            color: 'bg-blue-600',
-            link: '/admin/product-images',
+            color: "bg-blue-600",
+            link: "/admin/product-images",
           },
           {
-            title: 'Brand Management',
-            description: 'Brand assets and guidelines',
+            title: "Brand Management",
+            description: "Brand assets and guidelines",
             icon: Tag,
-            color: 'bg-purple-600',
-            link: '/admin/brands',
+            color: "bg-purple-600",
+            link: "/admin/brands",
           },
           {
-            title: 'Design Projects',
-            description: 'Current design tasks',
+            title: "Design Projects",
+            description: "Current design tasks",
             icon: Palette,
-            color: 'bg-green-600',
-            link: '/admin/design-projects',
+            color: "bg-green-600",
+            link: "/admin/design-projects",
           },
           {
-            title: 'Color Management',
-            description: 'Product color variations',
+            title: "Color Management",
+            description: "Product color variations",
             icon: Palette,
-            color: 'bg-indigo-600',
-            link: '/admin/colors',
+            color: "bg-indigo-600",
+            link: "/admin/colors",
           },
         ],
       },
       EDITOR: {
-        title: 'Content Management Dashboard',
-        description: 'Content creation, editing, and publication management',
+        title: "Content Management Dashboard",
+        description: "Content creation, editing, and publication management",
         stats: [
           {
-            title: 'Content Pieces',
-            value: '89',
+            title: "Content Pieces",
+            value: "89",
             icon: FileText,
-            color: 'text-blue-600',
-            description: 'Published content',
+            color: "text-blue-600",
+            description: "Published content",
           },
           {
-            title: 'Product Descriptions',
-            value: '156',
+            title: "Product Descriptions",
+            value: "156",
             icon: Package,
-            color: 'text-green-600',
-            description: 'Product content',
+            color: "text-green-600",
+            description: "Product content",
           },
           {
-            title: 'Pending Reviews',
-            value: '12',
+            title: "Pending Reviews",
+            value: "12",
             icon: Clock,
-            color: 'text-amber-600',
-            description: 'Awaiting approval',
+            color: "text-amber-600",
+            description: "Awaiting approval",
           },
           {
-            title: 'Blog Posts',
-            value: '24',
+            title: "Blog Posts",
+            value: "24",
             icon: FileText,
-            color: 'text-purple-600',
-            description: 'Published articles',
+            color: "text-purple-600",
+            description: "Published articles",
           },
         ],
         quickActions: [
           {
-            title: 'Product Content',
-            description: 'Edit product descriptions',
+            title: "Product Content",
+            description: "Edit product descriptions",
             icon: Package,
-            color: 'bg-blue-600',
-            link: '/admin/product-content',
+            color: "bg-blue-600",
+            link: "/admin/product-content",
           },
           {
-            title: 'Blog Management',
-            description: 'Create and edit blog posts',
+            title: "Blog Management",
+            description: "Create and edit blog posts",
             icon: FileText,
-            color: 'bg-green-600',
-            link: '/admin/blog',
+            color: "bg-green-600",
+            link: "/admin/blog",
           },
           {
-            title: 'SEO Management',
-            description: 'Optimize content for search',
+            title: "SEO Management",
+            description: "Optimize content for search",
             icon: TrendingUp,
-            color: 'bg-purple-600',
-            link: '/admin/seo',
+            color: "bg-purple-600",
+            link: "/admin/seo",
           },
           {
-            title: 'Review Queue',
-            description: 'Content awaiting review',
+            title: "Review Queue",
+            description: "Content awaiting review",
             icon: Eye,
-            color: 'bg-indigo-600',
-            link: '/admin/review-queue',
+            color: "bg-indigo-600",
+            link: "/admin/review-queue",
           },
         ],
       },
       // Customer dashboards
       BTC: {
-        title: 'Business Customer Dashboard',
-        description: 'Manage your business coffee orders and account',
+        title: "Business Customer Dashboard",
+        description: "Manage your business coffee orders and account",
         stats: [
           {
-            title: 'My Orders',
-            value: '23',
+            title: "My Orders",
+            value: "23",
             icon: ShoppingCart,
-            color: 'text-blue-600',
-            description: 'Total orders placed',
+            color: "text-blue-600",
+            description: "Total orders placed",
           },
           {
-            title: 'Loyalty Points',
-            value: '1,240',
+            title: "Loyalty Points",
+            value: "1,240",
             icon: Coffee,
-            color: 'text-green-600',
-            description: 'Available points',
+            color: "text-green-600",
+            description: "Available points",
           },
           {
-            title: 'Saved Items',
-            value: '8',
+            title: "Saved Items",
+            value: "8",
             icon: Heart,
-            color: 'text-purple-600',
-            description: 'Wishlist items',
+            color: "text-purple-600",
+            description: "Wishlist items",
           },
           {
-            title: 'Account Status',
-            value: 'Business',
+            title: "Account Status",
+            value: "Business",
             icon: Shield,
-            color: 'text-amber-600',
-            description: 'Customer type',
+            color: "text-amber-600",
+            description: "Customer type",
           },
         ],
         quickActions: [
           {
-            title: 'Browse Products',
-            description: 'Explore our coffee collection',
+            title: "Browse Products",
+            description: "Explore our coffee collection",
             icon: Coffee,
-            color: 'bg-amber-600',
-            link: '/products',
+            color: "bg-amber-600",
+            link: "/products",
           },
           {
-            title: 'My Orders',
-            description: 'View order history and status',
+            title: "My Orders",
+            description: "View order history and status",
             icon: ShoppingCart,
-            color: 'bg-blue-600',
-            link: '/my-orders',
+            color: "bg-blue-600",
+            link: "/my-orders",
           },
           {
-            title: 'Account Settings',
-            description: 'Update profile and preferences',
+            title: "Account Settings",
+            description: "Update profile and preferences",
             icon: Settings,
-            color: 'bg-gray-600',
-            link: '/account/settings',
+            color: "bg-gray-600",
+            link: "/account/settings",
           },
           {
-            title: 'Business Benefits',
-            description: 'View business discounts and benefits',
+            title: "Business Benefits",
+            description: "View business discounts and benefits",
             icon: Star,
-            color: 'bg-green-600',
-            link: '/business-benefits',
+            color: "bg-green-600",
+            link: "/business-benefits",
           },
         ],
       },
       BTB: {
-        title: 'Customer Dashboard',
-        description: 'Your personal coffee experience and order management',
+        title: "Customer Dashboard",
+        description: "Your personal coffee experience and order management",
         stats: [
           {
-            title: 'My Orders',
-            value: '12',
+            title: "My Orders",
+            value: "12",
             icon: ShoppingCart,
-            color: 'text-blue-600',
-            description: 'Total orders placed',
+            color: "text-blue-600",
+            description: "Total orders placed",
           },
           {
-            title: 'Loyalty Points',
-            value: '680',
+            title: "Loyalty Points",
+            value: "680",
             icon: Coffee,
-            color: 'text-green-600',
-            description: 'Available points',
+            color: "text-green-600",
+            description: "Available points",
           },
           {
-            title: 'Favorites',
-            value: '5',
+            title: "Favorites",
+            value: "5",
             icon: Heart,
-            color: 'text-purple-600',
-            description: 'Favorite products',
+            color: "text-purple-600",
+            description: "Favorite products",
           },
           {
-            title: 'Rewards',
-            value: '3',
+            title: "Rewards",
+            value: "3",
             icon: Star,
-            color: 'text-amber-600',
-            description: 'Available rewards',
+            color: "text-amber-600",
+            description: "Available rewards",
           },
         ],
         quickActions: [
           {
-            title: 'Browse Products',
-            description: 'Explore our coffee collection',
+            title: "Browse Products",
+            description: "Explore our coffee collection",
             icon: Coffee,
-            color: 'bg-amber-600',
-            link: '/products',
+            color: "bg-amber-600",
+            link: "/products",
           },
           {
-            title: 'My Orders',
-            description: 'View order history and status',
+            title: "My Orders",
+            description: "View order history and status",
             icon: ShoppingCart,
-            color: 'bg-blue-600',
-            link: '/my-orders',
+            color: "bg-blue-600",
+            link: "/my-orders",
           },
           {
-            title: 'Loyalty Program',
-            description: 'View points and rewards',
+            title: "Loyalty Program",
+            description: "View points and rewards",
             icon: Star,
-            color: 'bg-green-600',
-            link: '/loyalty',
+            color: "bg-green-600",
+            link: "/loyalty",
           },
           {
-            title: 'Support',
-            description: 'Get help and contact support',
+            title: "Support",
+            description: "Get help and contact support",
             icon: Users,
-            color: 'bg-purple-600',
-            link: '/support',
+            color: "bg-purple-600",
+            link: "/support",
           },
         ],
       },
@@ -880,6 +881,7 @@ const DashboardOverview = () => {
 
   return (
     <div className="space-y-6">
+      <AnnouncementPopup />
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">
         <div>
@@ -893,7 +895,7 @@ const DashboardOverview = () => {
         <div className="flex items-center gap-3">
           {/* Role Badge */}
           <div className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
-            {currentUser?.subRole || 'ADMIN'}
+            {currentUser?.subRole || "ADMIN"}
           </div>
           <button
             onClick={handleRefresh}
@@ -901,9 +903,9 @@ const DashboardOverview = () => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             <RefreshCw
-              className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
             />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
+            {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
       </div>
@@ -976,22 +978,34 @@ const DashboardOverview = () => {
             <Bell className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-1">
-            {['DIRECTOR', 'IT'].includes(currentUser?.subRole) ? (
+            {["DIRECTOR", "IT"].includes(currentUser?.subRole) ? (
               recentLogs.length > 0 ? (
                 recentLogs.map((log) => (
-                  <div key={log._id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div
+                    key={log._id}
+                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
                     <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {log.action?.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                        {log.action
+                          ?.replace(/_/g, " ")
+                          .toLowerCase()
+                          .replace(/\b\w/g, (c) => c.toUpperCase())}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                         {log.description}
                       </p>
                       <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                        {log.user?.name || 'Unknown'} · {new Date(log.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        {log.user?.name || "Unknown"} ·{" "}
+                        {new Date(log.createdAt).toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </div>
@@ -1005,13 +1019,15 @@ const DashboardOverview = () => {
             ) : (
               <div className="text-center py-6 text-gray-400 dark:text-gray-500">
                 <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Activity log is visible to Directors &amp; IT only</p>
+                <p className="text-sm">
+                  Activity log is visible to Directors &amp; IT only
+                </p>
               </div>
             )}
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            {['DIRECTOR', 'IT'].includes(currentUser?.subRole) ? (
+            {["DIRECTOR", "IT"].includes(currentUser?.subRole) ? (
               <Link
                 to="/admin/activity"
                 className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
@@ -1029,10 +1045,7 @@ const DashboardOverview = () => {
       </div>
 
       {/* Conditional System Health (only for DIRECTOR and IT) */}
-      {[
-        'IT',
-        'DIRECTOR',
-      ].includes(currentUser?.subRole) && (
+      {["IT", "DIRECTOR"].includes(currentUser?.subRole) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* System Health */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1098,7 +1111,7 @@ const DashboardOverview = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? '...' : '99.9%'}
+                  {loading ? "..." : "99.9%"}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Uptime
@@ -1111,7 +1124,7 @@ const DashboardOverview = () => {
 
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? '...' : '1.2s'}
+                  {loading ? "..." : "1.2s"}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Response Time
@@ -1124,7 +1137,7 @@ const DashboardOverview = () => {
 
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? '...' : stats.activity?.todayLogins || 34}
+                  {loading ? "..." : stats.activity?.todayLogins || 34}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Active Sessions
@@ -1137,7 +1150,7 @@ const DashboardOverview = () => {
 
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? '...' : '99.5%'}
+                  {loading ? "..." : "99.5%"}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Success Rate
@@ -1160,11 +1173,11 @@ const DashboardOverview = () => {
               Today's Summary
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </p>
           </div>
@@ -1174,70 +1187,70 @@ const DashboardOverview = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {loading ? '...' : stats.activity?.todayLogins || 34}
+              {loading ? "..." : stats.activity?.todayLogins || 34}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === 'SALES'
-                ? 'Orders Today'
-                : currentUser?.subRole === 'BTC' ||
-                  currentUser?.subRole === 'BTB'
-                ? 'Activities'
-                : 'Active Users'}
+              {currentUser?.subRole === "SALES"
+                ? "Orders Today"
+                : currentUser?.subRole === "BTC" ||
+                    currentUser?.subRole === "BTB"
+                  ? "Activities"
+                  : "Active Users"}
             </div>
           </div>
 
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {loading
-                ? '...'
-                : currentUser?.subRole === 'ACCOUNTANT'
-                ? '$2,340'
-                : currentUser?.subRole === 'GRAPHICS'
-                ? '5'
-                : currentUser?.subRole === 'BTC' ||
-                  currentUser?.subRole === 'BTB'
-                ? '3'
-                : '12'}
+                ? "..."
+                : currentUser?.subRole === "ACCOUNTANT"
+                  ? "$2,340"
+                  : currentUser?.subRole === "GRAPHICS"
+                    ? "5"
+                    : currentUser?.subRole === "BTC" ||
+                        currentUser?.subRole === "BTB"
+                      ? "3"
+                      : "12"}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === 'ACCOUNTANT'
-                ? 'Revenue'
-                : currentUser?.subRole === 'GRAPHICS'
-                ? 'New Designs'
-                : currentUser?.subRole === 'BTC' ||
-                  currentUser?.subRole === 'BTB'
-                ? 'New Orders'
-                : 'Completed Tasks'}
+              {currentUser?.subRole === "ACCOUNTANT"
+                ? "Revenue"
+                : currentUser?.subRole === "GRAPHICS"
+                  ? "New Designs"
+                  : currentUser?.subRole === "BTC" ||
+                      currentUser?.subRole === "BTB"
+                    ? "New Orders"
+                    : "Completed Tasks"}
             </div>
           </div>
 
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {loading ? '...' : '98.5%'}
+              {loading ? "..." : "98.5%"}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === 'IT'
-                ? 'System Health'
-                : currentUser?.subRole === 'BTC' ||
-                  currentUser?.subRole === 'BTB'
-                ? 'Satisfaction'
-                : 'Performance'}
+              {currentUser?.subRole === "IT"
+                ? "System Health"
+                : currentUser?.subRole === "BTC" ||
+                    currentUser?.subRole === "BTB"
+                  ? "Satisfaction"
+                  : "Performance"}
             </div>
           </div>
 
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
               {loading
-                ? '...'
-                : currentUser?.subRole === 'BTC' ||
-                  currentUser?.subRole === 'BTB'
-                ? '1,240'
-                : '5'}
+                ? "..."
+                : currentUser?.subRole === "BTC" ||
+                    currentUser?.subRole === "BTB"
+                  ? "1,240"
+                  : "5"}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === 'BTC' || currentUser?.subRole === 'BTB'
-                ? 'Loyalty Points'
-                : 'Notifications'}
+              {currentUser?.subRole === "BTC" || currentUser?.subRole === "BTB"
+                ? "Loyalty Points"
+                : "Notifications"}
             </div>
           </div>
         </div>
