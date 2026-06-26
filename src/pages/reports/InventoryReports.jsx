@@ -1,5 +1,15 @@
 //admin
 // src/pages/reports/InventoryReports.jsx
+// Roles: IT, DIRECTOR, WAREHOUSE, MANAGER, ACCOUNTANT
+// Endpoints:
+//   GET /api/warehouse/stock-summary   → { success, data:{ totalProducts, totalStock, onlineStock, offlineStock,
+//                                          lowStockItems, outOfStockItems, damagedItems, refurbishedItems, expiredItems } }
+//   GET /api/product/get?page=1&limit=200 → { success, data:[], totalNoPage }
+//     Product has: price, salePrice, btbPrice, btcPrice, price3weeksDelivery, price5weeksDelivery
+//                  stock (legacy), warehouseStock.{ finalStock, onlineStock, offlineStock, damagedQty, expiredQty, refurbishedQty, enabled }
+//                  partnerStock.{ enabled, quantity, supplier }
+//                  stockSource: WAREHOUSE_MANUAL | STOCK_BATCHES | PRODUCT_DEFAULT | PARTNER_MANAGED
+//   GET /api/stock/expiring?days=30     → { success, data:[] }
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Package,
@@ -8,10 +18,13 @@ import {
   Download,
   RefreshCw,
   Search,
-  Filter,
-  ChevronDown,
   BarChart3,
   Archive,
+  Warehouse,
+  Globe,
+  Store,
+  Users,
+  Truck,
 } from "lucide-react";
 import {
   BarChart,
@@ -24,17 +37,21 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from "recharts";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
-const token = () => localStorage.getItem("accessToken");
-const apiFetch = async (p) => {
-  const r = await fetch(`${API_BASE}${p}`, {
-    headers: { Authorization: `Bearer ${token()}` },
-  });
-  return r.json();
+const tok = () => localStorage.getItem("accessToken");
+const api = async (p) => {
+  try {
+    const r = await fetch(`${API_BASE}${p}`, {
+      headers: { Authorization: `Bearer ${tok()}` },
+    });
+    if (!r.ok) return { success: false };
+    return r.json();
+  } catch {
+    return { success: false };
+  }
 };
 
 const COLORS = [
@@ -47,68 +64,168 @@ const COLORS = [
   "#F97316",
   "#EC4899",
 ];
-
 function fmtN(n) {
   return n != null ? Number(n).toLocaleString() : "—";
 }
-function fmtCur(n) {
-  return n ? `₦${Number(n).toLocaleString()}` : "₦0";
+function fmtC(n) {
+  return n != null && n > 0 ? `₦${Number(n).toLocaleString()}` : "—";
 }
 
+// Resolve the effective stock figures from a product document
+function resolveStock(p) {
+  const wh = p.warehouseStock;
+  const ps = p.partnerStock;
+
+  if (ps?.enabled) {
+    // Partner-managed: all stock is "online" from partner
+    return {
+      source: "Partner",
+      total: ps.quantity || 0,
+      online: ps.quantity || 0,
+      offline: 0,
+      damaged: 0,
+      expired: 0,
+      refurb: 0,
+    };
+  }
+  if (wh?.enabled) {
+    return {
+      source: "Warehouse",
+      total: wh.finalStock || 0,
+      online: wh.onlineStock || 0,
+      offline: wh.offlineStock || 0,
+      damaged: wh.damagedQty || 0,
+      expired: wh.expiredQty || 0,
+      refurb: wh.refurbishedQty || 0,
+    };
+  }
+  // Fallback: legacy stock field
+  return {
+    source: "Default",
+    total: p.stock || 0,
+    online: p.stock || 0,
+    offline: 0,
+    damaged: 0,
+    expired: 0,
+    refurb: 0,
+  };
+}
+
+// Source badge config
+const SOURCE_BADGES = {
+  Partner: "bg-purple-100 text-purple-700",
+  Warehouse: "bg-blue-100 text-blue-700",
+  Default: "bg-gray-100 text-gray-500",
+};
+const SOURCE_ICONS = {
+  Partner: Truck,
+  Warehouse: Warehouse,
+  Default: Store,
+};
+
 export default function InventoryReports() {
-  const [summary, setSummary] = useState(null);
+  const [whSummary, setWhSummary] = useState(null); // /warehouse/stock-summary data object
   const [products, setProducts] = useState([]);
-  const [lowStock, setLowStock] = useState([]);
   const [expiring, setExpiring] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterSource, setFilterSource] = useState("");
   const [tab, setTab] = useState("overview");
+  const [expiryDays, setExpiryDays] = useState("30");
 
-  const fetch = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    const [sum, prods, exp] = await Promise.all([
-      apiFetch("/stock/summary"),
-      apiFetch("/product/get?page=1&limit=50"),
-      apiFetch("/stock/expiring?days=30"),
+    const [wh, prods, exp] = await Promise.all([
+      api("/warehouse/stock-summary"), // { data:{ totalProducts, totalStock, onlineStock, offlineStock, lowStockItems, outOfStockItems, damagedItems, refurbishedItems, expiredItems } }
+      api("/product/get?page=1&limit=200"), // { data:[], totalNoPage }
+      api(`/stock/expiring?days=${expiryDays}`), // { data:[] }
     ]);
-    setSummary(sum.data || sum);
-    setProducts(prods.data || []);
-    setExpiring(exp.data || []);
-    setLowStock((prods.data || []).filter((p) => (p.stock || 0) <= 10));
+    setWhSummary(wh.data || null);
+    setProducts(Array.isArray(prods.data) ? prods.data : []);
+    setExpiring(Array.isArray(exp.data) ? exp.data : []);
     setLoading(false);
-  }, []);
+  }, [expiryDays]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    fetchData();
+  }, [fetchData]);
 
-  const filtered = products.filter(
-    (p) => !search || p.name?.toLowerCase().includes(search.toLowerCase()),
-  );
+  // Enrich products with resolved stock
+  const enriched = products.map((p) => ({ ...p, _stock: resolveStock(p) }));
 
-  // Build category breakdown from products
-  const catMap = {};
-  products.forEach((p) => {
-    const cat = p.category?.name || p.category || "Uncategorised";
-    catMap[cat] = (catMap[cat] || 0) + 1;
+  const filtered = enriched.filter((p) => {
+    const sm = !search || p.name?.toLowerCase().includes(search.toLowerCase());
+    const fm = !filterSource || p._stock.source === filterSource;
+    return sm && fm;
   });
-  const catData = Object.entries(catMap)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+
+  // Aggregated stock figures
+  const totalOnline = enriched.reduce((s, p) => s + p._stock.online, 0);
+  const totalOffline = enriched.reduce((s, p) => s + p._stock.offline, 0);
+  const totalPartner = enriched
+    .filter((p) => p._stock.source === "Partner")
+    .reduce((s, p) => s + p._stock.total, 0);
+  const lowStock = enriched.filter(
+    (p) => p._stock.total > 0 && p._stock.total <= 10,
+  );
+  const outOfStock = enriched.filter((p) => p._stock.total === 0);
+
+  // Category breakdown
+  const catMap = {};
+  enriched.forEach((p) => {
+    const cat = p.category?.name || "Uncategorised";
+    catMap[cat] = catMap[cat] || {
+      name: cat,
+      total: 0,
+      online: 0,
+      offline: 0,
+      partner: 0,
+    };
+    catMap[cat].total += p._stock.total;
+    catMap[cat].online += p._stock.online;
+    catMap[cat].offline += p._stock.offline;
+    catMap[cat].partner += p._stock.source === "Partner" ? p._stock.total : 0;
+  });
+  const catData = Object.values(catMap)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8);
+
+  // Stock source breakdown
+  const sourceData = [
+    { name: "Online (Warehouse)", value: totalOnline },
+    { name: "Offline (In-store)", value: totalOffline },
+    { name: "Partner Stock", value: totalPartner },
+  ].filter((d) => d.value > 0);
 
   const exportCSV = () => {
-    const rows = [["Name", "Category", "Stock", "Price", "Status"]];
+    const rows = [
+      [
+        "Product",
+        "Category",
+        "Stock Source",
+        "Total Stock",
+        "Online",
+        "Offline",
+        "Damaged",
+        "Expired",
+        "Sale Price",
+        "B2B Price",
+        "B2C Price",
+      ],
+    ];
     filtered.forEach((p) =>
       rows.push([
-        p.name,
+        `"${p.name}"`,
         p.category?.name || "",
-        p.stock || 0,
-        p.price || 0,
-        (p.stock || 0) === 0
-          ? "Out of Stock"
-          : (p.stock || 0) <= 10
-            ? "Low Stock"
-            : "In Stock",
+        p._stock.source,
+        p._stock.total,
+        p._stock.online,
+        p._stock.offline,
+        p._stock.damaged,
+        p._stock.expired,
+        p.salePrice || p.price || 0,
+        p.btbPrice || 0,
+        p.btcPrice || 0,
       ]),
     );
     const csv = rows.map((r) => r.join(",")).join("\n");
@@ -120,18 +237,19 @@ export default function InventoryReports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Package className="h-6 w-6 text-blue-600" /> Inventory Reports
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Stock levels, product availability and expiry
+            Online, offline and partner stock with product-level breakdown
           </p>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={fetch}
+            onClick={fetchData}
             className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <RefreshCw
@@ -147,35 +265,78 @@ export default function InventoryReports() {
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Stock type legend */}
+      <div className="grid grid-cols-3 gap-3 text-xs">
         {[
           {
-            label: "Total Products",
-            value: fmtN(summary?.totalProducts || products.length),
+            icon: Globe,
+            label: "Online Stock",
+            desc: "Warehouse → onlineStock. Available on website.",
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
           },
           {
-            label: "In Stock",
-            value: fmtN(
-              summary?.inStockCount ||
-                products.filter((p) => (p.stock || 0) > 10).length,
-            ),
+            icon: Store,
+            label: "Offline Stock",
+            desc: "Warehouse → offlineStock. In-store / walk-in only.",
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
           },
           {
-            label: "Low Stock (≤10)",
-            value: fmtN(lowStock.length),
-            color: "text-orange-600",
-            bg: "bg-orange-50 dark:bg-orange-900/20",
+            icon: Truck,
+            label: "Partner Stock",
+            desc: "partnerStock.quantity. Held by partner, sold online.",
+            color: "text-purple-600",
+            bg: "bg-purple-50 dark:bg-purple-900/20",
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className={`${s.bg} rounded-xl p-3 border border-white/50`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <s.icon className={`h-4 w-4 ${s.color}`} />
+              <span className={`font-semibold ${s.color}`}>{s.label}</span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Summary cards — from /warehouse/stock-summary + computed */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          {
+            label: "Total Products",
+            value: fmtN(whSummary?.totalProducts ?? products.length),
+            icon: Package,
+            color: "text-blue-600",
+            bg: "bg-blue-50 dark:bg-blue-900/20",
+            sub: "In catalog",
           },
           {
-            label: "Expiring (30d)",
-            value: fmtN(expiring.length),
+            label: "Online Stock Units",
+            value: fmtN(whSummary?.onlineStock ?? totalOnline),
+            icon: Globe,
+            color: "text-green-600",
+            bg: "bg-green-50 dark:bg-green-900/20",
+            sub: "Website-available units",
+          },
+          {
+            label: "Offline Stock",
+            value: fmtN(whSummary?.offlineStock ?? totalOffline),
+            icon: Store,
+            color: "text-indigo-600",
+            bg: "bg-indigo-50 dark:bg-indigo-900/20",
+            sub: "In-store only units",
+          },
+          {
+            label: "Low / Out of Stock",
+            value: `${fmtN(whSummary?.lowStockItems ?? lowStock.length)} / ${fmtN(whSummary?.outOfStockItems ?? outOfStock.length)}`,
+            icon: AlertTriangle,
             color: "text-red-600",
             bg: "bg-red-50 dark:bg-red-900/20",
+            sub: "Low (≤10) / Zero stock",
           },
         ].map((s) => (
           <div
@@ -183,96 +344,182 @@ export default function InventoryReports() {
             className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
           >
             <div className={`inline-flex p-2 rounded-lg ${s.bg} mb-2`}>
-              <Package className={`h-5 w-5 ${s.color}`} />
+              <s.icon className={`h-5 w-5 ${s.color}`} />
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {loading ? "..." : s.value}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <p className="text-xs font-medium text-gray-500 mt-0.5">
               {s.label}
             </p>
+            <p className="text-xs text-gray-400">{s.sub}</p>
           </div>
         ))}
       </div>
 
+      {/* Extra warehouse summary row */}
+      {whSummary && (
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {[
+            {
+              label: "Total Stock",
+              value: fmtN(whSummary.totalStock),
+              color: "text-gray-800 dark:text-gray-200",
+            },
+            {
+              label: "Damaged",
+              value: fmtN(whSummary.damagedItems),
+              color: "text-red-600",
+            },
+            {
+              label: "Refurbished",
+              value: fmtN(whSummary.refurbishedItems),
+              color: "text-yellow-600",
+            },
+            {
+              label: "Expired",
+              value: fmtN(whSummary.expiredItems),
+              color: "text-orange-600",
+            },
+            {
+              label: "Manual Override",
+              value: fmtN(whSummary.manualOverrideCount),
+              color: "text-blue-600",
+            },
+            {
+              label: "Batch-tracked",
+              value: fmtN(whSummary.stockBatchCount),
+              color: "text-green-600",
+            },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center"
+            >
+              <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["overview", "products", "low-stock", "expiring"].map((t) => (
+        {[
+          { id: "overview", label: "Overview" },
+          { id: "products", label: `Products (${products.length})` },
+          {
+            id: "low-stock",
+            label: `Low Stock${lowStock.length > 0 ? ` (${lowStock.length})` : ""}`,
+          },
+          {
+            id: "expiring",
+            label: `Expiring${expiring.length > 0 ? ` (${expiring.length})` : ""}`,
+          },
+        ].map(({ id, label }) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === t ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            key={id}
+            onClick={() => setTab(id)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            {t.replace("-", " ")}
-            {t === "low-stock" && lowStock.length > 0 && (
-              <span className="ml-1 text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
-                {lowStock.length}
-              </span>
-            )}
-            {t === "expiring" && expiring.length > 0 && (
-              <span className="ml-1 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
-                {expiring.length}
-              </span>
-            )}
+            {label}
           </button>
         ))}
       </div>
 
+      {/* Overview charts */}
       {tab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Products by Category
+              Stock by Category (Online + Offline + Partner)
             </h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={catData.slice(0, 8)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar
-                  dataKey="count"
-                  fill="#3B82F6"
-                  radius={[4, 4, 0, 0]}
-                  name="Products"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {catData.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-8">No data</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={catData} layout="vertical">
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f0f0f0"
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(v) =>
+                      v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v
+                    }
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 10 }}
+                    width={90}
+                  />
+                  <Tooltip />
+                  <Bar
+                    dataKey="online"
+                    fill="#3B82F6"
+                    stackId="a"
+                    name="Online"
+                  />
+                  <Bar
+                    dataKey="offline"
+                    fill="#10B981"
+                    stackId="a"
+                    name="Offline"
+                  />
+                  <Bar
+                    dataKey="partner"
+                    fill="#8B5CF6"
+                    stackId="a"
+                    name="Partner"
+                    radius={[0, 3, 3, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Category Distribution
+              Stock Channel Distribution
             </h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={catData.slice(0, 6)}
-                  dataKey="count"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, percent }) =>
-                    `${name.substring(0, 10)} ${(percent * 100).toFixed(0)}%`
-                  }
-                  labelLine={false}
-                  fontSize={10}
-                >
-                  {catData.slice(0, 6).map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {sourceData.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-8">No data</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={sourceData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    label={({ name, percent }) =>
+                      `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelLine={false}
+                    fontSize={11}
+                  >
+                    {sourceData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => fmtN(v) + " units"} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       )}
 
+      {/* Products table */}
       {tab === "products" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-            <div className="relative">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-48">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 value={search}
@@ -281,49 +528,90 @@ export default function InventoryReports() {
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
+            <select
+              value={filterSource}
+              onChange={(e) => setFilterSource(e.target.value)}
+              className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              <option value="">All Sources</option>
+              <option value="Warehouse">Warehouse</option>
+              <option value="Partner">Partner</option>
+              <option value="Default">Default</option>
+            </select>
+            <span className="text-sm text-gray-400 self-center">
+              {filtered.length} products
+            </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {["Product", "Category", "Stock", "Price (₦)", "Status"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Product
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Source
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-blue-500 uppercase tracking-wide">
+                    Online
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-green-500 uppercase tracking-wide">
+                    Offline
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Total
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Damaged
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Sale Price
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-green-500 uppercase tracking-wide">
+                    B2B
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-purple-500 uppercase tracking-wide">
+                    B2C
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={10}
                       className="px-4 py-8 text-center text-gray-400"
                     >
                       Loading...
                     </td>
                   </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={10}
+                      className="px-4 py-8 text-center text-gray-400"
+                    >
+                      No products found
+                    </td>
+                  </tr>
                 ) : (
-                  filtered.slice(0, 50).map((p, i) => {
-                    const stock = p.stock || 0;
+                  filtered.slice(0, 100).map((p, i) => {
+                    const s = p._stock;
+                    const SrcIcon = SOURCE_ICONS[s.source] || Store;
+                    const total = s.total;
                     const status =
-                      stock === 0
-                        ? {
-                            label: "Out of Stock",
-                            cls: "bg-red-100 text-red-700",
-                          }
-                        : stock <= 10
+                      total === 0
+                        ? { l: "Out of Stock", cls: "bg-red-100 text-red-700" }
+                        : total <= 10
                           ? {
-                              label: "Low Stock",
+                              l: "Low Stock",
                               cls: "bg-orange-100 text-orange-700",
                             }
                           : {
-                              label: "In Stock",
+                              l: "In Stock",
                               cls: "bg-green-100 text-green-700",
                             };
                     return (
@@ -332,7 +620,7 @@ export default function InventoryReports() {
                         className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
                       >
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             {p.image?.[0] && (
                               <img
                                 src={p.image[0]}
@@ -340,21 +628,50 @@ export default function InventoryReports() {
                                 className="w-8 h-8 rounded object-cover flex-shrink-0"
                               />
                             )}
-                            <span className="font-medium text-gray-800 dark:text-gray-200 truncate max-w-48">
-                              {p.name}
-                            </span>
+                            <div>
+                              <p className="font-medium text-gray-800 dark:text-gray-200 truncate max-w-44">
+                                {p.name}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {p.category?.name || "—"}
+                              </p>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {p.category?.name || "—"}
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 w-fit ${SOURCE_BADGES[s.source]}`}
+                          >
+                            <SrcIcon className="h-3 w-3" />
+                            {s.source}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 font-medium">{fmtN(stock)}</td>
-                        <td className="px-4 py-3">{fmtCur(p.price)}</td>
+                        <td className="px-4 py-3 font-semibold text-blue-600">
+                          {fmtN(s.online)}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-green-600">
+                          {fmtN(s.offline)}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">
+                          {fmtN(total)}
+                        </td>
+                        <td className="px-4 py-3 text-red-500">
+                          {s.damaged > 0 ? fmtN(s.damaged) : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                          {fmtC(p.salePrice || p.price)}
+                        </td>
+                        <td className="px-4 py-3 text-green-600">
+                          {fmtC(p.btbPrice)}
+                        </td>
+                        <td className="px-4 py-3 text-purple-600">
+                          {fmtC(p.btcPrice)}
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.cls}`}
                           >
-                            {status.label}
+                            {status.l}
                           </span>
                         </td>
                       </tr>
@@ -367,120 +684,184 @@ export default function InventoryReports() {
         </div>
       )}
 
+      {/* Low stock */}
       {tab === "low-stock" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {lowStock.length === 0 ? (
             <div className="p-10 text-center text-gray-400">
-              <Package className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>No low stock items</p>
+              <Package className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
+              <p>All products are sufficiently stocked</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-orange-50 dark:bg-orange-900/10">
                 <tr>
-                  {["Product", "Category", "Stock", "Price", "Action"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-orange-600 uppercase tracking-wide"
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Product",
+                    "Category",
+                    "Source",
+                    "Online",
+                    "Offline",
+                    "Total",
+                    "Sale Price",
+                    "Action",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-xs font-semibold text-orange-600 uppercase tracking-wide"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {lowStock.map((p, i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-orange-50/50 dark:hover:bg-orange-900/5"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                      {p.name}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {p.category?.name || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-orange-600 font-bold">
-                        {p.stock || 0}
-                      </span>{" "}
-                      units
-                    </td>
-                    <td className="px-4 py-3">{fmtCur(p.price)}</td>
-                    <td className="px-4 py-3">
-                      <a
-                        href="/admin/purchase-orders"
-                        className="text-xs text-blue-600 hover:underline"
+                {lowStock
+                  .sort((a, b) => a._stock.total - b._stock.total)
+                  .map((p, i) => {
+                    const s = p._stock;
+                    return (
+                      <tr
+                        key={i}
+                        className={`${s.total === 0 ? "bg-red-50/30 dark:bg-red-900/5" : ""} hover:bg-orange-50/30 dark:hover:bg-orange-900/5`}
                       >
-                        Create PO →
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                          {p.name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {p.category?.name || "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${SOURCE_BADGES[s.source]}`}
+                          >
+                            {s.source}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-blue-600 font-semibold">
+                          {fmtN(s.online)}
+                        </td>
+                        <td className="px-4 py-3 text-green-600 font-semibold">
+                          {fmtN(s.offline)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`font-bold text-lg ${s.total === 0 ? "text-red-600" : "text-orange-500"}`}
+                          >
+                            {s.total}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {fmtC(p.salePrice || p.price)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <a
+                            href="/admin/purchase-orders"
+                            className="text-xs text-blue-600 hover:underline font-medium"
+                          >
+                            Create PO →
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           )}
         </div>
       )}
 
+      {/* Expiring */}
       {tab === "expiring" && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {expiring.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">
-              <Archive className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>No items expiring within 30 days</p>
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-red-50 dark:bg-red-900/10">
-                <tr>
-                  {["Product", "Batch", "Qty", "Expiry Date", "Days Left"].map(
-                    (h) => (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Show expiring within:
+            </label>
+            <select
+              value={expiryDays}
+              onChange={(e) => setExpiryDays(e.target.value)}
+              className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              {["7", "14", "30", "60", "90"].map((d) => (
+                <option key={d} value={d}>
+                  {d} days
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {expiring.length === 0 ? (
+              <div className="p-10 text-center text-gray-400">
+                <Archive className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
+                <p>No items expiring within {expiryDays} days</p>
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-red-50 dark:bg-red-900/10">
+                  <tr>
+                    {[
+                      "Product",
+                      "Batch",
+                      "Quality",
+                      "Qty",
+                      "Expiry Date",
+                      "Days Left",
+                      "Location",
+                    ].map((h) => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-xs font-semibold text-red-600 uppercase tracking-wide"
                       >
                         {h}
                       </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {expiring.map((b, i) => {
-                  const days = Math.ceil(
-                    (new Date(b.expiryDate) - Date.now()) / 86400000,
-                  );
-                  return (
-                    <tr
-                      key={i}
-                      className={`hover:bg-red-50/50 dark:hover:bg-red-900/5 ${days < 7 ? "bg-red-50/30 dark:bg-red-900/5" : ""}`}
-                    >
-                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                        {b.productName || b.product?.name || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 font-mono text-xs">
-                        {b.batchNumber || "—"}
-                      </td>
-                      <td className="px-4 py-3">{fmtN(b.quantity)}</td>
-                      <td className="px-4 py-3">
-                        {new Date(b.expiryDate).toLocaleDateString("en-NG")}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${days < 7 ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}
-                        >
-                          {days}d left
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {expiring.map((b, i) => {
+                    const days = Math.ceil(
+                      (new Date(b.expiryDate) - Date.now()) / 86400000,
+                    );
+                    return (
+                      <tr
+                        key={i}
+                        className={`${days <= 0 ? "bg-red-50/50 dark:bg-red-900/10" : days <= 7 ? "bg-orange-50/30" : ""} hover:bg-red-50/30`}
+                      >
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                          {b.productName || b.product?.name || "—"}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-blue-600">
+                          {b.batchNumber || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-xs">
+                          {b.quality || "—"}
+                        </td>
+                        <td className="px-4 py-3 font-semibold">
+                          {fmtN(b.quantity)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                          {new Date(b.expiryDate).toLocaleDateString("en-NG")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-sm font-bold ${days <= 0 ? "text-red-600" : days <= 7 ? "text-orange-600" : "text-yellow-600"}`}
+                          >
+                            {days <= 0 ? "Expired" : `${days}d`}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-500 font-mono">
+                          {[b.location?.zone, b.location?.shelf]
+                            .filter(Boolean)
+                            .join("-") || "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       )}
     </div>

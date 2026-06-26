@@ -79,7 +79,13 @@ export default function PurchaseReports() {
       api("/purchase-orders/stats"),
     ]);
     setOrders(ords.data || []);
-    setStats(st.data || st);
+    // /purchase-orders/stats → { success, data: { statusStats, monthlyStats, logisticsStats } }
+    const statsData = st.data || {};
+    setStats({
+      statusStats: statsData.statusStats || [],
+      monthlyStats: statsData.monthlyStats || [],
+      logisticsStats: statsData.logisticsStats || [],
+    });
     setLoading(false);
   }, []);
 

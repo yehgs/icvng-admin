@@ -1,5 +1,5 @@
 //admin
-// src/pages/dashboard/DashboardOverview.jsx
+// src/pages/dashboard/DashboardOverview.jsx — FIXED with verified API shapes
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,14 +10,10 @@ import {
   TrendingUp,
   TrendingDown,
   AlertCircle,
-  CheckCircle,
-  Clock,
-  Activity,
   RefreshCw,
   ArrowRight,
   BarChart3,
   FileText,
-  Database,
   Monitor,
   Shield,
   Truck,
@@ -26,31 +22,16 @@ import {
   Tag,
   Palette,
   Bell,
-  Star,
   Inbox,
   LifeBuoy,
   ArrowUpCircle,
   ArrowDownCircle,
   UserPlus,
   Eye,
-  Search,
-  PieChart,
   Zap,
   Award,
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/api";
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
 import AnnouncementPopup from "../../components/notifications/AnnouncementPopup";
 
 const API_BASE =
@@ -60,106 +41,27 @@ async function apiFetch(path) {
   const token = localStorage.getItem("accessToken");
   try {
     const res = await fetch(`${API_BASE}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
+    if (!res.ok) return { success: false, _status: res.status };
     return res.json();
   } catch {
     return { success: false };
   }
 }
 
-function fmtN(n) {
-  if (!n && n !== 0) return "—";
-  return Number(n).toLocaleString();
-}
-function fmtCur(n) {
-  return n ? `₦${Number(n).toLocaleString()}` : "₦0";
-}
-function timeAgo(d) {
+const fmt = (n) => (n != null ? Number(n).toLocaleString() : "—");
+const fmtC = (n) => (n ? `₦${Number(n).toLocaleString()}` : "₦0");
+function ago(d) {
   if (!d) return "";
-  const diff = Date.now() - new Date(d).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+  const s = Math.floor((Date.now() - new Date(d)) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
 }
 
-// ── Reusable stat card ──────────────────────────────────────────────────────
-const StatCard = ({
-  title,
-  value,
-  icon: Icon,
-  color,
-  bg,
-  trend,
-  trendUp,
-  sub,
-  loading,
-}) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
-    <div className="flex items-start justify-between mb-3">
-      <div
-        className={`p-2.5 rounded-xl ${bg || "bg-blue-50 dark:bg-blue-900/20"}`}
-      >
-        <Icon className={`h-5 w-5 ${color || "text-blue-600"}`} />
-      </div>
-      {trend && (
-        <span
-          className={`text-xs font-medium flex items-center gap-0.5 ${trendUp !== false ? "text-green-600" : "text-red-500"}`}
-        >
-          {trendUp !== false ? (
-            <TrendingUp className="h-3 w-3" />
-          ) : (
-            <TrendingDown className="h-3 w-3" />
-          )}
-          {trend}
-        </span>
-      )}
-    </div>
-    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-      {loading ? (
-        <span className="inline-block w-16 h-7 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-      ) : (
-        (value ?? "—")
-      )}
-    </p>
-    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
-      {title}
-    </p>
-    {sub && (
-      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{sub}</p>
-    )}
-  </div>
-);
-
-// ── Quick action card ────────────────────────────────────────────────────────
-const QuickAction = ({ title, desc, icon: Icon, color, onClick }) => (
-  <button
-    onClick={onClick}
-    className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all text-left w-full group"
-  >
-    <div className={`p-2.5 rounded-xl ${color} flex-shrink-0`}>
-      <Icon className="h-5 w-5 text-white" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
-        {title}
-      </p>
-      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-        {desc}
-      </p>
-    </div>
-    <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
-  </button>
-);
-
-// ── Role banner colors ───────────────────────────────────────────────────────
-const ROLE_BANNERS = {
+const BANNERS = {
   DIRECTOR: "from-purple-700 to-indigo-700",
   IT: "from-blue-700 to-cyan-700",
   MANAGER: "from-indigo-600 to-blue-600",
@@ -173,107 +75,209 @@ const ROLE_BANNERS = {
   DESIGNER: "from-rose-500 to-pink-600",
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-export default function DashboardOverview() {
-  const navigate = useNavigate();
-  const currentUser = getCurrentUser();
-  const role = currentUser?.subRole;
+const Stat = ({
+  title,
+  value,
+  icon: Icon,
+  color = "text-blue-600",
+  bg = "bg-blue-50 dark:bg-blue-900/20",
+  sub,
+  loading,
+}) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+    <div className={`inline-flex p-2.5 rounded-xl ${bg} mb-3`}>
+      <Icon className={`h-5 w-5 ${color}`} />
+    </div>
+    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+      {loading ? (
+        <span className="inline-block w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      ) : (
+        value
+      )}
+    </p>
+    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+      {title}
+    </p>
+    {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+  </div>
+);
 
-  const [data, setData] = useState({});
+const Action = ({ title, desc, icon: Icon, color, onClick }) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-300 transition-all text-left w-full group"
+  >
+    <div className={`p-2.5 rounded-xl ${color} flex-shrink-0`}>
+      <Icon className="h-5 w-5 text-white" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+        {title}
+      </p>
+      <p className="text-xs text-gray-500 truncate">{desc}</p>
+    </div>
+    <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 flex-shrink-0" />
+  </button>
+);
+
+export default function DashboardOverview() {
+  const nav = useNavigate();
+  const user = getCurrentUser();
+  const role = user?.subRole;
+
+  const [d, setD] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [updated, setUpdated] = useState(null);
 
-  // Fetch data relevant to the user's role
-  const fetchData = useCallback(
+  const load = useCallback(
     async (isRefresh = false) => {
       isRefresh ? setRefreshing(true) : setLoading(true);
-      const results = {};
+      const r = {};
 
-      // All roles — unread notifications count
-      const notifCount = await apiFetch("/admin/notifications/count");
-      results.unreadNotifications = notifCount.unreadCount || 0;
+      // ── every role: notification count ─────────────────────────────────────
+      // GET /api/admin/notifications/count → { success, unreadCount }
+      const nc = await apiFetch("/admin/notifications/count");
+      r.notif = nc.unreadCount || 0;
 
-      // Role-specific fetches
-      if (["DIRECTOR", "IT", "MANAGER"].includes(role)) {
-        const [adminStats, orders, customers, crmStats] = await Promise.all([
-          apiFetch("/admin/auth/stats"),
-          apiFetch("/order/order-list?page=1&limit=5"),
-          apiFetch("/admin/customers/list?page=1&limit=1"),
-          apiFetch("/admin/crm/stats"),
-        ]);
-        results.adminStats = adminStats.data;
-        results.recentOrders = orders.data || [];
-        results.totalCustomers = customers.total || customers.data?.length || 0;
-        results.crmStats = crmStats.data;
-      }
-
+      // ── DIRECTOR ────────────────────────────────────────────────────────────
       if (role === "DIRECTOR") {
-        const [financeData, products] = await Promise.all([
-          apiFetch("/admin/finance?limit=5"),
-          apiFetch("/product/get?page=1&limit=1"),
+        const [stats, orders, custs, crm, fin, prods] = await Promise.all([
+          apiFetch("/admin/auth/stats"), // { data:{ overview:{totalUsers,totalAdmins,totalCustomers,activeUsers} } }
+          apiFetch("/admin/orders/list?page=1&limit=5"), // { data:{ docs:[], totalDocs } }
+          apiFetch("/admin/customers/list?page=1&limit=1"), // { data:{ totalDocs } }
+          apiFetch("/admin/crm/stats"), // { data:{ totalLeads, wonLeads, conversionRate } }
+          apiFetch("/admin/finance?limit=1"), // { summary:{ income:{totalNGN}, expense:{totalNGN}, netNGN } }
+          apiFetch("/product/get?page=1&limit=1"), // { totalNoPage }
         ]);
-        results.financeSummary = financeData.summary;
-        results.totalProducts = products.totalNoPage || 0;
+        r.totalUsers = stats.data?.overview?.totalUsers ?? "—";
+        r.totalAdmins = stats.data?.overview?.totalAdmins ?? "—";
+        r.totalOrders = orders.data?.totalDocs ?? "—";
+        r.recentOrders = orders.data?.docs ?? [];
+        r.totalCustomers = custs.data?.totalDocs ?? "—";
+        r.wonLeads = crm.data?.wonLeads ?? "—";
+        r.convRate = crm.data?.conversionRate ?? 0;
+        r.income = fin.summary?.income?.totalNGN ?? 0;
+        r.netNGN = fin.summary?.netNGN ?? 0;
+        r.totalProducts = prods.totalNoPage ?? "—";
       }
 
-      if (["SALES", "SALES_MANAGER", "MANAGER", "DIRECTOR"].includes(role)) {
-        const [orders, customers, crm] = await Promise.all([
-          apiFetch("/order/order-list?page=1&limit=5"),
+      // ── IT ──────────────────────────────────────────────────────────────────
+      else if (role === "IT") {
+        const [stats, prods] = await Promise.all([
+          apiFetch("/admin/auth/stats"),
+          apiFetch("/product/get?page=1&limit=1"),
+        ]);
+        r.totalUsers = stats.data?.overview?.totalUsers ?? "—";
+        r.totalAdmins = stats.data?.overview?.totalAdmins ?? "—";
+        r.activeUsers = stats.data?.overview?.activeUsers ?? "—";
+        r.totalProducts = prods.totalNoPage ?? "—";
+      }
+
+      // ── MANAGER ─────────────────────────────────────────────────────────────
+      else if (role === "MANAGER") {
+        const [orders, custs, crm, wh] = await Promise.all([
+          apiFetch("/admin/orders/list?page=1&limit=5"),
+          apiFetch("/admin/customers/list?page=1&limit=1"),
+          apiFetch("/admin/crm/stats"),
+          apiFetch("/warehouse/stock-summary"), // { data:{ totalProducts, lowStockItems, outOfStockItems } }
+        ]);
+        r.totalOrders = orders.data?.totalDocs ?? "—";
+        r.recentOrders = orders.data?.docs ?? [];
+        r.totalCustomers = custs.data?.totalDocs ?? "—";
+        r.totalLeads = crm.data?.totalLeads ?? "—";
+        r.wonLeads = crm.data?.wonLeads ?? "—";
+        r.lowStock = wh.data?.lowStockItems ?? "—";
+        r.outOfStock = wh.data?.outOfStockItems ?? "—";
+      }
+
+      // ── SALES_MANAGER ────────────────────────────────────────────────────────
+      else if (role === "SALES_MANAGER") {
+        // SALES_MANAGER is blocked on admin/orders (only SALES, IT, MANAGER, DIRECTOR allowed)
+        // So we use customers and CRM only
+        const [custs, crm] = await Promise.all([
           apiFetch("/admin/customers/list?page=1&limit=1"),
           apiFetch("/admin/crm/stats"),
         ]);
-        results.recentOrders = results.recentOrders || orders.data || [];
-        results.totalOrders = orders.totalNoPage || orders.total || 0;
-        results.totalCustomers = results.totalCustomers || customers.total || 0;
-        results.crmStats = results.crmStats || crm.data;
+        r.totalCustomers = custs.data?.totalDocs ?? "—";
+        r.totalLeads = crm.data?.totalLeads ?? "—";
+        r.wonLeads = crm.data?.wonLeads ?? "—";
+        r.convRate = crm.data?.conversionRate ?? 0;
       }
 
-      if (["WAREHOUSE", "MANAGER", "IT", "DIRECTOR"].includes(role)) {
-        const [stock, po] = await Promise.all([
-          apiFetch("/stock/summary"),
-          apiFetch("/purchase-orders?page=1&limit=5"),
+      // ── SALES ────────────────────────────────────────────────────────────────
+      else if (role === "SALES") {
+        const [orders, custs, crm] = await Promise.all([
+          apiFetch("/admin/orders/list?page=1&limit=5"),
+          apiFetch("/admin/customers/list?page=1&limit=1"),
+          apiFetch("/admin/crm/stats"),
         ]);
-        results.stockSummary = stock.data || stock;
-        results.recentPOs = po.data || [];
-        results.totalPOs = po.total || 0;
+        r.totalOrders = orders.data?.totalDocs ?? "—";
+        r.recentOrders = orders.data?.docs ?? [];
+        r.totalCustomers = custs.data?.totalDocs ?? "—";
+        r.totalLeads = crm.data?.totalLeads ?? "—";
+        r.wonLeads = crm.data?.wonLeads ?? "—";
       }
 
-      if (["ACCOUNTANT", "MANAGER", "DIRECTOR"].includes(role)) {
-        const [pricing, finance] = await Promise.all([
-          apiFetch("/admin/finance?limit=1"),
-          apiFetch("/admin/finance/meta"),
+      // ── HR ───────────────────────────────────────────────────────────────────
+      else if (role === "HR") {
+        const [stats, custs] = await Promise.all([
+          apiFetch("/admin/auth/stats"),
+          apiFetch("/admin/customers/list?page=1&limit=1"),
         ]);
-        results.financeSummary = results.financeSummary || pricing.summary;
+        r.totalAdmins = stats.data?.overview?.totalAdmins ?? "—";
+        r.deptCount = stats.data?.adminsBySubRole?.length ?? "—";
+        r.totalCustomers = custs.data?.totalDocs ?? "—";
       }
 
-      if (["LOGISTICS", "MANAGER", "DIRECTOR"].includes(role)) {
-        const trackingData = await apiFetch(
-          "/order/order-list?status=pending&page=1&limit=5",
-        );
-        results.pendingDeliveries = trackingData.data || [];
-        results.totalPendingDeliveries = trackingData.total || 0;
+      // ── WAREHOUSE ────────────────────────────────────────────────────────────
+      else if (role === "WAREHOUSE") {
+        const [wh, pos] = await Promise.all([
+          apiFetch("/warehouse/stock-summary"), // { data:{ totalProducts, lowStockItems, outOfStockItems } }
+          apiFetch("/purchase-orders?page=1&limit=1"), // { totalCount }
+        ]);
+        r.totalProducts = wh.data?.totalProducts ?? "—";
+        r.lowStock = wh.data?.lowStockItems ?? "—";
+        r.outOfStock = wh.data?.outOfStockItems ?? "—";
+        r.totalPOs = pos.totalCount ?? "—";
       }
 
-      if (["EDITOR", "IT", "DIRECTOR", "MANAGER"].includes(role)) {
-        const [blogs, products] = await Promise.all([
-          apiFetch("/blog/get-all-posts?page=1&limit=1"),
+      // ── ACCOUNTANT ───────────────────────────────────────────────────────────
+      else if (role === "ACCOUNTANT") {
+        const fin = await apiFetch("/admin/finance?limit=1");
+        r.income = fin.summary?.income?.totalNGN ?? 0;
+        r.expense = fin.summary?.expense?.totalNGN ?? 0;
+        r.netNGN = fin.summary?.netNGN ?? 0;
+      }
+
+      // ── LOGISTICS ────────────────────────────────────────────────────────────
+      else if (role === "LOGISTICS") {
+        const orders = await apiFetch("/admin/orders/list?page=1&limit=5");
+        r.totalOrders = orders.data?.totalDocs ?? "—";
+        r.recentOrders = orders.data?.docs ?? [];
+        r.pendingOrders = (orders.data?.docs ?? []).filter(
+          (o) => !["Delivered", "Cancel"].includes(o.order_status),
+        ).length;
+      }
+
+      // ── EDITOR ───────────────────────────────────────────────────────────────
+      else if (role === "EDITOR") {
+        const [prods, blogs] = await Promise.all([
           apiFetch("/product/get?page=1&limit=1"),
+          apiFetch("/blog/get-all-posts?page=1&limit=1"), // { pagination:{ total } }
         ]);
-        results.totalBlogs = blogs.totalNoPage || 0;
-        results.totalProducts =
-          results.totalProducts || products.totalNoPage || 0;
+        r.totalProducts = prods.totalNoPage ?? "—";
+        r.totalBlogs = blogs.pagination?.total ?? "—";
       }
 
-      if (["HR", "IT", "DIRECTOR", "MANAGER"].includes(role)) {
-        const users = await apiFetch("/admin/user/users?page=1&limit=1");
-        results.totalStaff = users.total || 0;
-        results.staffByRole = users.bySubRole || [];
+      // ── DESIGNER ─────────────────────────────────────────────────────────────
+      else if (role === "DESIGNER") {
+        const prods = await apiFetch("/product/get?page=1&limit=1");
+        r.totalProducts = prods.totalNoPage ?? "—";
       }
 
-      results.loadedAt = new Date();
-      setData(results);
-      setLastUpdated(new Date());
+      setD(r);
+      setUpdated(new Date());
       setLoading(false);
       setRefreshing(false);
     },
@@ -281,31 +285,28 @@ export default function DashboardOverview() {
   );
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    load();
+  }, [load]);
 
-  const nav = (path) => navigate(path);
   const L = loading;
-  const banner = ROLE_BANNERS[role] || "from-blue-700 to-indigo-700";
+  const banner = BANNERS[role] || "from-blue-700 to-indigo-700";
 
-  // ── Role configs ──────────────────────────────────────────────────────────
   const configs = {
     DIRECTOR: {
       title: "Executive Dashboard",
-      subtitle: "Complete business overview and performance metrics",
+      subtitle: "Complete business overview",
       stats: [
         {
-          title: "Total Revenue (NGN)",
-          value: fmtCur(data.financeSummary?.income?.totalNGN),
+          title: "Total Revenue",
+          value: fmtC(d.income),
           icon: DollarSign,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          trend: "All time",
-          trendUp: true,
+          sub: "All-time income",
         },
         {
           title: "Net Balance",
-          value: fmtCur(data.financeSummary?.netNGN),
+          value: fmtC(d.netNGN),
           icon: TrendingUp,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
@@ -313,35 +314,19 @@ export default function DashboardOverview() {
         },
         {
           title: "Total Customers",
-          value: fmtN(data.totalCustomers),
+          value: fmt(d.totalCustomers),
           icon: Users,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
           sub: "Registered customers",
         },
         {
-          title: "CRM Won Deals",
-          value: fmtN(data.crmStats?.wonLeads),
+          title: "CRM Deals Won",
+          value: fmt(d.wonLeads),
           icon: Award,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
-          sub: `${data.crmStats?.conversionRate || 0}% conversion`,
-        },
-        {
-          title: "Total Products",
-          value: fmtN(data.totalProducts),
-          icon: Package,
-          color: "text-indigo-600",
-          bg: "bg-indigo-50 dark:bg-indigo-900/20",
-          sub: "In catalog",
-        },
-        {
-          title: "Admin Staff",
-          value: fmtN(data.adminStats?.overview?.totalAdmins),
-          icon: Shield,
-          color: "text-rose-600",
-          bg: "bg-rose-50 dark:bg-rose-900/20",
-          sub: "Active admins",
+          sub: `${d.convRate || 0}% conversion`,
         },
       ],
       actions: [
@@ -354,7 +339,7 @@ export default function DashboardOverview() {
         },
         {
           title: "CRM Pipeline",
-          desc: "Leads and deals",
+          desc: "Leads and sales pipeline",
           icon: Users,
           color: "bg-blue-600",
           path: "/admin/dashboard/crm",
@@ -371,18 +356,17 @@ export default function DashboardOverview() {
           desc: "Business analytics",
           icon: BarChart3,
           color: "bg-indigo-600",
-          path: "/admin/reports/inventory",
+          path: "/admin/reports/sales",
         },
       ],
     },
-
     IT: {
       title: "System Administration",
       subtitle: "Infrastructure, users, and system health",
       stats: [
         {
           title: "Total Users",
-          value: fmtN(data.adminStats?.overview?.totalUsers),
+          value: fmt(d.totalUsers),
           icon: Users,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
@@ -390,7 +374,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Admin Staff",
-          value: fmtN(data.adminStats?.overview?.totalAdmins),
+          value: fmt(d.totalAdmins),
           icon: Shield,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
@@ -398,15 +382,15 @@ export default function DashboardOverview() {
         },
         {
           title: "Active Users",
-          value: fmtN(data.adminStats?.overview?.activeUsers),
-          icon: Activity,
+          value: fmt(d.activeUsers),
+          icon: Monitor,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
           sub: "Status: Active",
         },
         {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -444,42 +428,41 @@ export default function DashboardOverview() {
         },
       ],
     },
-
     MANAGER: {
       title: "Operations Dashboard",
-      subtitle: "Full operational overview across all departments",
+      subtitle: "Full operational overview",
       stats: [
         {
           title: "Total Orders",
-          value: fmtN(data.totalOrders),
+          value: fmt(d.totalOrders),
           icon: ShoppingCart,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "All time",
+          sub: "All orders",
         },
         {
-          title: "Total Customers",
-          value: fmtN(data.totalCustomers),
+          title: "Customers",
+          value: fmt(d.totalCustomers),
           icon: Users,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
-          sub: "Customer base",
+          sub: "Registered",
         },
         {
-          title: "CRM Leads",
-          value: fmtN(data.crmStats?.totalLeads),
-          icon: TrendingUp,
+          title: "CRM Won",
+          value: fmt(d.wonLeads),
+          icon: Award,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          sub: `${data.crmStats?.wonLeads || 0} won`,
+          sub: `of ${d.totalLeads || 0} leads`,
         },
         {
-          title: "Notifications",
-          value: fmtN(data.unreadNotifications),
-          icon: Bell,
-          color: "text-amber-600",
-          bg: "bg-amber-50 dark:bg-amber-900/20",
-          sub: "Unread",
+          title: "Low Stock Items",
+          value: fmt(d.lowStock),
+          icon: AlertCircle,
+          color: "text-orange-600",
+          bg: "bg-orange-50 dark:bg-orange-900/20",
+          sub: `${d.outOfStock || 0} out of stock`,
         },
       ],
       actions: [
@@ -491,7 +474,7 @@ export default function DashboardOverview() {
           path: "/admin/website-orders",
         },
         {
-          title: "CRM Pipeline",
+          title: "CRM",
           desc: "Leads and deals",
           icon: Users,
           color: "bg-green-600",
@@ -499,52 +482,51 @@ export default function DashboardOverview() {
         },
         {
           title: "Reports",
-          desc: "Analytics & reporting",
+          desc: "Analytics",
           icon: BarChart3,
           color: "bg-purple-600",
           path: "/admin/reports/inventory",
         },
         {
           title: "Notifications",
-          desc: "Send team updates",
+          desc: "Team updates",
           icon: Bell,
           color: "bg-amber-600",
           path: "/admin/dashboard/notifications",
         },
       ],
     },
-
     SALES_MANAGER: {
       title: "Sales Management Dashboard",
-      subtitle: "Sales team performance and pipeline overview",
+      subtitle: "Sales pipeline and performance",
       stats: [
         {
-          title: "Total Orders",
-          value: fmtN(data.totalOrders),
-          icon: ShoppingCart,
+          title: "Total Customers",
+          value: fmt(d.totalCustomers),
+          icon: Users,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "All orders",
+          sub: "Registered customers",
         },
         {
-          title: "Customers",
-          value: fmtN(data.totalCustomers),
-          icon: Users,
+          title: "Total Leads",
+          value: fmt(d.totalLeads),
+          icon: TrendingUp,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
-          sub: "Total customers",
+          sub: "In CRM pipeline",
         },
         {
-          title: "CRM Won",
-          value: fmtN(data.crmStats?.wonLeads),
+          title: "Won Deals",
+          value: fmt(d.wonLeads),
           icon: Award,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          sub: `${data.crmStats?.conversionRate || 0}% conversion`,
+          sub: `${d.convRate || 0}% conversion`,
         },
         {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -567,29 +549,28 @@ export default function DashboardOverview() {
           path: "/admin/dashboard/scraper",
         },
         {
-          title: "Orders",
-          desc: "Track customer orders",
-          icon: ShoppingCart,
-          color: "bg-green-600",
-          path: "/admin/website-orders",
-        },
-        {
           title: "Customers",
           desc: "Customer accounts",
           icon: Coffee,
-          color: "bg-purple-600",
+          color: "bg-green-600",
           path: "/admin/customers",
+        },
+        {
+          title: "Sales Reports",
+          desc: "Your performance",
+          icon: BarChart3,
+          color: "bg-purple-600",
+          path: "/admin/reports/sales",
         },
       ],
     },
-
     SALES: {
       title: "Sales Dashboard",
-      subtitle: "Your sales performance and customer relationships",
+      subtitle: "Your sales performance",
       stats: [
         {
           title: "Total Orders",
-          value: fmtN(data.totalOrders),
+          value: fmt(d.totalOrders),
           icon: ShoppingCart,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
@@ -597,7 +578,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Customers",
-          value: fmtN(data.totalCustomers),
+          value: fmt(d.totalCustomers),
           icon: Users,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
@@ -605,19 +586,19 @@ export default function DashboardOverview() {
         },
         {
           title: "CRM Leads",
-          value: fmtN(data.crmStats?.totalLeads),
+          value: fmt(d.totalLeads),
           icon: TrendingUp,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          sub: "In pipeline",
+          sub: "Active pipeline",
         },
         {
-          title: "Notifications",
-          value: fmtN(data.unreadNotifications),
-          icon: Bell,
+          title: "Won Deals",
+          value: fmt(d.wonLeads),
+          icon: Award,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
-          sub: "Unread",
+          sub: "Closed deals",
         },
       ],
       actions: [
@@ -651,25 +632,21 @@ export default function DashboardOverview() {
         },
       ],
     },
-
     HR: {
       title: "Human Resources Dashboard",
-      subtitle: "Staff management and recruitment overview",
+      subtitle: "Staff and recruitment overview",
       stats: [
         {
           title: "Total Staff",
-          value: fmtN(data.totalStaff),
+          value: fmt(d.totalAdmins),
           icon: Users,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "Active admin accounts",
+          sub: "Admin accounts",
         },
         {
           title: "Departments",
-          value: fmtN(
-            data.adminStats?.adminsBySubRole?.length ||
-              data.staffByRole?.length,
-          ),
+          value: fmt(d.deptCount),
           icon: Shield,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
@@ -677,7 +654,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Customers",
-          value: fmtN(data.totalCustomers),
+          value: fmt(d.totalCustomers),
           icon: Coffee,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
@@ -685,7 +662,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -702,7 +679,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Add Employee",
-          desc: "Onboard new team member",
+          desc: "Onboard new member",
           icon: UserPlus,
           color: "bg-green-600",
           path: "/admin/users",
@@ -723,107 +700,105 @@ export default function DashboardOverview() {
         },
       ],
     },
-
     WAREHOUSE: {
       title: "Warehouse Dashboard",
-      subtitle: "Stock levels, movements, and warehouse operations",
+      subtitle: "Stock levels and operations",
       stats: [
         {
-          title: "Pending Orders",
-          value: fmtN(data.totalPOs),
-          icon: Inbox,
+          title: "Total Products",
+          value: fmt(d.totalProducts),
+          icon: Package,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "Purchase orders",
+          sub: "In catalog",
         },
         {
-          title: "Stock Items",
-          value: fmtN(data.stockSummary?.totalProducts),
-          icon: Package,
+          title: "Purchase Orders",
+          value: fmt(d.totalPOs),
+          icon: Inbox,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          sub: "Products in stock",
+          sub: "Total POs",
         },
         {
           title: "Low Stock",
-          value: fmtN(data.stockSummary?.lowStockCount),
+          value: fmt(d.lowStock),
+          icon: AlertCircle,
+          color: "text-orange-600",
+          bg: "bg-orange-50 dark:bg-orange-900/20",
+          sub: "Need reorder (≤threshold)",
+        },
+        {
+          title: "Out of Stock",
+          value: fmt(d.outOfStock),
           icon: AlertCircle,
           color: "text-red-600",
           bg: "bg-red-50 dark:bg-red-900/20",
-          sub: "Need reorder",
-        },
-        {
-          title: "Notifications",
-          value: fmtN(data.unreadNotifications),
-          icon: Bell,
-          color: "text-amber-600",
-          bg: "bg-amber-50 dark:bg-amber-900/20",
-          sub: "Unread",
+          sub: "Zero units",
         },
       ],
       actions: [
         {
           title: "Stock Management",
-          desc: "Monitor inventory levels",
+          desc: "Monitor levels",
           icon: Package,
           color: "bg-blue-600",
           path: "/admin/stock",
         },
         {
           title: "Warehouse",
-          desc: "Warehouse layout & zones",
+          desc: "Zones & layout",
           icon: Warehouse,
           color: "bg-green-600",
           path: "/admin/warehouse",
         },
         {
           title: "Purchase Orders",
-          desc: "Incoming stock orders",
+          desc: "Incoming stock",
           icon: Inbox,
           color: "bg-orange-600",
           path: "/admin/purchase-orders",
         },
         {
-          title: "Support Tickets",
-          desc: "Technical support",
-          icon: LifeBuoy,
-          color: "bg-red-600",
-          path: "/admin/dashboard/support-tickets",
+          title: "Stock Analysis",
+          desc: "Batch & expiry report",
+          icon: BarChart3,
+          color: "bg-purple-600",
+          path: "/admin/reports/stock-analysis",
         },
       ],
     },
-
     ACCOUNTANT: {
       title: "Accounting Dashboard",
-      subtitle: "Financial overview and pricing management",
+      subtitle: "Financial overview and pricing",
       stats: [
         {
           title: "Total Income",
-          value: fmtCur(data.financeSummary?.income?.totalNGN),
+          value: fmtC(d.income),
           icon: ArrowUpCircle,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          sub: "All time income",
+          sub: "All-time income",
         },
         {
           title: "Total Expenses",
-          value: fmtCur(data.financeSummary?.expense?.totalNGN),
+          value: fmtC(d.expense),
           icon: ArrowDownCircle,
           color: "text-red-600",
           bg: "bg-red-50 dark:bg-red-900/20",
-          sub: "All time expenses",
+          sub: "All-time expenses",
         },
         {
           title: "Net Balance",
-          value: fmtCur(data.financeSummary?.netNGN),
+          value: fmtC(d.netNGN),
           icon: DollarSign,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "Income - Expenses",
+          sub: "Income − Expenses",
         },
         {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -832,18 +807,11 @@ export default function DashboardOverview() {
       ],
       actions: [
         {
-          title: "Pricing Management",
+          title: "Pricing",
           desc: "Manage product prices",
           icon: DollarSign,
           color: "bg-green-600",
           path: "/admin/pricing",
-        },
-        {
-          title: "Price Lists",
-          desc: "View all price lists",
-          icon: FileText,
-          color: "bg-blue-600",
-          path: "/admin/pricing-lists",
         },
         {
           title: "Exchange Rates",
@@ -859,32 +827,38 @@ export default function DashboardOverview() {
           color: "bg-indigo-600",
           path: "/admin/reports/pricing",
         },
+        {
+          title: "Purchase Reports",
+          desc: "Supplier analytics",
+          icon: FileText,
+          color: "bg-blue-600",
+          path: "/admin/reports/purchase",
+        },
       ],
     },
-
     LOGISTICS: {
       title: "Logistics Dashboard",
-      subtitle: "Delivery management and tracking overview",
+      subtitle: "Delivery management and tracking",
       stats: [
         {
-          title: "Pending Deliveries",
-          value: fmtN(data.totalPendingDeliveries),
-          icon: Truck,
+          title: "Total Orders",
+          value: fmt(d.totalOrders),
+          icon: ShoppingCart,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "Awaiting dispatch",
-        },
-        {
-          title: "Total Orders",
-          value: fmtN(data.totalOrders),
-          icon: ShoppingCart,
-          color: "text-green-600",
-          bg: "bg-green-50 dark:bg-green-900/20",
           sub: "All orders",
         },
         {
+          title: "Pending Dispatch",
+          value: fmt(d.pendingOrders),
+          icon: Truck,
+          color: "text-orange-600",
+          bg: "bg-orange-50 dark:bg-orange-900/20",
+          sub: "Not yet delivered",
+        },
+        {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -892,16 +866,17 @@ export default function DashboardOverview() {
         },
         {
           title: "Support Tickets",
+          value: "—",
           icon: LifeBuoy,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
-          sub: "Open tickets",
+          sub: "Open issues",
         },
       ],
       actions: [
         {
           title: "Logistics",
-          desc: "Manage shipping methods",
+          desc: "Shipping methods",
           icon: Truck,
           color: "bg-blue-600",
           path: "/admin/logistics",
@@ -929,14 +904,13 @@ export default function DashboardOverview() {
         },
       ],
     },
-
     EDITOR: {
       title: "Content Management Dashboard",
-      subtitle: "Products, blog, and content publishing overview",
+      subtitle: "Products, blog and publishing",
       stats: [
         {
           title: "Total Products",
-          value: fmtN(data.totalProducts),
+          value: fmt(d.totalProducts),
           icon: Package,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
@@ -944,7 +918,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Blog Posts",
-          value: fmtN(data.totalBlogs),
+          value: fmt(d.totalBlogs),
           icon: FileText,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
@@ -952,7 +926,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -960,6 +934,7 @@ export default function DashboardOverview() {
         },
         {
           title: "Support Tickets",
+          value: "—",
           icon: LifeBuoy,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
@@ -969,7 +944,7 @@ export default function DashboardOverview() {
       actions: [
         {
           title: "Products",
-          desc: "Manage product content",
+          desc: "Manage content",
           icon: Package,
           color: "bg-blue-600",
           path: "/admin/products",
@@ -997,22 +972,21 @@ export default function DashboardOverview() {
         },
       ],
     },
-
     DESIGNER: {
       title: "Design Dashboard",
-      subtitle: "Visual content and brand asset management",
+      subtitle: "Visual content and brand assets",
       stats: [
         {
           title: "Total Products",
-          value: fmtN(data.totalProducts),
+          value: fmt(d.totalProducts),
           icon: Package,
           color: "text-blue-600",
           bg: "bg-blue-50 dark:bg-blue-900/20",
-          sub: "Products with images",
+          sub: "In catalog",
         },
         {
           title: "Notifications",
-          value: fmtN(data.unreadNotifications),
+          value: fmt(d.notif),
           icon: Bell,
           color: "text-amber-600",
           bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -1020,17 +994,19 @@ export default function DashboardOverview() {
         },
         {
           title: "Support Tickets",
+          value: "—",
           icon: LifeBuoy,
           color: "text-purple-600",
           bg: "bg-purple-50 dark:bg-purple-900/20",
           sub: "Open tickets",
         },
         {
-          title: "Sliders",
-          icon: PieChart,
+          title: "Active Sliders",
+          value: "—",
+          icon: Palette,
           color: "text-green-600",
           bg: "bg-green-50 dark:bg-green-900/20",
-          sub: "Active banners",
+          sub: "Homepage banners",
         },
       ],
       actions: [
@@ -1044,13 +1020,13 @@ export default function DashboardOverview() {
         {
           title: "Banners",
           desc: "Promotional banners",
-          icon: Star,
+          icon: Palette,
           color: "bg-pink-600",
           path: "/admin/banners",
         },
         {
           title: "Colors",
-          desc: "Product color management",
+          desc: "Colour management",
           icon: Palette,
           color: "bg-indigo-600",
           path: "/admin/colors",
@@ -1066,17 +1042,17 @@ export default function DashboardOverview() {
     },
   };
 
-  const config = configs[role] || configs.IT;
+  const cfg = configs[role] || configs.IT;
 
   return (
     <div className="space-y-6">
       <AnnouncementPopup />
 
-      {/* ── Banner ── */}
+      {/* Banner */}
       <div className={`bg-gradient-to-r ${banner} rounded-2xl p-6 text-white`}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-white/70 text-sm font-medium mb-1">
+            <p className="text-white/70 text-sm mb-1">
               {new Date().toLocaleDateString("en-NG", {
                 weekday: "long",
                 day: "numeric",
@@ -1084,24 +1060,24 @@ export default function DashboardOverview() {
                 year: "numeric",
               })}
             </p>
-            <h1 className="text-2xl font-bold">{config.title}</h1>
-            <p className="text-white/80 text-sm mt-1">{config.subtitle}</p>
-            <div className="flex items-center gap-3 mt-3">
+            <h1 className="text-2xl font-bold">{cfg.title}</h1>
+            <p className="text-white/80 text-sm mt-1">{cfg.subtitle}</p>
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
               <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-medium">
-                {currentUser?.name}
+                {user?.name}
               </span>
               <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-medium">
                 {role}
               </span>
-              {data.unreadNotifications > 0 && (
+              {d.notif > 0 && (
                 <span className="text-xs bg-red-500 px-3 py-1 rounded-full font-medium flex items-center gap-1">
-                  <Bell className="h-3 w-3" /> {data.unreadNotifications} new
+                  <Bell className="h-3 w-3" /> {d.notif} new
                 </span>
               )}
             </div>
           </div>
           <button
-            onClick={() => fetchData(true)}
+            onClick={() => load(true)}
             disabled={refreshing}
             className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
           >
@@ -1110,41 +1086,30 @@ export default function DashboardOverview() {
             />
           </button>
         </div>
-        {lastUpdated && (
-          <p className="text-white/50 text-xs mt-3">
-            Last updated: {timeAgo(lastUpdated)}
-          </p>
+        {updated && (
+          <p className="text-white/40 text-xs mt-3">Updated {ago(updated)}</p>
         )}
       </div>
 
-      {/* ── Stat cards ── */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {config.stats.map((s, i) => (
-          <StatCard key={i} {...s} loading={L} />
+        {cfg.stats.map((s, i) => (
+          <Stat key={i} {...s} loading={L} />
         ))}
       </div>
 
-      {/* ── Quick actions + Recent activity ── */}
+      {/* Actions + Recent orders */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick actions */}
         <div className="lg:col-span-1 space-y-3">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             Quick Actions
           </h2>
-          {config.actions.map((a, i) => (
-            <QuickAction
-              key={i}
-              title={a.title}
-              desc={a.desc}
-              icon={a.icon}
-              color={a.color}
-              onClick={() => nav(a.path)}
-            />
+          {cfg.actions.map((a, i) => (
+            <Action key={i} {...a} onClick={() => nav(a.path)} />
           ))}
         </div>
 
-        {/* Recent Orders (if relevant) */}
-        {data.recentOrders?.length > 0 && (
+        {d.recentOrders?.length > 0 ? (
           <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -1158,7 +1123,7 @@ export default function DashboardOverview() {
               </button>
             </div>
             <div className="space-y-3">
-              {data.recentOrders.slice(0, 5).map((order, i) => (
+              {d.recentOrders.slice(0, 5).map((o, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
@@ -1169,84 +1134,32 @@ export default function DashboardOverview() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-36">
-                        {order.userId?.name || order.name || "Customer"}
+                        {o.userId?.name || o.customerId?.name || "Customer"}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {timeAgo(order.createdAt)}
+                        {ago(o.createdAt)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                      {fmtCur(order.totalAmt || order.subTotalAmt)}
+                      {fmtC(o.totalAmt || o.subTotalAmt)}
                     </p>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        order.order_status === "Delivered"
-                          ? "bg-green-100 text-green-700"
-                          : order.order_status === "Cancel"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                      }`}
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${o.order_status === "Delivered" ? "bg-green-100 text-green-700" : o.order_status === "Cancel" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}
                     >
-                      {order.order_status || "Pending"}
+                      {o.order_status || "Pending"}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
-        {/* Stock alerts (warehouse/manager) */}
-        {data.stockSummary && !data.recentOrders?.length && (
-          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Stock Overview
-            </h2>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                {
-                  label: "Total Products",
-                  value: data.stockSummary?.totalProducts,
-                  color: "text-blue-600",
-                },
-                {
-                  label: "In Stock",
-                  value: data.stockSummary?.inStockCount,
-                  color: "text-green-600",
-                },
-                {
-                  label: "Low / Out",
-                  value: data.stockSummary?.lowStockCount,
-                  color: "text-red-600",
-                },
-              ].map((s) => (
-                <div
-                  key={s.label}
-                  className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                >
-                  <p className={`text-2xl font-bold ${s.color}`}>
-                    {fmtN(s.value)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Default info panel */}
-        {!data.recentOrders?.length && !data.stockSummary && (
-          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center text-center space-y-3">
-            <div
-              className={`p-4 rounded-full bg-gradient-to-br ${banner} bg-opacity-10`}
-            >
-              <Coffee className="h-8 w-8 text-white opacity-70" />
-            </div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xs">
-              Welcome to the I-COFFEE.NG admin panel. Use the quick actions to
-              get started.
+        ) : (
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center text-center gap-3">
+            <Coffee className="h-10 w-10 text-gray-200 dark:text-gray-700" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Welcome back, {user?.name}. Use the quick actions to navigate.
             </p>
           </div>
         )}

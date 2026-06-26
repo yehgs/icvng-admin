@@ -1,21 +1,23 @@
 //admin
-// src/pages/reports/StockAnalysis.jsx
-// Roles: IT, DIRECTOR, WAREHOUSE, MANAGER
+// src/pages/reports/SalesReports.jsx
+// Roles: IT, DIRECTOR, SALES, SALES_MANAGER, MANAGER, ACCOUNTANT
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Package,
-  AlertTriangle,
-  Archive,
+  ShoppingCart,
   TrendingUp,
+  DollarSign,
+  Users,
   RefreshCw,
   Download,
   Search,
-  BarChart3,
-  Warehouse,
-  ArrowUpCircle,
-  ArrowDownCircle,
+  Filter,
+  ChevronDown,
+  Award,
+  Target,
 } from "lucide-react";
 import {
+  AreaChart,
+  Area,
   BarChart,
   Bar,
   XAxis,
@@ -23,12 +25,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
   PieChart,
   Pie,
   Cell,
-  Legend,
-  AreaChart,
-  Area,
 } from "recharts";
 
 const API_BASE =
@@ -49,131 +49,145 @@ const COLORS = [
   "#8B5CF6",
   "#06B6D4",
   "#F97316",
+  "#EC4899",
 ];
-const QUALITY_COLORS = {
-  PASSED: "#10B981",
-  REFURBISHED: "#3B82F6",
-  DAMAGED: "#EF4444",
-  EXPIRED: "#6B7280",
+const STATUS_COLORS = {
+  "Order Placed": "#3B82F6",
+  Processing: "#8B5CF6",
+  Shipping: "#06B6D4",
+  Delivered: "#10B981",
+  Cancel: "#EF4444",
 };
 
-function fmtN(n) {
-  return n != null ? Number(n).toLocaleString() : "—";
-}
 function fmtCur(n) {
   return n != null ? `₦${Number(n).toLocaleString()}` : "₦0";
+}
+function fmtN(n) {
+  return n != null ? Number(n).toLocaleString() : "—";
 }
 function timeAgo(d) {
   if (!d) return "";
   const diff = Date.now() - new Date(d).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  return `${days}d ago`;
+  const m = Math.floor(diff / 60000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
-export default function StockAnalysis() {
-  const [summary, setSummary] = useState(null);
-  const [batches, setBatches] = useState([]);
-  const [expiring, setExpiring] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
-  const [products, setProducts] = useState([]);
+export default function SalesReports() {
+  const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [crmStats, setCrmStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("overview");
   const [search, setSearch] = useState("");
-  const [filterQuality, setFilterQuality] = useState("");
-  const [expiryDays, setExpiryDays] = useState("30");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [dateRange, setDateRange] = useState("all"); // all | 30 | 90 | 365
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [sum, batchData, exp, wh, prods] = await Promise.all([
-      api("/stock/summary"),
-      api("/stock/batches?page=1&limit=200"),
-      api(`/stock/expiring?days=${expiryDays}`),
-      api("/warehouse"),
-      api("/product/get?page=1&limit=200"),
+    const [ords, custs, crm] = await Promise.all([
+      api("/admin/orders/list?page=1&limit=200"),
+      api("/admin/customers/list?page=1&limit=500"),
+      api("/admin/crm/stats"),
     ]);
-    setSummary(sum.data || sum);
-    setBatches(batchData.data || []);
-    setExpiring(exp.data || []);
-    setWarehouses(wh.data || []);
-    setProducts(prods.data || []);
+    setOrders(ords.data?.docs || []);
+    setCustomers(custs.data?.docs || []);
+    setCrmStats(crm.data);
     setLoading(false);
-  }, [expiryDays]);
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // ── Aggregations ─────────────────────────────────────────────────────────
-  const filteredBatches = batches.filter((b) => {
+  // Apply date range filter
+  const cutoff =
+    dateRange === "all"
+      ? null
+      : new Date(Date.now() - parseInt(dateRange) * 86400000);
+  const filteredOrders = orders.filter((o) => {
+    const inRange = !cutoff || new Date(o.createdAt) >= cutoff;
+    const statusMatch = !filterStatus || o.order_status === filterStatus;
     const searchMatch =
       !search ||
-      b.productName?.toLowerCase().includes(search.toLowerCase()) ||
-      b.batchNumber?.toLowerCase().includes(search.toLowerCase());
-    const qualityMatch = !filterQuality || b.quality === filterQuality;
-    return searchMatch && qualityMatch;
+      o._id?.toLowerCase().includes(search.toLowerCase()) ||
+      o.userId?.name?.toLowerCase().includes(search.toLowerCase());
+    return inRange && statusMatch && searchMatch;
   });
 
-  // Quality breakdown
-  const qualityMap = {};
-  batches.forEach((b) => {
-    qualityMap[b.quality] = (qualityMap[b.quality] || 0) + (b.quantity || 0);
+  // ── Aggregations ─────────────────────────────────────────────────────────
+  const totalRevenue = filteredOrders
+    .filter((o) => o.order_status !== "Cancel")
+    .reduce((s, o) => s + (o.totalAmt || o.subTotalAmt || 0), 0);
+
+  const deliveredOrders = filteredOrders.filter(
+    (o) => o.order_status === "Delivered",
+  );
+  const cancelledOrders = filteredOrders.filter(
+    (o) => o.order_status === "Cancel",
+  );
+  const pendingOrders = filteredOrders.filter(
+    (o) => !["Delivered", "Cancel"].includes(o.order_status),
+  );
+
+  // Monthly revenue trend (last 12 months)
+  const monthlyMap = {};
+  filteredOrders.forEach((o) => {
+    if (!o.createdAt || o.order_status === "Cancel") return;
+    const d = new Date(o.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleString("en", { month: "short", year: "2-digit" });
+    monthlyMap[key] = monthlyMap[key] || { key, label, revenue: 0, orders: 0 };
+    monthlyMap[key].revenue += o.totalAmt || o.subTotalAmt || 0;
+    monthlyMap[key].orders++;
   });
-  const qualityData = Object.entries(qualityMap).map(([name, value]) => ({
+  const monthlyData = Object.entries(monthlyMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([, v]) => v);
+
+  // Status breakdown for pie
+  const statusMap = {};
+  filteredOrders.forEach((o) => {
+    const s = o.order_status || "Unknown";
+    statusMap[s] = (statusMap[s] || 0) + 1;
+  });
+  const statusData = Object.entries(statusMap).map(([name, value]) => ({
     name,
     value,
   }));
 
-  // Category stock distribution (from products)
-  const catStock = {};
-  products.forEach((p) => {
-    const cat = p.category?.name || "Uncategorised";
-    catStock[cat] = (catStock[cat] || 0) + (p.stock || 0);
-  });
-  const catStockData = Object.entries(catStock)
-    .map(([name, stock]) => ({ name, stock }))
-    .sort((a, b) => b.stock - a.stock)
-    .slice(0, 8);
-
-  // Low stock products
-  const lowStock = products
-    .filter((p) => (p.stock || 0) <= 10)
-    .sort((a, b) => (a.stock || 0) - (b.stock || 0));
-  const outOfStock = products.filter((p) => (p.stock || 0) === 0);
-
-  const totalStockValue = products.reduce(
-    (s, p) => s + (p.price || 0) * (p.stock || 0),
-    0,
-  );
+  // Top customers by spend
+  const custSpend = {};
+  filteredOrders
+    .filter((o) => o.order_status !== "Cancel")
+    .forEach((o) => {
+      const name = o.userId?.name || o.name || "Unknown";
+      custSpend[name] =
+        (custSpend[name] || 0) + (o.totalAmt || o.subTotalAmt || 0);
+    });
+  const topCustomers = Object.entries(custSpend)
+    .map(([name, total]) => ({ name, total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10);
 
   const exportCSV = () => {
-    const rows = [
-      [
-        "Batch No",
-        "Product",
-        "Quality",
-        "Quantity",
-        "Expiry Date",
-        "Location",
-        "Received",
-      ],
-    ];
-    filteredBatches.forEach((b) =>
+    const rows = [["Order ID", "Customer", "Status", "Amount (₦)", "Date"]];
+    filteredOrders.forEach((o) =>
       rows.push([
-        b.batchNumber || "",
-        b.productName || b.product?.name || "",
-        b.quality || "",
-        b.quantity || 0,
-        b.expiryDate ? new Date(b.expiryDate).toLocaleDateString("en-NG") : "",
-        `${b.location?.zone || ""}-${b.location?.shelf || ""}`,
-        b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-NG") : "",
+        o._id || "",
+        o.userId?.name || "",
+        o.order_status || "",
+        o.totalAmt || o.subTotalAmt || 0,
+        o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-NG") : "",
       ]),
     );
     const csv = rows.map((r) => r.join(",")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = "stock_analysis.csv";
+    a.download = "sales_report.csv";
     a.click();
   };
 
@@ -183,13 +197,24 @@ export default function StockAnalysis() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Warehouse className="h-6 w-6 text-orange-600" /> Stock Analysis
+            <ShoppingCart className="h-6 w-6 text-green-600" /> Sales Reports
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Inventory levels, batch quality and warehouse utilisation
+            Revenue, order performance and customer analytics
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {/* Date range */}
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+          >
+            <option value="all">All Time</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="365">Last 12 Months</option>
+          </select>
           <button
             onClick={fetchData}
             className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -200,7 +225,7 @@ export default function StockAnalysis() {
           </button>
           <button
             onClick={exportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
           >
             <Download className="h-4 w-4" /> Export CSV
           </button>
@@ -211,36 +236,36 @@ export default function StockAnalysis() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Total Products",
-            value: fmtN(summary?.totalProducts || products.length),
-            icon: Package,
-            color: "text-blue-600",
-            bg: "bg-blue-50 dark:bg-blue-900/20",
-            sub: "In catalog",
-          },
-          {
-            label: "Stock Value",
-            value: fmtCur(totalStockValue),
-            icon: BarChart3,
+            label: "Total Revenue",
+            value: loading ? "..." : fmtCur(totalRevenue),
+            icon: DollarSign,
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
-            sub: "Estimated at retail",
+            sub: `${filteredOrders.filter((o) => o.order_status !== "Cancel").length} paid orders`,
           },
           {
-            label: "Low Stock",
-            value: fmtN(lowStock.length),
-            icon: AlertTriangle,
-            color: "text-orange-600",
-            bg: "bg-orange-50 dark:bg-orange-900/20",
-            sub: "≤10 units remaining",
+            label: "Total Orders",
+            value: loading ? "..." : fmtN(filteredOrders.length),
+            icon: ShoppingCart,
+            color: "text-blue-600",
+            bg: "bg-blue-50 dark:bg-blue-900/20",
+            sub: `${pendingOrders.length} pending`,
           },
           {
-            label: "Out of Stock",
-            value: fmtN(outOfStock.length),
-            icon: Archive,
-            color: "text-red-600",
+            label: "Delivered",
+            value: loading ? "..." : fmtN(deliveredOrders.length),
+            icon: Award,
+            color: "text-teal-600",
+            bg: "bg-teal-50 dark:bg-teal-900/20",
+            sub: `${filteredOrders.length ? ((deliveredOrders.length / filteredOrders.length) * 100).toFixed(0) : 0}% fulfilment rate`,
+          },
+          {
+            label: "Cancelled",
+            value: loading ? "..." : fmtN(cancelledOrders.length),
+            icon: Target,
+            color: "text-red-500",
             bg: "bg-red-50 dark:bg-red-900/20",
-            sub: "Needs restocking",
+            sub: `${filteredOrders.length ? ((cancelledOrders.length / filteredOrders.length) * 100).toFixed(0) : 0}% cancellation rate`,
           },
         ].map((s) => (
           <div
@@ -251,7 +276,7 @@ export default function StockAnalysis() {
               <s.icon className={`h-5 w-5 ${s.color}`} />
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {loading ? "..." : s.value}
+              {s.value}
             </p>
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
               {s.label}
@@ -261,65 +286,116 @@ export default function StockAnalysis() {
         ))}
       </div>
 
+      {/* CRM summary row (if accessible) */}
+      {crmStats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            {
+              label: "CRM Total Leads",
+              value: fmtN(crmStats.totalLeads),
+              color: "text-blue-600",
+            },
+            {
+              label: "Won Deals",
+              value: fmtN(crmStats.wonLeads),
+              color: "text-green-600",
+            },
+            {
+              label: "Lost Leads",
+              value: fmtN(crmStats.lostLeads),
+              color: "text-red-500",
+            },
+            {
+              label: "Conversion Rate",
+              value: `${crmStats.conversionRate || 0}%`,
+              color: "text-purple-600",
+            },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <p className={`text-xl font-bold ${s.color}`}>
+                {loading ? "..." : s.value}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {[
-          { id: "overview", label: "Overview" },
-          { id: "batches", label: "Stock Batches" },
-          {
-            id: "low-stock",
-            label: `Low Stock${lowStock.length > 0 ? ` (${lowStock.length})` : ""}`,
-          },
-          {
-            id: "expiring",
-            label: `Expiring${expiring.length > 0 ? ` (${expiring.length})` : ""}`,
-          },
-          { id: "warehouses", label: "Warehouses" },
-        ].map(({ id, label }) => (
+        {["overview", "orders", "customers"].map((t) => (
           <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === id ? "border-orange-600 text-orange-600" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === t ? "border-green-600 text-green-600" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
           >
-            {label}
+            {t}
           </button>
         ))}
       </div>
 
-      {/* Overview charts */}
+      {/* Overview: charts */}
       {tab === "overview" && (
         <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+              Monthly Revenue Trend
+            </h3>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={monthlyData}>
+                <defs>
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <YAxis
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(v) =>
+                    v >= 1000000
+                      ? `₦${(v / 1000000).toFixed(1)}M`
+                      : v >= 1000
+                        ? `₦${(v / 1000).toFixed(0)}K`
+                        : `₦${v}`
+                  }
+                />
+                <Tooltip formatter={(v) => fmtCur(v)} />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10B981"
+                  fill="url(#revGrad)"
+                  strokeWidth={2}
+                  name="Revenue (₦)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Stock by Category
+                Monthly Orders
               </h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={catStockData} layout="vertical">
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#f0f0f0"
-                    horizontal={false}
-                  />
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(v) =>
-                      v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v
-                    }
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 10 }}
-                    width={90}
-                  />
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Bar
-                    dataKey="stock"
-                    fill="#F97316"
-                    radius={[0, 4, 4, 0]}
-                    name="Units"
+                    dataKey="orders"
+                    fill="#3B82F6"
+                    radius={[4, 4, 0, 0]}
+                    name="Orders"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -327,78 +403,40 @@ export default function StockAnalysis() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Batch Quality Breakdown
+                Order Status Breakdown
               </h3>
-              {qualityData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={qualityData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
-                      fontSize={10}
-                    >
-                      {qualityData.map(({ name }, i) => (
-                        <Cell
-                          key={i}
-                          fill={
-                            QUALITY_COLORS[name] || COLORS[i % COLORS.length]
-                          }
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v) => `${fmtN(v)} units`} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
-                  <div className="text-center">
-                    <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p>No batch data available</p>
-                  </div>
-                </div>
-              )}
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={75}
+                    label={({ name, percent }) =>
+                      `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelLine={false}
+                    fontSize={10}
+                  >
+                    {statusData.map(({ name }, i) => (
+                      <Cell
+                        key={i}
+                        fill={STATUS_COLORS[name] || COLORS[i % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Critical alerts */}
-          {(lowStock.length > 0 || expiring.length > 0) && (
-            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-4">
-              <h3 className="font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" /> Alerts Requiring Attention
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {lowStock.slice(0, 5).map((p, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"
-                  >
-                    <span className="text-gray-800 dark:text-gray-200 truncate mr-2">
-                      {p.name}
-                    </span>
-                    <span
-                      className={`font-bold flex-shrink-0 ${(p.stock || 0) === 0 ? "text-red-600" : "text-orange-500"}`}
-                    >
-                      {p.stock || 0} left
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Batches table */}
-      {tab === "batches" && (
+      {/* Orders table */}
+      {tab === "orders" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex gap-3 flex-wrap">
             <div className="relative flex-1 min-w-48">
@@ -406,116 +444,89 @@ export default function StockAnalysis() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search product or batch number..."
+                placeholder="Search order ID or customer..."
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
             <select
-              value={filterQuality}
-              onChange={(e) => setFilterQuality(e.target.value)}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Quality</option>
-              {["PASSED", "REFURBISHED", "DAMAGED", "EXPIRED"].map((q) => (
-                <option key={q} value={q}>
-                  {q}
+              <option value="">All Status</option>
+              {Object.keys(STATUS_COLORS).map((s) => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
             </select>
             <span className="text-sm text-gray-400 self-center">
-              {filteredBatches.length} batches
+              {filteredOrders.length} results
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {[
-                    "Batch No",
-                    "Product",
-                    "Quality",
-                    "Quantity",
-                    "Location",
-                    "Expiry",
-                    "Received",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  {["Order ID", "Customer", "Status", "Amount", "Date"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={5}
                       className="px-4 py-8 text-center text-gray-400"
                     >
                       Loading...
                     </td>
                   </tr>
-                ) : filteredBatches.length === 0 ? (
+                ) : filteredOrders.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={5}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      No batches found
+                      No orders found
                     </td>
                   </tr>
                 ) : (
-                  filteredBatches.slice(0, 100).map((b, i) => (
+                  filteredOrders.slice(0, 100).map((o, i) => (
                     <tr
                       key={i}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-blue-600">
-                        {b.batchNumber || "—"}
+                      <td className="px-4 py-3 font-mono text-xs text-blue-600 truncate max-w-32">
+                        {o._id || "—"}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200 truncate max-w-40">
-                        {b.productName || b.product?.name || "—"}
+                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                        {o.userId?.name || o.name || "—"}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className="text-xs px-2 py-0.5 rounded-full font-medium"
                           style={{
-                            backgroundColor: `${QUALITY_COLORS[b.quality] || "#6B7280"}20`,
-                            color: QUALITY_COLORS[b.quality] || "#6B7280",
+                            backgroundColor: `${STATUS_COLORS[o.order_status] || "#6B7280"}20`,
+                            color: STATUS_COLORS[o.order_status] || "#6B7280",
                           }}
                         >
-                          {b.quality || "—"}
+                          {o.order_status || "Pending"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">
-                        {fmtN(b.quantity)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs font-mono">
-                        {[
-                          b.location?.zone,
-                          b.location?.aisle,
-                          b.location?.shelf,
-                          b.location?.bin,
-                        ]
-                          .filter(Boolean)
-                          .join("-") || "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        {b.expiryDate ? (
-                          <span
-                            className={`text-xs font-medium ${new Date(b.expiryDate) < new Date(Date.now() + 30 * 86400000) ? "text-orange-600" : "text-gray-500"}`}
-                          >
-                            {new Date(b.expiryDate).toLocaleDateString("en-NG")}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )}
+                      <td className="px-4 py-3 font-semibold text-green-600">
+                        {fmtCur(o.totalAmt || o.subTotalAmt)}
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-xs">
-                        {timeAgo(b.createdAt)}
+                        {timeAgo(o.createdAt)}
                       </td>
                     </tr>
                   ))
@@ -526,29 +537,22 @@ export default function StockAnalysis() {
         </div>
       )}
 
-      {/* Low stock */}
-      {tab === "low-stock" && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {lowStock.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">
-              <Package className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
-              <p>All products are sufficiently stocked</p>
+      {/* Customers / Top spenders */}
+      {tab === "customers" && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Top Customers by Spend
+              </h3>
             </div>
-          ) : (
             <table className="w-full text-sm">
-              <thead className="bg-orange-50 dark:bg-orange-900/10">
+              <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {[
-                    "Product",
-                    "Category",
-                    "Stock",
-                    "Retail Price",
-                    "Stock Value",
-                    "Action",
-                  ].map((h) => (
+                  {["Rank", "Customer", "Total Spend", "Share"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-xs font-semibold text-orange-600 uppercase tracking-wide"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
                     >
                       {h}
                     </th>
@@ -556,215 +560,121 @@ export default function StockAnalysis() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {lowStock.map((p, i) => (
-                  <tr
-                    key={i}
-                    className={`hover:bg-orange-50/30 dark:hover:bg-orange-900/5 ${(p.stock || 0) === 0 ? "bg-red-50/30 dark:bg-red-900/5" : ""}`}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {p.image?.[0] && (
-                          <img
-                            src={p.image[0]}
-                            alt=""
-                            className="w-7 h-7 rounded object-cover"
-                          />
-                        )}
-                        <span className="font-medium text-gray-800 dark:text-gray-200 truncate max-w-40">
-                          {p.name}
+                {topCustomers.map((c, i) => {
+                  const share = totalRevenue
+                    ? ((c.total / totalRevenue) * 100).toFixed(1)
+                    : 0;
+                  return (
+                    <tr
+                      key={i}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                    >
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-100 text-gray-600" : i === 2 ? "bg-orange-100 text-orange-600" : "bg-gray-50 text-gray-500"}`}
+                        >
+                          #{i + 1}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {p.category?.name || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`font-bold text-lg ${(p.stock || 0) === 0 ? "text-red-600" : "text-orange-500"}`}
-                      >
-                        {p.stock || 0}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                      {fmtCur(p.price)}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-700 dark:text-gray-300">
-                      {fmtCur((p.price || 0) * (p.stock || 0))}
-                    </td>
-                    <td className="px-4 py-3">
-                      <a
-                        href="/admin/purchase-orders"
-                        className="text-xs text-blue-600 hover:underline font-medium"
-                      >
-                        Create PO →
-                      </a>
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                        {c.name}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-green-600">
+                        {fmtCur(c.total)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 min-w-20">
+                            <div
+                              className="h-full bg-green-500 rounded-full"
+                              style={{ width: `${share}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {share}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {topCustomers.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-4 py-8 text-center text-gray-400"
+                    >
+                      No customer data available
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
-          )}
-        </div>
-      )}
-
-      {/* Expiring */}
-      {tab === "expiring" && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Show expiring within:
-            </label>
-            <select
-              value={expiryDays}
-              onChange={(e) => setExpiryDays(e.target.value)}
-              className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-            >
-              <option value="7">7 days</option>
-              <option value="14">14 days</option>
-              <option value="30">30 days</option>
-              <option value="60">60 days</option>
-              <option value="90">90 days</option>
-            </select>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            {expiring.length === 0 ? (
-              <div className="p-10 text-center text-gray-400">
-                <Archive className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
-                <p>No items expiring within {expiryDays} days</p>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-red-50 dark:bg-red-900/10">
-                  <tr>
-                    {[
-                      "Product",
-                      "Batch",
-                      "Quality",
-                      "Quantity",
-                      "Expiry Date",
-                      "Days Left",
-                      "Location",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-red-600 uppercase tracking-wide"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {expiring.map((b, i) => {
-                    const days = Math.ceil(
-                      (new Date(b.expiryDate) - Date.now()) / 86400000,
-                    );
-                    const isExpired = days <= 0;
-                    return (
-                      <tr
-                        key={i}
-                        className={`hover:bg-red-50/30 dark:hover:bg-red-900/5 ${isExpired ? "bg-red-50/50 dark:bg-red-900/10" : days <= 7 ? "bg-orange-50/30 dark:bg-orange-900/5" : ""}`}
-                      >
-                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                          {b.productName || b.product?.name || "—"}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-blue-600">
-                          {b.batchNumber || "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{
-                              backgroundColor: `${QUALITY_COLORS[b.quality] || "#6B7280"}20`,
-                              color: QUALITY_COLORS[b.quality] || "#6B7280",
-                            }}
-                          >
-                            {b.quality || "—"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">
-                          {fmtN(b.quantity)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                          {new Date(b.expiryDate).toLocaleDateString("en-NG")}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`text-sm font-bold ${isExpired ? "text-red-600" : days <= 7 ? "text-orange-600" : "text-yellow-600"}`}
-                          >
-                            {isExpired ? "Expired" : `${days}d`}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-gray-500 font-mono">
-                          {[b.location?.zone, b.location?.shelf]
-                            .filter(Boolean)
-                            .join("-") || "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Warehouses */}
-      {tab === "warehouses" && (
-        <div className="space-y-4">
-          {warehouses.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-10 text-center text-gray-400">
-              <Warehouse className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>No warehouses configured yet</p>
-              <a
-                href="/admin/warehouse"
-                className="text-sm text-blue-600 hover:underline mt-2 block"
-              >
-                Set up warehouses →
-              </a>
+          {/* Customer registration trend */}
+          {customers.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                Customer Growth
+              </h3>
+              {(() => {
+                const cMap = {};
+                customers.forEach((c) => {
+                  if (!c.createdAt) return;
+                  const d = new Date(c.createdAt);
+                  const label = d.toLocaleString("en", {
+                    month: "short",
+                    year: "2-digit",
+                  });
+                  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                  cMap[key] = cMap[key] || { key, label, count: 0 };
+                  cMap[key].count++;
+                });
+                const cData = Object.entries(cMap)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .slice(-12)
+                  .map(([, v]) => v);
+                return (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <AreaChart data={cData}>
+                      <defs>
+                        <linearGradient
+                          id="custGrad"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#8B5CF6"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#8B5CF6"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Area
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#8B5CF6"
+                        fill="url(#custGrad)"
+                        strokeWidth={2}
+                        name="New Customers"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                );
+              })()}
             </div>
-          ) : (
-            warehouses.map((wh, i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
-                      {wh.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {wh.location || wh.address || "—"}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${wh.isActive !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
-                  >
-                    {wh.isActive !== false ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "Capacity", value: fmtN(wh.capacity) },
-                    { label: "Zones", value: fmtN(wh.zones?.length) },
-                    { label: "Manager", value: wh.manager || "—" },
-                  ].map((s) => (
-                    <div
-                      key={s.label}
-                      className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center"
-                    >
-                      <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                        {s.value}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
           )}
         </div>
       )}

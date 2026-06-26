@@ -88,12 +88,12 @@ export default function SalesReports() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [ords, custs, crm] = await Promise.all([
-      api("/order/order-list?page=1&limit=500"),
+      api("/admin/orders/list?page=1&limit=200"),
       api("/admin/customers/list?page=1&limit=500"),
       api("/admin/crm/stats"),
     ]);
-    setOrders(ords.data || []);
-    setCustomers(custs.data || []);
+    setOrders(ords.data?.docs || []);
+    setCustomers(custs.data?.docs || []);
     setCrmStats(crm.data);
     setLoading(false);
   }, []);
