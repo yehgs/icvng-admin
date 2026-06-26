@@ -52,6 +52,8 @@ import DirectPricingManagement from "./pages/pricing/DirectPricingManagement.jsx
 import InventoryReports from "./pages/reports/InventoryReports";
 import PricingReports from "./pages/reports/PricingReports";
 import PurchaseReports from "./pages/reports/PurchaseReports";
+import SalesReports from "./pages/reports/SalesReports";
+import StockAnalysis from "./pages/reports/StockAnalysis";
 
 // User Management
 import UserManagement from "./pages/users/UserManagement";
@@ -84,12 +86,14 @@ import FomoManagement from "./pages/content/FomoManagement.jsx";
 // Product Requests
 import ProductRequestManagement from "./pages/products/ProductRequestManagement.jsx";
 
+import CrmManagement from "./pages/crm/CrmManagement";
+import ProfilePage from "./pages/profile/ProfilePage";
+import ScraperTool from "./pages/scraper/ScraperTool";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import SupportTicketManagement from "./pages/support/SupportTicketManagement";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
-import FinanceManagement from "./pages/finance/FinanceManagement";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -182,6 +186,7 @@ const App = () => {
                   path="dashboard/notifications"
                   element={<NotificationManagement />}
                 />
+                <Route path="dashboard/profile" element={<ProfilePage />} />
                 <Route
                   path="dashboard/support-tickets"
                   element={<SupportTicketManagement />}
@@ -191,15 +196,6 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <PasswordVaultManagement />
-                    </RoleProtectedRoute>
-                  }
-                />
-
-                <Route
-                  path="dashboard/finance"
-                  element={
-                    <RoleProtectedRoute allowedSubRoles={["DIRECTOR"]}>
-                      <FinanceManagement />
                     </RoleProtectedRoute>
                   }
                 />
@@ -244,6 +240,7 @@ const App = () => {
                         "IT",
                         "DIRECTOR",
                         "LOGISTICS",
+                        "SALES_MANAGER",
                         "MANAGER",
                       ]}
                     >
@@ -259,6 +256,7 @@ const App = () => {
                         "IT",
                         "DIRECTOR",
                         "LOGISTICS",
+                        "SALES_MANAGER",
                         "MANAGER",
                       ]}
                     >
@@ -388,6 +386,7 @@ const App = () => {
                         "IT",
                         "DIRECTOR",
                         "SALES",
+                        "SALES_MANAGER",
                         "MANAGER",
                         "HR",
                       ]}
@@ -404,6 +403,7 @@ const App = () => {
                         "IT",
                         "DIRECTOR",
                         "SALES",
+                        "SALES_MANAGER",
                         "MANAGER",
                         "HR",
                       ]}
@@ -418,7 +418,13 @@ const App = () => {
                   path="customers"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "SALES", "MANAGER"]}
+                      allowedSubRoles={[
+                        "IT",
+                        "DIRECTOR",
+                        "SALES",
+                        "SALES_MANAGER",
+                        "MANAGER",
+                      ]}
                     >
                       <CustomerManagement />
                     </RoleProtectedRoute>
@@ -614,6 +620,38 @@ const App = () => {
                       </RoleProtectedRoute>
                     }
                   />
+                  <Route
+                    path="sales"
+                    element={
+                      <RoleProtectedRoute
+                        allowedSubRoles={[
+                          "IT",
+                          "DIRECTOR",
+                          "SALES",
+                          "SALES_MANAGER",
+                          "MANAGER",
+                          "ACCOUNTANT",
+                        ]}
+                      >
+                        <SalesReports />
+                      </RoleProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="stock-analysis"
+                    element={
+                      <RoleProtectedRoute
+                        allowedSubRoles={[
+                          "IT",
+                          "DIRECTOR",
+                          "WAREHOUSE",
+                          "MANAGER",
+                        ]}
+                      >
+                        <StockAnalysis />
+                      </RoleProtectedRoute>
+                    }
+                  />
                 </Route>
 
                 {/* Users */}
@@ -628,8 +666,15 @@ const App = () => {
                   }
                 />
 
-                {/* Settings */}
-                <Route path="settings" element={<Settings />} />
+                {/* Settings — IT and Director only */}
+                <Route
+                  path="settings"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                      <Settings />
+                    </RoleProtectedRoute>
+                  }
+                />
 
                 {/* Content */}
                 <Route
@@ -652,7 +697,6 @@ const App = () => {
                     </RoleProtectedRoute>
                   }
                 />
-
                 <Route
                   path="fomo"
                   element={
@@ -669,9 +713,52 @@ const App = () => {
                   path="product-requests"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["SALES", "IT", "DIRECTOR"]}
+                      allowedSubRoles={[
+                        "SALES",
+                        "SALES_MANAGER",
+                        "IT",
+                        "DIRECTOR",
+                      ]}
                     >
                       <ProductRequestManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* CRM Pipeline */}
+                <Route
+                  path="dashboard/crm"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "SALES",
+                        "SALES_MANAGER",
+                        "MANAGER",
+                        "IT",
+                        "EDITOR",
+                        "DIRECTOR",
+                      ]}
+                    >
+                      <CrmManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Web Scraper */}
+                <Route
+                  path="dashboard/scraper"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "SALES",
+                        "SALES_MANAGER",
+                        "MANAGER",
+                        "IT",
+                        "EDITOR",
+                        "DIRECTOR",
+                      ]}
+                    >
+                      <ScraperTool />
                     </RoleProtectedRoute>
                   }
                 />

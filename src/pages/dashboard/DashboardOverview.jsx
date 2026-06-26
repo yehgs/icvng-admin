@@ -1,1262 +1,1256 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+//admin
+// src/pages/dashboard/DashboardOverview.jsx
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
-  Shield,
-  Coffee,
-  CheckCircle,
-  UserPlus,
-  Key,
-  TrendingUp,
-  Activity,
-  Clock,
-  AlertCircle,
-  ArrowRight,
-  BarChart3,
-  Calendar,
-  Loader2,
-  RefreshCw,
-  Bell,
-  Settings,
-  Eye,
-  Plus,
+  ShoppingCart,
   Package,
   DollarSign,
-  ShoppingCart,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Activity,
+  RefreshCw,
+  ArrowRight,
+  BarChart3,
   FileText,
   Database,
   Monitor,
-  Palette,
+  Shield,
+  Truck,
+  Warehouse,
+  Coffee,
   Tag,
-  Folder,
-  Heart,
+  Palette,
+  Bell,
   Star,
+  Inbox,
+  LifeBuoy,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  UserPlus,
+  Eye,
+  Search,
+  PieChart,
+  Zap,
+  Award,
 } from "lucide-react";
+import { getCurrentUser } from "../../utils/api";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import AnnouncementPopup from "../../components/notifications/AnnouncementPopup";
-import { authAPI, getCurrentUser, activityLogAPI } from "../../utils/api";
 
-const DashboardOverview = () => {
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [recentLogs, setRecentLogs] = useState([]);
-  const currentUser = getCurrentUser();
-  const navigate = useNavigate();
+const API_BASE =
+  import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
 
-  // Fetch real activity logs for the dashboard panel (DIRECTOR + IT only)
-  const fetchRecentLogs = async () => {
-    if (!["DIRECTOR", "IT"].includes(currentUser?.subRole)) return;
-    try {
-      const data = await activityLogAPI.getLogs({ page: 1, limit: 6 });
-      if (data.success) setRecentLogs(data.data || []);
-    } catch (e) {
-      // Non-critical — panel will just stay empty
-    }
-  };
+async function apiFetch(path) {
+  const token = localStorage.getItem("accessToken");
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  } catch {
+    return { success: false };
+  }
+}
 
-  // Fetch dashboard stats
-  const fetchStats = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError("");
+function fmtN(n) {
+  if (!n && n !== 0) return "—";
+  return Number(n).toLocaleString();
+}
+function fmtCur(n) {
+  return n ? `₦${Number(n).toLocaleString()}` : "₦0";
+}
+function timeAgo(d) {
+  if (!d) return "";
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
-      const response = await authAPI.getStats();
-      if (response.success) {
-        setStats(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-      setError("Failed to load dashboard statistics");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-    fetchRecentLogs();
-  }, []);
-
-  const handleRefresh = () => {
-    fetchStats(true);
-    fetchRecentLogs();
-  };
-
-  // Common Components
-  const StatCard = ({
-    title,
-    value,
-    icon: Icon,
-    color,
-    trend,
-    description,
-    isLoading,
-  }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            {title}
-          </p>
-          {isLoading ? (
-            <div className="flex items-center gap-2 mt-1">
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-              <span className="text-sm text-gray-400">Loading...</span>
-            </div>
-          ) : (
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {value || 0}
-            </p>
-          )}
-        </div>
-        <div className={`p-3 rounded-full bg-gray-50 dark:bg-gray-700`}>
-          <Icon className={`h-6 w-6 ${color}`} />
-        </div>
+// ── Reusable stat card ──────────────────────────────────────────────────────
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  color,
+  bg,
+  trend,
+  trendUp,
+  sub,
+  loading,
+}) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+    <div className="flex items-start justify-between mb-3">
+      <div
+        className={`p-2.5 rounded-xl ${bg || "bg-blue-50 dark:bg-blue-900/20"}`}
+      >
+        <Icon className={`h-5 w-5 ${color || "text-blue-600"}`} />
       </div>
-      {!isLoading && trend && (
-        <div className="mt-3 flex items-center text-sm">
-          <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-          <span className="text-green-600 dark:text-green-400 font-medium">
-            {trend}
-          </span>
-        </div>
-      )}
-      {!isLoading && description && (
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {description}
-        </p>
+      {trend && (
+        <span
+          className={`text-xs font-medium flex items-center gap-0.5 ${trendUp !== false ? "text-green-600" : "text-red-500"}`}
+        >
+          {trendUp !== false ? (
+            <TrendingUp className="h-3 w-3" />
+          ) : (
+            <TrendingDown className="h-3 w-3" />
+          )}
+          {trend}
+        </span>
       )}
     </div>
+    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+      {loading ? (
+        <span className="inline-block w-16 h-7 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      ) : (
+        (value ?? "—")
+      )}
+    </p>
+    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+      {title}
+    </p>
+    {sub && (
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{sub}</p>
+    )}
+  </div>
+);
+
+// ── Quick action card ────────────────────────────────────────────────────────
+const QuickAction = ({ title, desc, icon: Icon, color, onClick }) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all text-left w-full group"
+  >
+    <div className={`p-2.5 rounded-xl ${color} flex-shrink-0`}>
+      <Icon className="h-5 w-5 text-white" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+        {title}
+      </p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+        {desc}
+      </p>
+    </div>
+    <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+  </button>
+);
+
+// ── Role banner colors ───────────────────────────────────────────────────────
+const ROLE_BANNERS = {
+  DIRECTOR: "from-purple-700 to-indigo-700",
+  IT: "from-blue-700 to-cyan-700",
+  MANAGER: "from-indigo-600 to-blue-600",
+  SALES_MANAGER: "from-emerald-600 to-teal-600",
+  SALES: "from-green-600 to-emerald-600",
+  HR: "from-pink-600 to-rose-600",
+  WAREHOUSE: "from-orange-600 to-amber-600",
+  ACCOUNTANT: "from-teal-600 to-green-600",
+  LOGISTICS: "from-cyan-600 to-blue-600",
+  EDITOR: "from-violet-600 to-purple-600",
+  DESIGNER: "from-rose-500 to-pink-600",
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+export default function DashboardOverview() {
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
+  const role = currentUser?.subRole;
+
+  const [data, setData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Fetch data relevant to the user's role
+  const fetchData = useCallback(
+    async (isRefresh = false) => {
+      isRefresh ? setRefreshing(true) : setLoading(true);
+      const results = {};
+
+      // All roles — unread notifications count
+      const notifCount = await apiFetch("/admin/notifications/count");
+      results.unreadNotifications = notifCount.unreadCount || 0;
+
+      // Role-specific fetches
+      if (["DIRECTOR", "IT", "MANAGER"].includes(role)) {
+        const [adminStats, orders, customers, crmStats] = await Promise.all([
+          apiFetch("/admin/auth/stats"),
+          apiFetch("/order/order-list?page=1&limit=5"),
+          apiFetch("/admin/customers/list?page=1&limit=1"),
+          apiFetch("/admin/crm/stats"),
+        ]);
+        results.adminStats = adminStats.data;
+        results.recentOrders = orders.data || [];
+        results.totalCustomers = customers.total || customers.data?.length || 0;
+        results.crmStats = crmStats.data;
+      }
+
+      if (role === "DIRECTOR") {
+        const [financeData, products] = await Promise.all([
+          apiFetch("/admin/finance?limit=5"),
+          apiFetch("/product/get?page=1&limit=1"),
+        ]);
+        results.financeSummary = financeData.summary;
+        results.totalProducts = products.totalNoPage || 0;
+      }
+
+      if (["SALES", "SALES_MANAGER", "MANAGER", "DIRECTOR"].includes(role)) {
+        const [orders, customers, crm] = await Promise.all([
+          apiFetch("/order/order-list?page=1&limit=5"),
+          apiFetch("/admin/customers/list?page=1&limit=1"),
+          apiFetch("/admin/crm/stats"),
+        ]);
+        results.recentOrders = results.recentOrders || orders.data || [];
+        results.totalOrders = orders.totalNoPage || orders.total || 0;
+        results.totalCustomers = results.totalCustomers || customers.total || 0;
+        results.crmStats = results.crmStats || crm.data;
+      }
+
+      if (["WAREHOUSE", "MANAGER", "IT", "DIRECTOR"].includes(role)) {
+        const [stock, po] = await Promise.all([
+          apiFetch("/stock/summary"),
+          apiFetch("/purchase-orders?page=1&limit=5"),
+        ]);
+        results.stockSummary = stock.data || stock;
+        results.recentPOs = po.data || [];
+        results.totalPOs = po.total || 0;
+      }
+
+      if (["ACCOUNTANT", "MANAGER", "DIRECTOR"].includes(role)) {
+        const [pricing, finance] = await Promise.all([
+          apiFetch("/admin/finance?limit=1"),
+          apiFetch("/admin/finance/meta"),
+        ]);
+        results.financeSummary = results.financeSummary || pricing.summary;
+      }
+
+      if (["LOGISTICS", "MANAGER", "DIRECTOR"].includes(role)) {
+        const trackingData = await apiFetch(
+          "/order/order-list?status=pending&page=1&limit=5",
+        );
+        results.pendingDeliveries = trackingData.data || [];
+        results.totalPendingDeliveries = trackingData.total || 0;
+      }
+
+      if (["EDITOR", "IT", "DIRECTOR", "MANAGER"].includes(role)) {
+        const [blogs, products] = await Promise.all([
+          apiFetch("/blog/get-all-posts?page=1&limit=1"),
+          apiFetch("/product/get?page=1&limit=1"),
+        ]);
+        results.totalBlogs = blogs.totalNoPage || 0;
+        results.totalProducts =
+          results.totalProducts || products.totalNoPage || 0;
+      }
+
+      if (["HR", "IT", "DIRECTOR", "MANAGER"].includes(role)) {
+        const users = await apiFetch("/admin/user/users?page=1&limit=1");
+        results.totalStaff = users.total || 0;
+        results.staffByRole = users.bySubRole || [];
+      }
+
+      results.loadedAt = new Date();
+      setData(results);
+      setLastUpdated(new Date());
+      setLoading(false);
+      setRefreshing(false);
+    },
+    [role],
   );
 
-  const QuickActionCard = ({
-    title,
-    description,
-    icon: Icon,
-    color,
-    link,
-    disabled = false,
-    onClick,
-  }) => {
-    const handleClick = () => {
-      if (onClick) {
-        onClick();
-      } else if (!disabled) {
-        navigate(link);
-      }
-    };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    return (
-      <button
-        onClick={handleClick}
-        disabled={disabled}
-        className={`w-full text-left p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all ${
-          disabled
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-0.5"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
-              {title}
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {description}
-            </p>
-          </div>
-          <ArrowRight className="h-5 w-5 text-gray-400" />
-        </div>
-      </button>
-    );
+  const nav = (path) => navigate(path);
+  const L = loading;
+  const banner = ROLE_BANNERS[role] || "from-blue-700 to-indigo-700";
+
+  // ── Role configs ──────────────────────────────────────────────────────────
+  const configs = {
+    DIRECTOR: {
+      title: "Executive Dashboard",
+      subtitle: "Complete business overview and performance metrics",
+      stats: [
+        {
+          title: "Total Revenue (NGN)",
+          value: fmtCur(data.financeSummary?.income?.totalNGN),
+          icon: DollarSign,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          trend: "All time",
+          trendUp: true,
+        },
+        {
+          title: "Net Balance",
+          value: fmtCur(data.financeSummary?.netNGN),
+          icon: TrendingUp,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "Income minus expenses",
+        },
+        {
+          title: "Total Customers",
+          value: fmtN(data.totalCustomers),
+          icon: Users,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Registered customers",
+        },
+        {
+          title: "CRM Won Deals",
+          value: fmtN(data.crmStats?.wonLeads),
+          icon: Award,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: `${data.crmStats?.conversionRate || 0}% conversion`,
+        },
+        {
+          title: "Total Products",
+          value: fmtN(data.totalProducts),
+          icon: Package,
+          color: "text-indigo-600",
+          bg: "bg-indigo-50 dark:bg-indigo-900/20",
+          sub: "In catalog",
+        },
+        {
+          title: "Admin Staff",
+          value: fmtN(data.adminStats?.overview?.totalAdmins),
+          icon: Shield,
+          color: "text-rose-600",
+          bg: "bg-rose-50 dark:bg-rose-900/20",
+          sub: "Active admins",
+        },
+      ],
+      actions: [
+        {
+          title: "Finance Manager",
+          desc: "Income & expense records",
+          icon: DollarSign,
+          color: "bg-green-600",
+          path: "/admin/dashboard/finance",
+        },
+        {
+          title: "CRM Pipeline",
+          desc: "Leads and deals",
+          icon: Users,
+          color: "bg-blue-600",
+          path: "/admin/dashboard/crm",
+        },
+        {
+          title: "User Management",
+          desc: "Manage all staff",
+          icon: Shield,
+          color: "bg-purple-600",
+          path: "/admin/users",
+        },
+        {
+          title: "Reports",
+          desc: "Business analytics",
+          icon: BarChart3,
+          color: "bg-indigo-600",
+          path: "/admin/reports/inventory",
+        },
+      ],
+    },
+
+    IT: {
+      title: "System Administration",
+      subtitle: "Infrastructure, users, and system health",
+      stats: [
+        {
+          title: "Total Users",
+          value: fmtN(data.adminStats?.overview?.totalUsers),
+          icon: Users,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "All registered users",
+        },
+        {
+          title: "Admin Staff",
+          value: fmtN(data.adminStats?.overview?.totalAdmins),
+          icon: Shield,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Active admin accounts",
+        },
+        {
+          title: "Active Users",
+          value: fmtN(data.adminStats?.overview?.activeUsers),
+          icon: Activity,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "Status: Active",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "User Management",
+          desc: "Manage all user accounts",
+          icon: Users,
+          color: "bg-blue-600",
+          path: "/admin/users",
+        },
+        {
+          title: "Password Vault",
+          desc: "Secure credentials store",
+          icon: Shield,
+          color: "bg-gray-700",
+          path: "/admin/dashboard/password-vault",
+        },
+        {
+          title: "Support Tickets",
+          desc: "Resolve technical issues",
+          icon: LifeBuoy,
+          color: "bg-red-600",
+          path: "/admin/dashboard/support-tickets",
+        },
+        {
+          title: "System Settings",
+          desc: "Platform configuration",
+          icon: Monitor,
+          color: "bg-indigo-600",
+          path: "/admin/settings",
+        },
+      ],
+    },
+
+    MANAGER: {
+      title: "Operations Dashboard",
+      subtitle: "Full operational overview across all departments",
+      stats: [
+        {
+          title: "Total Orders",
+          value: fmtN(data.totalOrders),
+          icon: ShoppingCart,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "All time",
+        },
+        {
+          title: "Total Customers",
+          value: fmtN(data.totalCustomers),
+          icon: Users,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Customer base",
+        },
+        {
+          title: "CRM Leads",
+          value: fmtN(data.crmStats?.totalLeads),
+          icon: TrendingUp,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: `${data.crmStats?.wonLeads || 0} won`,
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "Orders",
+          desc: "Monitor all orders",
+          icon: ShoppingCart,
+          color: "bg-blue-600",
+          path: "/admin/website-orders",
+        },
+        {
+          title: "CRM Pipeline",
+          desc: "Leads and deals",
+          icon: Users,
+          color: "bg-green-600",
+          path: "/admin/dashboard/crm",
+        },
+        {
+          title: "Reports",
+          desc: "Analytics & reporting",
+          icon: BarChart3,
+          color: "bg-purple-600",
+          path: "/admin/reports/inventory",
+        },
+        {
+          title: "Notifications",
+          desc: "Send team updates",
+          icon: Bell,
+          color: "bg-amber-600",
+          path: "/admin/dashboard/notifications",
+        },
+      ],
+    },
+
+    SALES_MANAGER: {
+      title: "Sales Management Dashboard",
+      subtitle: "Sales team performance and pipeline overview",
+      stats: [
+        {
+          title: "Total Orders",
+          value: fmtN(data.totalOrders),
+          icon: ShoppingCart,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "All orders",
+        },
+        {
+          title: "Customers",
+          value: fmtN(data.totalCustomers),
+          icon: Users,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Total customers",
+        },
+        {
+          title: "CRM Won",
+          value: fmtN(data.crmStats?.wonLeads),
+          icon: Award,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: `${data.crmStats?.conversionRate || 0}% conversion`,
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "CRM Pipeline",
+          desc: "Manage leads & deals",
+          icon: Users,
+          color: "bg-blue-600",
+          path: "/admin/dashboard/crm",
+        },
+        {
+          title: "Web Scraper",
+          desc: "Find new leads",
+          icon: Zap,
+          color: "bg-yellow-500",
+          path: "/admin/dashboard/scraper",
+        },
+        {
+          title: "Orders",
+          desc: "Track customer orders",
+          icon: ShoppingCart,
+          color: "bg-green-600",
+          path: "/admin/website-orders",
+        },
+        {
+          title: "Customers",
+          desc: "Customer accounts",
+          icon: Coffee,
+          color: "bg-purple-600",
+          path: "/admin/customers",
+        },
+      ],
+    },
+
+    SALES: {
+      title: "Sales Dashboard",
+      subtitle: "Your sales performance and customer relationships",
+      stats: [
+        {
+          title: "Total Orders",
+          value: fmtN(data.totalOrders),
+          icon: ShoppingCart,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "All orders",
+        },
+        {
+          title: "Customers",
+          value: fmtN(data.totalCustomers),
+          icon: Users,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Total registered",
+        },
+        {
+          title: "CRM Leads",
+          value: fmtN(data.crmStats?.totalLeads),
+          icon: TrendingUp,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "In pipeline",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "CRM Pipeline",
+          desc: "Manage your leads",
+          icon: Users,
+          color: "bg-blue-600",
+          path: "/admin/dashboard/crm",
+        },
+        {
+          title: "Web Scraper",
+          desc: "Find new prospects",
+          icon: Zap,
+          color: "bg-yellow-500",
+          path: "/admin/dashboard/scraper",
+        },
+        {
+          title: "Customers",
+          desc: "Customer management",
+          icon: Coffee,
+          color: "bg-green-600",
+          path: "/admin/customers",
+        },
+        {
+          title: "Orders",
+          desc: "Track orders",
+          icon: ShoppingCart,
+          color: "bg-purple-600",
+          path: "/admin/website-orders",
+        },
+      ],
+    },
+
+    HR: {
+      title: "Human Resources Dashboard",
+      subtitle: "Staff management and recruitment overview",
+      stats: [
+        {
+          title: "Total Staff",
+          value: fmtN(data.totalStaff),
+          icon: Users,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "Active admin accounts",
+        },
+        {
+          title: "Departments",
+          value: fmtN(
+            data.adminStats?.adminsBySubRole?.length ||
+              data.staffByRole?.length,
+          ),
+          icon: Shield,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Active departments",
+        },
+        {
+          title: "Customers",
+          value: fmtN(data.totalCustomers),
+          icon: Coffee,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "Registered customers",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "User Management",
+          desc: "Manage staff accounts",
+          icon: Users,
+          color: "bg-blue-600",
+          path: "/admin/users",
+        },
+        {
+          title: "Add Employee",
+          desc: "Onboard new team member",
+          icon: UserPlus,
+          color: "bg-green-600",
+          path: "/admin/users",
+        },
+        {
+          title: "Customer Accounts",
+          desc: "Customer management",
+          icon: Coffee,
+          color: "bg-orange-600",
+          path: "/admin/customers",
+        },
+        {
+          title: "Support Tickets",
+          desc: "HR support requests",
+          icon: LifeBuoy,
+          color: "bg-red-600",
+          path: "/admin/dashboard/support-tickets",
+        },
+      ],
+    },
+
+    WAREHOUSE: {
+      title: "Warehouse Dashboard",
+      subtitle: "Stock levels, movements, and warehouse operations",
+      stats: [
+        {
+          title: "Pending Orders",
+          value: fmtN(data.totalPOs),
+          icon: Inbox,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "Purchase orders",
+        },
+        {
+          title: "Stock Items",
+          value: fmtN(data.stockSummary?.totalProducts),
+          icon: Package,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "Products in stock",
+        },
+        {
+          title: "Low Stock",
+          value: fmtN(data.stockSummary?.lowStockCount),
+          icon: AlertCircle,
+          color: "text-red-600",
+          bg: "bg-red-50 dark:bg-red-900/20",
+          sub: "Need reorder",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "Stock Management",
+          desc: "Monitor inventory levels",
+          icon: Package,
+          color: "bg-blue-600",
+          path: "/admin/stock",
+        },
+        {
+          title: "Warehouse",
+          desc: "Warehouse layout & zones",
+          icon: Warehouse,
+          color: "bg-green-600",
+          path: "/admin/warehouse",
+        },
+        {
+          title: "Purchase Orders",
+          desc: "Incoming stock orders",
+          icon: Inbox,
+          color: "bg-orange-600",
+          path: "/admin/purchase-orders",
+        },
+        {
+          title: "Support Tickets",
+          desc: "Technical support",
+          icon: LifeBuoy,
+          color: "bg-red-600",
+          path: "/admin/dashboard/support-tickets",
+        },
+      ],
+    },
+
+    ACCOUNTANT: {
+      title: "Accounting Dashboard",
+      subtitle: "Financial overview and pricing management",
+      stats: [
+        {
+          title: "Total Income",
+          value: fmtCur(data.financeSummary?.income?.totalNGN),
+          icon: ArrowUpCircle,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "All time income",
+        },
+        {
+          title: "Total Expenses",
+          value: fmtCur(data.financeSummary?.expense?.totalNGN),
+          icon: ArrowDownCircle,
+          color: "text-red-600",
+          bg: "bg-red-50 dark:bg-red-900/20",
+          sub: "All time expenses",
+        },
+        {
+          title: "Net Balance",
+          value: fmtCur(data.financeSummary?.netNGN),
+          icon: DollarSign,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "Income - Expenses",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+      ],
+      actions: [
+        {
+          title: "Pricing Management",
+          desc: "Manage product prices",
+          icon: DollarSign,
+          color: "bg-green-600",
+          path: "/admin/pricing",
+        },
+        {
+          title: "Price Lists",
+          desc: "View all price lists",
+          icon: FileText,
+          color: "bg-blue-600",
+          path: "/admin/pricing-lists",
+        },
+        {
+          title: "Exchange Rates",
+          desc: "Currency rates",
+          icon: TrendingUp,
+          color: "bg-purple-600",
+          path: "/admin/exchange-rates",
+        },
+        {
+          title: "Pricing Reports",
+          desc: "Financial analytics",
+          icon: BarChart3,
+          color: "bg-indigo-600",
+          path: "/admin/reports/pricing",
+        },
+      ],
+    },
+
+    LOGISTICS: {
+      title: "Logistics Dashboard",
+      subtitle: "Delivery management and tracking overview",
+      stats: [
+        {
+          title: "Pending Deliveries",
+          value: fmtN(data.totalPendingDeliveries),
+          icon: Truck,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "Awaiting dispatch",
+        },
+        {
+          title: "Total Orders",
+          value: fmtN(data.totalOrders),
+          icon: ShoppingCart,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "All orders",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+        {
+          title: "Support Tickets",
+          icon: LifeBuoy,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Open tickets",
+        },
+      ],
+      actions: [
+        {
+          title: "Logistics",
+          desc: "Manage shipping methods",
+          icon: Truck,
+          color: "bg-blue-600",
+          path: "/admin/logistics",
+        },
+        {
+          title: "Tracking",
+          desc: "Track shipments",
+          icon: Eye,
+          color: "bg-green-600",
+          path: "/admin/tracking",
+        },
+        {
+          title: "Orders",
+          desc: "View all orders",
+          icon: ShoppingCart,
+          color: "bg-purple-600",
+          path: "/admin/website-orders",
+        },
+        {
+          title: "Support Tickets",
+          desc: "Technical requests",
+          icon: LifeBuoy,
+          color: "bg-red-600",
+          path: "/admin/dashboard/support-tickets",
+        },
+      ],
+    },
+
+    EDITOR: {
+      title: "Content Management Dashboard",
+      subtitle: "Products, blog, and content publishing overview",
+      stats: [
+        {
+          title: "Total Products",
+          value: fmtN(data.totalProducts),
+          icon: Package,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "In catalog",
+        },
+        {
+          title: "Blog Posts",
+          value: fmtN(data.totalBlogs),
+          icon: FileText,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "Published posts",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+        {
+          title: "Support Tickets",
+          icon: LifeBuoy,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Open tickets",
+        },
+      ],
+      actions: [
+        {
+          title: "Products",
+          desc: "Manage product content",
+          icon: Package,
+          color: "bg-blue-600",
+          path: "/admin/products",
+        },
+        {
+          title: "Blog",
+          desc: "Create & edit posts",
+          icon: FileText,
+          color: "bg-green-600",
+          path: "/admin/blog",
+        },
+        {
+          title: "Sliders",
+          desc: "Homepage banners",
+          icon: Palette,
+          color: "bg-purple-600",
+          path: "/admin/sliders",
+        },
+        {
+          title: "Support Tickets",
+          desc: "Technical support",
+          icon: LifeBuoy,
+          color: "bg-red-600",
+          path: "/admin/dashboard/support-tickets",
+        },
+      ],
+    },
+
+    DESIGNER: {
+      title: "Design Dashboard",
+      subtitle: "Visual content and brand asset management",
+      stats: [
+        {
+          title: "Total Products",
+          value: fmtN(data.totalProducts),
+          icon: Package,
+          color: "text-blue-600",
+          bg: "bg-blue-50 dark:bg-blue-900/20",
+          sub: "Products with images",
+        },
+        {
+          title: "Notifications",
+          value: fmtN(data.unreadNotifications),
+          icon: Bell,
+          color: "text-amber-600",
+          bg: "bg-amber-50 dark:bg-amber-900/20",
+          sub: "Unread",
+        },
+        {
+          title: "Support Tickets",
+          icon: LifeBuoy,
+          color: "text-purple-600",
+          bg: "bg-purple-50 dark:bg-purple-900/20",
+          sub: "Open tickets",
+        },
+        {
+          title: "Sliders",
+          icon: PieChart,
+          color: "text-green-600",
+          bg: "bg-green-50 dark:bg-green-900/20",
+          sub: "Active banners",
+        },
+      ],
+      actions: [
+        {
+          title: "Sliders",
+          desc: "Hero banners",
+          icon: Palette,
+          color: "bg-purple-600",
+          path: "/admin/sliders",
+        },
+        {
+          title: "Banners",
+          desc: "Promotional banners",
+          icon: Star,
+          color: "bg-pink-600",
+          path: "/admin/banners",
+        },
+        {
+          title: "Colors",
+          desc: "Product color management",
+          icon: Palette,
+          color: "bg-indigo-600",
+          path: "/admin/colors",
+        },
+        {
+          title: "Brands",
+          desc: "Brand management",
+          icon: Tag,
+          color: "bg-blue-600",
+          path: "/admin/brands",
+        },
+      ],
+    },
   };
 
-  const ActivityItem = ({
-    icon: Icon,
-    title,
-    description,
-    time,
-    type = "info",
-  }) => {
-    const typeColors = {
-      success: "text-green-600 bg-green-100 dark:bg-green-900",
-      warning: "text-yellow-600 bg-yellow-100 dark:bg-yellow-900",
-      error: "text-red-600 bg-red-100 dark:bg-red-900",
-      info: "text-blue-600 bg-blue-100 dark:bg-blue-900",
-    };
-
-    return (
-      <div className="flex items-start gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
-        <div className={`p-2 rounded-full ${typeColors[type]}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-white">
-            {title}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {description}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">{time}</p>
-        </div>
-      </div>
-    );
-  };
-
-  // Get dashboard configuration based on subRole
-  const getDashboardConfig = (subRole) => {
-    const configs = {
-      IT: {
-        title: "System Administration Dashboard",
-        description:
-          "Monitor system health, manage users, and maintain infrastructure",
-        stats: [
-          {
-            title: "Total Users",
-            value: stats.overview?.totalUsers,
-            icon: Users,
-            color: "text-blue-600",
-            trend: `+${stats.activity?.recentRegistrations || 0} this month`,
-            description: "All registered users",
-          },
-          {
-            title: "System Health",
-            value: loading ? "..." : "Optimal",
-            icon: Monitor,
-            color: "text-green-600",
-            description: "All systems operational",
-          },
-          {
-            title: "Database",
-            value: loading ? "..." : "99.9%",
-            icon: Database,
-            color: "text-purple-600",
-            description: "Uptime this month",
-          },
-          {
-            title: "Active Sessions",
-            value: stats.activity?.recentLogins,
-            icon: Activity,
-            color: "text-amber-600",
-            description: "Current active users",
-          },
-        ],
-        quickActions: [
-          {
-            title: "User Management",
-            description: "Manage all user accounts and permissions",
-            icon: Users,
-            color: "bg-blue-600",
-            link: "/admin/users",
-          },
-          {
-            title: "System Settings",
-            description: "Configure system-wide settings",
-            icon: Settings,
-            color: "bg-gray-600",
-            link: "/admin/settings",
-          },
-          {
-            title: "Database Management",
-            description: "Monitor and maintain database",
-            icon: Database,
-            color: "bg-purple-600",
-            link: "/admin/database",
-          },
-          {
-            title: "Product Management",
-            description: "Manage product catalog",
-            icon: Package,
-            color: "bg-green-600",
-            link: "/admin/products",
-          },
-        ],
-      },
-      DIRECTOR: {
-        title: "Executive Dashboard",
-        description:
-          "Executive overview of business performance and strategic metrics",
-        stats: [
-          {
-            title: "Monthly Revenue",
-            value: "$48,432",
-            icon: DollarSign,
-            color: "text-green-600",
-            trend: "+12% from last month",
-            description: "Total revenue",
-          },
-          {
-            title: "Total Users",
-            value: stats.overview?.totalUsers,
-            icon: Users,
-            color: "text-blue-600",
-            trend: `+${stats.activity?.recentRegistrations || 0} new users`,
-            description: "Customer base",
-          },
-          {
-            title: "Orders",
-            value: "1,847",
-            icon: ShoppingCart,
-            color: "text-purple-600",
-            trend: "+8% this month",
-            description: "Total orders",
-          },
-          {
-            title: "Growth Rate",
-            value: "15.3%",
-            icon: TrendingUp,
-            color: "text-amber-600",
-            description: "Monthly growth",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Analytics Overview",
-            description: "View business performance metrics",
-            icon: BarChart3,
-            color: "bg-blue-600",
-            link: "/admin/analytics",
-          },
-          {
-            title: "User Management",
-            description: "Manage all staff and customers",
-            icon: Users,
-            color: "bg-green-600",
-            link: "/admin/users",
-          },
-          {
-            title: "Financial Reports",
-            description: "Revenue and financial analytics",
-            icon: DollarSign,
-            color: "bg-purple-600",
-            link: "/admin/finance",
-          },
-          {
-            title: "Product Strategy",
-            description: "Product performance and planning",
-            icon: Package,
-            color: "bg-amber-600",
-            link: "/admin/products",
-          },
-        ],
-      },
-      HR: {
-        title: "Human Resources Dashboard",
-        description:
-          "Manage staff, recruitment, and human resources operations",
-        stats: [
-          {
-            title: "Total Staff",
-            value: stats.overview?.totalAdmins,
-            icon: Users,
-            color: "text-blue-600",
-            description: "Active employees",
-          },
-          {
-            title: "New Hires",
-            value: stats.activity?.recentRegistrations,
-            icon: UserPlus,
-            color: "text-green-600",
-            description: "This month",
-          },
-          {
-            title: "Departments",
-            value: stats.adminsBySubRole?.length || 8,
-            icon: Shield,
-            color: "text-purple-600",
-            description: "Active departments",
-          },
-          {
-            title: "Active Today",
-            value: stats.activity?.recentLogins,
-            icon: Activity,
-            color: "text-amber-600",
-            description: "Staff logged in today",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Staff Management",
-            description: "Manage employee accounts",
-            icon: Users,
-            color: "bg-blue-600",
-            link: "/admin/users",
-          },
-          {
-            title: "New Employee",
-            description: "Onboard new team members",
-            icon: UserPlus,
-            color: "bg-green-600",
-            link: "/admin/users",
-            onClick: () => navigate("/admin/users?action=create"),
-          },
-          {
-            title: "Employee Reports",
-            description: "Staff performance and attendance",
-            icon: FileText,
-            color: "bg-purple-600",
-            link: "/admin/hr-reports",
-          },
-          {
-            title: "Customer Accounts",
-            description: "Manage customer registrations",
-            icon: Coffee,
-            color: "bg-orange-600",
-            link: "/admin/customers",
-          },
-        ],
-      },
-      SALES: {
-        title: "Sales Dashboard",
-        description: "Track sales performance, customer relations, and revenue",
-        stats: [
-          {
-            title: "Monthly Sales",
-            value: "$32,847",
-            icon: DollarSign,
-            color: "text-green-600",
-            trend: "+15% from last month",
-            description: "This month's revenue",
-          },
-          {
-            title: "Orders",
-            value: "1,432",
-            icon: ShoppingCart,
-            color: "text-blue-600",
-            trend: "+8% increase",
-            description: "Total orders",
-          },
-          {
-            title: "Customers",
-            value: stats.overview?.totalCustomers,
-            icon: Coffee,
-            color: "text-purple-600",
-            description: "Active customers",
-          },
-          {
-            title: "Conversion Rate",
-            value: "3.2%",
-            icon: TrendingUp,
-            color: "text-amber-600",
-            trend: "+0.5% this week",
-            description: "Lead conversion",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Customer Management",
-            description: "Manage customer accounts",
-            icon: Users,
-            color: "bg-blue-600",
-            link: "/admin/customers",
-          },
-          {
-            title: "Order Management",
-            description: "View and process orders",
-            icon: ShoppingCart,
-            color: "bg-green-600",
-            link: "/admin/orders",
-          },
-          {
-            title: "Sales Reports",
-            description: "Sales analytics and reports",
-            icon: BarChart3,
-            color: "bg-purple-600",
-            link: "/admin/sales-reports",
-          },
-          {
-            title: "Product Catalog",
-            description: "View product information",
-            icon: Package,
-            color: "bg-amber-600",
-            link: "/admin/products",
-          },
-        ],
-      },
-      MANAGER: {
-        title: "Operations Dashboard",
-        description:
-          "Oversee daily operations, team management, and service quality",
-        stats: [
-          {
-            title: "Team Members",
-            value: "24",
-            icon: Users,
-            color: "text-blue-600",
-            description: "Direct reports",
-          },
-          {
-            title: "Daily Operations",
-            value: "98.5%",
-            icon: Activity,
-            color: "text-green-600",
-            description: "Efficiency rate",
-          },
-          {
-            title: "Customer Satisfaction",
-            value: "4.8/5",
-            icon: Coffee,
-            color: "text-purple-600",
-            description: "Average rating",
-          },
-          {
-            title: "Tasks Completed",
-            value: "147",
-            icon: CheckCircle,
-            color: "text-amber-600",
-            description: "This week",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Team Overview",
-            description: "Monitor team performance",
-            icon: Users,
-            color: "bg-blue-600",
-            link: "/admin/team",
-          },
-          {
-            title: "Customer Service",
-            description: "Customer support dashboard",
-            icon: Coffee,
-            color: "bg-green-600",
-            link: "/admin/customer-service",
-          },
-          {
-            title: "Operations Reports",
-            description: "Daily operations analytics",
-            icon: BarChart3,
-            color: "bg-purple-600",
-            link: "/admin/operations",
-          },
-          {
-            title: "Quality Control",
-            description: "Monitor service quality",
-            icon: CheckCircle,
-            color: "bg-amber-600",
-            link: "/admin/quality",
-          },
-        ],
-      },
-      ACCOUNTANT: {
-        title: "Financial Dashboard",
-        description:
-          "Financial management, reporting, and accounting operations",
-        stats: [
-          {
-            title: "Monthly Revenue",
-            value: "$45,230",
-            icon: DollarSign,
-            color: "text-green-600",
-            trend: "+8.5% vs last month",
-            description: "Total income",
-          },
-          {
-            title: "Expenses",
-            value: "$12,450",
-            icon: FileText,
-            color: "text-red-600",
-            description: "Monthly expenses",
-          },
-          {
-            title: "Profit Margin",
-            value: "72.5%",
-            icon: TrendingUp,
-            color: "text-purple-600",
-            trend: "+2.1% this month",
-            description: "Net profit margin",
-          },
-          {
-            title: "Outstanding",
-            value: "$3,240",
-            icon: Clock,
-            color: "text-amber-600",
-            description: "Pending payments",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Financial Reports",
-            description: "Generate financial statements",
-            icon: FileText,
-            color: "bg-blue-600",
-            link: "/admin/financial-reports",
-          },
-          {
-            title: "Revenue Analytics",
-            description: "Track income and growth",
-            icon: DollarSign,
-            color: "bg-green-600",
-            link: "/admin/revenue",
-          },
-          {
-            title: "Expense Management",
-            description: "Monitor and categorize expenses",
-            icon: BarChart3,
-            color: "bg-red-600",
-            link: "/admin/expenses",
-          },
-          {
-            title: "Payment Processing",
-            description: "Handle payments and invoices",
-            icon: CheckCircle,
-            color: "bg-purple-600",
-            link: "/admin/payments",
-          },
-        ],
-      },
-      GRAPHICS: {
-        title: "Design & Graphics Dashboard",
-        description:
-          "Design management, brand assets, and visual content creation",
-        stats: [
-          {
-            title: "Design Projects",
-            value: "32",
-            icon: Palette,
-            color: "text-purple-600",
-            description: "Active projects",
-          },
-          {
-            title: "Product Images",
-            value: "248",
-            icon: Package,
-            color: "text-blue-600",
-            description: "Product catalog images",
-          },
-          {
-            title: "Brand Assets",
-            value: "156",
-            icon: Tag,
-            color: "text-green-600",
-            description: "Brand materials",
-          },
-          {
-            title: "Campaigns",
-            value: "12",
-            icon: TrendingUp,
-            color: "text-amber-600",
-            description: "Marketing campaigns",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Product Images",
-            description: "Manage product photography",
-            icon: Package,
-            color: "bg-blue-600",
-            link: "/admin/product-images",
-          },
-          {
-            title: "Brand Management",
-            description: "Brand assets and guidelines",
-            icon: Tag,
-            color: "bg-purple-600",
-            link: "/admin/brands",
-          },
-          {
-            title: "Design Projects",
-            description: "Current design tasks",
-            icon: Palette,
-            color: "bg-green-600",
-            link: "/admin/design-projects",
-          },
-          {
-            title: "Color Management",
-            description: "Product color variations",
-            icon: Palette,
-            color: "bg-indigo-600",
-            link: "/admin/colors",
-          },
-        ],
-      },
-      EDITOR: {
-        title: "Content Management Dashboard",
-        description: "Content creation, editing, and publication management",
-        stats: [
-          {
-            title: "Content Pieces",
-            value: "89",
-            icon: FileText,
-            color: "text-blue-600",
-            description: "Published content",
-          },
-          {
-            title: "Product Descriptions",
-            value: "156",
-            icon: Package,
-            color: "text-green-600",
-            description: "Product content",
-          },
-          {
-            title: "Pending Reviews",
-            value: "12",
-            icon: Clock,
-            color: "text-amber-600",
-            description: "Awaiting approval",
-          },
-          {
-            title: "Blog Posts",
-            value: "24",
-            icon: FileText,
-            color: "text-purple-600",
-            description: "Published articles",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Product Content",
-            description: "Edit product descriptions",
-            icon: Package,
-            color: "bg-blue-600",
-            link: "/admin/product-content",
-          },
-          {
-            title: "Blog Management",
-            description: "Create and edit blog posts",
-            icon: FileText,
-            color: "bg-green-600",
-            link: "/admin/blog",
-          },
-          {
-            title: "SEO Management",
-            description: "Optimize content for search",
-            icon: TrendingUp,
-            color: "bg-purple-600",
-            link: "/admin/seo",
-          },
-          {
-            title: "Review Queue",
-            description: "Content awaiting review",
-            icon: Eye,
-            color: "bg-indigo-600",
-            link: "/admin/review-queue",
-          },
-        ],
-      },
-      // Customer dashboards
-      BTC: {
-        title: "Business Customer Dashboard",
-        description: "Manage your business coffee orders and account",
-        stats: [
-          {
-            title: "My Orders",
-            value: "23",
-            icon: ShoppingCart,
-            color: "text-blue-600",
-            description: "Total orders placed",
-          },
-          {
-            title: "Loyalty Points",
-            value: "1,240",
-            icon: Coffee,
-            color: "text-green-600",
-            description: "Available points",
-          },
-          {
-            title: "Saved Items",
-            value: "8",
-            icon: Heart,
-            color: "text-purple-600",
-            description: "Wishlist items",
-          },
-          {
-            title: "Account Status",
-            value: "Business",
-            icon: Shield,
-            color: "text-amber-600",
-            description: "Customer type",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Browse Products",
-            description: "Explore our coffee collection",
-            icon: Coffee,
-            color: "bg-amber-600",
-            link: "/products",
-          },
-          {
-            title: "My Orders",
-            description: "View order history and status",
-            icon: ShoppingCart,
-            color: "bg-blue-600",
-            link: "/my-orders",
-          },
-          {
-            title: "Account Settings",
-            description: "Update profile and preferences",
-            icon: Settings,
-            color: "bg-gray-600",
-            link: "/account/settings",
-          },
-          {
-            title: "Business Benefits",
-            description: "View business discounts and benefits",
-            icon: Star,
-            color: "bg-green-600",
-            link: "/business-benefits",
-          },
-        ],
-      },
-      BTB: {
-        title: "Customer Dashboard",
-        description: "Your personal coffee experience and order management",
-        stats: [
-          {
-            title: "My Orders",
-            value: "12",
-            icon: ShoppingCart,
-            color: "text-blue-600",
-            description: "Total orders placed",
-          },
-          {
-            title: "Loyalty Points",
-            value: "680",
-            icon: Coffee,
-            color: "text-green-600",
-            description: "Available points",
-          },
-          {
-            title: "Favorites",
-            value: "5",
-            icon: Heart,
-            color: "text-purple-600",
-            description: "Favorite products",
-          },
-          {
-            title: "Rewards",
-            value: "3",
-            icon: Star,
-            color: "text-amber-600",
-            description: "Available rewards",
-          },
-        ],
-        quickActions: [
-          {
-            title: "Browse Products",
-            description: "Explore our coffee collection",
-            icon: Coffee,
-            color: "bg-amber-600",
-            link: "/products",
-          },
-          {
-            title: "My Orders",
-            description: "View order history and status",
-            icon: ShoppingCart,
-            color: "bg-blue-600",
-            link: "/my-orders",
-          },
-          {
-            title: "Loyalty Program",
-            description: "View points and rewards",
-            icon: Star,
-            color: "bg-green-600",
-            link: "/loyalty",
-          },
-          {
-            title: "Support",
-            description: "Get help and contact support",
-            icon: Users,
-            color: "bg-purple-600",
-            link: "/support",
-          },
-        ],
-      },
-    };
-
-    return configs[subRole] || configs.IT; // Default to IT if subRole not found
-  };
-
-  const config = getDashboardConfig(currentUser?.subRole);
+  const config = configs[role] || configs.IT;
 
   return (
     <div className="space-y-6">
       <AnnouncementPopup />
-      {/* Header with Refresh */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {config.title}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {config.description}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Role Badge */}
-          <div className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
-            {currentUser?.subRole || "ADMIN"}
+
+      {/* ── Banner ── */}
+      <div className={`bg-gradient-to-r ${banner} rounded-2xl p-6 text-white`}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-white/70 text-sm font-medium mb-1">
+              {new Date().toLocaleDateString("en-NG", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+            <h1 className="text-2xl font-bold">{config.title}</h1>
+            <p className="text-white/80 text-sm mt-1">{config.subtitle}</p>
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-medium">
+                {currentUser?.name}
+              </span>
+              <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-medium">
+                {role}
+              </span>
+              {data.unreadNotifications > 0 && (
+                <span className="text-xs bg-red-500 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                  <Bell className="h-3 w-3" /> {data.unreadNotifications} new
+                </span>
+              )}
+            </div>
           </div>
           <button
-            onClick={handleRefresh}
+            onClick={() => fetchData(true)}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
           >
             <RefreshCw
-              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              className={`h-5 w-5 text-white ${refreshing ? "animate-spin" : ""}`}
             />
-            {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
+        {lastUpdated && (
+          <p className="text-white/50 text-xs mt-3">
+            Last updated: {timeAgo(lastUpdated)}
+          </p>
+        )}
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-            <button
-              onClick={handleRefresh}
-              className="ml-auto text-sm underline hover:no-underline"
-            >
-              Try again
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Role-specific Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {config.stats.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            color={stat.color}
-            trend={stat.trend}
-            description={stat.description}
-            isLoading={loading}
-          />
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {config.stats.map((s, i) => (
+          <StatCard key={i} {...s} loading={L} />
         ))}
       </div>
 
-      {/* Main Content Grid */}
+      {/* ── Quick actions + Recent activity ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
-        <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Quick Actions
-              </h3>
-              <Plus className="h-5 w-5 text-gray-400" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {config.quickActions.map((action, index) => (
-                <QuickActionCard
-                  key={index}
-                  title={action.title}
-                  description={action.description}
-                  icon={action.icon}
-                  color={action.color}
-                  link={action.link}
-                  onClick={action.onClick}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Quick actions */}
+        <div className="lg:col-span-1 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Quick Actions
+          </h2>
+          {config.actions.map((a, i) => (
+            <QuickAction
+              key={i}
+              title={a.title}
+              desc={a.desc}
+              icon={a.icon}
+              color={a.color}
+              onClick={() => nav(a.path)}
+            />
+          ))}
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Recent Activity
-            </h3>
-            <Bell className="h-5 w-5 text-gray-400" />
-          </div>
-          <div className="space-y-1">
-            {["DIRECTOR", "IT"].includes(currentUser?.subRole) ? (
-              recentLogs.length > 0 ? (
-                recentLogs.map((log) => (
-                  <div
-                    key={log._id}
-                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+        {/* Recent Orders (if relevant) */}
+        {data.recentOrders?.length > 0 && (
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Recent Orders
+              </h2>
+              <button
+                onClick={() => nav("/admin/website-orders")}
+                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+              >
+                View all <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {data.recentOrders.slice(0, 5).map((order, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                      <ShoppingCart className="h-4 w-4 text-blue-600" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {log.action
-                          ?.replace(/_/g, " ")
-                          .toLowerCase()
-                          .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-36">
+                        {order.userId?.name || order.name || "Customer"}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {log.description}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                        {log.user?.name || "Unknown"} ·{" "}
-                        {new Date(log.createdAt).toLocaleString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      <p className="text-xs text-gray-400">
+                        {timeAgo(order.createdAt)}
                       </p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-6 text-gray-400 dark:text-gray-500">
-                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">No activity recorded yet</p>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      {fmtCur(order.totalAmt || order.subTotalAmt)}
+                    </p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        order.order_status === "Delivered"
+                          ? "bg-green-100 text-green-700"
+                          : order.order_status === "Cancel"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {order.order_status || "Pending"}
+                    </span>
+                  </div>
                 </div>
-              )
-            ) : (
-              <div className="text-center py-6 text-gray-400 dark:text-gray-500">
-                <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">
-                  Activity log is visible to Directors &amp; IT only
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            {["DIRECTOR", "IT"].includes(currentUser?.subRole) ? (
-              <Link
-                to="/admin/activity"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-              >
-                View full activity log
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : (
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Activity log visible to Directors &amp; IT only
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Conditional System Health (only for DIRECTOR and IT) */}
-      {["IT", "DIRECTOR"].includes(currentUser?.subRole) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* System Health */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              System Health
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Server Status
-                  </span>
-                </div>
-                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                  Online
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Database
-                  </span>
-                </div>
-                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                  Connected
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Email Service
-                  </span>
-                </div>
-                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                  Active
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Backup System
-                  </span>
-                </div>
-                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                  Enabled
-                </span>
-              </div>
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Performance Metrics */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Performance Overview
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? "..." : "99.9%"}
+        {/* Stock alerts (warehouse/manager) */}
+        {data.stockSummary && !data.recentOrders?.length && (
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+              Stock Overview
+            </h2>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                {
+                  label: "Total Products",
+                  value: data.stockSummary?.totalProducts,
+                  color: "text-blue-600",
+                },
+                {
+                  label: "In Stock",
+                  value: data.stockSummary?.inStockCount,
+                  color: "text-green-600",
+                },
+                {
+                  label: "Low / Out",
+                  value: data.stockSummary?.lowStockCount,
+                  color: "text-red-600",
+                },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                >
+                  <p className={`text-2xl font-bold ${s.color}`}>
+                    {fmtN(s.value)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{s.label}</p>
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Uptime
-                </div>
-                <div className="text-xs flex items-center justify-center gap-1 text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +0.1%
-                </div>
-              </div>
-
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? "..." : "1.2s"}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Response Time
-                </div>
-                <div className="text-xs flex items-center justify-center gap-1 text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  -0.3s
-                </div>
-              </div>
-
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? "..." : stats.activity?.todayLogins || 34}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Active Sessions
-                </div>
-                <div className="text-xs flex items-center justify-center gap-1 text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +12%
-                </div>
-              </div>
-
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {loading ? "..." : "99.5%"}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Success Rate
-                </div>
-                <div className="text-xs flex items-center justify-center gap-1 text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +0.2%
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Today's Summary */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Today's Summary
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+        {/* Default info panel */}
+        {!data.recentOrders?.length && !data.stockSummary && (
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center text-center space-y-3">
+            <div
+              className={`p-4 rounded-full bg-gradient-to-br ${banner} bg-opacity-10`}
+            >
+              <Coffee className="h-8 w-8 text-white opacity-70" />
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xs">
+              Welcome to the I-COFFEE.NG admin panel. Use the quick actions to
+              get started.
             </p>
           </div>
-          <Calendar className="h-8 w-8 text-blue-600" />
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {loading ? "..." : stats.activity?.todayLogins || 34}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === "SALES"
-                ? "Orders Today"
-                : currentUser?.subRole === "BTC" ||
-                    currentUser?.subRole === "BTB"
-                  ? "Activities"
-                  : "Active Users"}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {loading
-                ? "..."
-                : currentUser?.subRole === "ACCOUNTANT"
-                  ? "$2,340"
-                  : currentUser?.subRole === "GRAPHICS"
-                    ? "5"
-                    : currentUser?.subRole === "BTC" ||
-                        currentUser?.subRole === "BTB"
-                      ? "3"
-                      : "12"}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === "ACCOUNTANT"
-                ? "Revenue"
-                : currentUser?.subRole === "GRAPHICS"
-                  ? "New Designs"
-                  : currentUser?.subRole === "BTC" ||
-                      currentUser?.subRole === "BTB"
-                    ? "New Orders"
-                    : "Completed Tasks"}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {loading ? "..." : "98.5%"}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === "IT"
-                ? "System Health"
-                : currentUser?.subRole === "BTC" ||
-                    currentUser?.subRole === "BTB"
-                  ? "Satisfaction"
-                  : "Performance"}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              {loading
-                ? "..."
-                : currentUser?.subRole === "BTC" ||
-                    currentUser?.subRole === "BTB"
-                  ? "1,240"
-                  : "5"}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {currentUser?.subRole === "BTC" || currentUser?.subRole === "BTB"
-                ? "Loyalty Points"
-                : "Notifications"}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default DashboardOverview;
+}
