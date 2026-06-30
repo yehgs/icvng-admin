@@ -26,8 +26,10 @@ import LogisticsZoneModal from '../../components/logistics/LogisticsZoneModal';
 import DeleteConfirmModal from '../../components/common/DeleteConfirmModal';
 import ZoneDeleteModal from '../../components/logistics/ZoneDeleteModal';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const LogisticsManagement = () => {
+  const { t } = useAdminTranslation();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [zones, setZones] = useState([]); // Paginated zones for table
   const [allZones, setAllZones] = useState([]); // ALL zones for modal dropdown

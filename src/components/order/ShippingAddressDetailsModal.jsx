@@ -23,8 +23,10 @@ import {
   Clock,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../hooks/useAdminTranslation.js";
 
 const ShippingAddressDetailsModal = ({ address, onClose, customerName }) => {
+  const { t } = useAdminTranslation();
   const [copiedField, setCopiedField] = useState(null);
 
   if (!address) return null;
@@ -87,7 +89,7 @@ const ShippingAddressDetailsModal = ({ address, onClose, customerName }) => {
       },
       warehouse: {
         icon: Layers,
-        label: "Warehouse",
+        label: t("reports2.warehouse"),
         color:
           "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
       },
@@ -99,7 +101,7 @@ const ShippingAddressDetailsModal = ({ address, onClose, customerName }) => {
       },
       other: {
         icon: MapPin,
-        label: "Other",
+        label: t("purchaseOrder.other"),
         color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
       },
     };
@@ -297,7 +299,7 @@ const ShippingAddressDetailsModal = ({ address, onClose, customerName }) => {
                 icon={<Layers className="w-4 h-4 text-gray-400" />}
               />
               <InfoRow
-                label="State"
+                label={t("fomo.state")}
                 value={address.state}
                 icon={<Globe className="w-4 h-4 text-gray-400" />}
               />
@@ -315,7 +317,7 @@ const ShippingAddressDetailsModal = ({ address, onClose, customerName }) => {
                 }
               />
               <InfoRow
-                label="Country"
+                label={t("common.country")}
                 value={address.country || "Nigeria"}
                 icon={<Globe className="w-4 h-4 text-gray-400" />}
               />
@@ -523,7 +525,7 @@ const InfoRow = ({ label, value, icon, copyButton, className = "" }) => (
         {label}
       </p>
       <p className="text-sm text-gray-900 dark:text-white truncate">
-        {value || <span className="text-gray-400 italic">Not provided</span>}
+        {value || <span className="text-gray-400 italic">{t("order.notProvided")}</span>}
       </p>
     </div>
     {copyButton}

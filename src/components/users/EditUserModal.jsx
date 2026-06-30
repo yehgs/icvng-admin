@@ -1,6 +1,6 @@
 // admin
 // components/Users/EditUserModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   X,
   Loader2,
@@ -9,9 +9,10 @@ import {
   Save,
   User,
   Shield,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import RoleBasedButton from '../layout/RoleBasedButton';
+} from "lucide-react";
+import toast from "react-hot-toast";
+import RoleBasedButton from "../layout/RoleBasedButton";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const EditUserModal = ({
   isOpen,
@@ -21,51 +22,58 @@ const EditUserModal = ({
   canCreateUser,
   loading,
 }) => {
+  const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: 'ADMIN',
-    subRole: '',
-    userMode: '',
-    mobile: '',
-    address: '',
-    status: 'Active',
+    name: "",
+    email: "",
+    role: "ADMIN",
+    subRole: "",
+    scope: "GLOBAL",
+    assignedCountry: "",
+    preferredLanguage: "",
+    userMode: "",
+    mobile: "",
+    address: "",
+    status: "Active",
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const adminSubRoles = [
-    'IT',
-    'DIRECTOR',
-    'SALES',
-    'HR',
-    'MANAGER',
-    'WAREHOUSE',
-    'ACCOUNTANT',
-    'LOGISTICS',
-    'GRAPHICS',
-    'EDITOR',
+    "IT",
+    "DIRECTOR",
+    "SALES",
+    "HR",
+    "MANAGER",
+    "WAREHOUSE",
+    "ACCOUNTANT",
+    "LOGISTICS",
+    "GRAPHICS",
+    "EDITOR",
   ];
-  const userSubRoles = ['BTC', 'BTB'];
-  const statusOptions = ['Active', 'Inactive', 'Suspended'];
+  const userSubRoles = ["BTC", "BTB"];
+  const statusOptions = ["Active", "Inactive", "Suspended"];
 
   const getAvailableSubRoles = (role) => {
-    return role === 'ADMIN' ? adminSubRoles : userSubRoles;
+    return role === "ADMIN" ? adminSubRoles : userSubRoles;
   };
 
   // Initialize form with user data
   useEffect(() => {
     if (user && isOpen) {
       const initialData = {
-        name: user.name || '',
-        email: user.email || '',
-        role: user.role || 'ADMIN',
-        subRole: user.subRole || '',
-        userMode: user.userMode || '',
-        mobile: user.mobile || '',
-        address: user.address || '',
-        status: user.status || 'Active',
+        name: user.name || "",
+        email: user.email || "",
+        role: user.role || "ADMIN",
+        subRole: user.subRole || "",
+        scope: user.scope || "GLOBAL",
+        assignedCountry: user.assignedCountry || "",
+        preferredLanguage: user.preferredLanguage || "",
+        userMode: user.userMode || "",
+        mobile: user.mobile || "",
+        address: user.address || "",
+        status: user.status || "Active",
       };
       setFormData(initialData);
       setErrors({});
@@ -78,14 +86,17 @@ const EditUserModal = ({
     if (!user) return;
 
     const hasDataChanged =
-      formData.name !== (user.name || '') ||
-      formData.email !== (user.email || '') ||
-      formData.role !== (user.role || 'ADMIN') ||
-      formData.subRole !== (user.subRole || '') ||
-      formData.userMode !== (user.userMode || '') ||
-      formData.mobile !== (user.mobile || '') ||
-      formData.address !== (user.address || '') ||
-      formData.status !== (user.status || 'Active');
+      formData.name !== (user.name || "") ||
+      formData.email !== (user.email || "") ||
+      formData.role !== (user.role || "ADMIN") ||
+      formData.subRole !== (user.subRole || "") ||
+      formData.userMode !== (user.userMode || "") ||
+      formData.mobile !== (user.mobile || "") ||
+      formData.address !== (user.address || "") ||
+      formData.status !== (user.status || "Active") ||
+      formData.scope !== (user.scope || "GLOBAL") ||
+      formData.assignedCountry !== (user.assignedCountry || "") ||
+      formData.preferredLanguage !== (user.preferredLanguage || "");
 
     setHasChanges(hasDataChanged);
   }, [formData, user]);
@@ -94,39 +105,39 @@ const EditUserModal = ({
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters long';
+      newErrors.name = "Name must be at least 2 characters long";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.role) {
-      newErrors.role = 'Role is required';
+      newErrors.role = "Role is required";
     }
 
     if (!formData.subRole) {
-      newErrors.subRole = 'Department/Sub-role is required';
+      newErrors.subRole = "Department/Sub-role is required";
     }
 
     if (
-      formData.role === 'ADMIN' &&
-      formData.subRole === 'SALES' &&
+      formData.role === "ADMIN" &&
+      formData.subRole === "SALES" &&
       !formData.userMode
     ) {
-      newErrors.userMode = 'Sales mode is required for ADMIN > SALES users';
+      newErrors.userMode = "Sales mode is required for ADMIN > SALES users";
     }
 
     if (!formData.status) {
-      newErrors.status = 'Status is required';
+      newErrors.status = "Status is required";
     }
 
-    if (formData.mobile && !/^\+?[\d\s\-\(\)]+$/.test(formData.mobile)) {
-      newErrors.mobile = 'Please enter a valid mobile number';
+    if (formData.mobile && !/^\+?[\d\s\-()]+$/.test(formData.mobile)) {
+      newErrors.mobile = "Please enter a valid mobile number";
     }
 
     // Check permissions for role/subRole changes
@@ -134,9 +145,24 @@ const EditUserModal = ({
       user &&
       (formData.role !== user.role || formData.subRole !== user.subRole)
     ) {
+      if (
+        formData.role === "ADMIN" &&
+        formData.scope === "COUNTRY" &&
+        !formData.assignedCountry
+      ) {
+        newErrors.assignedCountry = "Please select an assigned country";
+      }
+      if (
+        ["IT", "DIRECTOR", "LOGISTICS"].includes(formData.subRole) &&
+        formData.scope === "COUNTRY"
+      ) {
+        newErrors.scope =
+          "IT, Director and Logistics must always have global access";
+      }
+
       if (!canCreateUser(formData.role, formData.subRole)) {
         newErrors.permission =
-          'You do not have permission to assign this role/department';
+          "You do not have permission to assign this role/department";
       }
     }
 
@@ -157,7 +183,7 @@ const EditUserModal = ({
       // Only send changed fields
       const changedData = {};
       Object.keys(formData).forEach((key) => {
-        if (formData[key] !== (user[key] || '')) {
+        if (formData[key] !== (user[key] || "")) {
           changedData[key] = formData[key];
         }
       });
@@ -170,12 +196,12 @@ const EditUserModal = ({
         onClose();
 
         // Show success message
-        toast.success(result.message || 'User updated successfully!');
+        toast.success(result.message || "User updated successfully!");
       } else {
         setErrors({ submit: result.message });
       }
     } catch (error) {
-      setErrors({ submit: error.message || 'Failed to update user' });
+      setErrors({ submit: error.message || "Failed to update user" });
     } finally {
       setSubmitting(false);
     }
@@ -186,28 +212,38 @@ const EditUserModal = ({
       ...prev,
       [field]: value,
       // Reset subRole and userMode when role changes
-      ...(field === 'role' ? { subRole: '', userMode: '' } : {}),
-      // Reset userMode when subRole changes and it's not SALES
-      ...(field === 'subRole' && value !== 'SALES' ? { userMode: '' } : {}),
+      ...(field === "role"
+        ? { subRole: "", userMode: "", scope: "GLOBAL", assignedCountry: "" }
+        : {}),
+      ...(field === "subRole" && value !== "SALES" ? { userMode: "" } : {}),
+      ...(field === "subRole" && ["IT", "DIRECTOR", "LOGISTICS"].includes(value)
+        ? { scope: "GLOBAL", assignedCountry: "" }
+        : {}),
+      ...(field === "scope" && value === "GLOBAL"
+        ? { assignedCountry: "" }
+        : {}),
     }));
 
     // Clear field error when user starts typing
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const handleReset = () => {
     if (user) {
       setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        role: user.role || 'USER',
-        subRole: user.subRole || '',
-        userMode: user.userMode || '',
-        mobile: user.mobile || '',
-        address: user.address || '',
-        status: user.status || 'Active',
+        name: user.name || "",
+        email: user.email || "",
+        role: user.role || "USER",
+        subRole: user.subRole || "",
+        scope: user.scope || "GLOBAL",
+        assignedCountry: user.assignedCountry || "",
+        preferredLanguage: user.preferredLanguage || "",
+        userMode: user.userMode || "",
+        mobile: user.mobile || "",
+        address: user.address || "",
+        status: user.status || "Active",
       });
       setErrors({});
       setHasChanges(false);
@@ -248,9 +284,9 @@ const EditUserModal = ({
             <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
               <span className="text-white font-medium">
                 {user.name
-                  ?.split(' ')
+                  ?.split(" ")
                   .map((n) => n[0])
-                  .join('')
+                  .join("")
                   .toUpperCase()}
               </span>
             </div>
@@ -264,9 +300,9 @@ const EditUserModal = ({
               <div className="flex items-center gap-2 mt-1">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.role === 'ADMIN'
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                      : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+                    user.role === "ADMIN"
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                      : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
                   }`}
                 >
                   {user.role}
@@ -324,11 +360,11 @@ const EditUserModal = ({
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.name
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="Enter full name"
                 />
@@ -347,11 +383,11 @@ const EditUserModal = ({
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.email
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="Enter email address"
                 />
@@ -370,11 +406,11 @@ const EditUserModal = ({
                 <input
                   type="tel"
                   value={formData.mobile}
-                  onChange={(e) => handleInputChange('mobile', e.target.value)}
+                  onChange={(e) => handleInputChange("mobile", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.mobile
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="e.g., +234-801-234-5678"
                 />
@@ -395,15 +431,15 @@ const EditUserModal = ({
                 </label>
                 <select
                   value={formData.role}
-                  onChange={(e) => handleInputChange('role', e.target.value)}
+                  onChange={(e) => handleInputChange("role", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.role
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <option value="USER">User</option>
-                  <option value="ADMIN">Admin</option>
+                  <option value="ADMIN">{t("userManagement.admin")}</option>
                 </select>
                 {errors.role && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -419,11 +455,11 @@ const EditUserModal = ({
                 </label>
                 <select
                   value={formData.subRole}
-                  onChange={(e) => handleInputChange('subRole', e.target.value)}
+                  onChange={(e) => handleInputChange("subRole", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.subRole
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <option value="">Select department...</option>
@@ -440,7 +476,7 @@ const EditUserModal = ({
                 )}
               </div>
 
-              {formData.role === 'ADMIN' && formData.subRole === 'SALES' && (
+              {formData.role === "ADMIN" && formData.subRole === "SALES" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Sales Mode *
@@ -448,17 +484,17 @@ const EditUserModal = ({
                   <select
                     value={formData.userMode}
                     onChange={(e) =>
-                      handleInputChange('userMode', e.target.value)
+                      handleInputChange("userMode", e.target.value)
                     }
                     className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                       errors.userMode
-                        ? 'border-red-300 dark:border-red-600'
-                        : 'border-gray-300 dark:border-gray-600'
+                        ? "border-red-300 dark:border-red-600"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}
                   >
                     <option value="">Select sales mode...</option>
-                    <option value="ONLINE">Online</option>
-                    <option value="OFFLINE">Offline</option>
+                    <option value="ONLINE">{t("customer.online")}</option>
+                    <option value="OFFLINE">{t("customer.offline")}</option>
                   </select>
                   {errors.userMode && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -475,11 +511,11 @@ const EditUserModal = ({
                 </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
+                  onChange={(e) => handleInputChange("status", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.status
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   {statusOptions.map((status) => (
@@ -504,7 +540,7 @@ const EditUserModal = ({
             </label>
             <textarea
               value={formData.address}
-              onChange={(e) => handleInputChange('address', e.target.value)}
+              onChange={(e) => handleInputChange("address", e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
               placeholder="Enter address"
@@ -526,6 +562,93 @@ const EditUserModal = ({
               </div>
             )}
 
+          {/* ── Country / Foreign Admin Scope ─────────────────────────────── */}
+          {formData.role === "ADMIN" &&
+            !["IT", "DIRECTOR", "LOGISTICS"].includes(formData.subRole) && (
+              <div className="border border-blue-100 bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                      Country / Foreign Admin
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Restrict this user to a specific country's data
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={formData.scope === "COUNTRY"}
+                      onChange={(e) => {
+                        const isCountry = e.target.checked;
+                        setFormData((prev) => ({
+                          ...prev,
+                          scope: isCountry ? "COUNTRY" : "GLOBAL",
+                          assignedCountry: isCountry
+                            ? prev.assignedCountry
+                            : "",
+                        }));
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                  </label>
+                </div>
+
+                {formData.scope === "COUNTRY" && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Assigned Country <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.assignedCountry}
+                        onChange={(e) =>
+                          handleInputChange("assignedCountry", e.target.value)
+                        }
+                        className={`w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white ${
+                          errors.assignedCountry
+                            ? "border-red-300"
+                            : "border-gray-300 dark:border-gray-600"
+                        }`}
+                      >
+                        <option value="">Select country…</option>
+                        <option value="NG">🇳🇬 Nigeria</option>
+                        <option value="TG">🇹🇬 Togo</option>
+                        <option value="BJ">🇧🇯 Benin</option>
+                        <option value="IT">🇮🇹 Italy</option>
+                      </select>
+                      {errors.assignedCountry && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {errors.assignedCountry}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Preferred Language
+                      </label>
+                      <select
+                        value={formData.preferredLanguage || ""}
+                        onChange={(e) =>
+                          handleInputChange("preferredLanguage", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                      >
+                        <option value="">Auto-detect</option>
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="it">Italiano</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+                {errors.scope && (
+                  <p className="text-xs text-red-600 mt-1">{errors.scope}</p>
+                )}
+              </div>
+            )}
+
           {/* Form Actions */}
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
@@ -534,9 +657,9 @@ const EditUserModal = ({
               disabled={submitting}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              {hasChanges ? 'Reset Changes' : 'Cancel'}
+              {hasChanges ? "Reset Changes" : "Cancel"}
             </button>
-            <RoleBasedButton disabledRoles={['HR', 'MANAGER']}>
+            <RoleBasedButton disabledRoles={["HR", "MANAGER"]}>
               <button
                 type="submit"
                 disabled={

@@ -6,10 +6,12 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiCall, handleApiError, fileAPI } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const EMPTY_FORM = { title: '', description: '', imageUrl: '', url: '', isActive: true, order: 0 };
 
 const SliderManagement = () => {
+  const { t } = useAdminTranslation();
   const [sliders, setSliders]         = useState([]);
   const [loading, setLoading]         = useState(false);
   const [showForm, setShowForm]       = useState(false);
@@ -148,8 +150,8 @@ const SliderManagement = () => {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900 dark:text-white truncate">{s.title}</h3>
                       {s.isActive
-                        ? <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">Active</span>
-                        : <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">Inactive</span>}
+                        ? <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">{t("common.active")}</span>
+                        : <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">{t("common.inactive")}</span>}
                     </div>
                     {s.description && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{s.description}</p>}
                     {s.url && (
@@ -217,14 +219,14 @@ const SliderManagement = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("common.description")}</label>
                 <textarea rows={2} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                   placeholder="Optional tagline shown on the slide"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white resize-none" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link URL</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("content.linkUrl")}</label>
                 <input type="url" value={form.url} onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
                   placeholder="https://…  (where the slide links to)"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
@@ -244,7 +246,7 @@ const SliderManagement = () => {
                     >
                       <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.isActive ? 'translate-x-5' : ''}`} />
                     </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("common.active")}</span>
                   </label>
                 </div>
               </div>
@@ -273,8 +275,8 @@ const SliderManagement = () => {
               <strong>{deleteTarget.title}</strong> will be permanently removed from the homepage.
             </p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm">Cancel</button>
-              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Delete</button>
+              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm">{t("common.cancel")}</button>
+              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">{t("common.delete")}</button>
             </div>
           </div>
         </div>

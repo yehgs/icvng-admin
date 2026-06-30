@@ -17,8 +17,10 @@ import CustomerModal from '../../components/customer/CustomerModal';
 import CustomerDetailsModal from '../../components/customer/CustomerDetailsModal';
 import AssignCustomerModal from '../../components/customer/AssignCustomerModal';
 import Pagination from '../../components/common/Pagination';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const CustomerManagement = () => {
+  const { t } = useAdminTranslation();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -355,7 +357,7 @@ const CustomerManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-40">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-            <span className="text-gray-900 dark:text-white">Processing...</span>
+            <span className="text-gray-900 dark:text-white">{t("common.processing")}</span>
           </div>
         </div>
       )}

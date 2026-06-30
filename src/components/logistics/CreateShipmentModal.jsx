@@ -291,7 +291,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
         <!-- Header -->
         <div style="text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px;">
           <h1 style="color: #1e40af; margin: 0; font-size: 28px;">I-Coffee Shipping Label</h1>
-          <p style="margin: 5px 0; color: #6b7280; font-size: 16px;">Professional Coffee Solutions</p>
+          <p style="margin: 5px 0; color: #6b7280; font-size: 16px;">{t("logistics2.professionalCoffee")}</p>
           <p style="margin: 0; color: #9ca3af; font-size: 14px;">Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
         </div>
         
@@ -299,7 +299,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
           <!-- Left Column -->
           <div>
-            <h3 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">SHIPMENT DETAILS</h3>
+            <h3 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">{t("logistics2.shipmentDetails")}</h3>
             <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
               <p style="margin: 8px 0;"><strong>Tracking Number:</strong> <span style="color: #2563eb; font-size: 16px;">${
                 formData.trackingNumber || 'Auto-generated'
@@ -322,7 +322,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
               }</span></p>
             </div>
             
-            <h4 style="color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px;">CARRIER INFORMATION</h4>
+            <h4 style="color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px;">{t("logistics2.carrierInfo")}</h4>
             <p style="margin: 5px 0;"><strong>Carrier:</strong> ${
               formData.carrier.name
             }</p>
@@ -343,7 +343,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
           
           <!-- Right Column -->
           <div>
-            <h3 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">PACKAGE INFORMATION</h3>
+            <h3 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; font-size: 18px;">{t("logistics2.packageInfo")}</h3>
             <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
               <p style="margin: 8px 0;"><strong>Weight:</strong> ${
                 formData.packageInfo.weight
@@ -363,7 +363,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onSubmit, loading }) => {
               }</p>
             </div>
             
-            <h4 style="color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px;">ORDER DETAILS</h4>
+            <h4 style="color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px;">{t("logistics2.orderDetailsLabel")}</h4>
             <p style="margin: 5px 0;"><strong>Product:</strong> ${
               selectedOrder.productId?.name ||
               selectedOrder.product_details?.name ||

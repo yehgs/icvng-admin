@@ -28,8 +28,10 @@ import { exchangeRateAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
 import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ExchangeRates = () => {
+  const { t } = useAdminTranslation();
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -571,7 +573,7 @@ const ExchangeRates = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search currencies..."
+                placeholder={t("pricing.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

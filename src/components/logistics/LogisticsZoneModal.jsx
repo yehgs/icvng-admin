@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
 import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas.js';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
+  const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -333,9 +335,9 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               >
-                <option value="urban">Urban</option>
-                <option value="rural">Rural</option>
-                <option value="mixed">Mixed</option>
+                <option value="urban">{t("logistics2.urban")}</option>
+                <option value="rural">{t("logistics2.rural")}</option>
+                <option value="mixed">{t("logistics2.mixed")}</option>
               </select>
             </div>
 
@@ -350,7 +352,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               >
                 <option value="low">Low</option>
-                <option value="medium">Medium</option>
+                <option value="medium">{t("notificationsExt.medium")}</option>
                 <option value="high">High</option>
               </select>
             </div>

@@ -45,8 +45,10 @@ import WeightEditModal from "../../components/stock/WeightEditModal";
 import SystemControlModal from "../../components/stock/SystemControlModal";
 import ActivityLogModal from "../../components/stock/ActivityLogModal";
 import ImportExportModal from "../../components/stock/ImportExportModal";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const WarehouseManagement = () => {
+  const { t } = useAdminTranslation();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [paginatedProducts, setPaginatedProducts] = useState([]);
@@ -525,7 +527,7 @@ const WarehouseManagement = () => {
             className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{t("common.refresh")}</span>
           </button>
 
           <button
@@ -536,7 +538,7 @@ const WarehouseManagement = () => {
             className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t("common.export")}</span>
           </button>
 
           <button
@@ -555,7 +557,7 @@ const WarehouseManagement = () => {
             className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">Activity Log</span>
+            <span className="hidden sm:inline">{t("activity.title")}</span>
           </button>
 
           <RoleBasedAccess allowedRoles={["DIRECTOR", "IT"]}>
@@ -564,7 +566,7 @@ const WarehouseManagement = () => {
               className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">System Control</span>
+              <span className="hidden sm:inline">{t("stock.systemControl")}</span>
             </button>
           </RoleBasedAccess>
         </div>
@@ -705,7 +707,7 @@ const WarehouseManagement = () => {
                   className="flex items-center gap-1 px-2 md:px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Previous</span>
+                  <span className="hidden sm:inline">{t("common.previous")}</span>
                 </button>
 
                 {/* Page numbers - hide some on mobile */}
@@ -755,7 +757,7 @@ const WarehouseManagement = () => {
                   disabled={pagination.currentPage === pagination.totalPages}
                   className="flex items-center gap-1 px-2 md:px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <span className="hidden sm:inline">Next</span>
+                  <span className="hidden sm:inline">{t("common.next")}</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>

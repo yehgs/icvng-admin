@@ -319,9 +319,9 @@ const ExpiryManagement = ({ expiringBatches, loading, onRefresh }) => {
             onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
           >
-            <option value="expiryDate">Sort by Expiry Date</option>
-            <option value="quantity">Sort by Quantity</option>
-            <option value="product">Sort by Product</option>
+            <option value="expiryDate">{t("stockLog.sortByExpiry")}</option>
+            <option value="quantity">{t("stockLog.sortByQty")}</option>
+            <option value="product">{t("stockLog.sortByProduct")}</option>
           </select>
         </div>
 

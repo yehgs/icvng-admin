@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { warehouseAPI } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ActivityLogModal = ({ isOpen, onClose }) => {
+  const { t } = useAdminTranslation();
   const [activities, setActivities] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -98,13 +100,13 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
         icon: Package,
       },
       SYSTEM_ENABLED: {
-        label: "System Enabled",
+        label: t("stockLog.systemEnabled"),
         color:
           "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
         icon: Activity,
       },
       SYSTEM_DISABLED: {
-        label: "System Disabled",
+        label: t("stockLog.systemDisabled"),
         color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
         icon: Activity,
       },
@@ -298,7 +300,7 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                   <option value="1">Last 24 hours</option>
                   <option value="7">Last 7 days</option>
                   <option value="30">Last 30 days</option>
-                  <option value="all">All time</option>
+                  <option value="all">{t("stockLog.allTime")}</option>
                 </select>
               </div>
 
@@ -311,14 +313,28 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                   onChange={(e) => handleFilterChange("action", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="">All Actions</option>
-                  <option value="STOCK_UPDATE">Stock Updates</option>
-                  <option value="WEIGHT_UPDATE">Weight Updates</option>
-                  <option value="SYSTEM_ENABLED">System Enabled</option>
-                  <option value="SYSTEM_DISABLED">System Disabled</option>
-                  <option value="BULK_STOCK_UPDATE">Bulk Updates</option>
-                  <option value="STOCK_RECONCILIATION">Reconciliations</option>
-                  <option value="SETTINGS_UPDATE">Settings Updates</option>
+                  <option value="">{t("stockLog.allActions")}</option>
+                  <option value="STOCK_UPDATE">
+                    {t("stockLog.stockUpdates")}
+                  </option>
+                  <option value="WEIGHT_UPDATE">
+                    {t("stockLog.weightUpdates")}
+                  </option>
+                  <option value="SYSTEM_ENABLED">
+                    {t("stockLog.systemEnabled")}
+                  </option>
+                  <option value="SYSTEM_DISABLED">
+                    {t("stockLog.systemDisabled")}
+                  </option>
+                  <option value="BULK_STOCK_UPDATE">
+                    {t("stockLog.bulkUpdates")}
+                  </option>
+                  <option value="STOCK_RECONCILIATION">
+                    {t("stockLog.reconciliations")}
+                  </option>
+                  <option value="SETTINGS_UPDATE">
+                    {t("stockLog.settingsUpdates")}
+                  </option>
                 </select>
               </div>
 
@@ -331,7 +347,7 @@ const ActivityLogModal = ({ isOpen, onClose }) => {
                   onChange={(e) => handleFilterChange("userId", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="">All Users</option>
+                  <option value="">{t("stockLog.allUsers")}</option>
                   {users.map((user) => (
                     <option key={user._id} value={user._id}>
                       {user.name} ({user.subRole || user.role})

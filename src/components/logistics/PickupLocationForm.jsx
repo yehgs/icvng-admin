@@ -213,7 +213,7 @@ const PickupLocationForm = ({
             }`}
             required
           >
-            <option value="">Select State</option>
+            <option value="">{t("customer.selectState")}</option>
             {nigeriaStatesLgas.map((state) => (
               <option key={state.state} value={state.state}>
                 {state.state}
@@ -242,7 +242,7 @@ const PickupLocationForm = ({
             disabled={!selectedState || availableLgas.length === 0}
             required
           >
-            <option value="">Select LGA</option>
+            <option value="">{t("customer.selectLga")}</option>
             {availableLgas.map((lga) => (
               <option key={lga} value={lga}>
                 {lga}

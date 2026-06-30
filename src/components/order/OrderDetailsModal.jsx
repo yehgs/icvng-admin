@@ -1,7 +1,7 @@
 // icvng-admin/src/components/order/OrderDetailsModal.jsx
-import React, { useState } from 'react';
-import { adminOrderAPI } from '../../utils/api';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { adminOrderAPI } from "../../utils/api";
+import toast from "react-hot-toast";
 import {
   X,
   Package,
@@ -21,17 +21,19 @@ import {
   DollarSign,
   ShoppingBag,
   Globe,
-} from 'lucide-react';
-import { generateOrderPDF } from '../../utils/pdfGenerator';
+} from "lucide-react";
+import { generateOrderPDF } from "../../utils/pdfGenerator";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation";
 
 const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
+  const { t } = useAdminTranslation();
   const [updating, setUpdating] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [statusUpdate, setStatusUpdate] = useState({
-    order_status: order?.summary?.order_status || '',
-    payment_status: order?.summary?.payment_status || '',
-    notes: '',
+    order_status: order?.summary?.order_status || "",
+    payment_status: order?.summary?.payment_status || "",
+    notes: "",
   });
 
   if (!order) return null;
@@ -42,54 +44,54 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
     }).format(amount || 0);
   };
 
   // Format date
   const formatDate = (date) => {
-    if (!date) return 'Not set';
-    return new Date(date).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    if (!date) return "Not set";
+    return new Date(date).toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Status badge helpers
-  const getStatusBadge = (status, type = 'order') => {
+  const getStatusBadge = (status, type = "order") => {
     const statusClasses = {
       order: {
         PENDING:
-          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
         CONFIRMED:
-          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
         PROCESSING:
-          'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+          "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
         SHIPPED:
-          'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
+          "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
         DELIVERED:
-          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+          "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
         CANCELLED:
-          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+          "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
         RETURNED:
-          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+          "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
       },
       payment: {
         PENDING:
-          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-        PAID: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-        FAILED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+        PAID: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+        FAILED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
         REFUNDED:
-          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+          "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
         PENDING_BANK_TRANSFER:
-          'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+          "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
         PARTIAL:
-          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
       },
     };
 
@@ -107,25 +109,25 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
       PAYSTACK: {
         icon: CreditCard,
         color:
-          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-        label: 'Paystack',
+          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+        label: "Paystack",
       },
       STRIPE: {
         icon: CreditCard,
         color:
-          'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-        label: 'Stripe',
+          "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+        label: "Stripe",
       },
       BANK_TRANSFER: {
         icon: DollarSign,
         color:
-          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-        label: 'Bank Transfer',
+          "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+        label: "Bank Transfer",
       },
     };
     const badge = badges[method] || {
       icon: CreditCard,
-      color: 'bg-gray-100 text-gray-800',
+      color: "bg-gray-100 text-gray-800",
       label: method,
     };
     const Icon = badge.icon;
@@ -149,16 +151,16 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
       const ordersToUpdate = order.allOrders || [mainOrder];
 
       const updatePromises = ordersToUpdate.map((singleOrder) =>
-        adminOrderAPI.updateOrderStatus(singleOrder._id, statusUpdate)
+        adminOrderAPI.updateOrderStatus(singleOrder._id, statusUpdate),
       );
 
       await Promise.all(updatePromises);
 
-      toast.success('Order(s) updated successfully');
+      toast.success("Order(s) updated successfully");
       onUpdate();
       onClose();
     } catch (error) {
-      toast.error(error.message || 'Failed to update order');
+      toast.error(error.message || "Failed to update order");
     } finally {
       setUpdating(false);
     }
@@ -174,19 +176,19 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
 
       const response = await adminOrderAPI.generateInvoice(
         targetOrder._id,
-        sendEmail
+        sendEmail,
       );
 
       if (response.success) {
         if (sendEmail) {
-          toast.success('Invoice generated and email sent successfully');
+          toast.success("Invoice generated and email sent successfully");
         } else {
-          toast.success('Invoice generated successfully');
+          toast.success("Invoice generated successfully");
         }
         onUpdate();
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to generate invoice');
+      toast.error(error.message || "Failed to generate invoice");
     } finally {
       setGeneratingInvoice(false);
     }
@@ -197,10 +199,10 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
     try {
       setDownloadingPDF(true);
       await generateOrderPDF(order);
-      toast.success('PDF invoice downloaded successfully');
+      toast.success("PDF invoice downloaded successfully");
     } catch (error) {
-      console.error('PDF download error:', error);
-      toast.error('Failed to download PDF invoice');
+      console.error("PDF download error:", error);
+      toast.error("Failed to download PDF invoice");
     } finally {
       setDownloadingPDF(false);
     }
@@ -208,9 +210,9 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
 
   // Permission checks
   const canUpdateOrder = () => {
-    if (['IT', 'MANAGER', 'DIRECTOR'].includes(currentUser?.subRole))
+    if (["IT", "MANAGER", "DIRECTOR"].includes(currentUser?.subRole))
       return true;
-    if (currentUser?.subRole === 'SALES') {
+    if (currentUser?.subRole === "SALES") {
       return (
         mainOrder?.isWebsiteOrder ||
         mainOrder?.createdBy?._id === currentUser._id
@@ -220,7 +222,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
   };
 
   const canGenerateInvoice = () => {
-    return currentUser?.subRole === 'SALES' && !mainOrder?.invoiceGenerated;
+    return currentUser?.subRole === "SALES" && !mainOrder?.invoiceGenerated;
   };
 
   return (
@@ -283,15 +285,15 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {getStatusBadge(order.summary.order_status, 'order')}
-            {getStatusBadge(order.summary.payment_status, 'payment')}
+            {getStatusBadge(order.summary.order_status, "order")}
+            {getStatusBadge(order.summary.payment_status, "payment")}
             {getPaymentMethodBadge(mainOrder?.payment_method)}
 
             <span
               className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                mainOrder?.orderType === 'BTB'
-                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                mainOrder?.orderType === "BTB"
+                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                  : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
               }`}
             >
               {mainOrder?.orderType}
@@ -299,12 +301,12 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
 
             <span
               className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full ${
-                mainOrder?.orderMode === 'ONLINE'
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                mainOrder?.orderMode === "ONLINE"
+                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
               }`}
             >
-              {mainOrder?.orderMode === 'ONLINE' ? '🌐' : '📱'}{' '}
+              {mainOrder?.orderMode === "ONLINE" ? "🌐" : "📱"}{" "}
               {mainOrder?.orderMode}
             </span>
 
@@ -337,7 +339,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                     <p className="text-sm text-gray-900 dark:text-white font-medium">
                       {mainOrder?.userId?.name ||
                         mainOrder?.customerId?.name ||
-                        'N/A'}
+                        "N/A"}
                     </p>
                   </div>
                 </div>
@@ -351,7 +353,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                     <p className="text-sm text-gray-900 dark:text-white">
                       {mainOrder?.userId?.email ||
                         mainOrder?.customerId?.email ||
-                        'N/A'}
+                        "N/A"}
                     </p>
                   </div>
                 </div>
@@ -365,7 +367,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                     <p className="text-sm text-gray-900 dark:text-white">
                       {mainOrder?.userId?.mobile ||
                         mainOrder?.customerId?.mobile ||
-                        'Not provided'}
+                        "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -389,7 +391,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                           if (addr.state) parts.push(addr.state);
                           if (addr.lga) parts.push(`LGA: ${addr.lga}`);
                           if (addr.postalCode) parts.push(addr.postalCode);
-                          return parts.join(', ') || 'N/A';
+                          return parts.join(", ") || "N/A";
                         })()}
                       </p>
                     </div>
@@ -531,7 +533,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                             <p className="text-sm font-medium text-gray-900 dark:text-white">
                               {item.productId?.name ||
                                 item.product_details?.name ||
-                                'Product'}
+                                "Product"}
                             </p>
                             {item.productId?.sku && (
                               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -543,7 +545,7 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          {item.product_details?.priceOption || 'regular'}
+                          {item.product_details?.priceOption || "regular"}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -690,13 +692,27 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                       })
                     }
                   >
-                    <option value="PENDING">Pending</option>
-                    <option value="CONFIRMED">Confirmed</option>
-                    <option value="PROCESSING">Processing</option>
-                    <option value="SHIPPED">Shipped</option>
-                    <option value="DELIVERED">Delivered</option>
-                    <option value="CANCELLED">Cancelled</option>
-                    <option value="RETURNED">Returned</option>
+                    <option value="PENDING">
+                      {t("orders.statuses.Pending")}
+                    </option>
+                    <option value="CONFIRMED">
+                      {t("orders.statuses.Confirmed")}
+                    </option>
+                    <option value="PROCESSING">
+                      {t("orders.statuses.Processing")}
+                    </option>
+                    <option value="SHIPPED">
+                      {t("orders.statuses.Shipped")}
+                    </option>
+                    <option value="DELIVERED">
+                      {t("orders.statuses.Delivered")}
+                    </option>
+                    <option value="CANCELLED">
+                      {t("orders.statuses.Cancelled")}
+                    </option>
+                    <option value="RETURNED">
+                      {t("orders.statuses.Returned")}
+                    </option>
                   </select>
                 </div>
 
@@ -714,14 +730,20 @@ const OrderDetailsModal = ({ order, onClose, onUpdate, currentUser }) => {
                       })
                     }
                   >
-                    <option value="PENDING">Pending</option>
+                    <option value="PENDING">
+                      {t("orders.statuses.Pending")}
+                    </option>
                     <option value="PAID">Paid</option>
-                    <option value="FAILED">Failed</option>
-                    <option value="REFUNDED">Refunded</option>
+                    <option value="FAILED">
+                      {t("orders.statuses.FAILED")}
+                    </option>
+                    <option value="REFUNDED">
+                      {t("orders.statuses.Refunded")}
+                    </option>
                     <option value="PENDING_BANK_TRANSFER">
                       Pending Bank Transfer
                     </option>
-                    <option value="PARTIAL">Partial</option>
+                    <option value="PARTIAL">{t("activityExt.partial")}</option>
                   </select>
                 </div>
               </div>

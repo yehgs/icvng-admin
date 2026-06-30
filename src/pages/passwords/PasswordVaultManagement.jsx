@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/api";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -104,6 +105,7 @@ const EMPTY_PRODUCT = {
 };
 
 export default function PasswordVaultManagement() {
+  const { t } = useAdminTranslation();
   const [entries, setEntries] = useState([]);
   const [expiringItems, setExpiringItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -163,7 +165,7 @@ export default function PasswordVaultManagement() {
         { method: "POST" },
       );
       if (data.success) toast.success(data.message);
-      else toast.error(data.message || "Failed");
+      else toast.error(data.message || t("orders.statuses.FAILED"));
     } finally {
       setSendingReminders(false);
     }
@@ -207,7 +209,7 @@ export default function PasswordVaultManagement() {
         setEntryForm(EMPTY_ENTRY);
         fetchEntries();
         fetchExpiring();
-      } else toast.error(data.message || "Failed");
+      } else toast.error(data.message || t("orders.statuses.FAILED"));
     } finally {
       setSaving(false);
     }
@@ -385,7 +387,7 @@ export default function PasswordVaultManagement() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search platform, email, URL..."
+            placeholder={t("passwords.searchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
           />
         </div>
@@ -394,7 +396,7 @@ export default function PasswordVaultManagement() {
           onChange={(e) => setFilterCategory(e.target.value)}
           className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
-          <option value="">All Categories</option>
+          <option value="">{t("products.allCategories")}</option>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -512,7 +514,7 @@ export default function PasswordVaultManagement() {
                   <div className="grid grid-cols-2 gap-3">
                     {entry.accountUsername && (
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Username</p>
+                        <p className="text-xs text-gray-400 mb-0.5">{t("settings.username")}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                             {entry.accountUsername}

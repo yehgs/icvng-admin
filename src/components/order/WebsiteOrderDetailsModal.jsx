@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { adminOrderAPI } from "../../utils/api";
 import { generateOrderPDF } from "../../utils/pdfGenerator";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import {
   X,
   User,
@@ -385,6 +386,7 @@ const ShippingAddressDetailsModal = ({
   orderGroupId,
   mainOrder,
 }) => {
+  const { t } = useAdminTranslation();
   const [copied, setCopied] = useState(null);
   const [slipLoading, setSlipLoading] = useState(false);
 
@@ -451,7 +453,7 @@ const ShippingAddressDetailsModal = ({
     },
     warehouse: {
       icon: Layers,
-      label: "Warehouse",
+      label: t("reports2.warehouse"),
       color:
         "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
     },
@@ -463,7 +465,7 @@ const ShippingAddressDetailsModal = ({
     },
     other: {
       icon: MapPin,
-      label: "Other",
+      label: t("purchaseOrder.other"),
       color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
     },
   };
@@ -507,7 +509,9 @@ const ShippingAddressDetailsModal = ({
         </p>
         <p className="text-sm text-gray-900 dark:text-white break-words">
           {value || (
-            <span className="text-gray-400 italic text-xs">Not provided</span>
+            <span className="text-gray-400 italic text-xs">
+              {t("order.notProvided")}
+            </span>
           )}
         </p>
       </div>
@@ -656,7 +660,11 @@ const ShippingAddressDetailsModal = ({
                 icon={Building2}
               />
               <InfoRow label="LGA" value={address.lga} icon={Layers} />
-              <InfoRow label="State" value={address.state} icon={Globe} />
+              <InfoRow
+                label={t("fomo.state")}
+                value={address.state}
+                icon={Globe}
+              />
               <InfoRow
                 label="Postal Code"
                 value={address.postal_code}
@@ -664,7 +672,7 @@ const ShippingAddressDetailsModal = ({
                 copyText={address.postal_code}
               />
               <InfoRow
-                label="Country"
+                label={t("common.country")}
                 value={address.country || "Nigeria"}
                 icon={Globe}
               />
@@ -848,6 +856,7 @@ const WebsiteOrderDetailsModal = ({
   onUpdate,
   currentUser,
 }) => {
+  const { t } = useAdminTranslation();
   const [editMode, setEditMode] = useState(false);
   const [updateMode, setUpdateMode] = useState("collective"); // 'collective' | 'individual'
   const [updating, setUpdating] = useState(false);
@@ -1480,7 +1489,7 @@ const WebsiteOrderDetailsModal = ({
               mainOrder?.customer_notes ||
               mainOrder?.admin_notes) && (
               <div>
-                <SectionTitle icon={StickyNote} title="Notes" />
+                <SectionTitle icon={StickyNote} title={t("common.notes")} />
                 <div className="space-y-2">
                   {mainOrder.customer_notes && (
                     <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -1522,7 +1531,7 @@ const WebsiteOrderDetailsModal = ({
                 <div className="flex items-center justify-between mb-4">
                   <SectionTitle
                     icon={Edit}
-                    title="Update Order Status"
+                    title={t("order.updateStatus")}
                     iconClass="text-orange-600 dark:text-orange-400"
                   />
                   {!editMode && (

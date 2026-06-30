@@ -13,6 +13,7 @@ import {
 import { useNotifications } from "../../contexts/NotificationContext";
 import { getCurrentUser } from "../../utils/api";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const TYPE_OPTIONS = [
   "ORDER",
@@ -83,6 +84,7 @@ const EMPTY_FORM = {
 };
 
 export default function NotificationManagement() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const {
     notifications,
@@ -201,10 +203,10 @@ export default function NotificationManagement() {
           onChange={(e) => setFilterType(e.target.value)}
           className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
-          <option value="">All Types</option>
-          {TYPE_OPTIONS.map((t) => (
-            <option key={t} value={t}>
-              {t.replace("_", " ")}
+          <option value="">{t("orders.allTypes")}</option>
+          {TYPE_OPTIONS.map((typeOpt) => (
+            <option key={typeOpt} value={typeOpt}>
+              {typeOpt.replace("_", " ")}
             </option>
           ))}
         </select>
@@ -214,8 +216,8 @@ export default function NotificationManagement() {
           className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
           <option value="">All</option>
-          <option value="unread">Unread</option>
-          <option value="read">Read</option>
+          <option value="unread">{t("notifications.unread")}</option>
+          <option value="read">{t("notifications.read")}</option>
         </select>
         <span className="text-sm text-gray-500 ml-auto">
           {filtered.length} notification{filtered.length !== 1 ? "s" : ""}
@@ -328,9 +330,9 @@ export default function NotificationManagement() {
                     }
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                   >
-                    {TYPE_OPTIONS.map((t) => (
-                      <option key={t} value={t}>
-                        {t.replace(/_/g, " ")}
+                    {TYPE_OPTIONS.map((typeOpt) => (
+                      <option key={typeOpt} value={typeOpt}>
+                        {typeOpt.replace(/_/g, " ")}
                       </option>
                     ))}
                   </select>
@@ -347,9 +349,9 @@ export default function NotificationManagement() {
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                   >
                     <option value="low">Low</option>
-                    <option value="medium">Medium</option>
+                    <option value="medium">{t("notificationsExt.medium")}</option>
                     <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="urgent">{t("logistics2.urgent")}</option>
                   </select>
                 </div>
               </div>
@@ -402,25 +404,25 @@ export default function NotificationManagement() {
                   Target
                 </label>
                 <div className="flex gap-3 mb-3">
-                  {["all", "role"].map((t) => (
+                  {["all", "role"].map((targetType) => (
                     <label
                       key={t}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <input
                         type="radio"
-                        checked={form.targetType === t}
+                        checked={form.targetType === targetType}
                         onChange={() =>
                           setForm((f) => ({
                             ...f,
-                            targetType: t,
+                            targetType: targetType,
                             targetRoles: [],
                           }))
                         }
                         className="text-blue-600"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                        {t === "all" ? "All Roles" : "Specific Roles"}
+                        {t === "all" ? t("userManagement.allRoles") : "Specific Roles"}
                       </span>
                     </label>
                   ))}

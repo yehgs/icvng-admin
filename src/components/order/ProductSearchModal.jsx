@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { X, Search, Loader2, Package, Truck } from "lucide-react";
 import { productAPI, handleApiError } from "../../utils/api";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 // ===== PRODUCT VALIDATION LOGIC =====
 const isProductValidForOrderType = (product, orderType) => {
@@ -18,8 +19,8 @@ const isProductValidForOrderType = (product, orderType) => {
       reason: !hasBtbPrice
         ? "No BTB price set"
         : !hasOfflineStock
-        ? "No warehouse stock available"
-        : "",
+          ? "No warehouse stock available"
+          : "",
     };
   } else {
     // BTC: Must have (btcPrice > 0 AND onlineStock > 0) OR (has dropship prices)
@@ -42,13 +43,14 @@ const isProductValidForOrderType = (product, orderType) => {
         !hasBtcPrice && !hasDropshipPrices
           ? "No BTC or dropship price set"
           : !hasOnlineStock && !hasDropshipPrices
-          ? "No online stock and no dropship options"
-          : "",
+            ? "No online stock and no dropship options"
+            : "",
     };
   }
 };
 
 const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
+  const { t } = useAdminTranslation();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
@@ -208,7 +210,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
                 // ===== VALIDATION LOGIC =====
                 const validation = isProductValidForOrderType(
                   product,
-                  orderType
+                  orderType,
                 );
                 const isDisabled = !validation.isValid;
 
@@ -270,7 +272,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
                               stock
                             </>
                           ) : (
-                            "Out of stock"
+                            t("productExport.outOfStock")
                           )}
                         </span>
 

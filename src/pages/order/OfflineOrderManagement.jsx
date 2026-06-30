@@ -24,8 +24,10 @@ import {
 // Import sub-components
 import CreateOrderModal from '../../components/order/CreateOrderModal';
 import OrderDetailsModal from '../../components/order/OrderDetailsModal';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const OfflineOrderManagement = () => {
+  const { t } = useAdminTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -401,7 +403,7 @@ const OfflineOrderManagement = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search by order ID, customer..."
+              placeholder={t("orders.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -414,7 +416,7 @@ const OfflineOrderManagement = () => {
             onChange={(e) => setFilterType(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Types</option>
+            <option value="">{t("orders.allTypes")}</option>
             <option value="BTC">BTC</option>
             <option value="BTB">BTB</option>
           </select>
@@ -425,9 +427,9 @@ const OfflineOrderManagement = () => {
             onChange={(e) => setFilterMode(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Modes</option>
-            <option value="ONLINE">Online</option>
-            <option value="OFFLINE">Offline</option>
+            <option value="">{t("customer.allModes")}</option>
+            <option value="ONLINE">{t("customer.online")}</option>
+            <option value="OFFLINE">{t("customer.offline")}</option>
           </select>
 
           {/* Order Status */}
@@ -436,13 +438,13 @@ const OfflineOrderManagement = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="PROCESSING">Processing</option>
-            <option value="SHIPPED">Shipped</option>
-            <option value="DELIVERED">Delivered</option>
-            <option value="CANCELLED">Cancelled</option>
+            <option value="">{t("products.allStatus")}</option>
+            <option value="PENDING">{t("orders.statuses.Pending")}</option>
+            <option value="CONFIRMED">{t("orders.statuses.Confirmed")}</option>
+            <option value="PROCESSING">{t("orders.statuses.Processing")}</option>
+            <option value="SHIPPED">{t("orders.statuses.Shipped")}</option>
+            <option value="DELIVERED">{t("orders.statuses.Delivered")}</option>
+            <option value="CANCELLED">{t("orders.statuses.Cancelled")}</option>
           </select>
 
           {/* Payment Status */}
@@ -451,11 +453,11 @@ const OfflineOrderManagement = () => {
             onChange={(e) => setFilterPaymentStatus(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           >
-            <option value="">Payment Status</option>
-            <option value="PENDING">Pending</option>
+            <option value="">{t("order.paymentStatus")}</option>
+            <option value="PENDING">{t("orders.statuses.Pending")}</option>
             <option value="PAID">Paid</option>
-            <option value="FAILED">Failed</option>
-            <option value="REFUNDED">Refunded</option>
+            <option value="FAILED">{t("orders.statuses.FAILED")}</option>
+            <option value="REFUNDED">{t("orders.statuses.Refunded")}</option>
           </select>
         </div>
 

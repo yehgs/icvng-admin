@@ -23,8 +23,10 @@ import {
 } from 'lucide-react';
 import { supplierAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const SupplierManagement = () => {
+  const { t } = useAdminTranslation();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -344,7 +346,7 @@ const SupplierManagement = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search suppliers..."
+                placeholder={t("suppliers.searchPlaceholder")}
                 className="form-input pl-10"
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
@@ -358,10 +360,10 @@ const SupplierManagement = () => {
             value={filterStatus}
             onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
           >
-            <option value="">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="BLACKLISTED">Blacklisted</option>
+            <option value="">{t("orders.allStatuses")}</option>
+            <option value="ACTIVE">{t("common.active")}</option>
+            <option value="INACTIVE">{t("common.inactive")}</option>
+            <option value="BLACKLISTED">{t("supplier2.blacklisted")}</option>
           </select>
 
           {/* Filter by Type */}
@@ -370,9 +372,9 @@ const SupplierManagement = () => {
             value={filterType}
             onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
           >
-            <option value="">All Types</option>
-            <option value="FULL">Full Supplier</option>
-            <option value="PARTNER">Partner Supplier</option>
+            <option value="">{t("orders.allTypes")}</option>
+            <option value="FULL">{t("supplier2.fullSupplier")}</option>
+            <option value="PARTNER">{t("supplier2.partnerSupplier")}</option>
           </select>
 
           {/* Clear filters */}
@@ -679,12 +681,12 @@ const SupplierManagement = () => {
           <thead>
             <tr className="table-header">
               <th className="px-6 py-3 text-left">Supplier</th>
-              <th className="px-6 py-3 text-left">Contact Info</th>
+              <th className="px-6 py-3 text-left">{t("supplier2.contactInfo")}</th>
               <th className="px-6 py-3 text-left">Location</th>
-              <th className="px-6 py-3 text-left">Contact Person</th>
+              <th className="px-6 py-3 text-left">{t("supplier2.contactPerson")}</th>
               <th className="px-6 py-3 text-left">Payment Terms</th>
-              <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-left">Actions</th>
+              <th className="px-6 py-3 text-left">{t("common.status")}</th>
+              <th className="px-6 py-3 text-left">{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>

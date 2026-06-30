@@ -22,8 +22,10 @@ import {
 import toast from "react-hot-toast";
 import { pricingAPI, productAPI, brandAPI } from "../../utils/api";
 import { getCategoryStructure } from "../../utils/categoryService";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const PricingManagement = () => {
+  const { t } = useAdminTranslation();
   const [productPricing, setProductPricing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -263,7 +265,7 @@ const PricingManagement = () => {
                       )}`}
                     >
                       {getStatusIcon(selectedProduct.isApproved)}
-                      {selectedProduct.isApproved ? "Approved" : "Pending"}
+                      {selectedProduct.isApproved ? t("purchaseOrders.approved") : t("orders.statuses.Pending")}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -665,7 +667,7 @@ const PricingManagement = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t("products.searchPlaceholder")}
                 value={filters.search}
                 onChange={(e) => handleFilterChange("search", e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -678,7 +680,7 @@ const PricingManagement = () => {
               onChange={(e) => handleFilterChange("category", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Categories</option>
+              <option value="">{t("products.allCategories")}</option>
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
@@ -692,7 +694,7 @@ const PricingManagement = () => {
               onChange={(e) => handleFilterChange("brand", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Brands</option>
+              <option value="">{t("products.allBrands")}</option>
               {brands.map((brand) => (
                 <option key={brand._id} value={brand._id}>
                   {brand.name}
@@ -708,7 +710,7 @@ const PricingManagement = () => {
               }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Types</option>
+              <option value="">{t("orders.allTypes")}</option>
               {productTypes.map((type) => (
                 <option key={type} value={type}>
                   {type.replace("_", " ")}
@@ -722,9 +724,9 @@ const PricingManagement = () => {
               onChange={(e) => handleFilterChange("isApproved", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Status</option>
-              <option value="true">Approved</option>
-              <option value="false">Pending</option>
+              <option value="">{t("products.allStatus")}</option>
+              <option value="true">{t("purchaseOrders.approved")}</option>
+              <option value="false">{t("orders.statuses.Pending")}</option>
             </select>
           </div>
         )}
@@ -875,7 +877,7 @@ const PricingManagement = () => {
                           )}`}
                         >
                           {getStatusIcon(product.isApproved)}
-                          {product.isApproved ? "Approved" : "Pending"}
+                          {product.isApproved ? t("purchaseOrders.approved") : t("orders.statuses.Pending")}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">

@@ -30,8 +30,10 @@ import CreateShipmentModal from '../../components/logistics/CreateShipmentModal.
 import UpdateTrackingModal from '../../components/logistics/UpdateTrackingModal';
 import TrackingDetailsModal from '../../components/logistics/TrackingDetailsModal';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const TrackingManagement = () => {
+  const { t } = useAdminTranslation();
   const [loading, setLoading] = useState(false);
   const [trackings, setTrackings] = useState([]);
   const [stats, setStats] = useState({});
@@ -378,7 +380,7 @@ const TrackingManagement = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search by tracking number, order ID..."
+                placeholder={t("logistics.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
@@ -395,17 +397,17 @@ const TrackingManagement = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
             >
-              <option value="">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="PROCESSING">Processing</option>
-              <option value="PICKED_UP">Picked Up</option>
-              <option value="IN_TRANSIT">In Transit</option>
-              <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
-              <option value="DELIVERED">Delivered</option>
-              <option value="ATTEMPTED">Attempted</option>
-              <option value="RETURNED">Returned</option>
+              <option value="">{t("orders.allStatuses")}</option>
+              <option value="PENDING">{t("orders.statuses.Pending")}</option>
+              <option value="PROCESSING">{t("orders.statuses.Processing")}</option>
+              <option value="PICKED_UP">{t("logistics2.pickedUp")}</option>
+              <option value="IN_TRANSIT">{t("logistics2.inTransit")}</option>
+              <option value="OUT_FOR_DELIVERY">{t("logistics2.outForDelivery")}</option>
+              <option value="DELIVERED">{t("orders.statuses.Delivered")}</option>
+              <option value="ATTEMPTED">{t("logistics2.attempted")}</option>
+              <option value="RETURNED">{t("orders.statuses.Returned")}</option>
               <option value="LOST">Lost</option>
-              <option value="CANCELLED">Cancelled</option>
+              <option value="CANCELLED">{t("orders.statuses.Cancelled")}</option>
             </select>
           </div>
 
@@ -418,13 +420,13 @@ const TrackingManagement = () => {
               onChange={(e) => setCarrierFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
             >
-              <option value="">All Carriers</option>
+              <option value="">{t("logistics.allCarriers")}</option>
               <option value="DHL">DHL</option>
-              <option value="FEDEX">FedEx</option>
+              <option value="FEDEX">{t("logistics2.fedex")}</option>
               <option value="UPS">UPS</option>
-              <option value="ARAMEX">Aramex</option>
-              <option value="GIG">GIG Logistics</option>
-              <option value="SPEEDAF">Speedaf</option>
+              <option value="ARAMEX">{t("logistics2.aramex")}</option>
+              <option value="GIG">{t("logistics2.gigLogistics")}</option>
+              <option value="SPEEDAF">{t("logistics2.speedaf")}</option>
             </select>
           </div>
 
@@ -437,11 +439,11 @@ const TrackingManagement = () => {
               onChange={(e) => setPriorityFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
             >
-              <option value="">All Priorities</option>
+              <option value="">{t("crm.allPriorities")}</option>
               <option value="LOW">Low</option>
-              <option value="NORMAL">Normal</option>
+              <option value="NORMAL">{t("logistics2.normal")}</option>
               <option value="HIGH">High</option>
-              <option value="URGENT">Urgent</option>
+              <option value="URGENT">{t("logistics2.urgent")}</option>
             </select>
           </div>
 

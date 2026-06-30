@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { clearAuthData } from "../../utils/api";
 import { useNotifications } from "../../contexts/NotificationContext";
+// Phase 3
+import AdminLanguageSwitcher from "../country/AdminLanguageSwitcher.jsx";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const NOTIFICATION_TYPE_COLORS = {
   ORDER: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
@@ -60,6 +63,7 @@ function timeAgo(dateStr) {
 }
 
 const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
+  const { t } = useAdminTranslation();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
@@ -123,6 +127,9 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-40">
       <div className="flex items-center justify-end gap-6">
         <div className="flex items-center gap-4">
+          {/* Phase 3: Language switcher */}
+          <AdminLanguageSwitcher />
+
           {/* Dark Mode Toggle */}
           <button
             onClick={onToggleDarkMode}

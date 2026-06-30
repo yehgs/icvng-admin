@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -7,9 +7,10 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { directPricingAPI, handleApiError } from '../../utils/api';
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { directPricingAPI, handleApiError } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const AddProductDirectPricingModal = ({
   isOpen,
@@ -18,13 +19,14 @@ const AddProductDirectPricingModal = ({
   categories,
   brands,
 }) => {
+  const { t } = useAdminTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
-    category: '',
-    brand: '',
-    productType: '',
+    category: "",
+    brand: "",
+    productType: "",
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -65,12 +67,12 @@ const AddProductDirectPricingModal = ({
           totalCount: response.pagination.totalCount,
         }));
       } else {
-        toast.error('Failed to fetch products');
+        toast.error("Failed to fetch products");
         setProducts([]);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error(handleApiError(error, 'Failed to fetch products'));
+      console.error("Error fetching products:", error);
+      toast.error(handleApiError(error, "Failed to fetch products"));
       setProducts([]);
     } finally {
       setLoading(false);
@@ -83,19 +85,19 @@ const AddProductDirectPricingModal = ({
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
+    setSearchTerm("");
     setFilters({
-      category: '',
-      brand: '',
-      productType: '',
+      category: "",
+      brand: "",
+      productType: "",
     });
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
     }).format(amount || 0);
   };
 
@@ -146,10 +148,10 @@ const AddProductDirectPricingModal = ({
 
             <select
               value={filters.category}
-              onChange={(e) => handleFilterChange('category', e.target.value)}
+              onChange={(e) => handleFilterChange("category", e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Categories</option>
+              <option value="">{t("products.allCategories")}</option>
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
@@ -159,10 +161,10 @@ const AddProductDirectPricingModal = ({
 
             <select
               value={filters.brand}
-              onChange={(e) => handleFilterChange('brand', e.target.value)}
+              onChange={(e) => handleFilterChange("brand", e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Brands</option>
+              <option value="">{t("products.allBrands")}</option>
               {brands.map((brand) => (
                 <option key={brand._id} value={brand._id}>
                   {brand.name}
@@ -173,17 +175,21 @@ const AddProductDirectPricingModal = ({
             <select
               value={filters.productType}
               onChange={(e) =>
-                handleFilterChange('productType', e.target.value)
+                handleFilterChange("productType", e.target.value)
               }
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Product Types</option>
-              <option value="COFFEE">Coffee</option>
-              <option value="MACHINE">Machine</option>
-              <option value="ACCESSORIES">Accessories</option>
-              <option value="COFFEE_BEANS">Coffee Beans</option>
-              <option value="TEA">Tea</option>
-              <option value="DRINKS">Drinks</option>
+              <option value="">{t("productTypes.allProductTypes")}</option>
+              <option value="COFFEE">{t("productTypes.coffee")}</option>
+              <option value="MACHINE">{t("productTypes.machine")}</option>
+              <option value="ACCESSORIES">
+                {t("productTypes.accessories")}
+              </option>
+              <option value="COFFEE_BEANS">
+                {t("productTypes.coffeeBeans")}
+              </option>
+              <option value="TEA">{t("productTypes.tea")}</option>
+              <option value="DRINKS">{t("productTypes.drinks")}</option>
             </select>
 
             <button
@@ -267,11 +273,11 @@ const AddProductDirectPricingModal = ({
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                 {Math.min(
                   pagination.page * pagination.limit,
-                  pagination.totalCount
-                )}{' '}
+                  pagination.totalCount,
+                )}{" "}
                 of {pagination.totalCount} products
               </div>
               <div className="flex items-center gap-2">

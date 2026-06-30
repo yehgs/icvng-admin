@@ -42,7 +42,7 @@ const BasicInfoSection = ({ formData, updateFormData, suppliers, minDate }) => {
             value={formData.supplier || ''}
             onChange={handleSupplierChange}
           >
-            <option value="">Select Supplier</option>
+            <option value="">{t("purchaseOrder.selectSupplier")}</option>
             {suppliers.map((supplier) => (
               <option key={supplier._id} value={supplier._id}>
                 {supplier.name} - {supplier.email}

@@ -1,5 +1,5 @@
 // components/stock/StockDistribution.jsx (New Component)
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Globe,
   Monitor,
@@ -12,22 +12,24 @@ import {
   Loader2,
   AlertTriangle,
   Package,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { stockAPI } from '../../utils/api';
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { stockAPI } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
+  const { t } = useAdminTranslation();
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [distributionForm, setDistributionForm] = useState({
     distributions: [], // Array of { productId, onlineQuantity, offlineQuantity }
-    reason: '',
-    notes: '',
+    reason: "",
+    notes: "",
   });
 
   // User roles that can approve distributions
-  const approvalRoles = ['Director', 'IT', 'Manager'];
+  const approvalRoles = ["Director", "IT", "Manager"];
   const canApprove = approvalRoles.includes(currentUser?.role);
 
   const handleStartDistribution = (batch) => {
@@ -42,14 +44,14 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
           availableQuantity: item.passedQuantity + item.refurbishedQuantity,
           onlineQuantity: 0,
           offlineQuantity: item.passedQuantity + item.refurbishedQuantity, // Default to offline
-          notes: '',
+          notes: "",
         }))
         .filter((item) => item.availableQuantity > 0) || [];
 
     setDistributionForm({
       distributions: initialDistributions,
-      reason: '',
-      notes: '',
+      reason: "",
+      notes: "",
     });
     setShowDistributionModal(true);
   };
@@ -58,7 +60,7 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
     setDistributionForm((prev) => ({
       ...prev,
       distributions: prev.distributions.map((dist, i) =>
-        i === index ? { ...dist, [field]: value } : dist
+        i === index ? { ...dist, [field]: value } : dist,
       ),
     }));
   };
@@ -67,17 +69,17 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
     const numValue = parseInt(value) || 0;
     const distribution = distributionForm.distributions[index];
 
-    if (field === 'onlineQuantity') {
+    if (field === "onlineQuantity") {
       const offlineQuantity = distribution.availableQuantity - numValue;
       if (offlineQuantity >= 0) {
-        handleDistributionChange(index, 'onlineQuantity', numValue);
-        handleDistributionChange(index, 'offlineQuantity', offlineQuantity);
+        handleDistributionChange(index, "onlineQuantity", numValue);
+        handleDistributionChange(index, "offlineQuantity", offlineQuantity);
       }
-    } else if (field === 'offlineQuantity') {
+    } else if (field === "offlineQuantity") {
       const onlineQuantity = distribution.availableQuantity - numValue;
       if (onlineQuantity >= 0) {
-        handleDistributionChange(index, 'offlineQuantity', numValue);
-        handleDistributionChange(index, 'onlineQuantity', onlineQuantity);
+        handleDistributionChange(index, "offlineQuantity", numValue);
+        handleDistributionChange(index, "onlineQuantity", onlineQuantity);
       }
     }
   };
@@ -87,7 +89,7 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
       const total = dist.onlineQuantity + dist.offlineQuantity;
       if (total !== dist.availableQuantity) {
         toast.error(
-          `Total distribution for ${dist.productName} must equal available quantity (${dist.availableQuantity})`
+          `Total distribution for ${dist.productName} must equal available quantity (${dist.availableQuantity})`,
         );
         return false;
       }
@@ -115,20 +117,20 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
 
       const data = await stockAPI.distributeStock(
         selectedBatch._id,
-        distributionData
+        distributionData,
       );
 
       if (data.success) {
-        toast.success('Stock distribution submitted for approval!');
+        toast.success("Stock distribution submitted for approval!");
         setShowDistributionModal(false);
         setSelectedBatch(null);
         onRefresh();
       } else {
-        toast.error(data.message || 'Failed to submit distribution');
+        toast.error(data.message || "Failed to submit distribution");
       }
     } catch (error) {
-      console.error('Error submitting distribution:', error);
-      toast.error('Failed to submit distribution');
+      console.error("Error submitting distribution:", error);
+      toast.error("Failed to submit distribution");
     } finally {
       setSubmitting(false);
     }
@@ -138,18 +140,18 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
     try {
       const data = await stockAPI.approveDistribution(batchId, {
         approved: true,
-        approverNotes: '',
+        approverNotes: "",
       });
 
       if (data.success) {
-        toast.success('Distribution approved successfully!');
+        toast.success("Distribution approved successfully!");
         onRefresh();
       } else {
-        toast.error(data.message || 'Failed to approve distribution');
+        toast.error(data.message || "Failed to approve distribution");
       }
     } catch (error) {
-      console.error('Error approving distribution:', error);
-      toast.error('Failed to approve distribution');
+      console.error("Error approving distribution:", error);
+      toast.error("Failed to approve distribution");
     }
   };
 
@@ -167,13 +169,13 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
   // Filter batches that have passed quality check but not yet distributed
   const readyForDistribution = batches.filter(
     (batch) =>
-      batch.qualityStatus === 'COMPLETED' &&
-      batch.distributionStatus === 'PENDING'
+      batch.qualityStatus === "COMPLETED" &&
+      batch.distributionStatus === "PENDING",
   );
 
   // Filter batches pending approval
   const pendingApproval = batches.filter(
-    (batch) => batch.distributionStatus === 'AWAITING_APPROVAL'
+    (batch) => batch.distributionStatus === "AWAITING_APPROVAL",
   );
 
   return (
@@ -229,7 +231,7 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                   {batch.items
                     ?.filter(
                       (item) =>
-                        item.passedQuantity + item.refurbishedQuantity > 0
+                        item.passedQuantity + item.refurbishedQuantity > 0,
                     )
                     .map((item, index) => (
                       <div key={index} className="flex justify-between text-sm">
@@ -237,7 +239,7 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                           {item.product?.name}
                         </span>
                         <span className="text-green-600 font-medium">
-                          {item.passedQuantity + item.refurbishedQuantity}{' '}
+                          {item.passedQuantity + item.refurbishedQuantity}{" "}
                           available
                         </span>
                       </div>
@@ -380,8 +382,8 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                             onChange={(e) =>
                               handleQuantityChange(
                                 index,
-                                'onlineQuantity',
-                                e.target.value
+                                "onlineQuantity",
+                                e.target.value,
                               )
                             }
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -401,8 +403,8 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                             onChange={(e) =>
                               handleQuantityChange(
                                 index,
-                                'offlineQuantity',
-                                e.target.value
+                                "offlineQuantity",
+                                e.target.value,
                               )
                             }
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
@@ -418,11 +420,11 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                             className={
                               dist.onlineQuantity + dist.offlineQuantity ===
                               dist.availableQuantity
-                                ? 'text-green-600'
-                                : 'text-red-600'
+                                ? "text-green-600"
+                                : "text-red-600"
                             }
                           >
-                            {dist.onlineQuantity + dist.offlineQuantity} /{' '}
+                            {dist.onlineQuantity + dist.offlineQuantity} /{" "}
                             {dist.availableQuantity}
                           </span>
                         </div>
@@ -447,11 +449,13 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select reason...</option>
+                  <option value="">{t("purchaseOrder.selectReason")}</option>
                   <option value="Standard distribution">
                     Standard distribution
                   </option>
-                  <option value="High demand online">High demand online</option>
+                  <option value={t("stockLog.highDemandOnline")}>
+                    {t("stockLog.highDemandOnline")}
+                  </option>
                   <option value="High demand offline">
                     High demand offline
                   </option>
@@ -461,7 +465,9 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                   <option value="Inventory rebalancing">
                     Inventory rebalancing
                   </option>
-                  <option value="Other">Other</option>
+                  <option value={t("purchaseOrder.other")}>
+                    {t("purchaseOrder.other")}
+                  </option>
                 </select>
               </div>
 

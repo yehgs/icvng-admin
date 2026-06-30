@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getCurrentUser } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -315,6 +316,7 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function CrmManagement() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const canHardDelete = SUPER_DELETE_ROLES.includes(currentUser?.subRole);
   const canSeeMetrics = METRICS_ROLES.includes(currentUser?.subRole);
@@ -434,7 +436,7 @@ export default function CrmManagement() {
         setForm(EMPTY_FORM);
         fetchLeads();
         fetchStats();
-      } else toast.error(d.message || "Failed");
+      } else toast.error(d.message || t("orders.statuses.FAILED"));
     } finally {
       setSaving(false);
     }
@@ -474,7 +476,7 @@ export default function CrmManagement() {
       setDeleteRequestTarget(null);
       fetchLeads();
     } else {
-      toast.error(d.message || "Failed");
+      toast.error(d.message || t("orders.statuses.FAILED"));
     }
   };
 
@@ -496,7 +498,7 @@ export default function CrmManagement() {
       fetchLeads();
       fetchStats();
       fetchPendingDeletes();
-    } else toast.error(d.message || "Failed");
+    } else toast.error(d.message || t("orders.statuses.FAILED"));
   };
 
   const handleStageMove = async (leadId, stage) => {
@@ -674,8 +676,8 @@ export default function CrmManagement() {
               {[
                 "Company",
                 "Contact",
-                "Email",
-                "Phone",
+                t("common.email"),
+                t("common.phone"),
                 "Stage",
                 "Value",
                 "Source",
@@ -1094,7 +1096,7 @@ export default function CrmManagement() {
               onChange={(e) => setFilterStage(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Stages</option>
+              <option value="">{t("crm.allStages")}</option>
               {meta.CRM_STAGES.map((s) => (
                 <option key={s}>{s}</option>
               ))}
@@ -1104,7 +1106,7 @@ export default function CrmManagement() {
               onChange={(e) => setFilterSource(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Sources</option>
+              <option value="">{t("crm.allSources")}</option>
               {meta.LEAD_SOURCES.map((s) => (
                 <option key={s}>{s}</option>
               ))}
@@ -1359,8 +1361,8 @@ export default function CrmManagement() {
                   ["companyName", "Company Name"],
                   ["contactName", "Contact Name"],
                   ["jobTitle", "Job Title"],
-                  ["email", "Email"],
-                  ["phone", "Phone"],
+                  ["email", t("common.email")],
+                  ["phone", t("common.phone")],
                   ["website", "Website"],
                 ].map(([k, l]) => (
                   <div key={k}>

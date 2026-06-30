@@ -25,6 +25,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import WebsiteOrderDetailsModal from "../../components/order/WebsiteOrderDetailsModal";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 // ─────────────────────────────────────────────────────────────
 // Constants
@@ -295,6 +296,7 @@ const FilterChip = ({ label, onRemove, color = "blue" }) => {
 // Main Page Component
 // ─────────────────────────────────────────────────────────────
 const WebsiteOrderManagement = () => {
+  const { t } = useAdminTranslation();
   // ── Data state ─────────────────────────────────────────────
   const [orderGroups, setOrderGroups] = useState([]);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -513,7 +515,7 @@ const WebsiteOrderManagement = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             icon={ShoppingBag}
-            label="Total Orders"
+            label={t("reports.totalOrders")}
             value={stats.total.toLocaleString()}
             iconBg="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
           />
@@ -526,14 +528,14 @@ const WebsiteOrderManagement = () => {
           />
           <StatCard
             icon={Clock}
-            label="Pending"
+            label={t("orders.statuses.Pending")}
             value={stats.pending}
             sub="need attention"
             iconBg="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400"
           />
           <StatCard
             icon={TrendingUp}
-            label="Delivered"
+            label={t("orders.statuses.Delivered")}
             value={stats.delivered}
             sub="this page"
             iconBg="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
@@ -585,7 +587,7 @@ const WebsiteOrderManagement = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search order ID, group ID, email…"
+                placeholder={t("orders.searchPlaceholder")}
                 className="pl-9 pr-4 py-2 w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               />
             </div>
@@ -596,7 +598,7 @@ const WebsiteOrderManagement = () => {
               onChange={(e) => setFilterType(e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Types</option>
+              <option value="">{t("orders.allTypes")}</option>
               <option value="BTC">BTC – Consumer</option>
               <option value="BTB">BTB – Business</option>
             </select>
@@ -607,7 +609,7 @@ const WebsiteOrderManagement = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Statuses</option>
+              <option value="">{t("orders.allStatuses")}</option>
               {Object.entries(ORDER_STATUS_CONFIG).map(([val, cfg]) => (
                 <option key={val} value={val}>
                   {cfg.label}
@@ -621,7 +623,7 @@ const WebsiteOrderManagement = () => {
               onChange={(e) => setFilterPaymentStatus(e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Payment Statuses</option>
+              <option value="">{t("orders.allPaymentStatuses")}</option>
               {Object.entries(PAYMENT_STATUS_CONFIG).map(([val, cfg]) => (
                 <option key={val} value={val}>
                   {cfg.label}
@@ -639,7 +641,7 @@ const WebsiteOrderManagement = () => {
                 onChange={(e) => setFilterPaymentMethod(e.target.value)}
                 className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               >
-                <option value="">All Payment Methods</option>
+                <option value="">{t("orders.allPaymentMethods")}</option>
                 {Object.entries(PAYMENT_METHOD_CONFIG).map(([val, cfg]) => (
                   <option key={val} value={val}>
                     {cfg.label}
@@ -680,10 +682,10 @@ const WebsiteOrderManagement = () => {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="createdAt">Date Created</option>
-                  <option value="totalAmt">Amount</option>
-                  <option value="order_status">Order Status</option>
-                  <option value="payment_status">Payment Status</option>
+                  <option value="createdAt">{t("customer.dateCreated")}</option>
+                  <option value="totalAmt">{t("orders.amount")}</option>
+                  <option value="order_status">{t("common.status")}</option>
+                  <option value="payment_status">{t("order.paymentStatus")}</option>
                 </select>
                 <button
                   onClick={() =>
@@ -776,11 +778,11 @@ const WebsiteOrderManagement = () => {
                   "Order Group",
                   "Customer",
                   "Products",
-                  "Amount",
+                  t("orders.amount"),
                   "Delivery Address",
-                  "Order Status",
+                  t("common.status"),
                   "Payment",
-                  "Date",
+                  t("common.date"),
                   "",
                 ].map((h) => (
                   <th
@@ -822,7 +824,7 @@ const WebsiteOrderManagement = () => {
                       </p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">
                         {hasActiveFilters
-                          ? "Try adjusting your filters"
+                          ? t("stockLog.tryAdjustingFilters")
                           : "Orders placed on the website will appear here"}
                       </p>
                       {hasActiveFilters && (

@@ -500,7 +500,7 @@ const PurchaseOrderForm = ({
         </form>
 
         {/* Debug Panel - Remove in production */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.MODE === 'development' && (
           <div className="p-4 bg-gray-100 dark:bg-gray-900 border-t">
             <details>
               <summary className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">

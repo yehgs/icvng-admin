@@ -18,6 +18,7 @@ import {
   Clock,
   Filter,
 } from "lucide-react";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import {
   BarChart,
   Bar,
@@ -98,6 +99,7 @@ function getMarginBtc(r) {
 }
 
 export default function PricingReports() {
+  const { t } = useAdminTranslation();
   const [records, setRecords] = useState([]); // ProductPricing records
   const [rates, setRates] = useState([]);
   const [total, setTotal] = useState(0);
@@ -220,7 +222,7 @@ export default function PricingReports() {
         "Sale Margin%",
         "B2B Margin%",
         "B2C Margin%",
-        "Approved",
+        t("purchaseOrders.approved"),
       ],
     ];
     sorted.forEach((r) =>
@@ -368,7 +370,7 @@ export default function PricingReports() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["prices", "comparison", "margins", "exchange-rates"].map((t) => (
+        {["prices", "comparison", "margins", "exchange-rates"].map((tabKey) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -391,7 +393,7 @@ export default function PricingReports() {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Search products..."
+                placeholder={t("products.searchPlaceholder")}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
@@ -403,8 +405,8 @@ export default function PricingReports() {
               }}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Status</option>
-              <option value="true">Approved</option>
+              <option value="">{t("products.allStatus")}</option>
+              <option value="true">{t("purchaseOrders.approved")}</option>
               <option value="false">Pending Approval</option>
             </select>
             <span className="text-sm text-gray-400 self-center">
@@ -520,7 +522,7 @@ export default function PricingReports() {
                           ) : (
                             <Clock className="h-3 w-3" />
                           )}
-                          {r.isApproved ? "Approved" : "Pending"}
+                          {r.isApproved ? t("purchaseOrders.approved") : t("orders.statuses.Pending")}
                         </span>
                       </td>
                     </tr>
@@ -669,7 +671,7 @@ export default function PricingReports() {
               Avg Margins by Price Type
             </h3>
             {records.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-8">No data</p>
+              <p className="text-gray-400 text-sm text-center py-8">{t("common.noData")}</p>
             ) : (
               <div className="space-y-4 mt-2">
                 {[
@@ -734,7 +736,7 @@ export default function PricingReports() {
                     "Currency Pair",
                     "Rate (to NGN)",
                     "Last Updated",
-                    "Status",
+                    t("common.status"),
                   ].map((h) => (
                     <th
                       key={h}
@@ -766,7 +768,7 @@ export default function PricingReports() {
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
                       >
-                        {r.isActive ? "Active" : "Inactive"}
+                        {r.isActive ? t("common.active") : t("common.inactive")}
                       </span>
                     </td>
                   </tr>

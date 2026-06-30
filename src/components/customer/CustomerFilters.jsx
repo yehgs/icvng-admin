@@ -1,8 +1,10 @@
 // src/components/customer/CustomerFilters.jsx
 import React from 'react';
 import { Search, Filter } from 'lucide-react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const CustomerFilters = ({ filters, setFilters }) => {
+  const { t } = useAdminTranslation();
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -35,7 +37,7 @@ const CustomerFilters = ({ filters, setFilters }) => {
           value={filters.filterType}
           onChange={(e) => handleFilterChange('filterType', e.target.value)}
         >
-          <option value="">All Types</option>
+          <option value="">{t("orders.allTypes")}</option>
           <option value="BTC">BTC (Business to Consumer)</option>
           <option value="BTB">BTB (Business to Business)</option>
         </select>
@@ -46,9 +48,9 @@ const CustomerFilters = ({ filters, setFilters }) => {
           value={filters.filterMode}
           onChange={(e) => handleFilterChange('filterMode', e.target.value)}
         >
-          <option value="">All Modes</option>
-          <option value="ONLINE">Online</option>
-          <option value="OFFLINE">Offline</option>
+          <option value="">{t("customer.allModes")}</option>
+          <option value="ONLINE">{t("customer.online")}</option>
+          <option value="OFFLINE">{t("customer.offline")}</option>
         </select>
 
         {/* Status */}
@@ -57,10 +59,10 @@ const CustomerFilters = ({ filters, setFilters }) => {
           value={filters.filterStatus}
           onChange={(e) => handleFilterChange('filterStatus', e.target.value)}
         >
-          <option value="">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="SUSPENDED">Suspended</option>
+          <option value="">{t("products.allStatus")}</option>
+          <option value="ACTIVE">{t("common.active")}</option>
+          <option value="INACTIVE">{t("common.inactive")}</option>
+          <option value="SUSPENDED">{t("customer.suspended")}</option>
         </select>
       </div>
 
@@ -75,11 +77,11 @@ const CustomerFilters = ({ filters, setFilters }) => {
             value={filters.sortBy}
             onChange={(e) => handleFilterChange('sortBy', e.target.value)}
           >
-            <option value="createdAt">Date Created</option>
+            <option value="createdAt">{t("customer.dateCreated")}</option>
             <option value="name">Name</option>
-            <option value="email">Email</option>
-            <option value="totalOrders">Total Orders</option>
-            <option value="totalOrderValue">Total Value</option>
+            <option value="email">{t("common.email")}</option>
+            <option value="totalOrders">{t("customer.totalOrders")}</option>
+            <option value="totalOrderValue">{t("customer.totalValue")}</option>
           </select>
         </div>
 
@@ -92,8 +94,8 @@ const CustomerFilters = ({ filters, setFilters }) => {
             value={filters.sortOrder}
             onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
           >
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
+            <option value="desc">{t("customer.descending")}</option>
+            <option value="asc">{t("customer.ascending")}</option>
           </select>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 // components/stock/BatchList.jsx
 import React, { useState } from 'react';
 import {
@@ -425,7 +426,7 @@ const BatchList = ({
                           )}
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">No expiry</span>
+                        <span className="text-sm text-gray-400">{t("stockLog.noExpiry")}</span>
                       )}
                     </td>
 

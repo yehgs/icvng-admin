@@ -1,15 +1,6 @@
 //admin
 // src/pages/reports/InventoryReports.jsx
-// Roles: IT, DIRECTOR, WAREHOUSE, MANAGER, ACCOUNTANT
-// Endpoints:
-//   GET /api/warehouse/stock-summary   → { success, data:{ totalProducts, totalStock, onlineStock, offlineStock,
-//                                          lowStockItems, outOfStockItems, damagedItems, refurbishedItems, expiredItems } }
-//   GET /api/product/get?page=1&limit=200 → { success, data:[], totalNoPage }
-//     Product has: price, salePrice, btbPrice, btcPrice, price3weeksDelivery, price5weeksDelivery
-//                  stock (legacy), warehouseStock.{ finalStock, onlineStock, offlineStock, damagedQty, expiredQty, refurbishedQty, enabled }
-//                  partnerStock.{ enabled, quantity, supplier }
-//                  stockSource: WAREHOUSE_MANUAL | STOCK_BATCHES | PRODUCT_DEFAULT | PARTNER_MANAGED
-//   GET /api/stock/expiring?days=30     → { success, data:[] }
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Package,
@@ -26,6 +17,8 @@ import {
   Users,
   Truck,
 } from "lucide-react";
+
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import {
   BarChart,
   Bar,
@@ -124,6 +117,15 @@ const SOURCE_ICONS = {
 };
 
 export default function InventoryReports() {
+  const { t } = useAdminTranslation();
+
+  // Source key → translated display label (keys stay English for logic)
+  const SOURCE_LABELS = {
+    Partner: t("reports2.partner"),
+    Warehouse: t("reports2.warehouse"),
+    Default: t("reports2.default"),
+  };
+
   const [whSummary, setWhSummary] = useState(null); // /warehouse/stock-summary data object
   const [products, setProducts] = useState([]);
   const [expiring, setExpiring] = useState([]);
@@ -204,8 +206,8 @@ export default function InventoryReports() {
         "Category",
         "Stock Source",
         "Total Stock",
-        "Online",
-        "Offline",
+        t("customer.online"),
+        t("customer.offline"),
         "Damaged",
         "Expired",
         "Sale Price",
@@ -241,7 +243,7 @@ export default function InventoryReports() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Package className="h-6 w-6 text-blue-600" /> Inventory Reports
+            <Package className="h-6 w-6 text-blue-600" /> {t("reports.inventoryReport")}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Online, offline and partner stock with product-level breakdown
@@ -260,7 +262,7 @@ export default function InventoryReports() {
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
           >
-            <Download className="h-4 w-4" /> Export CSV
+            <Download className="h-4 w-4" /> {t("reports.exportCsv")}
           </button>
         </div>
       </div>
@@ -270,14 +272,14 @@ export default function InventoryReports() {
         {[
           {
             icon: Globe,
-            label: "Online Stock",
+            label: t("products.onlineStock"),
             desc: "Warehouse → onlineStock. Available on website.",
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
           },
           {
             icon: Store,
-            label: "Offline Stock",
+            label: t("products.offlineStock"),
             desc: "Warehouse → offlineStock. In-store / walk-in only.",
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
@@ -323,7 +325,7 @@ export default function InventoryReports() {
             sub: "Website-available units",
           },
           {
-            label: "Offline Stock",
+            label: t("products.offlineStock"),
             value: fmtN(whSummary?.offlineStock ?? totalOffline),
             icon: Store,
             color: "text-indigo-600",
@@ -435,7 +437,9 @@ export default function InventoryReports() {
               Stock by Category (Online + Offline + Partner)
             </h3>
             {catData.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-8">No data</p>
+              <p className="text-gray-400 text-sm text-center py-8">
+                {t("common.noData")}
+              </p>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={catData} layout="vertical">
@@ -462,19 +466,19 @@ export default function InventoryReports() {
                     dataKey="online"
                     fill="#3B82F6"
                     stackId="a"
-                    name="Online"
+                    name={t("customer.online")}
                   />
                   <Bar
                     dataKey="offline"
                     fill="#10B981"
                     stackId="a"
-                    name="Offline"
+                    name={t("customer.offline")}
                   />
                   <Bar
                     dataKey="partner"
                     fill="#8B5CF6"
                     stackId="a"
-                    name="Partner"
+                    name={t("reports2.partner")}
                     radius={[0, 3, 3, 0]}
                   />
                 </BarChart>
@@ -486,7 +490,9 @@ export default function InventoryReports() {
               Stock Channel Distribution
             </h3>
             {sourceData.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-8">No data</p>
+              <p className="text-gray-400 text-sm text-center py-8">
+                {t("common.noData")}
+              </p>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -524,7 +530,7 @@ export default function InventoryReports() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products..."
+                placeholder={t("products.searchPlaceholder")}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
@@ -533,10 +539,10 @@ export default function InventoryReports() {
               onChange={(e) => setFilterSource(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Sources</option>
-              <option value="Warehouse">Warehouse</option>
-              <option value="Partner">Partner</option>
-              <option value="Default">Default</option>
+              <option value="">{t("crm.allSources")}</option>
+              <option value="Warehouse">{t("reports2.warehouse")}</option>
+              <option value="Partner">{t("reports2.partner")}</option>
+              <option value="Default">{t("reports2.default")}</option>
             </select>
             <span className="text-sm text-gray-400 self-center">
               {filtered.length} products
@@ -607,11 +613,11 @@ export default function InventoryReports() {
                         ? { l: "Out of Stock", cls: "bg-red-100 text-red-700" }
                         : total <= 10
                           ? {
-                              l: "Low Stock",
+                              l: t("products.lowStock"),
                               cls: "bg-orange-100 text-orange-700",
                             }
                           : {
-                              l: "In Stock",
+                              l: t("products.inStock"),
                               cls: "bg-green-100 text-green-700",
                             };
                     return (
@@ -643,7 +649,7 @@ export default function InventoryReports() {
                             className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 w-fit ${SOURCE_BADGES[s.source]}`}
                           >
                             <SrcIcon className="h-3 w-3" />
-                            {s.source}
+                            {SOURCE_LABELS[s.source] || s.source}
                           </span>
                         </td>
                         <td className="px-4 py-3 font-semibold text-blue-600">
@@ -690,7 +696,7 @@ export default function InventoryReports() {
           {lowStock.length === 0 ? (
             <div className="p-10 text-center text-gray-400">
               <Package className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
-              <p>All products are sufficiently stocked</p>
+              <p>{t("stock.allGoodStock")}</p>
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -700,11 +706,11 @@ export default function InventoryReports() {
                     "Product",
                     "Category",
                     "Source",
-                    "Online",
-                    "Offline",
-                    "Total",
+                    t("customer.online"),
+                    t("customer.offline"),
+                    t("common.total"),
                     "Sale Price",
-                    "Action",
+                    t("logistics2.action"),
                   ].map((h) => (
                     <th
                       key={h}
@@ -735,7 +741,7 @@ export default function InventoryReports() {
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${SOURCE_BADGES[s.source]}`}
                           >
-                            {s.source}
+                            {SOURCE_LABELS[s.source] || s.source}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-blue-600 font-semibold">
@@ -807,7 +813,7 @@ export default function InventoryReports() {
                       "Qty",
                       "Expiry Date",
                       "Days Left",
-                      "Location",
+                      t("supplier2.location"),
                     ].map((h) => (
                       <th
                         key={h}

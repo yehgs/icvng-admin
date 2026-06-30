@@ -19,8 +19,10 @@ import UserDetailsModal from '../../components/users/UserDetailsModal';
 import UserFilters from '../../components/users/UserFilters';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const UserManagement = () => {
+  const { t } = useAdminTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -422,7 +424,7 @@ const UserManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-40">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-            <span className="text-gray-900 dark:text-white">Processing...</span>
+            <span className="text-gray-900 dark:text-white">{t("common.processing")}</span>
           </div>
         </div>
       )}

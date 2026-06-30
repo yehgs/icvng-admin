@@ -13,6 +13,7 @@ import {
   XCircle,
   Package,
 } from "lucide-react";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import {
   BarChart,
   Bar,
@@ -65,6 +66,7 @@ const STATUS_COLORS = {
 };
 
 export default function PurchaseReports() {
+  const { t } = useAdminTranslation();
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -131,7 +133,7 @@ export default function PurchaseReports() {
 
   const exportCSV = () => {
     const rows = [
-      ["PO Number", "Supplier", "Status", "Items", "Total (₦)", "Created"],
+      ["PO Number", t("suppliers.title"), t("common.status"), t("purchaseOrder.items"), "Total (₦)", t("blogExt.created")],
     ];
     filtered.forEach((o) =>
       rows.push([
@@ -183,14 +185,14 @@ export default function PurchaseReports() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Total Orders",
+            label: t("reports.totalOrders"),
             value: fmtN(orders.length),
             icon: Inbox,
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
           },
           {
-            label: "Total Value",
+            label: t("customer.totalValue"),
             value: fmtCur(totalValue),
             icon: DollarSign,
             color: "text-green-600",
@@ -204,7 +206,7 @@ export default function PurchaseReports() {
             bg: "bg-teal-50 dark:bg-teal-900/20",
           },
           {
-            label: "Pending",
+            label: t("orders.statuses.Pending"),
             value: fmtN(
               orders.filter((o) =>
                 ["pending", "approved", "ordered"].includes(o.status),
@@ -232,13 +234,13 @@ export default function PurchaseReports() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["overview", "orders", "suppliers"].map((t) => (
+        {["overview", "orders", "suppliers"].map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === t ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === tabKey ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            {t}
+            {tabKey}
           </button>
         ))}
       </div>
@@ -268,7 +270,7 @@ export default function PurchaseReports() {
                   dataKey="total"
                   fill="#6366F1"
                   radius={[4, 4, 0, 0]}
-                  name="Total Value"
+                  name={t("customer.totalValue")}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -311,7 +313,7 @@ export default function PurchaseReports() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search PO number or supplier..."
+                placeholder={t("purchaseOrders.searchPlaceholder")}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
@@ -320,7 +322,7 @@ export default function PurchaseReports() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Status</option>
+              <option value="">{t("products.allStatus")}</option>
               {[
                 "pending",
                 "approved",
@@ -341,11 +343,11 @@ export default function PurchaseReports() {
                 <tr>
                   {[
                     "PO Number",
-                    "Supplier",
-                    "Items",
-                    "Total",
-                    "Status",
-                    "Created",
+                    t("suppliers.title"),
+                    t("purchaseOrder.items"),
+                    t("common.total"),
+                    t("common.status"),
+                    t("blogExt.created"),
                   ].map((h) => (
                     <th
                       key={h}
@@ -427,10 +429,10 @@ export default function PurchaseReports() {
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
                     {[
-                      "Supplier",
-                      "Total Orders",
+                      t("suppliers.title"),
+                      t("reports.totalOrders"),
                       "Received",
-                      "Total Value",
+                      t("customer.totalValue"),
                       "Completion",
                     ].map((h) => (
                       <th

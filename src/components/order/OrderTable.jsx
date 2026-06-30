@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const OrderTable = ({
   orders,
@@ -10,6 +11,7 @@ const OrderTable = ({
   formatCurrency,
   formatDate,
 }) => {
+  const { t } = useAdminTranslation();
   const getStatusBadge = (status, type = 'order') => {
     const statusClasses = {
       order: {
@@ -80,14 +82,14 @@ const OrderTable = ({
               <tr>
                 <td colSpan="7" className="px-6 py-12 text-center">
                   <div className="h-8 w-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-                  <p className="mt-2 text-gray-500">Loading orders...</p>
+                  <p className="mt-2 text-gray-500">{t("order.loadingOrders")}</p>
                 </td>
               </tr>
             ) : orders.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-6 py-12 text-center">
                   <div className="text-6xl mb-4">🛒</div>
-                  <p className="text-gray-500">No orders found</p>
+                  <p className="text-gray-500">{t("order.noOrdersFound")}</p>
                 </td>
               </tr>
             ) : (

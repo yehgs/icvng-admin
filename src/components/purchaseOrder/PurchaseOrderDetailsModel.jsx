@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   X,
   Building2,
@@ -15,13 +15,14 @@ import {
   MessageSquare,
   AlertCircle,
   Receipt,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   purchaseOrderAPI,
   handleApiError,
   getCurrentUser,
-} from '../../utils/api';
-import toast from 'react-hot-toast';
+} from "../../utils/api";
+import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 // Status Update Component
 const StatusUpdateComponent = ({
@@ -31,10 +32,11 @@ const StatusUpdateComponent = ({
   onStatusUpdate,
   orderData,
 }) => {
+  const { t } = useAdminTranslation();
   const [allowedStatuses, setAllowedStatuses] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [notes, setNotes] = useState('');
-  const [reason, setReason] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [notes, setNotes] = useState("");
+  const [reason, setReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [statusHistory, setStatusHistory] = useState([]);
@@ -43,56 +45,56 @@ const StatusUpdateComponent = ({
   // Status configuration
   const statusConfig = {
     DRAFT: {
-      color: 'bg-gray-100 text-gray-800',
+      color: "bg-gray-100 text-gray-800",
       icon: <AlertCircle className="w-4 h-4" />,
-      label: 'Draft',
-      description: 'Order is being prepared',
+      label: "Draft",
+      description: "Order is being prepared",
     },
     PENDING: {
-      color: 'bg-yellow-100 text-yellow-800',
+      color: "bg-yellow-100 text-yellow-800",
       icon: <Clock className="w-4 h-4" />,
-      label: 'Pending Approval',
-      description: 'Waiting for approval',
+      label: "Pending Approval",
+      description: "Waiting for approval",
     },
     APPROVED: {
-      color: 'bg-green-100 text-green-800',
+      color: "bg-green-100 text-green-800",
       icon: <CheckCircle className="w-4 h-4" />,
-      label: 'Approved',
-      description: 'Order has been approved',
+      label: "Approved",
+      description: "Order has been approved",
     },
     SHIPPED: {
-      color: 'bg-blue-100 text-blue-800',
+      color: "bg-blue-100 text-blue-800",
       icon: <Ship className="w-4 h-4" />,
-      label: 'Shipped',
-      description: 'Order is in transit',
+      label: "Shipped",
+      description: "Order is in transit",
     },
     DELIVERED: {
-      color: 'bg-blue-100 text-blue-800',
+      color: "bg-blue-100 text-blue-800",
       icon: <Truck className="w-4 h-4" />,
-      label: 'Delivered',
-      description: 'Items have been delivered',
+      label: "Delivered",
+      description: "Items have been delivered",
     },
     COMPLETED: {
-      color: 'bg-purple-100 text-purple-800',
+      color: "bg-purple-100 text-purple-800",
       icon: <CheckCircle className="w-4 h-4" />,
-      label: 'Completed',
-      description: 'Order process completed',
+      label: "Completed",
+      description: "Order process completed",
     },
     CANCELLED: {
-      color: 'bg-red-100 text-red-800',
+      color: "bg-red-100 text-red-800",
       icon: <X className="w-4 h-4" />,
-      label: 'Cancelled',
-      description: 'Order has been cancelled',
+      label: "Cancelled",
+      description: "Order has been cancelled",
     },
   };
 
   // Add this helper function to PurchaseOrderDetailsModal.jsx
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   // Fetch allowed status updates with role-based permissions
@@ -106,11 +108,11 @@ const StatusUpdateComponent = ({
       // Calculate allowed statuses based on current user role and order status
       const allowedTransitions = getRoleBasedAllowedStatuses(
         userRole,
-        currentStatus
+        currentStatus,
       );
       setAllowedStatuses(allowedTransitions);
     } catch (error) {
-      console.error('Error fetching allowed statuses:', error);
+      console.error("Error fetching allowed statuses:", error);
     }
   };
 
@@ -120,21 +122,21 @@ const StatusUpdateComponent = ({
     // Role-based permissions for status updates
     const permissions = {
       WAREHOUSE: {
-        DRAFT: ['PENDING'],
-        APPROVED: ['DELIVERED'],
+        DRAFT: ["PENDING"],
+        APPROVED: ["DELIVERED"],
       },
       IT: {
-        PENDING: ['APPROVED', 'CANCELLED'],
-        APPROVED: ['SHIPPED', 'CANCELLED'],
-        SHIPPED: ['DELIVERED'],
-        DELIVERED: ['COMPLETED'],
+        PENDING: ["APPROVED", "CANCELLED"],
+        APPROVED: ["SHIPPED", "CANCELLED"],
+        SHIPPED: ["DELIVERED"],
+        DELIVERED: ["COMPLETED"],
       },
       DIRECTOR: {
-        DRAFT: ['PENDING', 'CANCELLED'],
-        PENDING: ['APPROVED', 'CANCELLED'],
-        APPROVED: ['SHIPPED', 'CANCELLED'],
-        SHIPPED: ['DELIVERED'],
-        DELIVERED: ['COMPLETED'],
+        DRAFT: ["PENDING", "CANCELLED"],
+        PENDING: ["APPROVED", "CANCELLED"],
+        APPROVED: ["SHIPPED", "CANCELLED"],
+        SHIPPED: ["DELIVERED"],
+        DELIVERED: ["COMPLETED"],
       },
     };
 
@@ -148,7 +150,7 @@ const StatusUpdateComponent = ({
         setStatusHistory(response.data.history || []);
       }
     } catch (error) {
-      console.error('Error fetching status history:', error);
+      console.error("Error fetching status history:", error);
     }
   };
 
@@ -160,12 +162,12 @@ const StatusUpdateComponent = ({
       const statusData = {
         status: selectedStatus,
         notes,
-        reason: selectedStatus === 'CANCELLED' ? reason : notes,
+        reason: selectedStatus === "CANCELLED" ? reason : notes,
       };
 
       const response = await purchaseOrderAPI.updateOrderStatus(
         orderId,
-        statusData
+        statusData,
       );
 
       if (response.success) {
@@ -175,9 +177,9 @@ const StatusUpdateComponent = ({
         }
 
         // Reset form
-        setSelectedStatus('');
-        setNotes('');
-        setReason('');
+        setSelectedStatus("");
+        setNotes("");
+        setReason("");
         setShowUpdateForm(false);
 
         // Refresh data
@@ -185,14 +187,14 @@ const StatusUpdateComponent = ({
         fetchStatusHistory();
 
         toast.success(
-          `Order status updated to ${selectedStatus} successfully!`
+          `Order status updated to ${selectedStatus} successfully!`,
         );
       } else {
         toast.error(`Failed to update status: ${response.message}`);
       }
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error(handleApiError(error, 'Failed to update status'));
+      console.error("Error updating status:", error);
+      toast.error(handleApiError(error, "Failed to update status"));
     } finally {
       setIsUpdating(false);
     }
@@ -200,21 +202,21 @@ const StatusUpdateComponent = ({
 
   const getRoleDisplayName = (role) => {
     const roleNames = {
-      WAREHOUSE: 'Warehouse Staff',
-      IT: 'IT Admin',
-      DIRECTOR: 'Director',
-      ACCOUNT: 'Accountant',
+      WAREHOUSE: "Warehouse Staff",
+      IT: "IT Admin",
+      DIRECTOR: "Director",
+      ACCOUNT: "Accountant",
     };
     return roleNames[role?.toUpperCase()] || role;
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -241,7 +243,7 @@ const StatusUpdateComponent = ({
             onClick={() => setShowHistory(!showHistory)}
             className="text-sm text-blue-600 hover:text-blue-800 underline"
           >
-            {showHistory ? 'Hide History' : 'View History'}
+            {showHistory ? "Hide History" : "View History"}
           </button>
 
           {allowedStatuses.length > 0 && (
@@ -258,7 +260,9 @@ const StatusUpdateComponent = ({
       {/* Status Update Form */}
       {showUpdateForm && (
         <div className="border-t pt-6 mb-6">
-          <h3 className="text-lg font-medium mb-4">Update Order Status</h3>
+          <h3 className="text-lg font-medium mb-4">
+            {t("order.updateStatus")}
+          </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
@@ -290,7 +294,7 @@ const StatusUpdateComponent = ({
             </div>
           </div>
 
-          {selectedStatus === 'CANCELLED' && (
+          {selectedStatus === "CANCELLED" && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Cancellation Reason *
@@ -300,19 +304,25 @@ const StatusUpdateComponent = ({
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               >
-                <option value="">Select reason...</option>
+                <option value="">{t("purchaseOrder.selectReason")}</option>
                 <option value="Supplier unavailable">
                   Supplier unavailable
                 </option>
-                <option value="Budget constraints">Budget constraints</option>
+                <option value={t("purchaseOrder.budgetConstraints")}>
+                  {t("purchaseOrder.budgetConstraints")}
+                </option>
                 <option value="Requirements changed">
                   Requirements changed
                 </option>
                 <option value="Better alternative found">
                   Better alternative found
                 </option>
-                <option value="Project cancelled">Project cancelled</option>
-                <option value="Other">Other</option>
+                <option value={t("purchaseOrder.projectCancelled")}>
+                  {t("purchaseOrder.projectCancelled")}
+                </option>
+                <option value={t("purchaseOrder.other")}>
+                  {t("purchaseOrder.other")}
+                </option>
               </select>
             </div>
           )}
@@ -331,22 +341,22 @@ const StatusUpdateComponent = ({
           </div>
 
           {/* Receipts & Documents */}
-          {purchaseOrder.receipts && purchaseOrder.receipts.length > 0 && (
+          {orderData.receipts && orderData.receipts.length > 0 && (
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                 <Receipt className="w-5 h-5 mr-2 text-green-600" />
-                Receipts & Documents ({purchaseOrder.receipts.length})
+                Receipts & Documents ({orderData.receipts.length})
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {purchaseOrder.receipts.map((receipt, index) => (
+                {orderData.receipts.map((receipt, index) => (
                   <div
                     key={index}
                     className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => window.open(receipt.url, '_blank')}
+                    onClick={() => window.open(receipt.url, "_blank")}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="text-gray-500 dark:text-gray-400">
-                        {receipt.type === 'pdf' ? (
+                        {receipt.type === "pdf" ? (
                           <FileText className="w-8 h-8" />
                         ) : (
                           <ImageIcon className="w-8 h-8" />
@@ -363,7 +373,7 @@ const StatusUpdateComponent = ({
                             <span>{formatFileSize(receipt.size)}</span>
                           </div>
                           <div>
-                            Uploaded:{' '}
+                            Uploaded:{" "}
                             {new Date(receipt.uploadedAt).toLocaleDateString()}
                           </div>
                         </div>
@@ -386,19 +396,19 @@ const StatusUpdateComponent = ({
               disabled={
                 !selectedStatus ||
                 isUpdating ||
-                (selectedStatus === 'CANCELLED' && !reason)
+                (selectedStatus === "CANCELLED" && !reason)
               }
               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isUpdating ? 'Updating...' : 'Update Status'}
+              {isUpdating ? "Updating..." : "Update Status"}
             </button>
 
             <button
               onClick={() => {
                 setShowUpdateForm(false);
-                setSelectedStatus('');
-                setNotes('');
-                setReason('');
+                setSelectedStatus("");
+                setNotes("");
+                setReason("");
               }}
               className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-300 px-6 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
             >
@@ -429,7 +439,7 @@ const StatusUpdateComponent = ({
                   <div
                     className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                       statusConfig[entry.newStatus]?.color ||
-                      'bg-gray-100 text-gray-800'
+                      "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {statusConfig[entry.newStatus]?.icon}
@@ -441,7 +451,7 @@ const StatusUpdateComponent = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 text-sm">
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {entry.changedBy?.name || 'Unknown User'}
+                        {entry.changedBy?.name || "Unknown User"}
                       </span>
                       <span className="text-gray-500 dark:text-gray-400">
                         ({getRoleDisplayName(entry.userRole)})
@@ -455,7 +465,7 @@ const StatusUpdateComponent = ({
 
                     {entry.previousStatus && (
                       <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        Changed from{' '}
+                        Changed from{" "}
                         {statusConfig[entry.previousStatus]?.label ||
                           entry.previousStatus}
                       </div>
@@ -506,46 +516,46 @@ const PurchaseOrderDetailsModal = ({
   // Status configuration
   const statusConfig = {
     DRAFT: {
-      color: 'bg-gray-100 text-gray-800',
+      color: "bg-gray-100 text-gray-800",
       icon: FileText,
-      label: 'Draft',
-      description: 'Order is being prepared',
+      label: "Draft",
+      description: "Order is being prepared",
     },
     PENDING: {
-      color: 'bg-yellow-100 text-yellow-800',
+      color: "bg-yellow-100 text-yellow-800",
       icon: Clock,
-      label: 'Pending Approval',
-      description: 'Waiting for approval',
+      label: "Pending Approval",
+      description: "Waiting for approval",
     },
     APPROVED: {
-      color: 'bg-green-100 text-green-800',
+      color: "bg-green-100 text-green-800",
       icon: CheckCircle,
-      label: 'Approved',
-      description: 'Order has been approved',
+      label: "Approved",
+      description: "Order has been approved",
     },
     SHIPPED: {
-      color: 'bg-blue-100 text-blue-800',
+      color: "bg-blue-100 text-blue-800",
       icon: Ship,
-      label: 'Shipped',
-      description: 'Order is in transit',
+      label: "Shipped",
+      description: "Order is in transit",
     },
     DELIVERED: {
-      color: 'bg-blue-100 text-blue-800',
+      color: "bg-blue-100 text-blue-800",
       icon: Truck,
-      label: 'Delivered',
-      description: 'Items have been delivered',
+      label: "Delivered",
+      description: "Items have been delivered",
     },
     COMPLETED: {
-      color: 'bg-purple-100 text-purple-800',
+      color: "bg-purple-100 text-purple-800",
       icon: CheckCircle,
-      label: 'Completed',
-      description: 'Order process completed',
+      label: "Completed",
+      description: "Order process completed",
     },
     CANCELLED: {
-      color: 'bg-red-100 text-red-800',
+      color: "bg-red-100 text-red-800",
       icon: XCircle,
-      label: 'Cancelled',
-      description: 'Order has been cancelled',
+      label: "Cancelled",
+      description: "Order has been cancelled",
     },
   };
 
@@ -556,9 +566,9 @@ const PurchaseOrderDetailsModal = ({
     }
   }, [isOpen, purchaseOrder]);
 
-  const formatCurrency = (amount, currencyCode = 'USD') => {
+  const formatCurrency = (amount, currencyCode = "USD") => {
     const currency = supportedCurrencies.find((c) => c.code === currencyCode);
-    return `${currency?.symbol || '$'}${amount?.toLocaleString() || '0'}`;
+    return `${currency?.symbol || "$"}${amount?.toLocaleString() || "0"}`;
   };
 
   const getStatusBadge = (status) => {
@@ -577,20 +587,20 @@ const PurchaseOrderDetailsModal = ({
 
   const getRoleDisplayName = (role) => {
     const roleNames = {
-      WAREHOUSE: 'Warehouse Staff',
-      IT: 'IT Admin',
-      DIRECTOR: 'Director',
+      WAREHOUSE: "Warehouse Staff",
+      IT: "IT Admin",
+      DIRECTOR: "Director",
     };
     return roleNames[role] || role;
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -623,7 +633,7 @@ const PurchaseOrderDetailsModal = ({
           <StatusUpdateComponent
             orderId={purchaseOrder._id}
             currentStatus={purchaseOrder.status}
-            userRole={currentUser?.subRole || currentUser?.role || 'USER'}
+            userRole={currentUser?.subRole || currentUser?.role || "USER"}
             onStatusUpdate={(updatedOrder) => {
               if (onStatusUpdate) {
                 onStatusUpdate(purchaseOrder._id, updatedOrder.status);
@@ -659,7 +669,7 @@ const PurchaseOrderDetailsModal = ({
                       purchaseOrder.grandTotal ||
                         purchaseOrder.totalAmount ||
                         0,
-                      purchaseOrder.currency?.code || purchaseOrder.currency
+                      purchaseOrder.currency?.code || purchaseOrder.currency,
                     )}
                   </p>
                 </div>
@@ -692,7 +702,7 @@ const PurchaseOrderDetailsModal = ({
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Name</p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {purchaseOrder.supplier?.name || 'N/A'}
+                  {purchaseOrder.supplier?.name || "N/A"}
                 </p>
               </div>
               <div>
@@ -700,7 +710,7 @@ const PurchaseOrderDetailsModal = ({
                   Email
                 </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {purchaseOrder.supplier?.email || 'N/A'}
+                  {purchaseOrder.supplier?.email || "N/A"}
                 </p>
               </div>
               {purchaseOrder.supplier?.phone && (
@@ -730,9 +740,9 @@ const PurchaseOrderDetailsModal = ({
                 <p className="font-medium text-gray-900 dark:text-white">
                   {purchaseOrder.expectedDeliveryDate
                     ? new Date(
-                        purchaseOrder.expectedDeliveryDate
+                        purchaseOrder.expectedDeliveryDate,
                       ).toLocaleDateString()
-                    : 'Not set'}
+                    : "Not set"}
                 </p>
               </div>
               {purchaseOrder.actualDeliveryDate && (
@@ -742,7 +752,7 @@ const PurchaseOrderDetailsModal = ({
                   </p>
                   <p className="font-medium text-green-600">
                     {new Date(
-                      purchaseOrder.actualDeliveryDate
+                      purchaseOrder.actualDeliveryDate,
                     ).toLocaleDateString()}
                   </p>
                 </div>
@@ -763,7 +773,7 @@ const PurchaseOrderDetailsModal = ({
                     Transport Mode
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {purchaseOrder.logistics.transportMode || 'N/A'}
+                    {purchaseOrder.logistics.transportMode || "N/A"}
                   </p>
                 </div>
                 <div>
@@ -773,7 +783,7 @@ const PurchaseOrderDetailsModal = ({
                   <p className="font-medium text-gray-900 dark:text-white">
                     {formatCurrency(
                       purchaseOrder.logistics.freightCost || 0,
-                      purchaseOrder.currency?.code || purchaseOrder.currency
+                      purchaseOrder.currency?.code || purchaseOrder.currency,
                     )}
                   </p>
                 </div>
@@ -784,7 +794,7 @@ const PurchaseOrderDetailsModal = ({
                   <p className="font-medium text-gray-900 dark:text-white">
                     {formatCurrency(
                       purchaseOrder.logistics.clearanceCost || 0,
-                      purchaseOrder.currency?.code || purchaseOrder.currency
+                      purchaseOrder.currency?.code || purchaseOrder.currency,
                     )}
                   </p>
                 </div>
@@ -795,7 +805,7 @@ const PurchaseOrderDetailsModal = ({
                   <p className="font-medium text-orange-600">
                     {formatCurrency(
                       purchaseOrder.logistics.totalLogisticsCost || 0,
-                      purchaseOrder.currency?.code || purchaseOrder.currency
+                      purchaseOrder.currency?.code || purchaseOrder.currency,
                     )}
                   </p>
                 </div>
@@ -836,10 +846,10 @@ const PurchaseOrderDetailsModal = ({
                       <td className="px-4 py-3">
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            {item.product?.name || 'Unknown Product'}
+                            {item.product?.name || "Unknown Product"}
                           </div>
                           <div className="text-sm text-gray-500">
-                            SKU: {item.product?.sku || 'N/A'}
+                            SKU: {item.product?.sku || "N/A"}
                           </div>
                         </div>
                       </td>
@@ -849,13 +859,15 @@ const PurchaseOrderDetailsModal = ({
                       <td className="px-4 py-3 text-gray-900 dark:text-white">
                         {formatCurrency(
                           item.unitPrice || item.unitCost || 0,
-                          purchaseOrder.currency?.code || purchaseOrder.currency
+                          purchaseOrder.currency?.code ||
+                            purchaseOrder.currency,
                         )}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                         {formatCurrency(
                           item.totalPrice || item.totalCost || 0,
-                          purchaseOrder.currency?.code || purchaseOrder.currency
+                          purchaseOrder.currency?.code ||
+                            purchaseOrder.currency,
                         )}
                       </td>
                     </tr>
@@ -878,7 +890,7 @@ const PurchaseOrderDetailsModal = ({
                 <span className="font-medium text-gray-900 dark:text-white">
                   {formatCurrency(
                     purchaseOrder.subtotal || 0,
-                    purchaseOrder.currency?.code || purchaseOrder.currency
+                    purchaseOrder.currency?.code || purchaseOrder.currency,
                   )}
                 </span>
               </div>
@@ -891,7 +903,7 @@ const PurchaseOrderDetailsModal = ({
                   <span className="font-medium text-gray-900 dark:text-white">
                     {formatCurrency(
                       purchaseOrder.logistics.totalLogisticsCost,
-                      purchaseOrder.currency?.code || purchaseOrder.currency
+                      purchaseOrder.currency?.code || purchaseOrder.currency,
                     )}
                   </span>
                 </div>
@@ -904,14 +916,14 @@ const PurchaseOrderDetailsModal = ({
                 <span className="text-green-600">
                   {formatCurrency(
                     purchaseOrder.grandTotal || purchaseOrder.totalAmount || 0,
-                    purchaseOrder.currency?.code || purchaseOrder.currency
+                    purchaseOrder.currency?.code || purchaseOrder.currency,
                   )}
                 </span>
               </div>
 
               {/* NGN conversion if not NGN */}
               {(purchaseOrder.currency?.code || purchaseOrder.currency) !==
-                'NGN' &&
+                "NGN" &&
                 purchaseOrder.exchangeRate && (
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     In NGN: ₦

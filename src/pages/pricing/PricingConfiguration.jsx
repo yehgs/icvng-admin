@@ -20,8 +20,10 @@ import toast from "react-hot-toast";
 import { pricingAPI, pricingUtils } from "../../utils/api";
 import RoleBasedAccess from "../../components/layout/RoleBaseAccess";
 import RoleBasedButton from "../../components/layout/RoleBasedButton";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const PricingConfiguration = () => {
+  const { t } = useAdminTranslation();
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -134,7 +136,7 @@ const PricingConfiguration = () => {
     },
     {
       key: "btcPrice",
-      label: "BTC Price",
+      label: t("pricing.btcPrice"),
       description: "Business-to-Consumer price",
     },
     {
@@ -183,7 +185,7 @@ const PricingConfiguration = () => {
                 {config.isApproved ? (
                   <div className="flex items-center text-green-600">
                     <CheckCircle className="h-4 w-4 mr-1" />
-                    <span className="text-sm font-medium">Approved</span>
+                    <span className="text-sm font-medium">{t("purchaseOrders.approved")}</span>
                   </div>
                 ) : (
                   <div className="flex items-center text-yellow-600">

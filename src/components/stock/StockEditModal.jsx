@@ -4,8 +4,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, AlertTriangle, Info } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const StockEditModal = ({ isOpen, onClose, product, onSave }) => {
+  const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
     stockOnArrival: 0,
     stockInHouse: 0,
@@ -59,13 +61,13 @@ const StockEditModal = ({ isOpen, onClose, product, onSave }) => {
 
     // Rule 1: Non-negative
     const quantities = [
-      { name: "Stock In House", value: stockInHouse },
-      { name: "Damaged Qty", value: damagedQty },
-      { name: "Expired Qty", value: expiredQty },
-      { name: "Refurbished Qty", value: refurbishedQty },
-      { name: "Final Stock", value: finalStock },
-      { name: "Online Stock", value: onlineStock },
-      { name: "Offline Stock", value: offlineStock },
+      { name: t("importExport.stockInHouse"), value: stockInHouse },
+      { name: t("importExport.damagedQty"), value: damagedQty },
+      { name: t("importExport.expiredQty"), value: expiredQty },
+      { name: t("importExport.refurbishedQty"), value: refurbishedQty },
+      { name: t("importExport.finalStock"), value: finalStock },
+      { name: t("importExport.onlineStock"), value: onlineStock },
+      { name: t("importExport.offlineStock"), value: offlineStock },
     ];
     quantities.forEach(({ name, value }) => {
       if (value < 0) errors.push(`${name} cannot be negative`);

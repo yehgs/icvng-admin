@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ImportExportModal = ({
   isOpen,
@@ -20,6 +21,7 @@ const ImportExportModal = ({
   onImport,
   type = "import", // 'import' or 'export'
 }) => {
+  const { t } = useAdminTranslation();
   const [exportConfig, setExportConfig] = useState({
     format: "csv",
     columns: "all",
@@ -322,20 +324,20 @@ const ImportExportModal = ({
                         <strong>1. Required CSV Columns:</strong>
                       </p>
                       <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li>Product Name</li>
-                        <li>SKU (used for matching products)</li>
-                        <li>Supplier (auto-creates if new)</li>
-                        <li>Weight (kg)</li>
+                        <li>{t("importExport.productName")}</li>
+                        <li>{t("importExport.skuNote")}</li>
+                        <li>{t("importExport.supplierNote")}</li>
+                        <li>{t("importExport.weight")}</li>
                         <li>Unit</li>
-                        <li>Packaging</li>
-                        <li>Stock on Arrival</li>
-                        <li>Stock In House</li>
-                        <li>Damaged Qty</li>
-                        <li>Expired Qty</li>
-                        <li>Refurbished Qty</li>
-                        <li>Final Stock</li>
-                        <li>Online Stock</li>
-                        <li>Offline Stock</li>
+                        <li>{t("importExport.packaging")}</li>
+                        <li>{t("importExport.stockOnArrival")}</li>
+                        <li>{t("importExport.stockInHouse")}</li>
+                        <li>{t("importExport.damagedQty")}</li>
+                        <li>{t("importExport.expiredQty")}</li>
+                        <li>{t("importExport.refurbishedQty")}</li>
+                        <li>{t("importExport.finalStock")}</li>
+                        <li>{t("importExport.onlineStock")}</li>
+                        <li>{t("importExport.offlineStock")}</li>
                       </ul>
 
                       <p className="pt-2">

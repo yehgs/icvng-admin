@@ -202,7 +202,7 @@ const CreateBatchModal = ({ isOpen, onClose, onSuccess }) => {
                     : 'border-gray-300 dark:border-gray-600'
                 }`}
               >
-                <option value="">Select Purchase Order</option>
+                <option value="">{t("stockLog.selectPurchaseOrder")}</option>
                 {purchaseOrders.map((po) => (
                   <option key={po._id} value={po._id}>
                     {po.orderNumber} - {po.supplier?.name} (

@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { brandAPI } from "../../utils/manageApi";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const BrandManagement = () => {
+  const { t } = useAdminTranslation();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
-    name: '',
-    image: '',
+    name: "",
+    image: "",
     compatibleSystem: false,
   });
 
@@ -24,13 +27,13 @@ const BrandManagement = () => {
 
   const fetchBrands = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const response = await brandAPI.getBrands();
       setBrands(response.data || []);
     } catch (error) {
-      console.error('Error fetching brands:', error);
-      setError(error.message || 'Failed to fetch brands');
+      console.error("Error fetching brands:", error);
+      setError(error.message || "Failed to fetch brands");
     } finally {
       setLoading(false);
     }
@@ -40,11 +43,11 @@ const BrandManagement = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Brand name is required';
+      newErrors.name = "Brand name is required";
     }
 
     if (!formData.image) {
-      newErrors.image = 'Brand image is required';
+      newErrors.image = "Brand image is required";
     }
 
     setErrors(newErrors);
@@ -57,7 +60,7 @@ const BrandManagement = () => {
     }
 
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       if (editingBrand) {
@@ -70,8 +73,8 @@ const BrandManagement = () => {
         // Update local state
         setBrands((prev) =>
           prev.map((brand) =>
-            brand._id === editingBrand._id ? { ...brand, ...formData } : brand
-          )
+            brand._id === editingBrand._id ? { ...brand, ...formData } : brand,
+          ),
         );
       } else {
         const response = await brandAPI.createBrand(formData);
@@ -83,8 +86,8 @@ const BrandManagement = () => {
       setShowModal(false);
       resetForm();
     } catch (error) {
-      console.error('Error saving brand:', error);
-      setError(error.message || 'Failed to save brand');
+      console.error("Error saving brand:", error);
+      setError(error.message || "Failed to save brand");
     } finally {
       setSubmitting(false);
     }
@@ -93,12 +96,12 @@ const BrandManagement = () => {
   const handleEdit = (brand) => {
     setEditingBrand(brand);
     setFormData({
-      name: brand.name || '',
-      image: brand.image || '',
+      name: brand.name || "",
+      image: brand.image || "",
       compatibleSystem: brand.compatibleSystem || false,
     });
     setErrors({});
-    setError('');
+    setError("");
     setShowModal(true);
   };
 
@@ -112,8 +115,8 @@ const BrandManagement = () => {
       await brandAPI.deleteBrand(brandId);
       setBrands((prev) => prev.filter((brand) => brand._id !== brandId));
     } catch (error) {
-      console.error('Error deleting brand:', error);
-      setError(error.message || 'Failed to delete brand');
+      console.error("Error deleting brand:", error);
+      setError(error.message || "Failed to delete brand");
     } finally {
       setLoading(false);
     }
@@ -121,24 +124,24 @@ const BrandManagement = () => {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      image: '',
+      name: "",
+      image: "",
       compatibleSystem: false,
     });
     setEditingBrand(null);
     setErrors({});
-    setError('');
+    setError("");
   };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const filteredBrands = brands.filter((brand) =>
-    brand.name.toLowerCase().includes(searchTerm.toLowerCase())
+    brand.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const compatibleBrands = brands.filter((brand) => brand.compatibleSystem);
@@ -153,7 +156,7 @@ const BrandManagement = () => {
             Brand Management
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage product brands and manufacturers ({brands.length} total,{' '}
+            Manage product brands and manufacturers ({brands.length} total,{" "}
             {compatibleBrands.length} compatible systems)
           </p>
         </div>
@@ -186,7 +189,7 @@ const BrandManagement = () => {
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <p className="text-red-600 dark:text-red-400">{error}</p>
           <button
-            onClick={() => setError('')}
+            onClick={() => setError("")}
             className="mt-2 text-sm text-red-500 hover:text-red-700 underline"
           >
             Dismiss
@@ -212,7 +215,7 @@ const BrandManagement = () => {
           </svg>
           <input
             type="text"
-            placeholder="Search brands..."
+            placeholder={t("brands.searchPlaceholder")}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -350,12 +353,12 @@ const BrandManagement = () => {
               />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {searchTerm ? 'No brands found' : 'No brands yet'}
+              {searchTerm ? "No brands found" : "No brands yet"}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {searchTerm
-                ? 'Try adjusting your search terms'
-                : 'Get started by creating your first brand'}
+                ? "Try adjusting your search terms"
+                : "Get started by creating your first brand"}
             </p>
           </div>
         ) : (
@@ -365,8 +368,8 @@ const BrandManagement = () => {
                 key={brand._id}
                 className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
                   brand.compatibleSystem
-                    ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
-                    : 'border-gray-200 dark:border-gray-600'
+                    ? "border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
+                    : "border-gray-200 dark:border-gray-600"
                 }`}
               >
                 <div className="aspect-square mb-3 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
@@ -403,7 +406,7 @@ const BrandManagement = () => {
                     {brand.compatibleSystem && (
                       <svg
                         className="w-4 h-4 text-green-600 dark:text-green-400"
-                        title="Compatible System"
+                        title={t("products.compatibleSystem")}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -488,7 +491,7 @@ const BrandManagement = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingBrand ? 'Edit Brand' : 'Add New Brand'}
+                {editingBrand ? "Edit Brand" : "Add New Brand"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -529,11 +532,11 @@ const BrandManagement = () => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.name
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="Enter brand name"
                 />
@@ -552,11 +555,11 @@ const BrandManagement = () => {
                 <input
                   type="url"
                   value={formData.image}
-                  onChange={(e) => handleInputChange('image', e.target.value)}
+                  onChange={(e) => handleInputChange("image", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                     errors.image
-                      ? 'border-red-300 dark:border-red-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? "border-red-300 dark:border-red-600"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                   placeholder="Enter image URL"
                 />
@@ -572,7 +575,7 @@ const BrandManagement = () => {
                       alt="Preview"
                       className="w-20 h-20 object-cover rounded border"
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        e.target.style.display = "none";
                       }}
                     />
                   </div>
@@ -586,7 +589,7 @@ const BrandManagement = () => {
                     type="checkbox"
                     checked={formData.compatibleSystem}
                     onChange={(e) =>
-                      handleInputChange('compatibleSystem', e.target.checked)
+                      handleInputChange("compatibleSystem", e.target.checked)
                     }
                     className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
@@ -660,7 +663,7 @@ const BrandManagement = () => {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      {editingBrand ? 'Updating...' : 'Creating...'}
+                      {editingBrand ? "Updating..." : "Creating..."}
                     </>
                   ) : (
                     <>
@@ -677,7 +680,7 @@ const BrandManagement = () => {
                           d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
                         />
                       </svg>
-                      {editingBrand ? 'Update Brand' : 'Create Brand'}
+                      {editingBrand ? "Update Brand" : "Create Brand"}
                     </>
                   )}
                 </button>

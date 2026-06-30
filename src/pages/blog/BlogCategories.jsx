@@ -20,8 +20,10 @@ import {
 import { blogAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
 import ImageUploader from '../../components/common/ImageUploader';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const BlogCategories = () => {
+  const { t } = useAdminTranslation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -371,7 +373,7 @@ const BlogCategories = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search categories by name or description..."
+                placeholder={t("categories.searchPlaceholder")}
                 className="form-input pl-10 w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -384,9 +386,9 @@ const BlogCategories = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="">All Status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="">{t("products.allStatus")}</option>
+              <option value="ACTIVE">{t("common.active")}</option>
+              <option value="INACTIVE">{t("common.inactive")}</option>
             </select>
           </div>
         </div>
@@ -576,12 +578,12 @@ const BlogCategories = () => {
         <table className="w-full">
           <thead>
             <tr className="table-header">
-              <th className="px-6 py-3 text-left">Category</th>
-              <th className="px-6 py-3 text-left">Description</th>
-              <th className="px-6 py-3 text-left">Posts</th>
-              <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-left">Created</th>
-              <th className="px-6 py-3 text-left">Actions</th>
+              <th className="px-6 py-3 text-left">{t("common.category")}</th>
+              <th className="px-6 py-3 text-left">{t("common.description")}</th>
+              <th className="px-6 py-3 text-left">{t("blogExt.posts")}</th>
+              <th className="px-6 py-3 text-left">{t("common.status")}</th>
+              <th className="px-6 py-3 text-left">{t("blogExt.created")}</th>
+              <th className="px-6 py-3 text-left">{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -813,8 +815,8 @@ const BlogCategories = () => {
                         }))
                       }
                     >
-                      <option value="ACTIVE">Active</option>
-                      <option value="INACTIVE">Inactive</option>
+                      <option value="ACTIVE">{t("common.active")}</option>
+                      <option value="INACTIVE">{t("common.inactive")}</option>
                     </select>
                   </div>
                 </div>

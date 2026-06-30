@@ -13,8 +13,10 @@ import {
 import toast from 'react-hot-toast';
 import { exchangeRateAPI, pricingAPI } from '../../utils/api';
 import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const PricingUtilities = () => {
+  const { t } = useAdminTranslation();
   const [exchangeRates, setExchangeRates] = useState([]);
   const [pricingConfig, setPricingConfig] = useState(null);
   const [loading, setLoading] = useState(false);

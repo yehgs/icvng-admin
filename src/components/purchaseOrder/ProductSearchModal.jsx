@@ -14,8 +14,10 @@ import {
 import { productAPI, handleApiError } from '../../utils/api';
 import { getCategoryStructure } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
+  const { t } = useAdminTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -232,7 +234,7 @@ const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
                       setFilters({ ...filters, category: e.target.value })
                     }
                   >
-                    <option value="">All Categories</option>
+                    <option value="">{t("products.allCategories")}</option>
                     {categories.map((category) => (
                       <option key={category._id} value={category._id}>
                         {category.name}
@@ -252,7 +254,7 @@ const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
                       setFilters({ ...filters, brand: e.target.value })
                     }
                   >
-                    <option value="">All Brands</option>
+                    <option value="">{t("products.allBrands")}</option>
                     {brands.map((brand) => (
                       <option key={brand._id} value={brand._id}>
                         {brand.name}
@@ -272,7 +274,7 @@ const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
                       setFilters({ ...filters, productType: e.target.value })
                     }
                   >
-                    <option value="">All Types</option>
+                    <option value="">{t("orders.allTypes")}</option>
                     {productTypes.map((type) => (
                       <option key={type} value={type}>
                         {type}
@@ -325,8 +327,8 @@ const ProductSearchModal = ({ isOpen, onClose, onProductSelect }) => {
           ) : products.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p>No products found matching your criteria</p>
-              <p className="text-sm">Try adjusting your search or filters</p>
+              <p>{t("purchaseOrder.noProductsFound")}</p>
+              <p className="text-sm">{t("purchaseOrder.tryAdjusting")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

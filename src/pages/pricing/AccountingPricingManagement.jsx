@@ -26,8 +26,10 @@ import {
 } from "../../utils/api";
 import { getCategoryStructure } from "../../utils/categoryService";
 import RoleBasedButton from "../../components/layout/RoleBasedButton";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const AccountingPricingManagement = () => {
+  const { t } = useAdminTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -285,7 +287,7 @@ const AccountingPricingManagement = () => {
     { value: "basePrice", label: "Base Price Only" },
     { value: "salePrice", label: "Sale Price" },
     { value: "btbPrice", label: "BTB Price" },
-    { value: "btcPrice", label: "BTC Price" },
+    { value: "btcPrice", label: t("pricing.btcPrice") },
     { value: "price3weeks", label: "2 Weeks Delivery" },
     { value: "price5weeks", label: "5 Weeks Delivery" },
   ];
@@ -506,7 +508,7 @@ const AccountingPricingManagement = () => {
             onChange={(e) => handleFilterChange("category", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Categories</option>
+            <option value="">{t("products.allCategories")}</option>
             {categories.map((category) => (
               <option key={category._id} value={category._id}>
                 {category.name}
@@ -521,7 +523,7 @@ const AccountingPricingManagement = () => {
             onChange={(e) => handleFilterChange("brand", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Brands</option>
+            <option value="">{t("products.allBrands")}</option>
             {brands.map((brand) => (
               <option key={brand._id} value={brand._id}>
                 {brand.name}
@@ -538,7 +540,7 @@ const AccountingPricingManagement = () => {
             }
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Systems</option>
+            <option value="">{t("pricingExt.allSystems")}</option>
             {compatibleSystems.map((system) => (
               <option key={system._id} value={system._id}>
                 {system.name}
@@ -553,13 +555,13 @@ const AccountingPricingManagement = () => {
             onChange={(e) => handleFilterChange("productType", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Types</option>
-            <option value="COFFEE">Coffee</option>
-            <option value="MACHINE">Machine</option>
-            <option value="ACCESSORIES">Accessories</option>
-            <option value="COFFEE_BEANS">Coffee Beans</option>
-            <option value="TEA">Tea</option>
-            <option value="DRINKS">Drinks</option>
+            <option value="">{t("orders.allTypes")}</option>
+            <option value="COFFEE">{t("productTypes.coffee")}</option>
+            <option value="MACHINE">{t("productTypes.machine")}</option>
+            <option value="ACCESSORIES">{t("productTypes.accessories")}</option>
+            <option value="COFFEE_BEANS">{t("productTypes.coffeeBeans")}</option>
+            <option value="TEA">{t("productTypes.tea")}</option>
+            <option value="DRINKS">{t("productTypes.drinks")}</option>
           </select>
         </div>
 
@@ -728,16 +730,16 @@ const AccountingPricingManagement = () => {
                     "Base Price",
                     "Sale Price",
                     "BTB Price",
-                    "BTC Price",
+                    t("pricing.btcPrice"),
                     "2 Weeks",
                     "5 Weeks",
                     "Stock",
-                    "Actions",
+                    t("common.actions"),
                   ].map((h) => (
                     <th
                       key={h}
                       className={`px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
-                        h === "Actions" ? "text-right" : "text-left"
+                        h === t("common.actions") ? "text-right" : "text-left"
                       }`}
                     >
                       {h}
@@ -1492,7 +1494,7 @@ PROD-003,12000,,`}
                           const labels = {
                             salePrice: "Sale Price",
                             btbPrice: "BTB Price",
-                            btcPrice: "BTC Price",
+                            btcPrice: t("pricing.btcPrice"),
                             price3weeksDelivery: "2 Weeks Delivery",
                             price5weeksDelivery: "5 Weeks Delivery",
                           };

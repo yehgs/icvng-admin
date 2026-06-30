@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import toast from 'react-hot-toast';
 import { getCurrentUser } from '../../utils/api';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
 const FILE_UPLOAD = `${API_BASE}/file/upload`;
@@ -76,6 +77,7 @@ const EMPTY_FORM = {
 };
 
 export default function FinanceManagement() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const [meta, setMeta] = useState({ INCOME_CATEGORIES: [], EXPENSE_CATEGORIES: [], CURRENCIES: [], PAYMENT_METHODS: [] });
   const [entries, setEntries] = useState([]);
@@ -283,7 +285,7 @@ export default function FinanceManagement() {
             <div className="p-2 bg-white/20 rounded-lg"><ArrowUpCircle className="h-5 w-5" /></div>
             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{summary.income.count} entries</span>
           </div>
-          <p className="text-sm text-white/80">Total Income</p>
+          <p className="text-sm text-white/80">{t("finance.totalIncome")}</p>
           <p className="text-2xl font-bold mt-1">{formatNGN(summary.income.totalNGN)}</p>
         </div>
         {/* Expense */}
@@ -292,7 +294,7 @@ export default function FinanceManagement() {
             <div className="p-2 bg-white/20 rounded-lg"><ArrowDownCircle className="h-5 w-5" /></div>
             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{summary.expense.count} entries</span>
           </div>
-          <p className="text-sm text-white/80">Total Expenses</p>
+          <p className="text-sm text-white/80">{t("finance.totalExpenses")}</p>
           <p className="text-2xl font-bold mt-1">{formatNGN(summary.expense.totalNGN)}</p>
         </div>
         {/* Net */}
@@ -301,7 +303,7 @@ export default function FinanceManagement() {
             <div className="p-2 bg-white/20 rounded-lg"><TrendingUp className="h-5 w-5" /></div>
             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Net</span>
           </div>
-          <p className="text-sm text-white/80">Net Balance</p>
+          <p className="text-sm text-white/80">{t("stats.netBalance")}</p>
           <p className="text-2xl font-bold mt-1">{formatNGN(Math.abs(summary.netNGN))}</p>
           <p className="text-xs text-white/70 mt-0.5">{summary.netNGN >= 0 ? 'Profit' : 'Deficit'}</p>
         </div>
@@ -310,7 +312,7 @@ export default function FinanceManagement() {
       {/* ── Charts ── */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white">Analytics</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-white">{t("finance2.analytics")}</h3>
           <div className="flex gap-1">
             {['trend', 'category'].map((c) => (
               <button key={c} onClick={() => setActiveChart(c)}
@@ -339,8 +341,8 @@ export default function FinanceManagement() {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => v >= 1000000 ? `₦${(v/1000000).toFixed(1)}M` : v >= 1000 ? `₦${(v/1000).toFixed(0)}K` : `₦${v}`} />
               <Tooltip formatter={(v) => formatNGN(v)} />
               <Legend />
-              <Area type="monotone" dataKey="income" stroke="#10B981" fill="url(#incomeGrad)" strokeWidth={2} name="Income" />
-              <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="url(#expenseGrad)" strokeWidth={2} name="Expense" />
+              <Area type="monotone" dataKey="income" stroke="#10B981" fill="url(#incomeGrad)" strokeWidth={2} name={t("finance2.income")} />
+              <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="url(#expenseGrad)" strokeWidth={2} name={t("finance2.expense")} />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -369,18 +371,18 @@ export default function FinanceManagement() {
         <div className="flex gap-2 flex-wrap items-center">
           <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, ref..."
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("notifications.searchPlaceholder")}
               className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
           </div>
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
             className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-            <option value="">All Types</option>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
+            <option value="">{t("orders.allTypes")}</option>
+            <option value="income">{t("finance2.income")}</option>
+            <option value="expense">{t("finance2.expense")}</option>
           </select>
           <select value={filterCurrency} onChange={(e) => setFilterCurrency(e.target.value)}
             className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-            <option value="">All Currencies</option>
+            <option value="">{t("pricing.allCurrencies")}</option>
             {meta.CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
           </select>
           <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
@@ -389,7 +391,7 @@ export default function FinanceManagement() {
             className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
           {(filterType || filterCategory || filterCurrency || filterPayment || search || startDate || endDate) && (
             <button onClick={() => { setFilterType(''); setFilterCategory(''); setFilterCurrency(''); setFilterPayment(''); setSearch(''); setStartDate(''); setEndDate(''); }}
-              className="text-xs text-red-500 hover:text-red-700 px-2 py-1">Clear</button>
+              className="text-xs text-red-500 hover:text-red-700 px-2 py-1">{t("common.clear")}</button>
           )}
         </div>
       </div>
@@ -400,7 +402,7 @@ export default function FinanceManagement() {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{total} entries</span>
         </div>
         {loading && entries.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">Loading...</div>
+          <div className="p-10 text-center text-gray-400">{t("common.loading")}</div>
         ) : entries.length === 0 ? (
           <div className="p-10 text-center text-gray-400">
             <BarChart3 className="h-10 w-10 mx-auto mb-3 opacity-30" /><p>No entries yet</p>
@@ -504,7 +506,7 @@ export default function FinanceManagement() {
               {/* Amount + Currency */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Currency</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("common.currency")}</label>
                   <select value={form.currency} onChange={(e) => handleCurrencyChange(e.target.value)}
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                     {meta.CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.code} {c.symbol}</option>)}
@@ -526,7 +528,7 @@ export default function FinanceManagement() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Exchange Rate to ₦ (1 {form.currency} = ?)
-                    {loadingRate && <span className="ml-2 text-blue-500 text-xs">Loading...</span>}
+                    {loadingRate && <span className="ml-2 text-blue-500 text-xs">{t("common.loading")}</span>}
                   </label>
                   <input type="number" value={form.exchangeRateToNGN}
                     onChange={(e) => setForm((f) => ({ ...f, exchangeRateToNGN: parseFloat(e.target.value) || 0 }))}
@@ -543,12 +545,12 @@ export default function FinanceManagement() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
                   <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                    <option value="">Select category</option>
+                    <option value="">{t("finance2.selectCategory")}</option>
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transaction Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("finance.transactionDate")}</label>
                   <input type="date" value={form.transactionDate} onChange={(e) => setForm((f) => ({ ...f, transactionDate: e.target.value }))}
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                 </div>
@@ -556,7 +558,7 @@ export default function FinanceManagement() {
 
               {/* Payment method */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("finance2.paymentMethod")}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {meta.PAYMENT_METHODS.map((m) => {
                     const Icon = PAYMENT_ICONS[m] || PAYMENT_ICONS.default;
@@ -616,20 +618,20 @@ export default function FinanceManagement() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Card Type</label>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("passwords.cardType")}</label>
                         <select value={form.cardDetails.cardType} onChange={(e) => setForm((f) => ({ ...f, cardDetails: { ...f.cardDetails, cardType: e.target.value } }))}
                           className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                           {['Visa','Mastercard','Verve','Amex','Other'].map((t) => <option key={t}>{t}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Card Colour</label>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("passwords.cardColour")}</label>
                         <input type="color" value={form.cardDetails.cardColor || '#3B82F6'}
                           onChange={(e) => setForm((f) => ({ ...f, cardDetails: { ...f.cardDetails, cardColor: e.target.value } }))}
                           className="w-full h-8 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cardholder Name</label>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("passwords.cardholderName")}</label>
                         <input value={form.cardDetails.cardholderName || ''} onChange={(e) => setForm((f) => ({ ...f, cardDetails: { ...f.cardDetails, cardholderName: e.target.value } }))}
                           className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                       </div>
@@ -659,12 +661,12 @@ export default function FinanceManagement() {
               {/* Description + Notes */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("common.description")}</label>
                   <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                     rows={2} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference Number</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("purchaseOrder.referenceNumber")}</label>
                   <input value={form.referenceNumber} onChange={(e) => setForm((f) => ({ ...f, referenceNumber: e.target.value }))}
                     placeholder="INV-001"
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
@@ -689,7 +691,7 @@ export default function FinanceManagement() {
                 {form.isRecurring && (
                   <select value={form.recurringPeriod || ''} onChange={(e) => setForm((f) => ({ ...f, recurringPeriod: e.target.value || null }))}
                     className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                    <option value="">Select period</option>
+                    <option value="">{t("finance2.selectPeriod")}</option>
                     {['daily','weekly','monthly','quarterly','yearly'].map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
                 )}
@@ -722,7 +724,7 @@ export default function FinanceManagement() {
             </div>
 
             <div className="flex items-center justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700">
-              <button onClick={() => { setShowForm(false); setEditEntry(null); }} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Cancel</button>
+              <button onClick={() => { setShowForm(false); setEditEntry(null); }} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{t("common.cancel")}</button>
               <button onClick={handleSave} disabled={saving}
                 className={`px-6 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50 bg-gradient-to-r ${TYPE_GRADIENT[form.type]} hover:opacity-90`}>
                 {saving ? 'Saving...' : editEntry ? 'Update Entry' : 'Add Entry'}
@@ -763,14 +765,14 @@ export default function FinanceManagement() {
                 </div>
               ))}
               {selectedEntry.description && (
-                <div><p className="text-xs text-gray-500 mb-1">Description</p><p className="text-sm text-gray-700 dark:text-gray-300">{selectedEntry.description}</p></div>
+                <div><p className="text-xs text-gray-500 mb-1">{t("common.description")}</p><p className="text-sm text-gray-700 dark:text-gray-300">{selectedEntry.description}</p></div>
               )}
               {selectedEntry.notes && (
-                <div><p className="text-xs text-gray-500 mb-1">Notes</p><p className="text-sm text-gray-700 dark:text-gray-300">{selectedEntry.notes}</p></div>
+                <div><p className="text-xs text-gray-500 mb-1">{t("common.notes")}</p><p className="text-sm text-gray-700 dark:text-gray-300">{selectedEntry.notes}</p></div>
               )}
               {selectedEntry.bankDetails?.bankName && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Bank Details</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t("passwords.bankDetails")}</p>
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-1 text-sm">
                     {Object.entries(selectedEntry.bankDetails).filter(([, v]) => v).map(([k, v]) => (
                       <div key={k} className="flex justify-between">
@@ -783,7 +785,7 @@ export default function FinanceManagement() {
               )}
               {selectedEntry.cardDetails?.last4Digits && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Card Details</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t("passwords.cardDetails")}</p>
                   <div className="rounded-xl p-4 text-white text-sm font-mono shadow-md" style={{ background: `linear-gradient(135deg, ${selectedEntry.cardDetails.cardColor || '#3B82F6'}, ${selectedEntry.cardDetails.cardColor || '#3B82F6'}99)` }}>
                     <p className="text-white/60 text-xs">{selectedEntry.cardDetails.cardType}</p>
                     <p className="text-lg tracking-widest mt-1">•••• •••• •••• {selectedEntry.cardDetails.last4Digits}</p>
@@ -796,7 +798,7 @@ export default function FinanceManagement() {
               )}
               {selectedEntry.attachments?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Attachments</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t("support.attachments")}</p>
                   <div className="grid grid-cols-2 gap-2">
                     {selectedEntry.attachments.map((a, i) => (
                       a.type === 'image' ? (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAdminTranslation } from "../hooks/useAdminTranslation.js";
 import {
   Check,
   Clock,
@@ -17,6 +18,7 @@ const StatusUpdateComponent = ({
   onStatusUpdate,
   orderData,
 }) => {
+  const { t } = useAdminTranslation();
   const [allowedStatuses, setAllowedStatuses] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [notes, setNotes] = useState('');
@@ -220,7 +222,7 @@ const StatusUpdateComponent = ({
       {/* Status Update Form */}
       {showUpdateForm && (
         <div className="border-t pt-6 mb-6">
-          <h3 className="text-lg font-medium mb-4">Update Order Status</h3>
+          <h3 className="text-lg font-medium mb-4">{t("order.updateStatus")}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
@@ -262,19 +264,19 @@ const StatusUpdateComponent = ({
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Select reason...</option>
+                <option value="">{t("purchaseOrder.selectReason")}</option>
                 <option value="Supplier unavailable">
                   Supplier unavailable
                 </option>
-                <option value="Budget constraints">Budget constraints</option>
+                <option value={t("purchaseOrder.budgetConstraints")}>{t("purchaseOrder.budgetConstraints")}</option>
                 <option value="Requirements changed">
                   Requirements changed
                 </option>
                 <option value="Better alternative found">
                   Better alternative found
                 </option>
-                <option value="Project cancelled">Project cancelled</option>
-                <option value="Other">Other</option>
+                <option value={t("purchaseOrder.projectCancelled")}>{t("purchaseOrder.projectCancelled")}</option>
+                <option value={t("purchaseOrder.other")}>{t("purchaseOrder.other")}</option>
               </select>
             </div>
           )}
@@ -323,7 +325,7 @@ const StatusUpdateComponent = ({
       {/* Status History */}
       {showHistory && (
         <div className="border-t pt-6">
-          <h3 className="text-lg font-medium mb-4">Status History</h3>
+          <h3 className="text-lg font-medium mb-4">{t("purchaseOrder.statusHistory")}</h3>
 
           {statusHistory.length === 0 ? (
             <p className="text-gray-500 text-sm">No status changes yet.</p>

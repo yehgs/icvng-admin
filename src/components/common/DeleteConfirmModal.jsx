@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const DeleteConfirmModal = ({
   isOpen,
@@ -9,6 +10,7 @@ const DeleteConfirmModal = ({
   message = 'Are you sure you want to delete this item?',
   loading = false,
 }) => {
+  const { t } = useAdminTranslation();
   if (!isOpen) return null;
 
   return (
@@ -34,7 +36,7 @@ const DeleteConfirmModal = ({
             </div>
           </div>
 
-          <p className="text-sm text-gray-500">This action cannot be undone.</p>
+          <p className="text-sm text-gray-500">{t("deleteModal.cannotUndo")}</p>
         </div>
 
         <div className="flex justify-end gap-4 p-6 border-t bg-gray-50">

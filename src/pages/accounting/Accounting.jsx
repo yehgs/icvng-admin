@@ -1,7 +1,9 @@
 import React from 'react';
 import { Calculator, DollarSign, CreditCard, Receipt } from 'lucide-react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const Accounting = () => {
+  const { t } = useAdminTranslation();
   return (
     <div className="space-y-6">
       <div className="text-center py-12">

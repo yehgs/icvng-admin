@@ -23,6 +23,7 @@ import {
 import { getCurrentUser, clearAuthData } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -106,7 +107,7 @@ function PasswordStrength({ password }) {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const currentUser = getCurrentUser();
+  const { t } = useAdminTranslation();
   const avatarInputRef = useRef();
 
   const [profile, setProfile] = useState(null);
@@ -205,7 +206,7 @@ export default function ProfilePage() {
           }),
         );
         toast.success("Profile updated!");
-      } else toast.error(d.message || "Failed");
+      } else toast.error(d.message || t("orders.statuses.FAILED"));
     } finally {
       setSavingProfile(false);
     }
@@ -240,7 +241,7 @@ export default function ProfilePage() {
           clearAuthData();
           navigate("/login");
         }, 2000);
-      } else toast.error(d.message || "Failed");
+      } else toast.error(d.message || t("orders.statuses.FAILED"));
     } finally {
       setSavingPw(false);
     }
@@ -327,7 +328,7 @@ export default function ProfilePage() {
                 {profile?.role} — {profile?.subRole}
               </span>
               <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium ${profile?.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${profile?.status === t("common.active") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
               >
                 {profile?.status}
               </span>
@@ -435,7 +436,7 @@ export default function ProfilePage() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {savingProfile ? "Saving..." : "Save Changes"}
+              {savingProfile ? "Saving..." : t("settings.save")}
             </button>
           </div>
 
@@ -452,7 +453,7 @@ export default function ProfilePage() {
                   value: profile?.subRole,
                   icon: Building2,
                 },
-                { label: "Status", value: profile?.status, icon: CheckCircle },
+                { label: t("common.status"), value: profile?.status, icon: CheckCircle },
                 {
                   label: "Last Login",
                   value: profile?.last_login_date

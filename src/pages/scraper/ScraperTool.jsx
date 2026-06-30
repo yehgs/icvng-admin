@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getCurrentUser } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -75,7 +76,11 @@ const STATUS_CONFIG = {
     color: "bg-green-100 text-green-700",
     icon: CheckCircle,
   },
-  failed: { label: "Failed", color: "bg-red-100 text-red-700", icon: XCircle },
+  failed: {
+    label: "Failed",
+    color: "bg-red-100 text-red-700",
+    icon: XCircle,
+  },
   cancelled: {
     label: "Cancelled",
     color: "bg-gray-100 text-gray-500",
@@ -175,6 +180,7 @@ function QuotaBar({ quota }) {
 
 // ── Quota Management Modal (MANAGER / IT / DIRECTOR) ────────────────────────
 function QuotaManagerModal({ onClose }) {
+  const { t } = useAdminTranslation();
   const [allQuotas, setAllQuotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState({}); // { [userId]: newLimit }
@@ -212,7 +218,7 @@ function QuotaManagerModal({ onClose }) {
         delete n[userId];
         return n;
       });
-    } else toast.error(d.message || "Failed");
+    } else toast.error(d.message || t("orders.statuses.FAILED"));
     setSaving(null);
   };
 
@@ -230,7 +236,7 @@ function QuotaManagerModal({ onClose }) {
             : q,
         ),
       );
-    } else toast.error(d.message || "Failed");
+    } else toast.error(d.message || t("orders.statuses.FAILED"));
   };
 
   const ROLE_COLORS = {
@@ -281,7 +287,7 @@ function QuotaManagerModal({ onClose }) {
                     "Role",
                     "Used / Limit",
                     "New Limit",
-                    "Actions",
+                    t("common.actions"),
                   ].map((h) => (
                     <th
                       key={h}
@@ -400,6 +406,7 @@ function QuotaManagerModal({ onClose }) {
 
 // ── Main ScraperTool ──────────────────────────────────────────────────────────
 export default function ScraperTool() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const isSuperRole = SUPER_ROLES.includes(currentUser?.subRole);
   const isQuotaAdmin = QUOTA_ADMIN_ROLES.includes(currentUser?.subRole);
@@ -588,7 +595,7 @@ export default function ScraperTool() {
       setMarkedForDelete(new Set());
       setSelectedIndices(new Set());
       fetchJobs();
-    } else toast.error(d.message || "Failed");
+    } else toast.error(d.message || t("orders.statuses.FAILED"));
     setDeletingRows(false);
   };
 

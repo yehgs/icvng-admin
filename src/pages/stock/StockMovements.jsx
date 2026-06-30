@@ -20,8 +20,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { stockAPI } from '../../utils/api';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const StockMovements = ({ batches, loading, onRefresh }) => {
+  const { t } = useAdminTranslation();
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
@@ -401,8 +403,8 @@ const StockMovements = ({ batches, loading, onRefresh }) => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="ADD">Add Stock</option>
-                    <option value="REMOVE">Remove Stock</option>
+                    <option value="ADD">{t("stockMov.addStock")}</option>
+                    <option value="REMOVE">{t("stockMov.removeStock")}</option>
                   </select>
                 </div>
 
@@ -444,18 +446,18 @@ const StockMovements = ({ batches, loading, onRefresh }) => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select reason...</option>
-                  <option value="Damaged goods">Damaged goods</option>
-                  <option value="Lost inventory">Lost inventory</option>
-                  <option value="Found inventory">Found inventory</option>
-                  <option value="Quality issue">Quality issue</option>
-                  <option value="Expired products">Expired products</option>
-                  <option value="Theft/Shrinkage">Theft/Shrinkage</option>
-                  <option value="Returns processing">Returns processing</option>
+                  <option value="">{t("purchaseOrder.selectReason")}</option>
+                  <option value={t("stock.damagedGoods")}>Damaged goods</option>
+                  <option value={t("stockMov.lostInventory")}>{t("stockMov.lostInventory")}</option>
+                  <option value={t("stockMov.foundInventory")}>{t("stockMov.foundInventory")}</option>
+                  <option value={t("stock.qualityIssue")}>Quality issue</option>
+                  <option value={t("stockMov.expiredProducts")}>Expired products</option>
+                  <option value={t("stock.theft")}>Theft/Shrinkage</option>
+                  <option value={t("stock.returnsProcessing")}>Returns processing</option>
                   <option value="Cycle count correction">
                     Cycle count correction
                   </option>
-                  <option value="Other">Other</option>
+                  <option value={t("purchaseOrder.other")}>{t("purchaseOrder.other")}</option>
                 </select>
               </div>
 

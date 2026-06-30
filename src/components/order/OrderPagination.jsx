@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const OrderPagination = ({
   currentPage,
@@ -7,6 +8,7 @@ const OrderPagination = ({
   ordersPerPage,
   onPageChange,
 }) => {
+  const { t } = useAdminTranslation();
   if (totalPages <= 1) return null;
 
   const getVisiblePages = () => {
@@ -86,7 +88,7 @@ const OrderPagination = ({
                 disabled={currentPage === 1}
                 className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
               >
-                <span className="sr-only">Previous</span>←
+                <span className="sr-only">{t("pagination.previous")}</span>←
               </button>
 
               {/* Page numbers */}
@@ -125,7 +127,7 @@ const OrderPagination = ({
                 disabled={currentPage === totalPages}
                 className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
               >
-                <span className="sr-only">Next</span>→
+                <span className="sr-only">{t("pagination.next")}</span>→
               </button>
             </nav>
           </div>

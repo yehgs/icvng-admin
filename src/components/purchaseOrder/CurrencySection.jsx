@@ -205,8 +205,8 @@ const CurrencySection = ({ formData, updateFormData, supportedCurrencies }) => {
             value={currentCurrency.exchangeRateSource}
             onChange={handleRateSourceChange}
           >
-            <option value="API">API (Automatic)</option>
-            <option value="MANUAL">Manual</option>
+            <option value="API">{t("purchaseOrder.apiAutomatic")}</option>
+            <option value="MANUAL">{t("purchaseOrder.manual")}</option>
           </select>
         </div>
 

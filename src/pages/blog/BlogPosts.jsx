@@ -55,6 +55,23 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { blogAPI, fileAPI, handleApiError } from "../../utils/api";
 import toast from "react-hot-toast";
 import ImageUploader from "../../components/common/ImageUploader";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+
+const API_BASE =
+  import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
+
+async function apiFetch(path, options = {}) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    ...options,
+  });
+  return res.json();
+}
 
 // ─── Toolbar helpers ──────────────────────────────────────────────────────────
 const ToolbarBtn = ({ onClick, active, disabled, title, children }) => (
@@ -79,6 +96,7 @@ const Sep = () => (
 
 // ─── Tiptap Editor component ──────────────────────────────────────────────────
 const RichEditor = ({ value, onChange }) => {
+  const { t } = useAdminTranslation();
   const imgInputRef = useRef(null);
 
   const editor = useEditor({
@@ -402,6 +420,13 @@ const emptyForm = {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 const BlogPosts = () => {
+  const { t } = useAdminTranslation();
+  const { manageableLanguages } = useAdminCountry();
+
+  // Inline translation state (for the editor's Translations tab)
+  const [blogTranslations, setBlogTranslations] = useState({}); // langCode → {title, excerpt, seo.title, seo.description}
+  const [savingTranslation, setSavingTranslation] = useState(false);
+
   // List state
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -489,7 +514,7 @@ const BlogPosts = () => {
       featuredImage: post.featuredImage || "",
       imageAlt: post.imageAlt || "",
       category: post.category?._id || "",
-      tags: post.tags?.map((t) => t._id) || [],
+      tags: post.tags?.map((tag) => tag._id || tag) || [],
       status: post.status || "DRAFT",
       featured: post.featured || false,
       seoTitle: post.seoTitle || "",
@@ -503,7 +528,76 @@ const BlogPosts = () => {
     });
     setEditingPost(post);
     setActiveTab("content");
+    setBlogTranslations({});
+    // Load existing translations for each manageable language
+    if (post._id && manageableLanguages?.length) {
+      apiFetch(`/translations/blog/${post._id}`)
+        .then((res) => {
+          const docs = res.data || [];
+          const tr = {};
+          for (const doc of docs) {
+            tr[doc.language] = {
+              title: doc.fields?.title || "",
+              excerpt: doc.fields?.excerpt || "",
+              "seo.title": doc.fields?.["seo.title"] || "",
+              "seo.description": doc.fields?.["seo.description"] || "",
+            };
+          }
+          setBlogTranslations(tr);
+        })
+        .catch(() => {});
+    }
     setView("editor");
+  };
+
+  // Save a single language's blog translation manually
+  const saveBlogTranslation = async (langCode) => {
+    if (!editingPost?._id) return;
+    setSavingTranslation(true);
+    try {
+      const fields = blogTranslations[langCode] || {};
+      const res = await apiFetch(
+        `/translations/blog/${editingPost._id}/${langCode}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ fields }),
+        },
+      );
+      if (res.success) {
+        toast.success(`${langCode.toUpperCase()} translation saved`);
+      } else {
+        toast.error("Save failed");
+      }
+    } catch {
+      toast.error("Save failed");
+    } finally {
+      setSavingTranslation(false);
+    }
+  };
+
+  // Auto-translate a blog post for all manageable languages
+  const autoTranslateBlog = async () => {
+    if (!editingPost?._id) return;
+    setSavingTranslation(true);
+    try {
+      const res = await apiFetch("/translations/trigger", {
+        method: "POST",
+        body: JSON.stringify({
+          entityType: "blog",
+          entityId: editingPost._id,
+          document: editingPost,
+        }),
+      });
+      if (res.success) {
+        toast.success("Translation queued — refresh in a few seconds");
+      } else {
+        toast.error("Auto-translate failed");
+      }
+    } catch {
+      toast.error("Auto-translate failed");
+    } finally {
+      setSavingTranslation(false);
+    }
   };
 
   const field = (key, val) => setFormData((p) => ({ ...p, [key]: val }));
@@ -512,7 +606,7 @@ const BlogPosts = () => {
     setFormData((p) => ({
       ...p,
       tags: p.tags.includes(id)
-        ? p.tags.filter((t) => t !== id)
+        ? p.tags.filter((tid) => tid !== id)
         : [...p.tags, id],
     }));
 
@@ -581,13 +675,13 @@ const BlogPosts = () => {
   const exportCSV = () => {
     const rows = [
       [
-        "Title",
+        t("common.title"),
         "Category",
-        "Status",
-        "Featured",
-        "Views",
-        "Author",
-        "Published",
+        t("common.status"),
+        t("blogExt.featured"),
+        t("blog.views"),
+        t("blog.author"),
+        t("blog.published"),
       ],
       ...posts.map((p) => [
         p.title,
@@ -653,7 +747,7 @@ const BlogPosts = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search posts..."
+                placeholder={t("blog.searchPlaceholder")}
                 className="form-input pl-10"
                 value={searchTerm}
                 onChange={(e) => {
@@ -670,10 +764,10 @@ const BlogPosts = () => {
                 setCurrentPage(1);
               }}
             >
-              <option value="">All Status</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="DRAFT">Draft</option>
-              <option value="ARCHIVED">Archived</option>
+              <option value="">{t("products.allStatus")}</option>
+              <option value="PUBLISHED">{t("blog.published")}</option>
+              <option value="DRAFT">{t("blog.draft")}</option>
+              <option value="ARCHIVED">{t("purchaseOrders.archived")}</option>
             </select>
             <select
               className="form-select min-w-40"
@@ -683,7 +777,7 @@ const BlogPosts = () => {
                 setCurrentPage(1);
               }}
             >
-              <option value="">All Categories</option>
+              <option value="">{t("products.allCategories")}</option>
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
@@ -699,13 +793,13 @@ const BlogPosts = () => {
             <thead>
               <tr className="table-header">
                 <th className="px-6 py-3 text-left">Post</th>
-                <th className="px-6 py-3 text-left">Category</th>
-                <th className="px-6 py-3 text-left">Status</th>
-                <th className="px-6 py-3 text-left">Featured</th>
+                <th className="px-6 py-3 text-left">{t("common.category")}</th>
+                <th className="px-6 py-3 text-left">{t("common.status")}</th>
+                <th className="px-6 py-3 text-left">{t("blogExt.featured")}</th>
                 <th className="px-6 py-3 text-left">Views</th>
                 <th className="px-6 py-3 text-left">Author</th>
-                <th className="px-6 py-3 text-left">Date</th>
-                <th className="px-6 py-3 text-left">Actions</th>
+                <th className="px-6 py-3 text-left">{t("common.date")}</th>
+                <th className="px-6 py-3 text-left">{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -955,7 +1049,13 @@ const BlogPosts = () => {
           {/* Tabs */}
           <div className="card overflow-hidden">
             <div className="flex border-b border-gray-200 dark:border-gray-700">
-              {["content", "seo"].map((tab) => (
+              {[
+                "content",
+                "seo",
+                ...(editingPost && manageableLanguages?.length
+                  ? ["translations"]
+                  : []),
+              ].map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -966,7 +1066,11 @@ const BlogPosts = () => {
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   }`}
                 >
-                  {tab === "content" ? "Content & Excerpt" : "SEO Settings"}
+                  {tab === "content"
+                    ? "Content & Excerpt"
+                    : tab === "seo"
+                      ? "SEO Settings"
+                      : "🌐 Translations"}
                 </button>
               ))}
             </div>
@@ -1119,6 +1223,106 @@ const BlogPosts = () => {
                 )}
               </div>
             )}
+
+            {/* ── Translations tab ─────────────────────────────────────────── */}
+            {activeTab === "translations" && editingPost && (
+              <div className="p-5 space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Edit translations for this blog post inline. Changes are
+                    saved per language.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={autoTranslateBlog}
+                    disabled={savingTranslation}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-50 disabled:opacity-50"
+                  >
+                    ⚡ Auto-translate all
+                  </button>
+                </div>
+
+                {(manageableLanguages || []).map((lang) => {
+                  const langCode = lang.code;
+                  const tr = blogTranslations[langCode] || {};
+                  const setTr = (field, value) =>
+                    setBlogTranslations((prev) => ({
+                      ...prev,
+                      [langCode]: { ...(prev[langCode] || {}), [field]: value },
+                    }));
+                  return (
+                    <div
+                      key={langCode}
+                      className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          {lang.flag} {lang.label}
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => saveBlogTranslation(langCode)}
+                          disabled={savingTranslation}
+                          className="px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+                        >
+                          Save {langCode.toUpperCase()}
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          className="form-input text-sm"
+                          value={tr.title || ""}
+                          onChange={(e) => setTr("title", e.target.value)}
+                          placeholder={formData.title}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          Excerpt
+                        </label>
+                        <textarea
+                          rows={2}
+                          className="form-textarea text-sm"
+                          value={tr.excerpt || ""}
+                          onChange={(e) => setTr("excerpt", e.target.value)}
+                          placeholder={formData.excerpt}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          SEO Title
+                        </label>
+                        <input
+                          type="text"
+                          className="form-input text-sm"
+                          value={tr["seo.title"] || ""}
+                          onChange={(e) => setTr("seo.title", e.target.value)}
+                          placeholder={formData.seoTitle}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          SEO Description
+                        </label>
+                        <textarea
+                          rows={2}
+                          className="form-textarea text-sm"
+                          value={tr["seo.description"] || ""}
+                          onChange={(e) =>
+                            setTr("seo.description", e.target.value)
+                          }
+                          placeholder={formData.seoDescription}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1139,9 +1343,11 @@ const BlogPosts = () => {
                   value={formData.status}
                   onChange={(e) => field("status", e.target.value)}
                 >
-                  <option value="DRAFT">Draft</option>
-                  <option value="PUBLISHED">Published</option>
-                  <option value="ARCHIVED">Archived</option>
+                  <option value="DRAFT">{t("blog.draft")}</option>
+                  <option value="PUBLISHED">{t("blog.published")}</option>
+                  <option value="ARCHIVED">
+                    {t("purchaseOrders.archived")}
+                  </option>
                 </select>
               </div>
               <div className="flex items-center justify-between">

@@ -1,6 +1,7 @@
 // src/components/common/Pagination.jsx
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const Pagination = ({
   currentPage,
@@ -9,6 +10,7 @@ const Pagination = ({
   itemsPerPage,
   onPageChange,
 }) => {
+  const { t } = useAdminTranslation();
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -84,7 +86,7 @@ const Pagination = ({
                 disabled={currentPage === 1}
                 className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="sr-only">Previous</span>
+                <span className="sr-only">{t("pagination.previous")}</span>
                 <ChevronLeft className="h-5 w-5" />
               </button>
 
@@ -122,7 +124,7 @@ const Pagination = ({
                 disabled={currentPage === totalPages}
                 className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="sr-only">Next</span>
+                <span className="sr-only">{t("pagination.next")}</span>
                 <ChevronRight className="h-5 w-5" />
               </button>
             </nav>

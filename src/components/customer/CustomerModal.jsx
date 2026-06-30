@@ -5,8 +5,10 @@ import { customerAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import ImageUploader from '../common/ImageUploader';
 import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const CustomerModal = ({ isOpen, onClose, onSuccess, customer }) => {
+  const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -305,8 +307,8 @@ const handleImageChange = (images) => {
                   setFormData({ ...formData, customerMode: e.target.value })
                 }
               >
-                <option value="OFFLINE">Offline</option>
-                <option value="ONLINE">Online</option>
+                <option value="OFFLINE">{t("customer.offline")}</option>
+                <option value="ONLINE">{t("customer.online")}</option>
               </select>
             </div>
           </div>
@@ -395,7 +397,7 @@ const handleImageChange = (images) => {
                 value={formData.address.state}
                 onChange={handleStateChange}
               >
-                <option value="">Select State</option>
+                <option value="">{t("customer.selectState")}</option>
                 {nigeriaStatesLgas.map((stateData) => (
                   <option key={stateData.state} value={stateData.state}>
                     {stateData.state}
@@ -415,7 +417,7 @@ const handleImageChange = (images) => {
                 }
                 disabled={!formData.address.state}
               >
-                <option value="">Select LGA</option>
+                <option value="">{t("customer.selectLga")}</option>
                 {selectedStateLgas.map((lga) => (
                   <option key={lga} value={lga}>
                     {lga}

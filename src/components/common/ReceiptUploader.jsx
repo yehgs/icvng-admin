@@ -13,12 +13,14 @@ import {
 import { fileAPI } from '../../utils/api';
 import DeleteConfirmModal from '../common/DeleteConfirmModal';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ReceiptUploader = ({
   receipts = [],
   onReceiptsChange,
   className = '',
 }) => {
+  const { t } = useAdminTranslation();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState([]);
@@ -427,7 +429,7 @@ const ReceiptUploader = ({
                     </p>
                     <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                       <CheckCircle className="h-3 w-3 text-green-600" />
-                      <span className="text-green-600">Uploaded</span>
+                      <span className="text-green-600">{t("uploadExt.uploaded")}</span>
                       <span>•</span>
                       <span>{receipt.type.toUpperCase()}</span>
                       <span>•</span>

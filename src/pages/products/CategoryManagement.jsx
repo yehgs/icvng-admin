@@ -7,6 +7,7 @@ import ImageUploader from '../../components/common/ImageUploader';
 import { categoryAPI } from '../../utils/manageApi';
 import { getCategories, clearCategoryCache } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const EmptyState = ({ message, sub }) => (
   <div className="text-center py-16">
@@ -93,6 +94,7 @@ const GridCard = ({ category, onEdit, onDelete }) => (
 );
 
 const CategoryManagement = () => {
+  const { t } = useAdminTranslation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -199,7 +201,7 @@ const CategoryManagement = () => {
     <div className="p-6">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Category Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("categories.title")}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{categories.length} categories</p>
         </div>
         <button
@@ -216,7 +218,7 @@ const CategoryManagement = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Search categories..."
+            placeholder={t("categories.searchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -259,8 +261,8 @@ const CategoryManagement = () => {
                 <tr>
                   <SortTh label="Category" field="name" sort={sort} onSort={handleSort} />
                   <SortTh label="Slug" field="slug" sort={sort} onSort={handleSort} />
-                  <SortTh label="Created" field="createdAt" sort={sort} onSort={handleSort} />
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  <SortTh label={t("blogExt.created")} field="createdAt" sort={sort} onSort={handleSort} />
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t("common.actions")}</th>
                 </tr>
               </thead>
               <tbody>

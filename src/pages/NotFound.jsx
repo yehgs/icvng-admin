@@ -1,8 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Home, ArrowLeft, Coffee } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Home, ArrowLeft, Coffee } from "lucide-react";
+import { useAdminTranslation } from "../hooks/useAdminTranslation.js";
 
 const NotFound = () => {
+  const { t } = useAdminTranslation();
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="text-center">

@@ -7,6 +7,7 @@ import ImageUploader from '../../components/common/ImageUploader.jsx';
 import { subCategoryAPI } from '../../utils/manageApi.js';
 import { getCategories } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const EmptyState = ({ message, sub }) => (
   <div className="text-center py-16">
@@ -101,6 +102,7 @@ const GridCard = ({ sub, onEdit, onDelete }) => (
 );
 
 const SubCategoryManagement = () => {
+  const { t } = useAdminTranslation();
   const [subCategories, setSubCategories] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -223,7 +225,7 @@ const SubCategoryManagement = () => {
     <div className="p-6">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SubCategory Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("categories.subTitle")}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{subCategories.length} subcategories</p>
         </div>
         <button
@@ -240,7 +242,7 @@ const SubCategoryManagement = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Search subcategories..."
+            placeholder={t("categories.searchSub")}
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -252,7 +254,7 @@ const SubCategoryManagement = () => {
           onChange={(e) => setFilterCategory(e.target.value)}
           className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
-          <option value="">All Categories</option>
+          <option value="">{t("products.allCategories")}</option>
           {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
         </select>
         <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg ml-auto">
@@ -293,8 +295,8 @@ const SubCategoryManagement = () => {
                   <SortTh label="SubCategory" field="name" sort={sort} onSort={handleSort} />
                   <SortTh label="Parent Category" field="category" sort={sort} onSort={handleSort} />
                   <SortTh label="Slug" field="slug" sort={sort} onSort={handleSort} />
-                  <SortTh label="Created" field="createdAt" sort={sort} onSort={handleSort} />
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  <SortTh label={t("blogExt.created")} field="createdAt" sort={sort} onSort={handleSort} />
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t("common.actions")}</th>
                 </tr>
               </thead>
               <tbody>

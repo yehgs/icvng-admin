@@ -21,8 +21,10 @@ import ProductExportModal from "../../components/product/ProductExportModal";
 import ProductForm from "../../components/product/ProductForm";
 import RoleBasedButton from "../../components/layout/RoleBasedButton";
 import toast from "react-hot-toast";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ProductManagement = () => {
+  const { t } = useAdminTranslation();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -236,37 +238,37 @@ const ProductManagement = () => {
 
   // Column display labels (same order as ALL_COLUMNS in modal)
   const COL_LABELS = {
-    name: "Product Name",
+    name: t("products.productName"),
     sku: "SKU",
     category: "Category",
-    subCategory: "Sub Category",
-    brand: "Brand(s)",
-    compatibleSystem: "Compatible System",
-    producer: "Producer",
-    productType: "Product Type",
-    publish: "Publish Status",
-    featured: "Featured",
-    visibleInShop: "Visible in Shop",
+    subCategory: t("products.subCategory"),
+    brand: t("products.brand"),
+    compatibleSystem: t("products.compatibleSystem"),
+    producer: t("products.producer"),
+    productType: t("products.productType"),
+    publish: t("products.publishStatus"),
+    featured: t("blogExt.featured"),
+    visibleInShop: t("products.visibleInShop"),
     btbPrice: "BTB Price (₦)",
     btcPrice: "BTC Price (₦)",
     price3weeks: "3-Week Price (₦)",
     price5weeks: "5-Week Price (₦)",
-    onlineStock: "Online Stock",
-    offlineStock: "Offline Stock",
-    partnerEnabled: "Partner Enabled",
-    partnerQty: "Partner Qty",
-    roastLevel: "Roast Level",
+    onlineStock: t("products.onlineStock"),
+    offlineStock: t("products.offlineStock"),
+    partnerEnabled: t("products.partnerEnabled"),
+    partnerQty: t("products.partnerQty"),
+    roastLevel: t("products.roastLevel"),
     blend: "Blend",
     intensity: "Intensity",
-    coffeeOrigin: "Coffee Origin",
-    aromaticProfile: "Aromatic Profile",
+    coffeeOrigin: t("products.coffeeOrigin"),
+    aromaticProfile: t("products.aromaticProfile"),
     weight: "Weight",
     unit: "Unit",
-    packaging: "Packaging",
+    packaging: t("importExport.packaging"),
     seoTitle: "SEO Title",
     seoDescription: "SEO Description",
-    shortDescription: "Short Description",
-    createdAt: "Created At",
+    shortDescription: t("products.shortDescription"),
+    createdAt: t("products.createdAt"),
   };
 
   // ── Fetch data for export ─────────────────────────────────────────────────
@@ -506,7 +508,7 @@ const ProductManagement = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t("products.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -522,7 +524,7 @@ const ProductManagement = () => {
             }
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            <option value="">All Visibility</option>
+            <option value="">{t("products.allVisibility")}</option>
             <option value="true">🚫 Hidden from shop</option>
             <option value="false">✅ Visible in shop</option>
           </select>
@@ -533,7 +535,7 @@ const ProductManagement = () => {
             onChange={(e) => handleFilterChange("category", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Categories</option>
+            <option value="">{t("products.allCategories")}</option>
             {categories.map((category) => (
               <option key={category._id} value={category._id}>
                 {category.name}
@@ -547,7 +549,7 @@ const ProductManagement = () => {
             onChange={(e) => handleFilterChange("brand", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Brands</option>
+            <option value="">{t("products.allBrands")}</option>
             {brands.map((brand) => (
               <option key={brand._id} value={brand._id}>
                 {brand.name}
@@ -561,7 +563,7 @@ const ProductManagement = () => {
             onChange={(e) => handleFilterChange("productType", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Types</option>
+            <option value="">{t("orders.allTypes")}</option>
             {productTypes.map((type) => (
               <option key={type} value={type}>
                 {type}
@@ -575,7 +577,7 @@ const ProductManagement = () => {
             onChange={(e) => handleFilterChange("publish", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Status</option>
+            <option value="">{t("products.allStatus")}</option>
             {publishStates.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -589,9 +591,9 @@ const ProductManagement = () => {
             onChange={(e) => handleFilterChange("lowStock", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Stock Levels</option>
+            <option value="">{t("products.allStockLevels")}</option>
             <option value="true">Low Online Stock (≤5)</option>
-            <option value="critical">Out of Stock Online</option>
+            <option value="critical">{t("products.outOfStockOnline")}</option>
           </select>
 
           {/* Price Filter */}
@@ -600,11 +602,11 @@ const ProductManagement = () => {
             onChange={(e) => handleFilterChange("priceFilter", e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Price States</option>
-            <option value="hasbtc">Has BTC Price</option>
+            <option value="">{t("products.allPriceStates")}</option>
+            <option value="hasbtc">{t("products.hasBtcPrice")}</option>
             <option value="has3week">Has 3-Week Price</option>
             <option value="has5week">Has 5-Week Price</option>
-            <option value="noPrice">Missing All Prices</option>
+            <option value="noPrice">{t("productExport.missingAllPrices")}</option>
           </select>
 
           {/* Clear Filters */}
@@ -632,11 +634,11 @@ const ProductManagement = () => {
           <div className="text-center py-12">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {hasActiveFilters ? "No products found" : "No products yet"}
+              {hasActiveFilters ? t("common.noData") : "No products yet"}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {hasActiveFilters
-                ? "Try adjusting your search or filters"
+                ? t("purchaseOrder.tryAdjusting")
                 : "Get started by creating your first product"}
             </p>
           </div>

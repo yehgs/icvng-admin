@@ -6,6 +6,7 @@ import {
 import { brandAPI } from '../../utils/manageApi';
 import toast from 'react-hot-toast';
 import ImageUploader from '../../components/common/ImageUploader';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const EmptyState = ({ icon: Icon, message, sub }) => (
   <div className="text-center py-16">
@@ -113,6 +114,7 @@ const GridCard = ({ brand, onEdit, onDelete }) => (
 );
 
 const BrandManagement = () => {
+  const { t } = useAdminTranslation();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -224,7 +226,7 @@ const BrandManagement = () => {
     <div className="p-6">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("brands.title")}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
             {brands.length} total &middot; {regularCount} regular &middot; {compatibleCount} compatible systems
           </p>
@@ -316,8 +318,8 @@ const BrandManagement = () => {
                 <tr>
                   <SortTh label="Brand" field="name" sort={sort} onSort={handleSort} />
                   <SortTh label="Type" field="compatibleSystem" sort={sort} onSort={handleSort} />
-                  <SortTh label="Created" field="createdAt" sort={sort} onSort={handleSort} />
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  <SortTh label={t("blogExt.created")} field="createdAt" sort={sort} onSort={handleSort} />
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t("common.actions")}</th>
                 </tr>
               </thead>
               <tbody>

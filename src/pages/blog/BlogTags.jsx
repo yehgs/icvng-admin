@@ -13,8 +13,10 @@ import {
 } from 'lucide-react';
 import { blogAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const BlogTags = () => {
+  const { t } = useAdminTranslation();
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -208,7 +210,7 @@ const BlogTags = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Search tags..."
+            placeholder={t("blog.searchPlaceholder")}
             className="form-input pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -461,8 +463,8 @@ const BlogTags = () => {
                     }))
                   }
                 >
-                  <option value="ACTIVE">Active</option>
-                  <option value="INACTIVE">Inactive</option>
+                  <option value="ACTIVE">{t("common.active")}</option>
+                  <option value="INACTIVE">{t("common.inactive")}</option>
                 </select>
               </div>
 

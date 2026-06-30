@@ -20,8 +20,10 @@ import toast from "react-hot-toast";
 import RoleBasedAccess from "../../components/layout/RoleBaseAccess";
 import { pricingAPI, pricingUtils } from "../../utils/api";
 import RoleBasedButton from "../../components/layout/RoleBasedButton";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const PriceCalculation = () => {
+  const { t } = useAdminTranslation();
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [selectedPO, setSelectedPO] = useState(null);
   const [calculatedPrices, setCalculatedPrices] = useState(null);

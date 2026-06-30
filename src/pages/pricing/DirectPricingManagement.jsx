@@ -30,8 +30,10 @@ import {
 import { getCategoryStructure } from '../../utils/categoryService';
 import AddProductDirectPricingModal from '../../components/pricing/AddProductDirectPricingModal';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const DirectPricingManagement = () => {
+  const { t } = useAdminTranslation();
   const [directPricingList, setDirectPricingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -384,7 +386,7 @@ const DirectPricingManagement = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t("products.searchPlaceholder")}
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -396,7 +398,7 @@ const DirectPricingManagement = () => {
               onChange={(e) => handleFilterChange('category', e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Categories</option>
+              <option value="">{t("products.allCategories")}</option>
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
@@ -409,7 +411,7 @@ const DirectPricingManagement = () => {
               onChange={(e) => handleFilterChange('brand', e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Brands</option>
+              <option value="">{t("products.allBrands")}</option>
               {brands.map((brand) => (
                 <option key={brand._id} value={brand._id}>
                   {brand.name}
@@ -424,13 +426,13 @@ const DirectPricingManagement = () => {
               }
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Product Types</option>
-              <option value="COFFEE">Coffee</option>
-              <option value="MACHINE">Machine</option>
-              <option value="ACCESSORIES">Accessories</option>
-              <option value="COFFEE_BEANS">Coffee Beans</option>
-              <option value="TEA">Tea</option>
-              <option value="DRINKS">Drinks</option>
+              <option value="">{t("productTypes.allProductTypes")}</option>
+              <option value="COFFEE">{t("productTypes.coffee")}</option>
+              <option value="MACHINE">{t("productTypes.machine")}</option>
+              <option value="ACCESSORIES">{t("productTypes.accessories")}</option>
+              <option value="COFFEE_BEANS">{t("productTypes.coffeeBeans")}</option>
+              <option value="TEA">{t("productTypes.tea")}</option>
+              <option value="DRINKS">{t("productTypes.drinks")}</option>
             </select>
 
             <button
@@ -749,10 +751,10 @@ const DirectPricingManagement = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-600">
-                        <th className="text-left py-2">Price Type</th>
-                        <th className="text-right py-2">Current</th>
+                        <th className="text-left py-2">{t("pricingExt.priceType")}</th>
+                        <th className="text-right py-2">{t("pricingExt.current")}</th>
                         <th className="text-right py-2">New</th>
-                        <th className="text-right py-2">Change</th>
+                        <th className="text-right py-2">{t("pricingExt.change")}</th>
                       </tr>
                     </thead>
                     <tbody>

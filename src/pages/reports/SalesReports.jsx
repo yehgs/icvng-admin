@@ -15,6 +15,7 @@ import {
   Award,
   Target,
 } from "lucide-react";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import {
   AreaChart,
   Area,
@@ -52,7 +53,7 @@ const COLORS = [
   "#EC4899",
 ];
 const STATUS_COLORS = {
-  "Order Placed": "#3B82F6",
+  Pending: "#3B82F6",
   Processing: "#8B5CF6",
   Shipping: "#06B6D4",
   Delivered: "#10B981",
@@ -76,6 +77,7 @@ function timeAgo(d) {
 }
 
 export default function SalesReports() {
+  const { t } = useAdminTranslation();
   const [orders, setOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [crmStats, setCrmStats] = useState(null);
@@ -123,13 +125,13 @@ export default function SalesReports() {
     .reduce((s, o) => s + (o.totalAmt || o.subTotalAmt || 0), 0);
 
   const deliveredOrders = filteredOrders.filter(
-    (o) => o.order_status === "Delivered",
+    (o) => o.order_status === t("orders.statuses.Delivered"),
   );
   const cancelledOrders = filteredOrders.filter(
     (o) => o.order_status === "Cancel",
   );
   const pendingOrders = filteredOrders.filter(
-    (o) => !["Delivered", "Cancel"].includes(o.order_status),
+    (o) => ![t("orders.statuses.Delivered"), "Cancel"].includes(o.order_status),
   );
 
   // Monthly revenue trend (last 12 months)
@@ -151,7 +153,7 @@ export default function SalesReports() {
   // Status breakdown for pie
   const statusMap = {};
   filteredOrders.forEach((o) => {
-    const s = o.order_status || "Unknown";
+    const s = o.order_status || t("reports.unknown");
     statusMap[s] = (statusMap[s] || 0) + 1;
   });
   const statusData = Object.entries(statusMap).map(([name, value]) => ({
@@ -164,7 +166,7 @@ export default function SalesReports() {
   filteredOrders
     .filter((o) => o.order_status !== "Cancel")
     .forEach((o) => {
-      const name = o.userId?.name || o.name || "Unknown";
+      const name = o.userId?.name || o.name || t("reports.unknown");
       custSpend[name] =
         (custSpend[name] || 0) + (o.totalAmt || o.subTotalAmt || 0);
     });
@@ -174,7 +176,15 @@ export default function SalesReports() {
     .slice(0, 10);
 
   const exportCSV = () => {
-    const rows = [["Order ID", "Customer", "Status", "Amount (₦)", "Date"]];
+    const rows = [
+      [
+        t("orders.orderId"),
+        t("reports.customerCol"),
+        t("common.status"),
+        t("reports.amountCol"),
+        t("common.date"),
+      ],
+    ];
     filteredOrders.forEach((o) =>
       rows.push([
         o._id || "",
@@ -210,10 +220,10 @@ export default function SalesReports() {
             onChange={(e) => setDateRange(e.target.value)}
             className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
           >
-            <option value="all">All Time</option>
-            <option value="30">Last 30 Days</option>
-            <option value="90">Last 90 Days</option>
-            <option value="365">Last 12 Months</option>
+            <option value="all">{t("reports.allTime")}</option>
+            <option value="30">{t("reports.last30Days")}</option>
+            <option value="90">{t("reports.last90Days")}</option>
+            <option value="365">{t("reports.last12Months")}</option>
           </select>
           <button
             onClick={fetchData}
@@ -236,7 +246,7 @@ export default function SalesReports() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Total Revenue",
+            label: t("reports.totalRevenue"),
             value: loading ? "..." : fmtCur(totalRevenue),
             icon: DollarSign,
             color: "text-green-600",
@@ -244,7 +254,7 @@ export default function SalesReports() {
             sub: `${filteredOrders.filter((o) => o.order_status !== "Cancel").length} paid orders`,
           },
           {
-            label: "Total Orders",
+            label: t("reports.totalOrders"),
             value: loading ? "..." : fmtN(filteredOrders.length),
             icon: ShoppingCart,
             color: "text-blue-600",
@@ -252,7 +262,7 @@ export default function SalesReports() {
             sub: `${pendingOrders.length} pending`,
           },
           {
-            label: "Delivered",
+            label: t("orders.statuses.Delivered"),
             value: loading ? "..." : fmtN(deliveredOrders.length),
             icon: Award,
             color: "text-teal-600",
@@ -260,7 +270,7 @@ export default function SalesReports() {
             sub: `${filteredOrders.length ? ((deliveredOrders.length / filteredOrders.length) * 100).toFixed(0) : 0}% fulfilment rate`,
           },
           {
-            label: "Cancelled",
+            label: t("orders.statuses.Cancelled"),
             value: loading ? "..." : fmtN(cancelledOrders.length),
             icon: Target,
             color: "text-red-500",
@@ -291,22 +301,22 @@ export default function SalesReports() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             {
-              label: "CRM Total Leads",
+              label: t("reports.totalLeads"),
               value: fmtN(crmStats.totalLeads),
               color: "text-blue-600",
             },
             {
-              label: "Won Deals",
+              label: t("reports.wonDeals"),
               value: fmtN(crmStats.wonLeads),
               color: "text-green-600",
             },
             {
-              label: "Lost Leads",
+              label: t("reports.lostLeads"),
               value: fmtN(crmStats.lostLeads),
               color: "text-red-500",
             },
             {
-              label: "Conversion Rate",
+              label: t("reports.conversionRate"),
               value: `${crmStats.conversionRate || 0}%`,
               color: "text-purple-600",
             },
@@ -328,13 +338,13 @@ export default function SalesReports() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["overview", "orders", "customers"].map((t) => (
+        {["overview", "orders", "customers"].map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === t ? "border-green-600 text-green-600" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === tabKey ? "border-green-600 text-green-600" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
           >
-            {t}
+            {tabKey}
           </button>
         ))}
       </div>
@@ -374,7 +384,7 @@ export default function SalesReports() {
                   stroke="#10B981"
                   fill="url(#revGrad)"
                   strokeWidth={2}
-                  name="Revenue (₦)"
+                  name={t("reports.revenueNgn")}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -395,7 +405,7 @@ export default function SalesReports() {
                     dataKey="orders"
                     fill="#3B82F6"
                     radius={[4, 4, 0, 0]}
-                    name="Orders"
+                    name={t("reports.orderCount")}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -453,7 +463,7 @@ export default function SalesReports() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <option value="">All Status</option>
+              <option value="">{t("products.allStatus")}</option>
               {Object.keys(STATUS_COLORS).map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -468,16 +478,20 @@ export default function SalesReports() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {["Order ID", "Customer", "Status", "Amount", "Date"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    t("orders.orderId"),
+                    t("reports.customerCol"),
+                    t("common.status"),
+                    t("orders.amount"),
+                    t("common.date"),
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -519,7 +533,7 @@ export default function SalesReports() {
                             color: STATUS_COLORS[o.order_status] || "#6B7280",
                           }}
                         >
-                          {o.order_status || "Pending"}
+                          {o.order_status || t("orders.statuses.Pending")}
                         </span>
                       </td>
                       <td className="px-4 py-3 font-semibold text-green-600">
@@ -549,7 +563,12 @@ export default function SalesReports() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {["Rank", "Customer", "Total Spend", "Share"].map((h) => (
+                  {[
+                    "Rank",
+                    t("reports.customerCol"),
+                    "Total Spend",
+                    "Share",
+                  ].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"

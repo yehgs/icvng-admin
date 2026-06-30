@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, X, Filter } from "lucide-react";
 import { warehouseAPI } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const WarehouseFilters = ({
   searchTerm,
@@ -13,6 +14,7 @@ const WarehouseFilters = ({
   filteredCount,
   totalCount,
 }) => {
+  const { t } = useAdminTranslation();
   const [suppliers, setSuppliers] = useState([]);
 
   useEffect(() => {
@@ -83,7 +85,7 @@ const WarehouseFilters = ({
             onChange={(e) => handleFilterChange("category", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Categories</option>
+            <option value="">{t("products.allCategories")}</option>
             {categories.map((category) => (
               <option key={category._id} value={category._id}>
                 {category.name}
@@ -99,7 +101,7 @@ const WarehouseFilters = ({
             onChange={(e) => handleFilterChange("brand", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Brands</option>
+            <option value="">{t("products.allBrands")}</option>
             {brands.map((brand) => (
               <option key={brand._id} value={brand._id}>
                 {brand.name}
@@ -115,7 +117,7 @@ const WarehouseFilters = ({
             onChange={(e) => handleFilterChange("supplier", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Suppliers</option>
+            <option value="">{t("stockLog.allSuppliers")}</option>
             {suppliers.map((supplier) => (
               <option key={supplier._id} value={supplier._id}>
                 {supplier.name}
@@ -131,13 +133,13 @@ const WarehouseFilters = ({
             onChange={(e) => handleFilterChange("productType", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Types</option>
-            <option value="COFFEE">Coffee</option>
-            <option value="MACHINE">Machine</option>
-            <option value="ACCESSORIES">Accessories</option>
-            <option value="COFFEE_BEANS">Coffee Beans</option>
-            <option value="TEA">Tea</option>
-            <option value="DRINKS">Drinks</option>
+            <option value="">{t("orders.allTypes")}</option>
+            <option value="COFFEE">{t("productTypes.coffee")}</option>
+            <option value="MACHINE">{t("productTypes.machine")}</option>
+            <option value="ACCESSORIES">{t("productTypes.accessories")}</option>
+            <option value="COFFEE_BEANS">{t("productTypes.coffeeBeans")}</option>
+            <option value="TEA">{t("productTypes.tea")}</option>
+            <option value="DRINKS">{t("productTypes.drinks")}</option>
           </select>
         </div>
 

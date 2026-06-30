@@ -21,8 +21,10 @@ import toast from "react-hot-toast";
 import ProductSearchModal from "./ProductSearchModal";
 import InvoicePreviewModal from "./InvoicePreviewModal";
 import { nigeriaStatesLgas } from "../../data/nigeria-states-lgas.js";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useAdminTranslation();
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -107,7 +109,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
   const getAvailableLgas = () => {
     if (!formData.deliveryAddress.state) return [];
     const stateData = nigeriaStatesLgas.find(
-      (s) => s.state === formData.deliveryAddress.state
+      (s) => s.state === formData.deliveryAddress.state,
     );
     return stateData?.lga || [];
   };
@@ -117,7 +119,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
     const { deliveryAddress, items } = formData;
 
     const hasDropshipment = items.some(
-      (item) => item.priceOption === "3weeks" || item.priceOption === "5weeks"
+      (item) => item.priceOption === "3weeks" || item.priceOption === "5weeks",
     );
 
     if (hasDropshipment) {
@@ -138,7 +140,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     const validItems = items.filter(
-      (item) => item.productId && item.quantity > 0
+      (item) => item.productId && item.quantity > 0,
     );
     if (validItems.length === 0) {
       toast.error("Please add at least one valid item");
@@ -160,7 +162,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
 
       const subtotal = validItems.reduce(
         (sum, item) => sum + getItemPrice(item),
-        0
+        0,
       );
 
       const shippingResponse = await logisticsAPI.calculateShippingCostManually(
@@ -176,7 +178,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
           },
           orderValue: subtotal,
           totalWeight,
-        }
+        },
       );
 
       if (shippingResponse.success && shippingResponse.data.methods) {
@@ -282,7 +284,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
   const calculateTotals = () => {
     const subtotal = formData.items.reduce(
       (sum, item) => sum + getItemPrice(item),
-      0
+      0,
     );
     const total =
       subtotal +
@@ -300,7 +302,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     const validItems = formData.items.filter(
-      (item) => item.productId && item.quantity > 0
+      (item) => item.productId && item.quantity > 0,
     );
     if (validItems.length === 0) {
       toast.error("Please add at least one valid item");
@@ -319,7 +321,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     const validItems = formData.items.filter(
-      (item) => item.productId && item.quantity > 0
+      (item) => item.productId && item.quantity > 0,
     );
     if (validItems.length === 0) {
       toast.error("Please add at least one valid item");
@@ -327,7 +329,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     const hasDropshipment = validItems.some(
-      (item) => item.priceOption === "3weeks" || item.priceOption === "5weeks"
+      (item) => item.priceOption === "3weeks" || item.priceOption === "5weeks",
     );
 
     if (!hasDropshipment && !shippingCalculated) {
@@ -416,7 +418,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
   const selectedCustomer = customers.find((c) => c._id === formData.customerId);
   const totals = calculateTotals();
   const hasDropshipment = formData.items.some(
-    (item) => item.priceOption === "3weeks" || item.priceOption === "5weeks"
+    (item) => item.priceOption === "3weeks" || item.priceOption === "5weeks",
   );
 
   if (!isOpen) return null;
@@ -534,8 +536,8 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                     setFormData({ ...formData, orderMode: e.target.value })
                   }
                 >
-                  <option value="OFFLINE">Offline</option>
-                  <option value="ONLINE">Online</option>
+                  <option value="OFFLINE">{t("customer.offline")}</option>
+                  <option value="ONLINE">{t("customer.online")}</option>
                 </select>
               </div>
 
@@ -551,7 +553,9 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                   }
                 >
                   <option value="CASH">Cash</option>
-                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="BANK_TRANSFER">
+                    {t("order.bankTransfer")}
+                  </option>
                   <option value="CARD">Card</option>
                 </select>
               </div>
@@ -648,7 +652,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                                 handleItemChange(
                                   index,
                                   "quantity",
-                                  parseInt(e.target.value) || 1
+                                  parseInt(e.target.value) || 1,
                                 )
                               }
                             />
@@ -665,7 +669,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                                 handleItemChange(
                                   index,
                                   "priceOption",
-                                  e.target.value
+                                  e.target.value,
                                 );
                                 setShippingCalculated(false);
                               }}
@@ -762,7 +766,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                     }}
                     required
                   >
-                    <option value="">Select State</option>
+                    <option value="">{t("customer.selectState")}</option>
                     {nigeriaStatesLgas.map((state) => (
                       <option key={state.state} value={state.state}>
                         {state.state}
@@ -791,7 +795,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                     required
                     disabled={!formData.deliveryAddress.state}
                   >
-                    <option value="">Select LGA</option>
+                    <option value="">{t("customer.selectLga")}</option>
                     {getAvailableLgas().map((lga) => (
                       <option key={lga} value={lga}>
                         {lga}

@@ -1,6 +1,7 @@
 // icvng-admin/src/components/order/OrderFilters.jsx
 import React from 'react';
 import { Search } from 'lucide-react';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const OrderFilters = ({
   searchTerm,
@@ -16,6 +17,7 @@ const OrderFilters = ({
   filterWebsiteOrder,
   setFilterWebsiteOrder,
 }) => {
+  const { t } = useAdminTranslation();
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -35,7 +37,7 @@ const OrderFilters = ({
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
         >
-          <option value="">All Types</option>
+          <option value="">{t("orders.allTypes")}</option>
           <option value="BTC">BTC</option>
           <option value="BTB">BTB</option>
         </select>
@@ -45,9 +47,9 @@ const OrderFilters = ({
           value={filterMode}
           onChange={(e) => setFilterMode(e.target.value)}
         >
-          <option value="">All Modes</option>
-          <option value="ONLINE">Online</option>
-          <option value="OFFLINE">Offline</option>
+          <option value="">{t("customer.allModes")}</option>
+          <option value="ONLINE">{t("customer.online")}</option>
+          <option value="OFFLINE">{t("customer.offline")}</option>
         </select>
 
         <select
@@ -55,13 +57,13 @@ const OrderFilters = ({
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >
-          <option value="">All Status</option>
-          <option value="PENDING">Pending</option>
-          <option value="CONFIRMED">Confirmed</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="SHIPPED">Shipped</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="">{t("products.allStatus")}</option>
+          <option value="PENDING">{t("orders.statuses.Pending")}</option>
+          <option value="CONFIRMED">{t("orders.statuses.Confirmed")}</option>
+          <option value="PROCESSING">{t("orders.statuses.Processing")}</option>
+          <option value="SHIPPED">{t("orders.statuses.Shipped")}</option>
+          <option value="DELIVERED">{t("orders.statuses.Delivered")}</option>
+          <option value="CANCELLED">{t("orders.statuses.Cancelled")}</option>
         </select>
 
         <select
@@ -69,11 +71,11 @@ const OrderFilters = ({
           value={filterPaymentStatus}
           onChange={(e) => setFilterPaymentStatus(e.target.value)}
         >
-          <option value="">Payment Status</option>
-          <option value="PENDING">Pending</option>
+          <option value="">{t("order.paymentStatus")}</option>
+          <option value="PENDING">{t("orders.statuses.Pending")}</option>
           <option value="PAID">Paid</option>
-          <option value="FAILED">Failed</option>
-          <option value="REFUNDED">Refunded</option>
+          <option value="FAILED">{t("orders.statuses.FAILED")}</option>
+          <option value="REFUNDED">{t("orders.statuses.Refunded")}</option>
         </select>
 
         <select
@@ -81,9 +83,9 @@ const OrderFilters = ({
           value={filterWebsiteOrder}
           onChange={(e) => setFilterWebsiteOrder(e.target.value)}
         >
-          <option value="">All Sources</option>
-          <option value="true">Website Orders</option>
-          <option value="false">Admin Orders</option>
+          <option value="">{t("order.allSources")}</option>
+          <option value="true">{t("order.websiteOrders")}</option>
+          <option value="false">{t("order.adminOrders")}</option>
         </select>
       </div>
     </div>

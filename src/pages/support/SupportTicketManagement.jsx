@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
 
@@ -56,6 +57,7 @@ function timeAgo(dateStr) {
 }
 
 export default function SupportTicketManagement() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const isIT = ['IT', 'DIRECTOR'].includes(currentUser?.subRole);
 
@@ -203,17 +205,17 @@ export default function SupportTicketManagement() {
           <div className="flex gap-2 flex-wrap">
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-              <option value="">All Status</option>
+              <option value="">{t("products.allStatus")}</option>
               {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
             <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-              <option value="">All Categories</option>
+              <option value="">{t("products.allCategories")}</option>
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-              <option value="">All Priority</option>
+              <option value="">{t("supportExt.allPriority")}</option>
               {['low','medium','high','critical'].map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
@@ -222,7 +224,7 @@ export default function SupportTicketManagement() {
         {/* Ticket list */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {loading && tickets.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">Loading...</div>
+            <div className="p-10 text-center text-gray-400">{t("common.loading")}</div>
           ) : tickets.length === 0 ? (
             <div className="p-10 text-center text-gray-400"><LifeBuoy className="h-10 w-10 mx-auto mb-3 opacity-30" /><p>No tickets found</p></div>
           ) : (
@@ -354,7 +356,7 @@ export default function SupportTicketManagement() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create Support Ticket</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("support.createTicket")}</h2>
               <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <div className="p-6 space-y-4">
@@ -366,18 +368,18 @@ export default function SupportTicketManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("common.category")}</label>
                   <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("common.priority")}</label>
                   <select value={form.priority} onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                    <option value="low">Low</option><option value="medium">Medium</option>
-                    <option value="high">High</option><option value="critical">Critical</option>
+                    <option value="low">Low</option><option value="medium">{t("notificationsExt.medium")}</option>
+                    <option value="high">High</option><option value="critical">{t("supportExt.critical")}</option>
                   </select>
                 </div>
               </div>
@@ -411,7 +413,7 @@ export default function SupportTicketManagement() {
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-              <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Cancel</button>
+              <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{t("common.cancel")}</button>
               <button onClick={handleCreate} disabled={submitting}
                 className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
                 {submitting ? 'Submitting...' : 'Submit Ticket'}

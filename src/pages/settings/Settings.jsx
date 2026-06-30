@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getCurrentUser } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -66,6 +67,7 @@ const Toggle = ({ value, onChange }) => (
 );
 
 export default function Settings() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const [tab, setTab] = useState("general");
   const [saving, setSaving] = useState(false);

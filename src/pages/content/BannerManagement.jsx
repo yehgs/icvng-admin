@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout, Plus, Edit2, Trash2, RefreshCw, ExternalLink, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiCall, handleApiError, fileAPI } from "../../utils/api";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const POSITIONS = [
   { value: 'homepage_side1', label: 'Homepage – Left Side Banner'  },
@@ -13,6 +14,7 @@ const POSITIONS = [
 const EMPTY_FORM = { title: '', subtitle: '', image: '', link: '', linkText: 'Shop Now', position: 'homepage_side1', isActive: true };
 
 const BannerManagement = () => {
+  const { t } = useAdminTranslation();
   const [banners, setBanners]         = useState([]);
   const [loading, setLoading]         = useState(false);
   const [showForm, setShowForm]       = useState(false);
@@ -195,26 +197,26 @@ const BannerManagement = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                  placeholder="Banner headline"
+                  placeholder={t("content.headline")}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subtitle</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("content.subtitle")}</label>
                 <input type="text" value={form.subtitle} onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
                   placeholder="Optional sub-heading"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link URL</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("content.linkUrl")}</label>
                   <input type="url" value={form.link} onChange={(e) => setForm((p) => ({ ...p, link: e.target.value }))}
                     placeholder="https://…"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Button Text</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("content.buttonText")}</label>
                   <input type="text" value={form.linkText} onChange={(e) => setForm((p) => ({ ...p, linkText: e.target.value }))}
-                    placeholder="Shop Now"
+                    placeholder={t("content.shopNow")}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                 </div>
               </div>
@@ -223,11 +225,11 @@ const BannerManagement = () => {
                   className={`relative w-11 h-6 rounded-full transition-colors ${form.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
                   <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.isActive ? 'translate-x-5' : ''}`} />
                 </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("common.active")}</span>
               </label>
             </div>
             <div className="flex justify-end gap-3 p-5 pt-0">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm">Cancel</button>
+              <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm">{t("common.cancel")}</button>
               <button onClick={handleSubmit} disabled={submitting}
                 className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
                 {submitting && <RefreshCw className="w-3 h-3 animate-spin" />}
@@ -246,8 +248,8 @@ const BannerManagement = () => {
             <h3 className="text-lg font-bold mb-2 dark:text-white">Delete Banner?</h3>
             <p className="text-sm text-gray-500 mb-5">This will remove the banner from <strong>{positionLabel(deleteTarget.position)}</strong>.</p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border rounded-lg text-sm">Cancel</button>
-              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Delete</button>
+              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border rounded-lg text-sm">{t("common.cancel")}</button>
+              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">{t("common.delete")}</button>
             </div>
           </div>
         </div>

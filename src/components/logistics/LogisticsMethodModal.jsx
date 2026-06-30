@@ -610,9 +610,9 @@ const LogisticsMethodModal = ({
             }
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
           >
-            <option value="all_products">All Products</option>
-            <option value="categories">Specific Categories</option>
-            <option value="specific_products">Specific Products</option>
+            <option value="all_products">{t("logistics2.allProducts")}</option>
+            <option value="categories">{t("logistics2.specificCategories")}</option>
+            <option value="specific_products">{t("logistics2.specificProducts")}</option>
           </select>
         </div>
 
@@ -1227,11 +1227,11 @@ const LogisticsMethodModal = ({
                 disabled={!!method}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               >
-                <option value="flat_rate">Flat Rate</option>
+                <option value="flat_rate">{t("logistics2.flatRate")}</option>
                 <option value="table_shipping">
                   Table Shipping (Zone + Weight)
                 </option>
-                <option value="pickup">Store Pickup</option>
+                <option value="pickup">{t("logistics2.storePickup")}</option>
               </select>
               {method && (
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -1400,7 +1400,7 @@ const LogisticsMethodModal = ({
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         >
-                          <option value="">Select Zone</option>
+                          <option value="">{t("logistics2.selectZone")}</option>
                           {zones.map((zone) => (
                             <option key={zone._id} value={zone._id}>
                               {zone.name}
@@ -1604,7 +1604,7 @@ const LogisticsMethodModal = ({
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         >
-                          <option value="">Select Zone</option>
+                          <option value="">{t("logistics2.selectZone")}</option>
                           {zones.map((zone) => (
                             <option key={zone._id} value={zone._id}>
                               {zone.name}
@@ -1634,7 +1634,7 @@ const LogisticsMethodModal = ({
                           <div>Min Weight (kg)</div>
                           <div>Max Weight (kg)</div>
                           <div>Shipping Cost (₦)</div>
-                          <div>Action</div>
+                          <div>{t("logistics2.action")}</div>
                         </div>
 
                         {zoneRate.weightRanges.map((range, rangeIndex) => (
@@ -1882,7 +1882,7 @@ const LogisticsMethodModal = ({
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         >
-                          <option value="">Select Zone</option>
+                          <option value="">{t("logistics2.selectZone")}</option>
                           {zones.map((zone) => (
                             <option key={zone._id} value={zone._id}>
                               {zone.name}

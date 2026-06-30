@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiCall, getCurrentUser, handleApiError } from '../../utils/api';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const STATUS_CONFIG = {
   PENDING:    { label: 'Pending',    color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock },
@@ -26,6 +27,7 @@ const STATUS_CONFIG = {
 };
 
 const ProductRequestManagement = () => {
+  const { t } = useAdminTranslation();
   const [requests, setRequests]         = useState([]);
   const [loading, setLoading]           = useState(false);
   const [searchTerm, setSearchTerm]     = useState('');
@@ -148,7 +150,7 @@ const ProductRequestManagement = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search product or customer…"
+            placeholder={t("scraper.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
@@ -161,7 +163,7 @@ const ProductRequestManagement = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="pl-9 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm appearance-none bg-white dark:bg-gray-700 dark:text-white"
           >
-            <option value="">All Statuses</option>
+            <option value="">{t("orders.allStatuses")}</option>
             {Object.keys(STATUS_CONFIG).map((s) => (
               <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
             ))}
@@ -273,7 +275,7 @@ const ProductRequestManagement = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
             {/* Modal header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Request Details</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t("support.requestDetails")}</h2>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
 

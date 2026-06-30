@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser, activityLogAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const ACTION_COLORS = {
   CREATE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -48,6 +49,7 @@ const RESOURCE_TYPES = [
 ];
 
 export default function ActivityLog() {
+  const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const [logs, setLogs]               = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -60,19 +62,6 @@ export default function ActivityLog() {
     search: '', action: '', resourceType: '', status: '',
     dateFrom: '', dateTo: '', page: 1, limit: 50,
   });
-
-  // Guard: only DIRECTOR and IT
-  if (!['DIRECTOR', 'IT'].includes(currentUser?.subRole)) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Access Restricted</h2>
-          <p className="text-gray-500 mt-2">This page is only visible to Directors and IT administrators.</p>
-        </div>
-      </div>
-    );
-  }
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -136,6 +125,19 @@ export default function ActivityLog() {
     URL.revokeObjectURL(url);
   };
 
+  // Guard: only DIRECTOR and IT
+  if (!['DIRECTOR', 'IT'].includes(currentUser?.subRole)) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">{t("auth.accessRestricted")}</h2>
+          <p className="text-gray-500 mt-2">This page is only visible to Directors and IT administrators.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -143,7 +145,7 @@ export default function ActivityLog() {
         <div className="flex items-center gap-3">
           <Activity className="w-7 h-7 text-indigo-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Activity Log</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("activity.title")}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {totalCount.toLocaleString()} total records · Directors &amp; IT only
             </p>
@@ -152,11 +154,11 @@ export default function ActivityLog() {
         <div className="flex gap-2">
           <button onClick={fetchLogs}
             className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> {t("common.refresh")}
           </button>
           <button onClick={exportCSV} disabled={logs.length === 0}
             className="flex items-center gap-2 px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50">
-            <Download className="w-4 h-4" /> Export CSV
+            <Download className="w-4 h-4" /> {t("reports.exportCsv")}
           </button>
         </div>
       </div>
@@ -166,7 +168,7 @@ export default function ActivityLog() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" placeholder="Search description or resource..."
+            <input type="text" placeholder={t("activity.searchPlaceholder")}
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -175,22 +177,22 @@ export default function ActivityLog() {
 
           <select value={filters.action} onChange={(e) => handleFilterChange('action', e.target.value)}
             className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <option value="">All Actions</option>
+            <option value="">{t("stockLog.allActions")}</option>
             {actionTypes.map((a) => <option key={a} value={a}>{formatAction(a)}</option>)}
           </select>
 
           <select value={filters.resourceType} onChange={(e) => handleFilterChange('resourceType', e.target.value)}
             className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <option value="">All Resources</option>
+            <option value="">{t("activityExt.allResources")}</option>
             {RESOURCE_TYPES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
 
           <select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)}
             className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <option value="">All Statuses</option>
-            <option value="SUCCESS">Success</option>
-            <option value="FAILED">Failed</option>
-            <option value="PARTIAL">Partial</option>
+            <option value="">{t("orders.allStatuses")}</option>
+            <option value="SUCCESS">{t("activityExt.success")}</option>
+            <option value="FAILED">{t("orders.statuses.FAILED")}</option>
+            <option value="PARTIAL">{t("activityExt.partial")}</option>
           </select>
 
           <input type="date" value={filters.dateFrom}
@@ -306,14 +308,14 @@ export default function ActivityLog() {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                             {log.metadata?.ip && (
                               <div>
-                                <p className="font-semibold text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide text-xs">Request Info</p>
+                                <p className="font-semibold text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide text-xs">{t("activityExt.requestInfo")}</p>
                                 <p className="text-gray-700 dark:text-gray-300">IP: {log.metadata.ip}</p>
                                 <p className="text-gray-500 dark:text-gray-500 truncate mt-1" title={log.metadata.userAgent}>{log.metadata.userAgent}</p>
                               </div>
                             )}
                             {log.changes?.before && (
                               <div>
-                                <p className="font-semibold text-red-600 dark:text-red-400 mb-1 uppercase tracking-wide text-xs">Before</p>
+                                <p className="font-semibold text-red-600 dark:text-red-400 mb-1 uppercase tracking-wide text-xs">{t("activity.before")}</p>
                                 <pre className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 overflow-auto max-h-36 text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
                                   {JSON.stringify(log.changes.before, null, 2)}
                                 </pre>
@@ -321,7 +323,7 @@ export default function ActivityLog() {
                             )}
                             {log.changes?.after && (
                               <div>
-                                <p className="font-semibold text-green-600 dark:text-green-400 mb-1 uppercase tracking-wide text-xs">After</p>
+                                <p className="font-semibold text-green-600 dark:text-green-400 mb-1 uppercase tracking-wide text-xs">{t("activity.after")}</p>
                                 <pre className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-2 overflow-auto max-h-36 text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
                                   {JSON.stringify(log.changes.after, null, 2)}
                                 </pre>

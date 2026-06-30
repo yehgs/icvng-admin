@@ -94,9 +94,13 @@ import NotificationManagement from "./pages/notifications/NotificationManagement
 import SupportTicketManagement from "./pages/support/SupportTicketManagement";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
+// Phase 3: multi-country
+import TranslationManager from "./pages/translations/TranslationManager.jsx";
+import { useAdminTranslation } from "@/hooks/useAdminTranslation.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
+  const { t } = useAdminTranslation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -135,7 +139,7 @@ const ProtectedRoute = ({ children }) => {
             <span className="text-2xl">☕</span>
           </div>
           <div className="w-8 h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading I-COFFEE.NG...</p>
+          <p className="text-gray-600">{t("app.loading")}</p>
         </div>
       </div>
     );
@@ -243,6 +247,7 @@ const App = () => {
                         "SALES_MANAGER",
                         "MANAGER",
                       ]}
+                      blockForeign={true}
                     >
                       <LogisticsManagement />
                     </RoleProtectedRoute>
@@ -259,6 +264,7 @@ const App = () => {
                         "SALES_MANAGER",
                         "MANAGER",
                       ]}
+                      blockForeign={true}
                     >
                       <TrackingManagement />
                     </RoleProtectedRoute>
@@ -326,6 +332,18 @@ const App = () => {
                       ]}
                     >
                       <PurchaseOrderManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* translation */}
+                <Route
+                  path="translations"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "MANAGER"]}
+                    >
+                      <TranslationManager />
                     </RoleProtectedRoute>
                   }
                 />
@@ -762,8 +780,9 @@ const App = () => {
                     </RoleProtectedRoute>
                   }
                 />
-              </Route>
 
+                {/* Phase 3: Country Admin Management */}
+              </Route>
               {/* Redirect Routes */}
               <Route path="/" element={<Navigate to="/admin" replace />} />
               <Route

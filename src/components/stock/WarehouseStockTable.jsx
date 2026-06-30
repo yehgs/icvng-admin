@@ -1,5 +1,6 @@
 // admin/src/components/stock/WarehouseStockTable.jsx
 import React from "react";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import {
   Package,
   Edit,
@@ -21,6 +22,7 @@ const WarehouseStockTable = ({
   onEditWeight,
   systemSettings,
 }) => {
+  const { t } = useAdminTranslation();
   /*************  ✨ Windsurf Command ⭐  *************/
   /**
    * Returns an object containing the stock status label, color, background color, and icon
@@ -40,21 +42,21 @@ const WarehouseStockTable = ({
         };
       } else if (finalStock <= systemSettings.criticalStockThreshold) {
         return {
-          label: "Critical",
+          label: t("supportExt.critical"),
           color: "text-red-600 dark:text-red-400",
           bg: "bg-red-50 dark:bg-red-900/20",
           icon: AlertTriangle,
         };
       } else if (finalStock <= systemSettings.lowStockThreshold) {
         return {
-          label: "Low Stock",
+          label: t("products.lowStock"),
           color: "text-yellow-600 dark:text-yellow-400",
           bg: "bg-yellow-50 dark:bg-yellow-900/20",
           icon: AlertTriangle,
         };
       } else {
         return {
-          label: "In Stock",
+          label: t("products.inStock"),
           color: "text-green-600 dark:text-green-400",
           bg: "bg-green-50 dark:bg-green-900/20",
           icon: CheckCircle,
@@ -74,7 +76,7 @@ const WarehouseStockTable = ({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
         <Package className="h-12 w-12 mb-3 opacity-50" />
-        <p className="text-lg font-medium">No products found</p>
+        <p className="text-lg font-medium">{t("common.noData")}</p>
         <p className="text-sm">Try adjusting your filters</p>
       </div>
     );
@@ -275,13 +277,13 @@ const WarehouseStockTable = ({
                     <Globe className="h-3 w-3 text-blue-500" />
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       {product.partnerStock?.enabled
-                        ? (product.partnerStock?.quantity || 0)
-                        : (stock.onlineStock || 0)}
+                        ? product.partnerStock?.quantity || 0
+                        : stock.onlineStock || 0}
                     </span>
                     {product.partnerStock?.enabled && (
                       <span
                         className="ml-1 text-xs bg-purple-100 text-purple-700 px-1 rounded font-medium"
-                        title={`Partner stock — managed by editor only. Supplier: ${product.partnerStock?.supplier?.name || 'N/A'}`}
+                        title={`Partner stock — managed by editor only. Supplier: ${product.partnerStock?.supplier?.name || "N/A"}`}
                       >
                         P
                       </span>
@@ -324,8 +326,8 @@ const WarehouseStockTable = ({
                         product.partnerStock?.enabled
                           ? "Partner stock — managed by editors only"
                           : canEdit
-                          ? "Edit stock quantities"
-                          : "Stock editing disabled"
+                            ? "Edit stock quantities"
+                            : "Stock editing disabled"
                       }
                     >
                       <Edit className="h-4 w-4" />

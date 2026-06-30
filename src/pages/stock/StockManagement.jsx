@@ -27,8 +27,10 @@ import StockIntakeModal from '../../components/stock/StockIntakeModal';
 import RoleBasedAccess from '../../components/layout/RoleBaseAccess';
 import { stockAPI } from '../../utils/api';
 import { getCurrentUser } from '../../utils/api';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const StockManagement = () => {
+  const { t } = useAdminTranslation();
   const [activeTab, setActiveTab] = useState('overview');
   const [stockSummary, setStockSummary] = useState([]);
   const [batches, setBatches] = useState([]);

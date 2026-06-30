@@ -30,8 +30,10 @@ import toast from 'react-hot-toast';
 import PurchaseOrderForm from '../../components/purchaseOrder/PurchaseOrderForm';
 import PurchaseOrderDetailsModal from '../../components/purchaseOrder/PurchaseOrderDetailsModel';
 import RoleBasedButton from '../../components/layout/RoleBasedButton';
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const PurchaseOrderManagement = () => {
+  const { t } = useAdminTranslation();
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [supportedCurrencies, setSupportedCurrencies] = useState([]);
@@ -481,7 +483,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t("common.total")}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stats.total}
               </p>
@@ -493,7 +495,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-yellow-600">Pending</p>
+              <p className="text-sm text-yellow-600">{t("orders.statuses.Pending")}</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {stats.pending}
               </p>
@@ -505,7 +507,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-600">Approved</p>
+              <p className="text-sm text-green-600">{t("purchaseOrders.approved")}</p>
               <p className="text-2xl font-bold text-green-600">
                 {stats.approved}
               </p>
@@ -517,7 +519,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600">Shipped</p>
+              <p className="text-sm text-blue-600">{t("orders.statuses.Shipped")}</p>
               <p className="text-2xl font-bold text-blue-600">
                 {stats.shipped}
               </p>
@@ -529,7 +531,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-indigo-600">Delivered</p>
+              <p className="text-sm text-indigo-600">{t("orders.statuses.Delivered")}</p>
               <p className="text-2xl font-bold text-indigo-600">
                 {stats.delivered}
               </p>
@@ -541,7 +543,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-emerald-600">Completed</p>
+              <p className="text-sm text-emerald-600">{t("purchaseOrder.completed")}</p>
               <p className="text-2xl font-bold text-emerald-600">
                 {stats.completed}
               </p>
@@ -553,7 +555,7 @@ const PurchaseOrderManagement = () => {
         <div className="card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-red-600">Cancelled</p>
+              <p className="text-sm text-red-600">{t("orders.statuses.Cancelled")}</p>
               <p className="text-2xl font-bold text-red-600">
                 {stats.cancelled}
               </p>
@@ -571,7 +573,7 @@ const PurchaseOrderManagement = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search purchase orders..."
+                placeholder={t("purchaseOrders.searchPlaceholder")}
                 className="form-input pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -586,7 +588,7 @@ const PurchaseOrderManagement = () => {
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
-              <option value="">All Statuses</option>
+              <option value="">{t("orders.allStatuses")}</option>
               {orderStatuses.map((status) => (
                 <option key={status} value={status}>
                   {status} ({stats[status.toLowerCase()] || 0})
@@ -610,13 +612,13 @@ const PurchaseOrderManagement = () => {
         <table className="w-full">
           <thead>
             <tr className="table-header">
-              <th className="px-6 py-3 text-left">Order Details</th>
+              <th className="px-6 py-3 text-left">{t("order.orderDetails")}</th>
               <th className="px-6 py-3 text-left">Supplier</th>
-              <th className="px-6 py-3 text-left">Dates</th>
-              <th className="px-6 py-3 text-left">Items</th>
-              <th className="px-6 py-3 text-left">Total Amount</th>
-              <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-left">Actions</th>
+              <th className="px-6 py-3 text-left">{t("purchaseOrder.dates")}</th>
+              <th className="px-6 py-3 text-left">{t("purchaseOrder.items")}</th>
+              <th className="px-6 py-3 text-left">{t("purchaseOrder.totalAmount")}</th>
+              <th className="px-6 py-3 text-left">{t("common.status")}</th>
+              <th className="px-6 py-3 text-left">{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
