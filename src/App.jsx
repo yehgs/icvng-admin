@@ -93,6 +93,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import SupportTicketManagement from "./pages/support/SupportTicketManagement";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
+import FinanceManagement from "./pages/finance/FinanceManagement.jsx";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
 // Phase 3: multi-country
 import TranslationManager from "./pages/translations/TranslationManager.jsx";
@@ -200,6 +201,15 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <PasswordVaultManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="dashboard/finance"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["DIRECTOR"]}>
+                      <FinanceManagement />
                     </RoleProtectedRoute>
                   }
                 />
