@@ -129,6 +129,7 @@ const en = {
     contentManagement: "Content Management",
     sliderManagement: "Slider Management",
     bannerManagement: "Banner Management",
+    siteContent: "Site Content",
     fomoWidget: "FOMO Widget",
     procurement: "Procurement",
     suppliers: "Suppliers",

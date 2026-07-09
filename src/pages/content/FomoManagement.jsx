@@ -22,6 +22,8 @@ import {
 import toast from "react-hot-toast";
 import { apiCall, handleApiError, productAPI, fileAPI } from "../../utils/api";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 // Simple NGN currency formatter (no external dependency needed)
 const formatPrice = (price) =>
@@ -130,9 +132,20 @@ const FomoManagement = () => {
 
   const { t } = useAdminTranslation();
 
+  // ── Country scoping ────────────────────────────────────────────────────
+  // A COUNTRY-scoped admin (e.g. an editor tagged to Togo) only ever
+  // manages Togo's FOMO widget — the backend enforces this regardless, but
+  // we lock the UI to match. A GLOBAL/HQ admin picks which market to view.
+  const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
+  const [selectedCountry, setSelectedCountry] = useState(countryScope || "NG");
+  useEffect(() => {
+    if (!isGlobalAdmin && countryScope) setSelectedCountry(countryScope);
+  }, [isGlobalAdmin, countryScope]);
+  const countryQuery = isGlobalAdmin ? `?countryCode=${selectedCountry}` : "";
+
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [selectedCountry]);
 
   // Close product dropdown when clicking outside
   useEffect(() => {
@@ -148,7 +161,7 @@ const FomoManagement = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const res = await apiCall("/fomo/settings");
+      const res = await apiCall(`/fomo/admin/settings${countryQuery}`);
       if (res.success) setSettings(res.data);
     } catch (err) {
       toast.error(handleApiError(err, "Failed to load FOMO settings"));
@@ -161,7 +174,7 @@ const FomoManagement = () => {
     if (!settings) return;
     setSaving(true);
     try {
-      const res = await apiCall("/fomo/settings", {
+      const res = await apiCall(`/fomo/settings${countryQuery}`, {
         method: "PUT",
         body: {
           enabled: settings.enabled,
@@ -173,6 +186,8 @@ const FomoManagement = () => {
           fadeOutMs: settings.fadeOutMs,
           useDummyUsers: settings.useDummyUsers,
           maxRealPurchases: settings.maxRealPurchases,
+          notificationMessage: settings.notificationMessage,
+          countryCode: selectedCountry,
         },
       });
       if (res.success) {
@@ -303,6 +318,7 @@ const FomoManagement = () => {
         product: dummyForm.product || null,
         quantity: dummyForm.quantity,
         purchasedAt: new Date(dummyForm.purchasedAt).toISOString(),
+        countryCode: selectedCountry,
         ...(editingUser ? { userId: editingUser } : {}),
       };
       const res = await apiCall("/fomo/dummy-user", { method, body });
@@ -322,7 +338,7 @@ const FomoManagement = () => {
     try {
       const res = await apiCall("/fomo/dummy-user", {
         method: "DELETE",
-        body: { userId },
+        body: { userId, countryCode: selectedCountry },
       });
       if (res.success) {
         toast.success("User removed");
@@ -337,7 +353,7 @@ const FomoManagement = () => {
     try {
       const res = await apiCall("/fomo/dummy-user", {
         method: "PUT",
-        body: { userId: u._id, isActive: !u.isActive },
+        body: { userId: u._id, isActive: !u.isActive, countryCode: selectedCountry },
       });
       if (res.success) fetchSettings();
     } catch {
@@ -394,6 +410,36 @@ const FomoManagement = () => {
             Save Settings
           </button>
         </div>
+      </div>
+
+      {/* Country scope — GLOBAL admins pick a market; COUNTRY-scoped admins
+          only ever see (and this shows) their own assigned market. */}
+      <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+          Managing FOMO for:
+        </span>
+        {isGlobalAdmin ? (
+          <select
+            value={selectedCountry}
+            onChange={(e) => setSelectedCountry(e.target.value)}
+            className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm bg-white dark:bg-gray-900"
+          >
+            {(allCountries.length ? allCountries : [{ code: "NG", name: "Nigeria" }]).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code})
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded px-3 py-1.5">
+            {selectedCountry} only — you can't manage other markets' FOMO widgets
+          </span>
+        )}
+        {selectedCountry !== "NG" && (
+          <span className="text-xs text-gray-400">
+            No customers/dummy users configured yet for this market? The widget simply shows nothing — it never falls back to another market's data.
+          </span>
+        )}
       </div>
 
       {/* Hint if widget enabled but no data yet */}
@@ -562,6 +608,24 @@ const FomoManagement = () => {
                       update("maxRealPurchases", Number(e.target.value))
                     }
                     className="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Notification label (e.g. "Just purchased")
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.notificationMessage || ""}
+                    onChange={(e) => update("notificationMessage", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                    placeholder="Just purchased"
+                  />
+                  <InlineTranslateFields
+                    entityType="fomo"
+                    entity={settings}
+                    fields={["notificationMessage"]}
+                    fieldLabels={{ notificationMessage: 'Notification label ("Just purchased")' }}
                   />
                 </div>
               </div>

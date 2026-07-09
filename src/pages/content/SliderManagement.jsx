@@ -7,11 +7,14 @@ import {
 import toast from 'react-hot-toast';
 import { apiCall, handleApiError, fileAPI } from "../../utils/api";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
-const EMPTY_FORM = { title: '', description: '', imageUrl: '', url: '', isActive: true, order: 0 };
+const EMPTY_FORM = { title: '', description: '', imageUrl: '', url: '', isActive: true, order: 0, countryCode: 'NG' };
 
 const SliderManagement = () => {
   const { t } = useAdminTranslation();
+  const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
   const [sliders, setSliders]         = useState([]);
   const [loading, setLoading]         = useState(false);
   const [showForm, setShowForm]       = useState(false);
@@ -20,6 +23,7 @@ const SliderManagement = () => {
   const [submitting, setSubmitting]   = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [countryFilter, setCountryFilter] = useState('ALL');
 
   useEffect(() => { fetchSliders(); }, []);
 
@@ -35,8 +39,12 @@ const SliderManagement = () => {
     }
   };
 
-  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setShowForm(true); };
-  const openEdit   = (s)  => { setEditing(s); setForm({ ...s }); setShowForm(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ ...EMPTY_FORM, countryCode: countryScope || (countryFilter !== 'ALL' ? countryFilter : 'NG') });
+    setShowForm(true);
+  };
+  const openEdit   = (s)  => { setEditing(s); setForm({ ...EMPTY_FORM, ...s }); setShowForm(true); };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -105,7 +113,23 @@ const SliderManagement = () => {
             Manage homepage hero sliders shown on the website
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {isGlobalAdmin ? (
+            <select
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800"
+            >
+              <option value="ALL">All markets</option>
+              {allCountries.map((c) => (
+                <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name}</option>
+              ))}
+            </select>
+          ) : (
+            <span className="text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2">
+              {countryScope} only
+            </span>
+          )}
           <button onClick={fetchSliders} className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <RefreshCw className="w-4 h-4 text-gray-500" />
           </button>
@@ -119,7 +143,7 @@ const SliderManagement = () => {
       {/* Sliders list */}
       {loading ? (
         <div className="flex justify-center py-12"><RefreshCw className="w-6 h-6 text-purple-500 animate-spin" /></div>
-      ) : sliders.length === 0 ? (
+      ) : sliders.filter((s) => countryFilter === 'ALL' || s.countryCode === countryFilter).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
           <Image className="w-14 h-14 mb-4 opacity-30" />
           <p>No sliders yet. Add one to get started.</p>
@@ -127,6 +151,7 @@ const SliderManagement = () => {
       ) : (
         <div className="grid gap-4">
           {sliders
+            .filter((s) => countryFilter === 'ALL' || s.countryCode === countryFilter)
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((s) => (
@@ -142,6 +167,9 @@ const SliderManagement = () => {
                   )}
                   <div className="absolute top-2 left-2">
                     <span className="bg-black/60 text-white text-xs px-2 py-0.5 rounded font-mono">#{s.order ?? 0}</span>
+                  </div>
+                  <div className="absolute bottom-2 left-2">
+                    <span className="bg-white/90 text-gray-700 text-xs px-2 py-0.5 rounded font-semibold">{s.countryCode || 'NG'}</span>
                   </div>
                 </div>
                 {/* Content */}
@@ -231,6 +259,36 @@ const SliderManagement = () => {
                   placeholder="https://…  (where the slide links to)"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
               </div>
+
+              {/* Market — which domain this slide shows on. If a market
+                  never adds its own, HQ's (Nigeria's) slide is shown there instead. */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Market</label>
+                {isGlobalAdmin ? (
+                  <select value={form.countryCode} onChange={(e) => setForm((p) => ({ ...p, countryCode: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
+                    {allCountries.map((c) => (
+                      <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name} ({c.code})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                    {countryScope} (your assigned market)
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  Shown only on this market's domain. If left unset for a market, HQ's (Nigeria's) slide shows there instead.
+                </p>
+              </div>
+
+              {editing && (
+                <InlineTranslateFields
+                  entityType="slider"
+                  entity={editing}
+                  fields={["title", "description"]}
+                  fieldLabels={{ title: "Title", description: t("common.description") }}
+                />
+              )}
 
               <div className="flex gap-4">
                 <div className="flex-1">

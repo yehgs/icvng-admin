@@ -49,7 +49,7 @@ const it = {
     notifications: "Notifiche", supportTickets: "Ticket supporto",
     passwordVault: "Cassaforte password",
     contentManagement: "Gestione contenuti", sliderManagement: "Gestione slider",
-    bannerManagement: "Gestione banner", fomoWidget: "Widget FOMO",
+    bannerManagement: "Gestione banner", siteContent: "Contenuto del sito", fomoWidget: "Widget FOMO",
     procurement: "Approvvigionamento", suppliers: "Fornitori",
     purchaseOrders: "Ordini di acquisto", inventoryManagement: "Gestione inventario",
     stockManagement: "Gestione scorte", qualityManagement: "Controllo qualità",

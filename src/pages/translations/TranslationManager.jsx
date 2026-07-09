@@ -57,10 +57,6 @@ const ALL_ENTITY_TYPES = [
     method: "POST",
   },
   { key: "brand", label: "Brands", apiPath: "/brand/get" },
-  { key: "banner", label: "Banners", apiPath: "/banner/get" },
-  { key: "slider", label: "Sliders", apiPath: "/slider/all" },
-  { key: "fomo", label: "FOMO", apiPath: "/fomo/settings", singleEntity: true },
-  { key: "country", label: "Countries", apiPath: "/country/admin" },
 ];
 
 const EDITABLE_FIELDS = {
@@ -68,13 +64,6 @@ const EDITABLE_FIELDS = {
   category: ["name", "description"],
   subCategory: ["name"],
   brand: ["name", "description"],
-  banner: ["title", "subtitle", "linkText"],
-  slider: ["title", "description"],
-  fomo: ["notificationMessage"],
-  // Header preheader message + footer contact address — content-managed per
-  // country, translatable so e.g. Togo's promo banner and address read in
-  // French while the master (English) copy stays intact for HQ/Nigeria.
-  country: ["content.preheaderMessage", "contacts.address"],
 };
 
 // ── Status Badge ──────────────────────────────────────────────────────────────

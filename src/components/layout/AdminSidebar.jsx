@@ -58,6 +58,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
       items: [
         { title: t("nav.sliderManagement"), path: "/admin/sliders", icon: Image,  allowedSubRoles: ["IT","DIRECTOR","EDITOR","DESIGNER"] },
         { title: t("nav.bannerManagement"), path: "/admin/banners", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","EDITOR","DESIGNER"] },
+        { title: t("nav.siteContent"), path: "/admin/home-content", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","EDITOR","DESIGNER"] },
         { title: t("nav.fomoWidget"),       path: "/admin/fomo",    icon: Zap,    allowedSubRoles: ["IT","DIRECTOR","EDITOR"] },
       ],
     },

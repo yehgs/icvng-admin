@@ -4,6 +4,8 @@ import { Layout, Plus, Edit2, Trash2, RefreshCw, ExternalLink, Image } from 'luc
 import toast from 'react-hot-toast';
 import { apiCall, handleApiError, fileAPI } from "../../utils/api";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 const POSITIONS = [
   { value: 'homepage_side1', label: 'Homepage – Left Side Banner'  },
@@ -11,10 +13,11 @@ const POSITIONS = [
   { value: 'footer',         label: 'Footer Banner'                },
 ];
 
-const EMPTY_FORM = { title: '', subtitle: '', image: '', link: '', linkText: 'Shop Now', position: 'homepage_side1', isActive: true };
+const EMPTY_FORM = { title: '', subtitle: '', image: '', link: '', linkText: 'Shop Now', position: 'homepage_side1', isActive: true, countryCode: 'NG' };
 
 const BannerManagement = () => {
   const { t } = useAdminTranslation();
+  const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
   const [banners, setBanners]         = useState([]);
   const [loading, setLoading]         = useState(false);
   const [showForm, setShowForm]       = useState(false);
@@ -23,6 +26,9 @@ const BannerManagement = () => {
   const [submitting, setSubmitting]   = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // GLOBAL admins can filter the list by market; COUNTRY-scoped admins only
+  // ever see their own (the backend enforces this regardless).
+  const [countryFilter, setCountryFilter] = useState('ALL');
 
   useEffect(() => { fetchBanners(); }, []);
 
@@ -38,8 +44,12 @@ const BannerManagement = () => {
     }
   };
 
-  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setShowForm(true); };
-  const openEdit   = (b)  => { setEditing(b); setForm({ ...b }); setShowForm(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ ...EMPTY_FORM, countryCode: countryScope || (countryFilter !== 'ALL' ? countryFilter : 'NG') });
+    setShowForm(true);
+  };
+  const openEdit   = (b)  => { setEditing(b); setForm({ ...EMPTY_FORM, ...b }); setShowForm(true); };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -79,9 +89,11 @@ const BannerManagement = () => {
 
   const positionLabel = (pos) => POSITIONS.find((p) => p.value === pos)?.label || pos;
 
+  const visibleBanners = countryFilter === 'ALL' ? banners : banners.filter((b) => b.countryCode === countryFilter);
+
   const grouped = POSITIONS.map((pos) => ({
     ...pos,
-    items: banners.filter((b) => b.position === pos.value),
+    items: visibleBanners.filter((b) => b.position === pos.value),
   }));
 
   return (
@@ -95,7 +107,23 @@ const BannerManagement = () => {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage promotional banners shown on the website</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {isGlobalAdmin ? (
+            <select
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800"
+            >
+              <option value="ALL">All markets</option>
+              {allCountries.map((c) => (
+                <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name}</option>
+              ))}
+            </select>
+          ) : (
+            <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
+              {countryScope} only
+            </span>
+          )}
           <button onClick={fetchBanners} className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50">
             <RefreshCw className="w-4 h-4 text-gray-500" />
           </button>
@@ -134,6 +162,9 @@ const BannerManagement = () => {
                         )}
                         <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${b.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                           {b.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 text-gray-700">
+                          {b.countryCode || 'NG'}
                         </span>
                       </div>
                       <div className="p-4">
@@ -194,6 +225,27 @@ const BannerManagement = () => {
                 </select>
               </div>
 
+              {/* Market — which domain this banner shows on. If a market never
+                  adds its own, HQ's (Nigeria's) banner is shown there instead. */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Market</label>
+                {isGlobalAdmin ? (
+                  <select value={form.countryCode} onChange={(e) => setForm((p) => ({ ...p, countryCode: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
+                    {allCountries.map((c) => (
+                      <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name} ({c.code})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                    {countryScope} (your assigned market)
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  Shown only on this market's domain. If left unset for a market, HQ's (Nigeria's) banner shows there instead.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
@@ -220,6 +272,16 @@ const BannerManagement = () => {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                 </div>
               </div>
+
+              {editing && (
+                <InlineTranslateFields
+                  entityType="banner"
+                  entity={editing}
+                  fields={["title", "subtitle", "linkText"]}
+                  fieldLabels={{ title: "Title", subtitle: "Subtitle", linkText: "Button text" }}
+                />
+              )}
+
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <div onClick={() => setForm((p) => ({ ...p, isActive: !p.isActive }))}
                   className={`relative w-11 h-6 rounded-full transition-colors ${form.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
