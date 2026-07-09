@@ -61,7 +61,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     featured: false,
     limitedEdition: {
       isLimitedEdition: false,
-      bannerText: "Limited Edition",
+      // Left blank on purpose: an empty bannerText means the storefront
+      // shows the auto-translated "Limited Edition" label in the visitor's
+      // language. Only set this if you want the SAME custom text on every
+      // market regardless of language.
+      bannerText: "",
       bannerColor: "#c8102e",
       totalUnits: 0,
       carouselOrder: 0,
@@ -329,7 +333,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       featured: productData.featured || false,
       limitedEdition: {
         isLimitedEdition: productData.limitedEdition?.isLimitedEdition || false,
-        bannerText: productData.limitedEdition?.bannerText || "Limited Edition",
+        bannerText: productData.limitedEdition?.bannerText || "",
         bannerColor: productData.limitedEdition?.bannerColor || "#c8102e",
         totalUnits: productData.limitedEdition?.totalUnits || 0,
         carouselOrder: productData.limitedEdition?.carouselOrder || 0,
@@ -395,7 +399,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       featured: false,
       limitedEdition: {
         isLimitedEdition: false,
-        bannerText: "Limited Edition",
+        bannerText: "",
         bannerColor: "#c8102e",
         totalUnits: 0,
         carouselOrder: 0,
