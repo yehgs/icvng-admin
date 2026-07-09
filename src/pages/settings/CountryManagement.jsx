@@ -21,6 +21,11 @@ const EMPTY = {
   flagEmoji: "",
   payments: { paystack: false, stripe: false },
   tax: { enabled: false, rate: 0, label: "VAT" },
+  // Content management (header preheader + footer contact details) — reflects
+  // on the storefront for this country's domain as soon as it's saved here.
+  contacts: { email: "", phone: "", whatsapp: "", address: "" },
+  content: { preheaderMessage: "" },
+  tawk: { propertyId: "", widgetId: "" },
 };
 
 const STATUS_COLORS = {
@@ -97,7 +102,13 @@ export default function CountryManagement() {
 
   function editCountry(c) {
     setEditingCode(c.code);
-    setForm({ ...EMPTY, ...c });
+    setForm({
+      ...EMPTY,
+      ...c,
+      contacts: { ...EMPTY.contacts, ...(c.contacts || {}) },
+      content: { ...EMPTY.content, ...(c.content || {}) },
+      tawk: { ...EMPTY.tawk, ...(c.tawk || {}) },
+    });
   }
 
   const set = (path, value) => {
@@ -263,6 +274,88 @@ export default function CountryManagement() {
               <input type="checkbox" checked={form.payments.stripe} onChange={(e) => set("payments.stripe", e.target.checked)} />
               Stripe
             </label>
+          </div>
+
+          {/* Content management — preheader promo + storefront contact details.
+              These replace the hardcoded Nigeria-only text in the header/footer
+              and reflect on this country's domain as soon as they're saved.
+              Non-English wording for these fields is edited in
+              Translations → Countries. */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Storefront content
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <Field label="Header preheader message (e.g. free-shipping banner)">
+                <input
+                  className="input"
+                  value={form.content.preheaderMessage}
+                  onChange={(e) => set("content.preheaderMessage", e.target.value)}
+                  placeholder="Free shipping on orders over ₦100,000 within Lagos!"
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <Field label="Contact address (footer)">
+                <input
+                  className="input"
+                  value={form.contacts.address}
+                  onChange={(e) => set("contacts.address", e.target.value)}
+                  placeholder="3 Kaffi Street, Alausa, Ikeja, Lagos, Nigeria"
+                />
+              </Field>
+              <Field label="Contact phone">
+                <input
+                  className="input"
+                  value={form.contacts.phone}
+                  onChange={(e) => set("contacts.phone", e.target.value)}
+                  placeholder="+234 805 242 3935"
+                />
+              </Field>
+              <Field label="Contact email">
+                <input
+                  className="input"
+                  value={form.contacts.email}
+                  onChange={(e) => set("contacts.email", e.target.value)}
+                  placeholder="customercare@i-coffee.ng"
+                />
+              </Field>
+              <Field label="WhatsApp number">
+                <input
+                  className="input"
+                  value={form.contacts.whatsapp}
+                  onChange={(e) => set("contacts.whatsapp", e.target.value)}
+                  placeholder="+234 805 242 3935"
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Tawk.to — each country can run its own agent queue instead of
+              sharing one hardcoded widget across every domain. Leave blank to
+              fall back to the default (Nigeria) widget. */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Tawk.to live chat
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Property ID">
+                <input
+                  className="input"
+                  value={form.tawk.propertyId}
+                  onChange={(e) => set("tawk.propertyId", e.target.value)}
+                  placeholder="69319adcb76a89198199fe66"
+                />
+              </Field>
+              <Field label="Widget ID">
+                <input
+                  className="input"
+                  value={form.tawk.widgetId}
+                  onChange={(e) => set("tawk.widgetId", e.target.value)}
+                  placeholder="1jbks9rel"
+                />
+              </Field>
+            </div>
           </div>
 
           <div className="flex gap-3 mt-6">
