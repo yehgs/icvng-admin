@@ -30,7 +30,11 @@ async function apiFetch(path) {
   }
 }
 
-const fmt = (n) => (n != null ? Number(n).toLocaleString() : "—");
+const fmt = (n) => {
+  if (n == null) return "—";
+  const num = Number(n);
+  return Number.isFinite(num) ? num.toLocaleString() : "—";
+};
 function ago(d) {
   if (!d) return "";
   const s = Math.floor((Date.now() - new Date(d)) / 1000);
@@ -96,7 +100,9 @@ const CountryBreakdown = ({ data, formatPrice }) => {
               <span className="text-lg">{row.flagEmoji || "🏳️"}</span>
               <div>
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{row.name || row._id}</p>
-                <p className="text-xs text-gray-400">{fmt(row.totalOrders)} orders</p>
+                <p className="text-xs text-gray-400">
+                  {fmt(row.totalOrders)} orders · {fmt(row.totalCustomers)} customers · {fmt(row.crmWon)} CRM won
+                </p>
               </div>
             </div>
             <div className="text-right">
@@ -140,7 +146,7 @@ export default function DashboardOverview() {
     // ── DIRECTOR ─────────────────────────────────────────────────────────────
     if (role === "DIRECTOR") {
       const [globalStats, orders, custs, crm, fin, prods, countryData] = await Promise.all([
-        apiFetch("/admin/dashboard/global-stats"),
+        apiFetch("/admin/dashboard/summary"),
         apiFetch("/admin/orders/list?page=1&limit=5"),
         apiFetch("/admin/customers/list?page=1&limit=1"),
         apiFetch("/admin/crm/stats"),
@@ -148,20 +154,20 @@ export default function DashboardOverview() {
         apiFetch("/product/get?page=1&limit=1"),
         apiFetch("/admin/dashboard/countries"),
       ]);
-      // Global totals
-      r.totalUsers = globalStats.data?.globalTotals?.totalAdmins ?? "—";
+      // /summary returns totals flat on `data` (no globalTotals wrapper)
+      r.totalUsers = custs.data?.totalAdmins ?? "—";
       r.totalOrders = orders.data?.totalDocs ?? "—";
-      r.recentOrders = orders.data?.docs ?? [];
-      r.totalCustomers = globalStats.data?.globalTotals?.totalCustomers ?? custs.data?.totalDocs ?? "—";
+      r.recentOrders = globalStats.data?.recentOrders ?? orders.data?.docs ?? [];
+      r.totalCustomers = globalStats.data?.totalCustomers ?? custs.data?.totalDocs ?? "—";
       r.wonLeads = crm.data?.wonLeads ?? "—";
       r.convRate = crm.data?.conversionRate ?? 0;
       r.income = fin.summary?.income?.totalNGN ?? 0;
       r.netNGN = fin.summary?.netNGN ?? 0;
       r.totalProducts = prods.totalNoPage ?? "—";
-      r.totalGlobalOrders = globalStats.data?.globalTotals?.totalOrders ?? "—";
-      r.totalGlobalRevenue = globalStats.data?.globalTotals?.totalRevenue ?? 0;
+      r.totalGlobalOrders = globalStats.data?.totalOrders ?? 0;
+      r.totalGlobalRevenue = globalStats.data?.totalRevenue ?? 0;
       // Per-country breakdown
-      r.countryBreakdown = countryData.data ?? globalStats.data?.perCountry ?? [];
+      r.countryBreakdown = countryData.data ?? globalStats.data?.countryBreakdown ?? [];
     }
 
     // ── IT ────────────────────────────────────────────────────────────────────
@@ -169,34 +175,43 @@ export default function DashboardOverview() {
       const [stats, prods, globalStats, countryData] = await Promise.all([
         apiFetch("/admin/auth/stats"),
         apiFetch("/product/get?page=1&limit=1"),
-        apiFetch("/admin/dashboard/global-stats"),
+        apiFetch("/admin/dashboard/summary"),
         apiFetch("/admin/dashboard/countries"),
       ]);
       r.totalUsers = stats.data?.overview?.totalUsers ?? "—";
       r.totalAdmins = stats.data?.overview?.totalAdmins ?? "—";
       r.activeUsers = stats.data?.overview?.activeUsers ?? "—";
       r.totalProducts = prods.totalNoPage ?? "—";
-      r.totalGlobalOrders = globalStats.data?.globalTotals?.totalOrders ?? "—";
-      r.totalGlobalRevenue = globalStats.data?.globalTotals?.totalRevenue ?? 0;
-      r.countryBreakdown = countryData.data ?? globalStats.data?.perCountry ?? [];
+      r.totalGlobalOrders = globalStats.data?.totalOrders ?? 0;
+      r.totalGlobalRevenue = globalStats.data?.totalRevenue ?? 0;
+      r.countryBreakdown = countryData.data ?? globalStats.data?.countryBreakdown ?? [];
     }
 
 
     // ── MANAGER ───────────────────────────────────────────────────────────────
     else if (role === "MANAGER") {
-      const [orders, custs, crm, wh] = await Promise.all([
+      // Stock/warehouse is a single NG physical facility — not relevant to a
+      // country-scoped (foreign) manager, so it's omitted entirely rather
+      // than shown as 0. Domestic NG managers (countryScope === null or "NG")
+      // still see it.
+      const isForeignCountryOffice = !!countryScope && countryScope !== "NG";
+
+      const fetches = [
         apiFetch("/admin/orders/list?page=1&limit=5"),
         apiFetch("/admin/customers/list?page=1&limit=1"),
         apiFetch("/admin/crm/stats"),
-        apiFetch("/warehouse/stock-summary"),
-      ]);
+      ];
+      if (!isForeignCountryOffice) fetches.push(apiFetch("/warehouse/stock-summary"));
+
+      const [orders, custs, crm, wh] = await Promise.all(fetches);
       r.totalOrders = orders.data?.totalDocs ?? "—";
       r.recentOrders = orders.data?.docs ?? [];
       r.totalCustomers = custs.data?.totalDocs ?? "—";
       r.totalLeads = crm.data?.totalLeads ?? "—";
       r.wonLeads = crm.data?.wonLeads ?? "—";
-      r.lowStock = wh.data?.lowStockItems ?? "—";
-      r.outOfStock = wh.data?.outOfStockItems ?? "—";
+      r.showStock = !isForeignCountryOffice;
+      r.lowStock = wh?.data?.lowStockItems ?? "—";
+      r.outOfStock = wh?.data?.outOfStockItems ?? "—";
     }
 
     // ── SALES_MANAGER ─────────────────────────────────────────────────────────
@@ -335,7 +350,10 @@ MANAGER: {
         { title: "Total Orders",    value: fmt(d.totalOrders),   icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: "All orders" },
         { title: "Customers",       value: fmt(d.totalCustomers), icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: "Registered" },
         { title: "CRM Won",         value: fmt(d.wonLeads),       icon: Award,        color: "text-green-600",  bg: "bg-green-50",  sub: `of ${d.totalLeads || 0} leads` },
-        { title: "Low Stock Items", value: fmt(d.lowStock),       icon: AlertCircle,  color: "text-orange-600", bg: "bg-orange-50", sub: `${d.outOfStock || 0} out of stock` },
+        // Stock is a single NG facility — omit entirely for foreign country offices
+        ...(d.showStock
+          ? [{ title: "Low Stock Items", value: fmt(d.lowStock), icon: AlertCircle, color: "text-orange-600", bg: "bg-orange-50", sub: `${d.outOfStock || 0} out of stock` }]
+          : []),
       ],
       actions: [
         { title: "Orders",            desc: "Website orders view",    icon: ShoppingCart, color: "bg-blue-600",   path: "/admin/website-orders" },
@@ -499,10 +517,6 @@ MANAGER: {
               {countryScope && (
                 <span className="text-xs bg-white/30 px-3 py-1 rounded-full font-medium flex items-center gap-1">
                   <MapPin className="h-3 w-3" /> {user.assignedCountry}
-                </span>
-              )}
-                <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-medium">
-                  +{""}
                 </span>
               )}
               {d.notif > 0 && (

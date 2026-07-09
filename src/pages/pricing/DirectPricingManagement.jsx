@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   DollarSign,
   Search,
@@ -17,8 +17,8 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+} from "lucide-react";
+import toast from "react-hot-toast";
 import {
   directPricingAPI,
   directPricingUtils,
@@ -26,10 +26,10 @@ import {
   brandAPI,
   getCurrentUser,
   handleApiError,
-} from '../../utils/api';
-import { getCategoryStructure } from '../../utils/categoryService';
-import AddProductDirectPricingModal from '../../components/pricing/AddProductDirectPricingModal';
-import RoleBasedButton from '../../components/layout/RoleBasedButton';
+} from "../../utils/api";
+import { getCategoryStructure } from "../../utils/categoryService";
+import AddProductDirectPricingModal from "../../components/pricing/AddProductDirectPricingModal";
+import RoleBasedButton from "../../components/layout/RoleBasedButton";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const DirectPricingManagement = () => {
@@ -38,11 +38,11 @@ const DirectPricingManagement = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    brand: '',
-    productType: '',
-    updatedBy: '',
+    search: "",
+    category: "",
+    brand: "",
+    productType: "",
+    updatedBy: "",
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -65,9 +65,9 @@ const DirectPricingManagement = () => {
 
   // Updated price types - removed salePrice and btbPrice
   const priceTypes = [
-    { key: 'btcPrice', label: 'BTC Price', color: 'purple' },
-    { key: 'price3weeksDelivery', label: '2 Weeks Delivery', color: 'orange' },
-    { key: 'price5weeksDelivery', label: '5 Weeks Delivery', color: 'red' },
+    { key: "btcPrice", label: "BTC Price", color: "purple" },
+    { key: "price3weeksDelivery", label: "2 Weeks Delivery", color: "orange" },
+    { key: "price5weeksDelivery", label: "5 Weeks Delivery", color: "red" },
   ];
 
   useEffect(() => {
@@ -99,11 +99,11 @@ const DirectPricingManagement = () => {
           totalCount: response.pagination.totalCount,
         }));
       } else {
-        toast.error(response.message || 'Failed to fetch direct pricing data');
+        toast.error(response.message || "Failed to fetch direct pricing data");
       }
     } catch (error) {
-      console.error('Error fetching direct pricing list:', error);
-      toast.error(handleApiError(error, 'Failed to fetch direct pricing data'));
+      console.error("Error fetching direct pricing list:", error);
+      toast.error(handleApiError(error, "Failed to fetch direct pricing data"));
       setDirectPricingList([]);
     } finally {
       setLoading(false);
@@ -117,8 +117,8 @@ const DirectPricingManagement = () => {
         setStats(response.data);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      toast.error('Failed to load statistics');
+      console.error("Error fetching stats:", error);
+      toast.error("Failed to load statistics");
     }
   };
 
@@ -127,7 +127,7 @@ const DirectPricingManagement = () => {
       const cats = await getCategoryStructure();
       setCategories(cats);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     }
   };
 
@@ -138,7 +138,7 @@ const DirectPricingManagement = () => {
         setBrands(response.data);
       }
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
     }
   };
 
@@ -160,7 +160,11 @@ const DirectPricingManagement = () => {
 
   const handleEditPricing = (product) => {
     setSelectedProduct(product);
-    setEditingPrices({ ...product.directPrices });
+    // Start from the effective (fallback-aware) prices, not the raw
+    // DirectPricing record — otherwise a field that was never set through
+    // this UI would show as 0 here even though the product has a real price,
+    // and saving would silently overwrite that real price with 0.
+    setEditingPrices({ ...product.directPrices, ...product.effectivePrices });
     setErrors({});
     setShowEditModal(true);
   };
@@ -172,7 +176,7 @@ const DirectPricingManagement = () => {
     }));
 
     if (errors[priceType]) {
-      setErrors((prev) => ({ ...prev, [priceType]: '' }));
+      setErrors((prev) => ({ ...prev, [priceType]: "" }));
     }
   };
 
@@ -190,21 +194,21 @@ const DirectPricingManagement = () => {
       const response = await directPricingAPI.createOrUpdateDirectPricing({
         productId: selectedProduct.productDetails._id,
         prices: editingPrices,
-        notes: `Direct pricing update by ${currentUser?.name || 'User'}`,
+        notes: `Direct pricing update by ${currentUser?.name || "User"}`,
       });
 
       if (response.success) {
-        toast.success('Pricing updated successfully');
+        toast.success("Pricing updated successfully");
         setShowEditModal(false);
         fetchDirectPricingList();
         fetchStats();
         resetForm();
       } else {
-        toast.error(response.message || 'Failed to update pricing');
+        toast.error(response.message || "Failed to update pricing");
       }
     } catch (error) {
-      console.error('Error updating pricing:', error);
-      toast.error(handleApiError(error, 'Failed to update pricing'));
+      console.error("Error updating pricing:", error);
+      toast.error(handleApiError(error, "Failed to update pricing"));
     } finally {
       setSubmitting(false);
     }
@@ -223,11 +227,11 @@ const DirectPricingManagement = () => {
 
   const clearFilters = () => {
     setFilters({
-      search: '',
-      category: '',
-      brand: '',
-      productType: '',
-      updatedBy: '',
+      search: "",
+      category: "",
+      brand: "",
+      productType: "",
+      updatedBy: "",
     });
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
@@ -238,22 +242,22 @@ const DirectPricingManagement = () => {
         directPricingUtils.exportDirectPricingToCSV(directPricingList);
       directPricingUtils.downloadCSV(
         csvContent,
-        `direct-pricing-${new Date().toISOString().split('T')[0]}.csv`
+        `direct-pricing-${new Date().toISOString().split("T")[0]}.csv`,
       );
-      toast.success('Data exported successfully');
+      toast.success("Data exported successfully");
     } catch (error) {
-      console.error('Error exporting data:', error);
-      toast.error('Failed to export data');
+      console.error("Error exporting data:", error);
+      toast.error("Failed to export data");
     }
   };
 
   const getPriceColorClass = (priceType) => {
-    return directPricingUtils.getPriceTypeColorClass(priceType).split(' ')[0];
+    return directPricingUtils.getPriceTypeColorClass(priceType).split(" ")[0];
   };
 
   const canEdit = directPricingUtils.canEditDirectPricing(
     currentUser?.role,
-    currentUser?.subRole
+    currentUser?.subRole,
   );
 
   return (
@@ -272,7 +276,7 @@ const DirectPricingManagement = () => {
 
         <div className="flex items-center gap-3">
           {canEdit && (
-            <RoleBasedButton disabledRoles={['MANAGER']}>
+            <RoleBasedButton disabledRoles={["MANAGER"]}>
               <button
                 onClick={() => setShowAddProductModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -388,14 +392,14 @@ const DirectPricingManagement = () => {
                 type="text"
                 placeholder={t("products.searchPlaceholder")}
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
 
             <select
               value={filters.category}
-              onChange={(e) => handleFilterChange('category', e.target.value)}
+              onChange={(e) => handleFilterChange("category", e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">{t("products.allCategories")}</option>
@@ -408,7 +412,7 @@ const DirectPricingManagement = () => {
 
             <select
               value={filters.brand}
-              onChange={(e) => handleFilterChange('brand', e.target.value)}
+              onChange={(e) => handleFilterChange("brand", e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">{t("products.allBrands")}</option>
@@ -422,15 +426,19 @@ const DirectPricingManagement = () => {
             <select
               value={filters.productType}
               onChange={(e) =>
-                handleFilterChange('productType', e.target.value)
+                handleFilterChange("productType", e.target.value)
               }
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">{t("productTypes.allProductTypes")}</option>
               <option value="COFFEE">{t("productTypes.coffee")}</option>
               <option value="MACHINE">{t("productTypes.machine")}</option>
-              <option value="ACCESSORIES">{t("productTypes.accessories")}</option>
-              <option value="COFFEE_BEANS">{t("productTypes.coffeeBeans")}</option>
+              <option value="ACCESSORIES">
+                {t("productTypes.accessories")}
+              </option>
+              <option value="COFFEE_BEANS">
+                {t("productTypes.coffeeBeans")}
+              </option>
               <option value="TEA">{t("productTypes.tea")}</option>
               <option value="DRINKS">{t("productTypes.drinks")}</option>
             </select>
@@ -464,7 +472,7 @@ const DirectPricingManagement = () => {
               No products have direct pricing set with the current filters
             </p>
             {canEdit && (
-              <RoleBasedButton disabledRoles={['MANAGER']}>
+              <RoleBasedButton disabledRoles={["MANAGER"]}>
                 <button
                   onClick={() => setShowAddProductModal(true)}
                   className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -509,51 +517,74 @@ const DirectPricingManagement = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {item.productDetails?.name || 'N/A'}
+                            {item.productDetails?.name || "N/A"}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {item.productDetails?.sku} •{' '}
+                            {item.productDetails?.sku} •{" "}
                             {item.productDetails?.productType}
                           </div>
                         </div>
                       </td>
-                      {priceTypes.map((priceType) => (
-                        <td
-                          key={priceType.key}
-                          className="px-6 py-4 whitespace-nowrap text-right"
-                        >
-                          <span
-                            className={`text-sm font-medium ${getPriceColorClass(
-                              priceType.key
-                            )}`}
+                      {priceTypes.map((priceType) => {
+                        // effectivePrices falls back to the product's own
+                        // price when this specific field was never set
+                        // through Direct Pricing (still 0/default here) —
+                        // without this, a real product price can show as 0.
+                        const rawValue = item.directPrices?.[priceType.key];
+                        const effectiveValue =
+                          item.effectivePrices?.[priceType.key];
+                        const isFallback =
+                          (!rawValue || rawValue <= 0) && effectiveValue > 0;
+                        return (
+                          <td
+                            key={priceType.key}
+                            className="px-6 py-4 whitespace-nowrap text-right"
                           >
-                            {formatCurrency(item.directPrices?.[priceType.key])}
-                          </span>
-                          {item.priceUpdatedBy?.[priceType.key]?.updatedBy && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              by{' '}
-                              {
-                                item.priceUpdatedBy[priceType.key].updatedBy
-                                  .name
+                            <span
+                              className={`text-sm font-medium ${getPriceColorClass(
+                                priceType.key,
+                              )}`}
+                              title={
+                                isFallback
+                                  ? "Not set in Direct Pricing — showing the price currently on the product record"
+                                  : undefined
                               }
-                            </div>
-                          )}
-                        </td>
-                      ))}
+                            >
+                              {formatCurrency(effectiveValue ?? rawValue)}
+                            </span>
+                            {isFallback && (
+                              <div className="text-xs text-gray-400 italic">
+                                from product
+                              </div>
+                            )}
+                            {!isFallback &&
+                              item.priceUpdatedBy?.[priceType.key]
+                                ?.updatedBy && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  by{" "}
+                                  {
+                                    item.priceUpdatedBy[priceType.key].updatedBy
+                                      .name
+                                  }
+                                </div>
+                              )}
+                          </td>
+                        );
+                      })}
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="text-sm text-gray-900 dark:text-white">
                           {directPricingUtils.formatDate(item.lastUpdatedAt)}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          by{' '}
+                          by{" "}
                           {item.lastUpdatedByDetails?.[0]?.name ||
                             item.lastUpdatedBy?.name ||
-                            'Unknown'}
+                            "Unknown"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <RoleBasedButton disabledRoles={['MANAGER']}>
+                          <RoleBasedButton disabledRoles={["MANAGER"]}>
                             <button
                               onClick={() => handleEditPricing(item)}
                               disabled={!canEdit}
@@ -565,7 +596,7 @@ const DirectPricingManagement = () => {
                           </RoleBasedButton>
                           <button
                             onClick={() => {
-                              toast.info('Price history feature coming soon');
+                              toast.info("Price history feature coming soon");
                             }}
                             className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
                             title="View History"
@@ -584,11 +615,11 @@ const DirectPricingManagement = () => {
             <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-600">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                  Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                   {Math.min(
                     pagination.page * pagination.limit,
-                    pagination.totalCount
-                  )}{' '}
+                    pagination.totalCount,
+                  )}{" "}
                   of {pagination.totalCount} results
                 </div>
                 <div className="flex items-center gap-2">
@@ -649,7 +680,7 @@ const DirectPricingManagement = () => {
                     Edit Direct Pricing: {selectedProduct.productDetails?.name}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    SKU: {selectedProduct.productDetails?.sku} • Type:{' '}
+                    SKU: {selectedProduct.productDetails?.sku} • Type:{" "}
                     {selectedProduct.productDetails?.productType}
                   </p>
                 </div>
@@ -667,13 +698,33 @@ const DirectPricingManagement = () => {
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">
-                  <p className="font-semibold mb-1">These prices update the product directly</p>
+                  <p className="font-semibold mb-1">
+                    These prices update the product directly
+                  </p>
                   <ul className="space-y-0.5 text-blue-700">
-                    <li>• <strong>BTC Price</strong> → <code className="bg-blue-100 px-1 rounded">product.btcPrice</code> (shown as the regular price on the website)</li>
-                    <li>• <strong>2 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price3weeksDelivery</code></li>
-                    <li>• <strong>5 Weeks Delivery</strong> → <code className="bg-blue-100 px-1 rounded">product.price5weeksDelivery</code></li>
+                    <li>
+                      • <strong>BTC Price</strong> →{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        product.btcPrice
+                      </code>{" "}
+                      (shown as the regular price on the website)
+                    </li>
+                    <li>
+                      • <strong>2 Weeks Delivery</strong> →{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        product.price3weeksDelivery
+                      </code>
+                    </li>
+                    <li>
+                      • <strong>5 Weeks Delivery</strong> →{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        product.price5weeksDelivery
+                      </code>
+                    </li>
                   </ul>
-                  <p className="mt-1 text-blue-600">Changes take effect immediately on the website.</p>
+                  <p className="mt-1 text-blue-600">
+                    Changes take effect immediately on the website.
+                  </p>
                 </div>
               </div>
 
@@ -705,14 +756,14 @@ const DirectPricingManagement = () => {
                         type="number"
                         min="0"
                         step="0.01"
-                        value={editingPrices[priceType.key] || ''}
+                        value={editingPrices[priceType.key] || ""}
                         onChange={(e) =>
                           handlePriceChange(priceType.key, e.target.value)
                         }
                         className={`w-full pl-8 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                           errors[priceType.key]
-                            ? 'border-red-300 dark:border-red-600'
-                            : 'border-gray-300 dark:border-gray-600'
+                            ? "border-red-300 dark:border-red-600"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         placeholder="0.00"
                       />
@@ -727,7 +778,7 @@ const DirectPricingManagement = () => {
                       ?.updatedBy && (
                       <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        Last updated by{' '}
+                        Last updated by{" "}
                         {
                           selectedProduct.priceUpdatedBy[priceType.key]
                             .updatedBy.name
@@ -735,7 +786,7 @@ const DirectPricingManagement = () => {
                         <Calendar className="h-3 w-3 ml-2" />
                         {directPricingUtils.formatDate(
                           selectedProduct.priceUpdatedBy[priceType.key]
-                            .updatedAt
+                            .updatedAt,
                         )}
                       </div>
                     )}
@@ -751,22 +802,30 @@ const DirectPricingManagement = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-600">
-                        <th className="text-left py-2">{t("pricingExt.priceType")}</th>
-                        <th className="text-right py-2">{t("pricingExt.current")}</th>
+                        <th className="text-left py-2">
+                          {t("pricingExt.priceType")}
+                        </th>
+                        <th className="text-right py-2">
+                          {t("pricingExt.current")}
+                        </th>
                         <th className="text-right py-2">New</th>
-                        <th className="text-right py-2">{t("pricingExt.change")}</th>
+                        <th className="text-right py-2">
+                          {t("pricingExt.change")}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {priceTypes.map((priceType) => {
                         const currentPrice =
-                          selectedProduct.directPrices?.[priceType.key] || 0;
+                          selectedProduct.effectivePrices?.[priceType.key] ||
+                          selectedProduct.directPrices?.[priceType.key] ||
+                          0;
                         const newPrice =
                           parseFloat(editingPrices[priceType.key]) || 0;
                         const difference =
                           directPricingUtils.calculatePriceDifference(
                             currentPrice,
-                            newPrice
+                            newPrice,
                           );
 
                         return (
@@ -787,12 +846,12 @@ const DirectPricingManagement = () => {
                               {difference.absolute !== 0 && (
                                 <span
                                   className={`${
-                                    difference.trend === 'increase'
-                                      ? 'text-red-600'
-                                      : 'text-green-600'
+                                    difference.trend === "increase"
+                                      ? "text-red-600"
+                                      : "text-green-600"
                                   } text-xs`}
                                 >
-                                  {difference.absolute > 0 ? '+' : ''}
+                                  {difference.absolute > 0 ? "+" : ""}
                                   {formatCurrency(difference.absolute)}
                                   {difference.percentage !== 0 &&
                                     ` (${difference.percentage.toFixed(1)}%)`}

@@ -1207,6 +1207,22 @@ export const fileAPI = {
 };
 
 // Brand API calls
+// PHASE 6: country management — onboard a market through the UI, no deploy.
+export const countryAPI = {
+  list: async () => apiCall("/country/admin"),
+  get: async (code) => apiCall(`/country/admin/${code}`),
+  create: async (data) =>
+    apiCall("/country/admin", { method: "POST", body: data }),
+  update: async (code, data) =>
+    apiCall(`/country/admin/${code}`, { method: "PUT", body: data }),
+  setStatus: async (code, status) =>
+    apiCall(`/country/admin/${code}/status`, {
+      method: "PATCH",
+      body: { status },
+    }),
+  languages: async () => apiCall("/country/admin/meta/languages"),
+};
+
 export const brandAPI = {
   getBrands: async () => {
     return apiCall("/brand/get");
@@ -4129,6 +4145,7 @@ export default {
   attributeAPI,
   customerAPI,
   adminOrderAPI,
+  countryAPI,
   getCurrentUser,
   handleApiError,
   isTokenValid,

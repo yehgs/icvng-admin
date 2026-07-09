@@ -22,9 +22,11 @@ import ProductForm from "../../components/product/ProductForm";
 import RoleBasedButton from "../../components/layout/RoleBasedButton";
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 
 const ProductManagement = () => {
   const { t } = useAdminTranslation();
+  const { isGlobalAdmin } = useAdminCountry();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -214,6 +216,7 @@ const ProductManagement = () => {
       btcPrice: p.btcPrice > 0 ? p.btcPrice : "",
       price3weeks: p.price3weeksDelivery > 0 ? p.price3weeksDelivery : "",
       price5weeks: p.price5weeksDelivery > 0 ? p.price5weeksDelivery : "",
+      discount: p.discount > 0 ? p.discount : "",
       onlineStock,
       offlineStock,
       partnerEnabled: isPartner ? "Yes" : "No",
@@ -253,6 +256,7 @@ const ProductManagement = () => {
     btcPrice: "BTC Price (₦)",
     price3weeks: "3-Week Price (₦)",
     price5weeks: "5-Week Price (₦)",
+    discount: "Discount (%)",
     onlineStock: t("products.onlineStock"),
     offlineStock: t("products.offlineStock"),
     partnerEnabled: t("products.partnerEnabled"),
@@ -606,7 +610,9 @@ const ProductManagement = () => {
             <option value="hasbtc">{t("products.hasBtcPrice")}</option>
             <option value="has3week">Has 3-Week Price</option>
             <option value="has5week">Has 5-Week Price</option>
-            <option value="noPrice">{t("productExport.missingAllPrices")}</option>
+            <option value="noPrice">
+              {t("productExport.missingAllPrices")}
+            </option>
           </select>
 
           {/* Clear Filters */}
@@ -662,9 +668,11 @@ const ProductManagement = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    BTB
-                  </th>
+                  {isGlobalAdmin && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      BTB
+                    </th>
+                  )}
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     BTC
                   </th>
@@ -675,11 +683,16 @@ const ProductManagement = () => {
                     5-Wk
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Online
+                    Discount
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Offline
+                    Online
                   </th>
+                  {isGlobalAdmin && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Offline
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
@@ -765,14 +778,16 @@ const ProductManagement = () => {
                         {product.productType}
                       </span>
                     </td>
-                    {/* BTB Price */}
-                    <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
-                      {product.btbPrice && product.btbPrice > 0 ? (
-                        `₦${Number(product.btbPrice).toLocaleString()}`
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </td>
+                    {/* BTB Price — HQ-only, hidden from country-scoped/foreign admins */}
+                    {isGlobalAdmin && (
+                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                        {product.btbPrice && product.btbPrice > 0 ? (
+                          `₦${Number(product.btbPrice).toLocaleString()}`
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                    )}
                     {/* BTC Price */}
                     <td className="px-4 py-4 whitespace-nowrap text-xs font-medium text-green-700 dark:text-green-400">
                       {product.btcPrice && product.btcPrice > 0 ? (
@@ -795,6 +810,16 @@ const ProductManagement = () => {
                       {product.price5weeksDelivery &&
                       product.price5weeksDelivery > 0 ? (
                         `₦${Number(product.price5weeksDelivery).toLocaleString()}`
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    {/* Discount */}
+                    <td className="px-4 py-4 whitespace-nowrap text-xs">
+                      {product.discount && product.discount > 0 ? (
+                        <span className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 rounded-full font-medium">
+                          {product.discount}%
+                        </span>
                       ) : (
                         <span className="text-gray-300">—</span>
                       )}
@@ -828,24 +853,26 @@ const ProductManagement = () => {
                         );
                       })()}
                     </td>
-                    {/* Offline Stock */}
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      {product.partnerStock?.enabled ? (
-                        <span className="text-xs text-gray-400 italic">
-                          N/A
-                        </span>
-                      ) : (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            (product.warehouseStock?.offlineStock || 0) === 0
-                              ? "bg-gray-100 text-gray-500"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {product.warehouseStock?.offlineStock || 0}
-                        </span>
-                      )}
-                    </td>
+                    {/* Offline Stock — HQ-only, hidden from country-scoped/foreign admins */}
+                    {isGlobalAdmin && (
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {product.partnerStock?.enabled ? (
+                          <span className="text-xs text-gray-400 italic">
+                            N/A
+                          </span>
+                        ) : (
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              (product.warehouseStock?.offlineStock || 0) === 0
+                                ? "bg-gray-100 text-gray-500"
+                                : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {product.warehouseStock?.offlineStock || 0}
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(product.publish)}
                     </td>

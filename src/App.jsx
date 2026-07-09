@@ -69,6 +69,7 @@ import TrackingManagement from "./pages/logistics/TrackingManagement";
 
 // Settings & Other
 import Settings from "./pages/settings/Settings";
+import CountryManagement from "./pages/settings/CountryManagement";
 import NotFound from "./pages/NotFound";
 
 // Order Management
@@ -90,6 +91,7 @@ import CrmManagement from "./pages/crm/CrmManagement";
 import ProfilePage from "./pages/profile/ProfilePage";
 import ScraperTool from "./pages/scraper/ScraperTool";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { CapabilitiesProvider } from "./contexts/CapabilitiesContext";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import SupportTicketManagement from "./pages/support/SupportTicketManagement";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
@@ -97,7 +99,7 @@ import FinanceManagement from "./pages/finance/FinanceManagement.jsx";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
 // Phase 3: multi-country
 import TranslationManager from "./pages/translations/TranslationManager.jsx";
-import { useAdminTranslation } from "@/hooks/useAdminTranslation.js";
+import { useAdminTranslation } from "./hooks/useAdminTranslation.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -153,6 +155,7 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
   return (
     <NotificationProvider>
+      <CapabilitiesProvider>
       <div>
         <Router>
           <div className="">
@@ -704,6 +707,16 @@ const App = () => {
                   }
                 />
 
+                {/* PHASE 6: Country management — HQ IT/Director (countries.manage) */}
+                <Route
+                  path="countries"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                      <CountryManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
                 {/* Content */}
                 <Route
                   path="sliders"
@@ -806,6 +819,7 @@ const App = () => {
           </div>
         </Router>
       </div>
+      </CapabilitiesProvider>
     </NotificationProvider>
   );
 };

@@ -103,13 +103,19 @@ export function AdminCountryProvider({ children }) {
   }, [countryScope]);
 
   // ── Language ──────────────────────────────────────────────────────────────
+  // Priority: explicit user.preferredLanguage > country's default language
+  // (once loaded) > previously saved choice > browser language.
+  // Previously this ran detectLanguage() with no argument, which never
+  // considered the admin's assigned country at all — a Togo manager would
+  // always land on English instead of French.
   useEffect(() => {
+    if (loading) return; // wait for activeCountry to resolve from /country/all
     const lang = user?.preferredLanguage
       ? user.preferredLanguage
-      : detectLanguage();
+      : detectLanguage(activeCountry?.language?.default || "en");
     setLanguageState(lang);
     document.documentElement.lang = lang;
-  }, [user?.preferredLanguage]);
+  }, [user?.preferredLanguage, activeCountry, loading]);
 
   const setLanguage = useCallback((lang) => {
     if (!SUPPORTED_LANGUAGES.includes(lang)) return;
