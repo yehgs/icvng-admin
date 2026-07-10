@@ -21,6 +21,7 @@ import { blogAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
 import ImageUploader from '../../components/common/ImageUploader';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 const BlogCategories = () => {
   const { t } = useAdminTranslation();
@@ -841,6 +842,14 @@ const BlogCategories = () => {
                   <div className="text-xs text-gray-500 mt-1">
                     {formData.description.length}/500 characters
                   </div>
+                  {editingCategory && (
+                    <InlineTranslateFields
+                      entityType="blogCategory"
+                      entity={editingCategory}
+                      fields={["name", "description"]}
+                      fieldLabels={{ name: "Category Name", description: "Description" }}
+                    />
+                  )}
                 </div>
 
                 <div className="mt-4">

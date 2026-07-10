@@ -416,12 +416,31 @@ const emptyForm = {
   socialDescription: "",
   socialImage: "",
   relatedProducts: [],
+  countryCode: "NG",
 };
+
+const ALL_NON_EN_LANGUAGES = [
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "it", label: "Italiano", flag: "🇮🇹" },
+];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 const BlogPosts = () => {
   const { t } = useAdminTranslation();
-  const { manageableLanguages } = useAdminCountry();
+  // NOTE: useAdminCountry() does NOT expose manageableLanguages directly —
+  // it's derived the same way Translation Manager derives it: all non-EN
+  // languages for a GLOBAL admin, or only the languages this market
+  // actually supports for a COUNTRY-scoped admin. (An earlier version of
+  // this file destructured a manageableLanguages field that doesn't exist,
+  // which silently made every `manageableLanguages?.length` check false —
+  // so the whole translation tab/buttons below never rendered.)
+  const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
+  const manageableLanguages = React.useMemo(() => {
+    if (isGlobalAdmin || !countryScope) return ALL_NON_EN_LANGUAGES;
+    const countryConf = allCountries.find((c) => c.code === countryScope);
+    const supported = countryConf?.language?.supported || [];
+    return ALL_NON_EN_LANGUAGES.filter((l) => supported.includes(l.code));
+  }, [isGlobalAdmin, countryScope, allCountries]);
 
   // Inline translation state (for the editor's Translations tab)
   const [blogTranslations, setBlogTranslations] = useState({}); // langCode → {title, excerpt, seo.title, seo.description}
@@ -500,7 +519,7 @@ const BlogPosts = () => {
 
   // ── Editor actions ────────────────────────────────────────────────────────
   const openCreate = () => {
-    setFormData(emptyForm);
+    setFormData({ ...emptyForm, countryCode: countryScope || "NG" });
     setEditingPost(null);
     setActiveTab("content");
     setView("editor");
@@ -525,6 +544,7 @@ const BlogPosts = () => {
       socialDescription: post.socialDescription || "",
       socialImage: post.socialImage || "",
       relatedProducts: post.relatedProducts?.map((p) => p._id) || [],
+      countryCode: post.countryCode || "NG",
     });
     setEditingPost(post);
     setActiveTab("content");
@@ -1369,6 +1389,32 @@ const BlogPosts = () => {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Market — which domain this post is published on. Falls back
+              to HQ's (Nigeria's) posts on a market's /blogs page until it
+              has published its own. */}
+          <div className="card p-5">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <Globe className="w-4 h-4 text-blue-600" /> Market
+            </h3>
+            {isGlobalAdmin ? (
+              <select
+                className="form-select"
+                value={formData.countryCode}
+                onChange={(e) => field("countryCode", e.target.value)}
+              >
+                {allCountries.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                {countryScope} (your assigned market)
+              </div>
+            )}
           </div>
 
           {/* Featured image */}

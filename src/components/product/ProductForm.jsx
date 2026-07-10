@@ -16,6 +16,7 @@ import { productAPI, brandAPI, colorAPI } from "../../utils/manageApi";
 import { supplierAPI, directPricingAPI } from "../../utils/api";
 import { getCategories, getSubCategories } from "../../utils/categoryService";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import InlineTranslateFields from "../translations/InlineTranslateFields";
 import toast from "react-hot-toast";
 
 const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
@@ -1080,6 +1081,23 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     placeholder="Additional product information, care instructions, etc."
                   />
                 </div>
+
+                {product && (
+                  <InlineTranslateFields
+                    entityType="product"
+                    entity={product}
+                    fields={["name", "shortDescription", "description", "additionalInfo", "roastOrigin", "coffeeOrigin", "blend"]}
+                    fieldLabels={{
+                      name: "Product Name",
+                      shortDescription: "Short Description",
+                      description: "Full Description",
+                      additionalInfo: "Additional Information",
+                      roastOrigin: "Roast Origin",
+                      coffeeOrigin: "Coffee Origin",
+                      blend: "Blend",
+                    }}
+                  />
+                )}
               </div>
             </div>
 

@@ -57,13 +57,19 @@ const ALL_ENTITY_TYPES = [
     method: "POST",
   },
   { key: "brand", label: "Brands", apiPath: "/brand/get" },
+  { key: "tag", label: "Tags", apiPath: "/tag/get" },
+  { key: "attribute", label: "Attributes", apiPath: "/attribute/get" },
+  { key: "color", label: "Colors", apiPath: "/colors/get" },
 ];
 
 const EDITABLE_FIELDS = {
-  product: ["name", "description", "unit", "seo.title", "seo.description"],
+  product: ["name", "description", "unit", "seo.title", "seo.description", "roastOrigin", "coffeeOrigin", "blend", "shortDescription", "additionalInfo"],
   category: ["name", "description"],
   subCategory: ["name"],
   brand: ["name", "description"],
+  tag: ["name"],
+  attribute: ["name"],
+  color: ["name"],
 };
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
