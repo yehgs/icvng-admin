@@ -83,6 +83,7 @@ import CustomerManagement from "./pages/customer/CustomerManagement.jsx";
 import SliderManagement from "./pages/content/SliderManagement.jsx";
 import BannerManagement from "./pages/content/BannerManagement.jsx";
 import HomeContentManagement from "./pages/content/HomeContentManagement.jsx";
+import SitePagesManagement from "./pages/content/SitePagesManagement.jsx";
 import FomoManagement from "./pages/content/FomoManagement.jsx";
 
 // Product Requests
@@ -746,6 +747,16 @@ const App = () => {
                       allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
                     >
                       <HomeContentManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="site-pages"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                    >
+                      <SitePagesManagement />
                     </RoleProtectedRoute>
                   }
                 />

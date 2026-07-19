@@ -130,6 +130,7 @@ const en = {
     sliderManagement: "Slider Management",
     bannerManagement: "Banner Management",
     siteContent: "Site Content",
+    sitePages: "Site Pages",
     fomoWidget: "FOMO Widget",
     procurement: "Procurement",
     suppliers: "Suppliers",
