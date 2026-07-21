@@ -16,11 +16,17 @@ import { productAPI, brandAPI, colorAPI } from "../../utils/manageApi";
 import { supplierAPI, directPricingAPI } from "../../utils/api";
 import { getCategories, getSubCategories } from "../../utils/categoryService";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import InlineTranslateFields from "../translations/InlineTranslateFields";
 import toast from "react-hot-toast";
 
 const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const { t } = useAdminTranslation();
+  const { isGlobalAdmin, countryScope } = useAdminCountry();
+  // Partner stock ("online BTC-type stock expected from our partners") is a
+  // Nigeria-specific arrangement — only Nigeria-scoped or global/HQ admins
+  // can see or manage it. A foreign-country admin has no such partners.
+  const canSeePartnerStock = isGlobalAdmin || countryScope === "NG";
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -137,6 +143,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     "Arabica/Robusta Blend (80/20)",
     "Arabica/Robusta Blend (40/60)",
     "Arabica/Robusta Blend (60/40)",
+    "Arabica/Robusta Blend (50/50)",
     "Single Origin Arabica",
     "Estate Blend",
     "House Blend",
@@ -1155,13 +1162,18 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         ⚠️ This product will be hidden from the shop
                       </p>
                       <p className="text-xs mt-1 text-amber-700">
-                        It has a BTC price but no online stock, no partner
-                        stock, and no 3-week or 5-week delivery price. Customers
-                        would see "Pricing Unavailable". To make it visible,
-                        either:
-                        <strong> add a 3-week or 5-week delivery price</strong>,
-                        or
-                        <strong> enable partner stock</strong>.
+                        It has a BTC price but no online stock
+                        {canSeePartnerStock ? ", no partner stock," : ""} and no
+                        3-week or 5-week delivery price. Customers would see
+                        "Pricing Unavailable". To make it visible,
+                        {canSeePartnerStock ? (
+                          <>
+                            {" "}either <strong> add a 3-week or 5-week delivery price</strong>,
+                            or <strong> enable partner stock</strong>.
+                          </>
+                        ) : (
+                          <strong> add a 3-week or 5-week delivery price</strong>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1321,7 +1333,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
               </div>
             </div>
 
-            {/* ── Partner Stock (Editor-managed online stock) ── */}
+            {/* ── Partner Stock (Editor-managed online stock) ──
+                Nigeria-scoped/global admins only — see canSeePartnerStock above. */}
+            {canSeePartnerStock && (
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -1498,6 +1512,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 </div>
               )}
             </div>
+            )}
 
             {/* SEO & Publishing */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">

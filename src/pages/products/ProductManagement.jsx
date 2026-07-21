@@ -882,7 +882,6 @@ const ProductManagement = () => {
                           disabledRoles={[
                             "SALES",
                             "HR",
-                            "MANAGER",
                             "SALES-MANAGER",
                             "ACCOUNTANT",
                             "GRAPHICS",
