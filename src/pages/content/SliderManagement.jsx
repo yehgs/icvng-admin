@@ -182,15 +182,15 @@ const SliderManagement = () => {
                         : <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">{t("common.inactive")}</span>}
                     </div>
                     {s.description && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{s.description}</p>}
-                    {s.url && (
-                      <a href={s.url} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1">
-                        <ExternalLink className="w-3 h-3" />
-                        {s.url}
-                      </a>
-                    )}
                   </div>
                   {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {s.url && (
+                      <a href={s.url} target="_blank" rel="noreferrer" title={s.url}
+                        className="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
                     <button onClick={() => toggleActive(s)} title={s.isActive ? 'Deactivate' : 'Activate'}
                       className={`p-2 rounded-lg transition ${s.isActive ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                       {s.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}

@@ -99,8 +99,6 @@ import SupportTicketManagement from "./pages/support/SupportTicketManagement";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
 import FinanceManagement from "./pages/finance/FinanceManagement.jsx";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
-// Phase 3: multi-country
-import TranslationManager from "./pages/translations/TranslationManager.jsx";
 import { useAdminTranslation } from "./hooks/useAdminTranslation.js";
 
 // Protected Route Component
@@ -225,7 +223,7 @@ const App = () => {
                   path="categories"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <CategoryManagement />
                     </RoleProtectedRoute>
@@ -235,7 +233,7 @@ const App = () => {
                   path="brands"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <BrandManagement />
                     </RoleProtectedRoute>
@@ -245,7 +243,7 @@ const App = () => {
                   path="colors"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <ColorManagement />
                     </RoleProtectedRoute>
@@ -289,7 +287,7 @@ const App = () => {
                   path="sub-categories"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <SubCategoryManagement />
                     </RoleProtectedRoute>
@@ -299,7 +297,7 @@ const App = () => {
                   path="tags"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <TagManagement />
                     </RoleProtectedRoute>
@@ -309,7 +307,7 @@ const App = () => {
                   path="attributes"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <AttributeManagement />
                     </RoleProtectedRoute>
@@ -319,7 +317,7 @@ const App = () => {
                   path="coffee-roasted-areas"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <CoffeeRoastAreaManagement />
                     </RoleProtectedRoute>
@@ -347,18 +345,6 @@ const App = () => {
                       ]}
                     >
                       <PurchaseOrderManagement />
-                    </RoleProtectedRoute>
-                  }
-                />
-
-                {/* translation */}
-                <Route
-                  path="translations"
-                  element={
-                    <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "MANAGER"]}
-                    >
-                      <TranslationManager />
                     </RoleProtectedRoute>
                   }
                 />
@@ -724,7 +710,7 @@ const App = () => {
                   path="sliders"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
                     >
                       <SliderManagement />
                     </RoleProtectedRoute>
@@ -734,7 +720,7 @@ const App = () => {
                   path="banners"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
                     >
                       <BannerManagement />
                     </RoleProtectedRoute>
@@ -744,7 +730,7 @@ const App = () => {
                   path="home-content"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
                     >
                       <HomeContentManagement />
                     </RoleProtectedRoute>
@@ -754,7 +740,7 @@ const App = () => {
                   path="site-pages"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
                     >
                       <SitePagesManagement />
                     </RoleProtectedRoute>
@@ -764,7 +750,7 @@ const App = () => {
                   path="fomo"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
                     >
                       <FomoManagement />
                     </RoleProtectedRoute>

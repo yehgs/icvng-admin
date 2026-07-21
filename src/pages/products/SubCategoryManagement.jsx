@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit, Trash2, X, Save, FolderOpen, Loader2,
-  LayoutGrid, List, ChevronUp, ChevronDown,
+  LayoutGrid, List, ChevronUp, ChevronDown, Languages, ChevronRight,
 } from 'lucide-react';
 import ImageUploader from '../../components/common/ImageUploader.jsx';
 import { subCategoryAPI } from '../../utils/manageApi.js';
 import { getCategories } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 const EmptyState = ({ message, sub }) => (
   <div className="text-center py-16">
@@ -32,10 +33,18 @@ const SortTh = ({ label, field, sort, onSort }) => (
   </th>
 );
 
-const TableRow = ({ sub, onEdit, onDelete }) => (
+const SUBCATEGORY_TRANSLATE_FIELDS = ["name"];
+const SUBCATEGORY_TRANSLATE_LABELS = { name: "Name" };
+
+const TableRow = ({ sub, onEdit, onDelete, isExpanded, onToggleExpand }) => (
+  <>
   <tr className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
     <td className="px-4 py-3">
       <div className="flex items-center gap-3">
+        <button onClick={() => onToggleExpand(sub._id)} title="Translations"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </button>
         {sub.image ? (
           <img src={sub.image} alt={sub.name}
             className="w-9 h-9 rounded-md object-cover bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600" />
@@ -66,12 +75,30 @@ const TableRow = ({ sub, onEdit, onDelete }) => (
           className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title="Delete">
           <Trash2 className="w-4 h-4" />
         </button>
+        <button onClick={() => onToggleExpand(sub._id)}
+          className={`p-1.5 rounded transition-colors ${isExpanded ? 'text-amber-700 bg-amber-50 dark:bg-amber-900/30' : 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'}`}
+          title="Translate">
+          <Languages className="w-4 h-4" />
+        </button>
       </div>
     </td>
   </tr>
+  {isExpanded && (
+    <tr className="border-t-0 bg-gray-50/60 dark:bg-gray-900/30">
+      <td colSpan={5} className="px-4 pb-4 pt-0">
+        <InlineTranslateFields
+          entityType="subCategory"
+          entity={sub}
+          fields={SUBCATEGORY_TRANSLATE_FIELDS}
+          fieldLabels={SUBCATEGORY_TRANSLATE_LABELS}
+        />
+      </td>
+    </tr>
+  )}
+  </>
 );
 
-const GridCard = ({ sub, onEdit, onDelete }) => (
+const GridCard = ({ sub, onEdit, onDelete, isExpanded, onToggleExpand }) => (
   <div className="border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-xl p-4 hover:shadow-md transition-all">
     <div className="aspect-square mb-3 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
       {sub.image ? (
@@ -97,7 +124,20 @@ const GridCard = ({ sub, onEdit, onDelete }) => (
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
         <Trash2 className="w-3 h-3" /> Delete
       </button>
+      <button onClick={() => onToggleExpand(sub._id)}
+        className={`flex items-center justify-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${isExpanded ? 'bg-amber-100 text-amber-800' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
+        title="Translate">
+        <Languages className="w-3 h-3" />
+      </button>
     </div>
+    {isExpanded && (
+      <InlineTranslateFields
+        entityType="subCategory"
+        entity={sub}
+        fields={SUBCATEGORY_TRANSLATE_FIELDS}
+        fieldLabels={SUBCATEGORY_TRANSLATE_LABELS}
+      />
+    )}
   </div>
 );
 
@@ -115,6 +155,8 @@ const SubCategoryManagement = () => {
   const [sort, setSort] = useState({ field: 'name', dir: 'asc' });
   const [formData, setFormData] = useState({ name: '', image: '', category: '' });
   const [errors, setErrors] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
+  const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id));
 
   useEffect(() => { fetchSubCategories(); fetchCategories(); }, []);
 
@@ -284,7 +326,8 @@ const SubCategoryManagement = () => {
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 p-5">
             {sorted.map((sub) => (
-              <GridCard key={sub._id} sub={sub} onEdit={handleEdit} onDelete={handleDelete} />
+              <GridCard key={sub._id} sub={sub} onEdit={handleEdit} onDelete={handleDelete}
+                isExpanded={expandedId === sub._id} onToggleExpand={toggleExpand} />
             ))}
           </div>
         ) : (
@@ -301,7 +344,8 @@ const SubCategoryManagement = () => {
               </thead>
               <tbody>
                 {sorted.map((sub) => (
-                  <TableRow key={sub._id} sub={sub} onEdit={handleEdit} onDelete={handleDelete} />
+                  <TableRow key={sub._id} sub={sub} onEdit={handleEdit} onDelete={handleDelete}
+                    isExpanded={expandedId === sub._id} onToggleExpand={toggleExpand} />
                 ))}
               </tbody>
             </table>

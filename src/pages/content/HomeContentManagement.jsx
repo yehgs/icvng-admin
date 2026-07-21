@@ -24,6 +24,7 @@ const EMPTY_TESTIMONIAL = {
 const EMPTY_HEADER = { type: "header", message: "", isActive: true, countryCode: "NG" };
 const EMPTY_FOOTER = {
   type: "footer", contactAddress: "", contactPhone: "", contactEmail: "", contactWhatsapp: "",
+  socialFacebook: "", socialTwitter: "", socialInstagram: "",
   isActive: true, countryCode: "NG",
 };
 
@@ -271,6 +272,32 @@ const HomeContentManagement = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp</label>
                     <input type="text" value={singletonForm.contactWhatsapp}
                       onChange={(e) => setSingletonForm((p) => ({ ...p, contactWhatsapp: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
+                  </div>
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <span className="text-xs text-gray-400">
+                      Social links — leave blank to keep using HQ's (Nigeria's) Facebook/Twitter/Instagram until this market has its own accounts.
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Facebook URL</label>
+                    <input type="text" value={singletonForm.socialFacebook}
+                      onChange={(e) => setSingletonForm((p) => ({ ...p, socialFacebook: e.target.value }))}
+                      placeholder="https://www.facebook.com/..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Twitter / X URL</label>
+                    <input type="text" value={singletonForm.socialTwitter}
+                      onChange={(e) => setSingletonForm((p) => ({ ...p, socialTwitter: e.target.value }))}
+                      placeholder="https://twitter.com/..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instagram URL</label>
+                    <input type="text" value={singletonForm.socialInstagram}
+                      onChange={(e) => setSingletonForm((p) => ({ ...p, socialInstagram: e.target.value }))}
+                      placeholder="https://www.instagram.com/..."
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                   </div>
                 </>
