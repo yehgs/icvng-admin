@@ -45,7 +45,7 @@ const CoffeeRoastAreaManagement = () => {
       setRoastAreas(response.data || []);
     } catch (error) {
       console.error('Error fetching roast areas:', error);
-      toast.error('Failed to fetch roast areas');
+      toast.error(t("roastAreas.fetchFailed"));
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ const CoffeeRoastAreaManagement = () => {
     const newErrors = {};
 
     if (!formData.country.trim()) {
-      newErrors.country = 'Country is required';
+      newErrors.country = t("roastAreas.countryRequired");
     }
 
     if (
@@ -64,7 +64,7 @@ const CoffeeRoastAreaManagement = () => {
         formData.latitude < -90 ||
         formData.latitude > 90)
     ) {
-      newErrors.latitude = 'Latitude must be a number between -90 and 90';
+      newErrors.latitude = t("roastAreas.latitudeInvalid");
     }
 
     if (
@@ -73,7 +73,7 @@ const CoffeeRoastAreaManagement = () => {
         formData.longitude < -180 ||
         formData.longitude > 180)
     ) {
-      newErrors.longitude = 'Longitude must be a number between -180 and 180';
+      newErrors.longitude = t("roastAreas.longitudeInvalid");
     }
 
     setErrors(newErrors);
@@ -123,7 +123,7 @@ const CoffeeRoastAreaManagement = () => {
             area._id === editingArea._id ? { ...area, ...submitData } : area
           )
         );
-        toast.success('Roast area updated successfully!');
+        toast.success(t("roastAreas.roastAreaUpdated"));
       } else {
         const response = await coffeeRoastAreaAPI.createCoffeeRoastArea(
           submitData
@@ -131,14 +131,14 @@ const CoffeeRoastAreaManagement = () => {
 
         // Add new area to local state
         setRoastAreas((prev) => [...prev, response.data]);
-        toast.success('Roast area created successfully!');
+        toast.success(t("roastAreas.roastAreaCreated"));
       }
 
       setShowModal(false);
       resetForm();
     } catch (error) {
       console.error('Error saving roast area:', error);
-      toast.error('Failed to save roast area. Please try again.');
+      toast.error(t("roastAreas.saveFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -158,7 +158,7 @@ const CoffeeRoastAreaManagement = () => {
   };
 
   const handleDelete = async (areaId, areaName) => {
-    if (!window.confirm(`Are you sure you want to delete "${areaName}"?`)) {
+    if (!window.confirm(t("roastAreas.confirmDelete", { name: areaName }))) {
       return;
     }
 
@@ -166,10 +166,10 @@ const CoffeeRoastAreaManagement = () => {
       setLoading(true);
       await coffeeRoastAreaAPI.deleteCoffeeRoastArea(areaId);
       setRoastAreas((prev) => prev.filter((area) => area._id !== areaId));
-      toast.success('Roast area deleted successfully!');
+      toast.success(t("roastAreas.roastAreaDeleted"));
     } catch (error) {
       console.error('Error deleting roast area:', error);
-      toast.error('Failed to delete roast area. Please try again.');
+      toast.error(t("roastAreas.deleteFailed"));
     } finally {
       setLoading(false);
     }
@@ -252,11 +252,10 @@ const CoffeeRoastAreaManagement = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Coffee Roast Area Management
+            {t("roastAreas.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage coffee roasting locations and origins ({roastAreas.length}{' '}
-            areas, {areasWithCoordinates.length} with coordinates)
+            {t("roastAreas.subtitle", { count: roastAreas.length, withCoords: areasWithCoordinates.length })}
           </p>
         </div>
         <div className="flex gap-3">
@@ -266,7 +265,7 @@ const CoffeeRoastAreaManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            Export
+            {t("common.export")}
           </button>
           <button
             onClick={() => {
@@ -276,7 +275,7 @@ const CoffeeRoastAreaManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Add Roast Area
+            {t("roastAreas.addRoastArea")}
           </button>
         </div>
       </div>
@@ -287,7 +286,7 @@ const CoffeeRoastAreaManagement = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder={t("attributes.searchPlaceholder")}
+            placeholder={t("roastAreas.searchPlaceholder")}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -302,7 +301,7 @@ const CoffeeRoastAreaManagement = () => {
             <MapPin className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Areas
+                {t("roastAreas.totalAreas")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {roastAreas.length}
@@ -316,7 +315,7 @@ const CoffeeRoastAreaManagement = () => {
             <Globe className="w-8 h-8 text-green-600 dark:text-green-400" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                With Coordinates
+                {t("roastAreas.withCoordinates")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {areasWithCoordinates.length}
@@ -330,7 +329,7 @@ const CoffeeRoastAreaManagement = () => {
             <Search className="w-8 h-8 text-purple-600 dark:text-purple-400" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Search Results
+                {t("roastAreas.searchResults")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {filteredAreas.length}
@@ -346,19 +345,19 @@ const CoffeeRoastAreaManagement = () => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             <span className="ml-2 text-gray-600 dark:text-gray-400">
-              Loading roast areas...
+              {t("roastAreas.loadingRoastAreas")}
             </span>
           </div>
         ) : filteredAreas.length === 0 ? (
           <div className="text-center py-12">
             <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {searchTerm ? 'No roast areas found' : 'No roast areas yet'}
+              {searchTerm ? t("roastAreas.noRoastAreasFound") : t("roastAreas.noRoastAreasYet")}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {searchTerm
-                ? 'Try adjusting your search terms'
-                : 'Get started by creating your first roast area'}
+                ? t("roastAreas.tryAdjustingSearch")
+                : t("roastAreas.getStarted")}
             </p>
           </div>
         ) : (
@@ -367,22 +366,22 @@ const CoffeeRoastAreaManagement = () => {
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Location
+                    {t("roastAreas.location")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Country
+                    {t("roastAreas.country")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Coordinates
+                    {t("roastAreas.coordinates")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Slug
+                    {t("roastAreas.slug")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Created Date
+                    {t("roastAreas.created")}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Actions
+                    {t("common.actions")}
                   </th>
                 </tr>
               </thead>
@@ -426,7 +425,7 @@ const CoffeeRoastAreaManagement = () => {
                         </div>
                       ) : (
                         <span className="text-gray-400 dark:text-gray-500">
-                          No coordinates
+                          {t("roastAreas.noCoordinates")}
                         </span>
                       )}
                     </td>
@@ -443,7 +442,7 @@ const CoffeeRoastAreaManagement = () => {
                         <button
                           onClick={() => handleEdit(area)}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="Edit Roast Area"
+                          title={t("roastAreas.editRoastArea")}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
@@ -452,7 +451,7 @@ const CoffeeRoastAreaManagement = () => {
                             handleDelete(area._id, getAreaDisplayName(area))
                           }
                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                          title="Delete Roast Area"
+                          title={t("roastAreas.deleteRoastArea")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -478,12 +477,12 @@ const CoffeeRoastAreaManagement = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {editingArea ? 'Edit Roast Area' : 'Add New Roast Area'}
+                    {editingArea ? t("roastAreas.editRoastArea") : t("roastAreas.addNewRoastArea")}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {editingArea
-                      ? 'Update roast area information'
-                      : 'Add a new coffee roasting location'}
+                      ? t("roastAreas.updateRoastAreaInfo")
+                      : t("roastAreas.addNewLocation")}
                   </p>
                 </div>
               </div>
@@ -500,7 +499,7 @@ const CoffeeRoastAreaManagement = () => {
               {/* Country */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Country *
+                  {t("roastAreas.country")} *
                 </label>
                 <input
                   type="text"
@@ -511,7 +510,7 @@ const CoffeeRoastAreaManagement = () => {
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
                   }`}
-                  placeholder="Enter country name"
+                  placeholder={t("roastAreas.countryPlaceholder")}
                 />
                 {errors.country && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -523,28 +522,28 @@ const CoffeeRoastAreaManagement = () => {
               {/* Region */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Region/State
+                  {t("roastAreas.regionState")}
                 </label>
                 <input
                   type="text"
                   value={formData.region}
                   onChange={(e) => handleInputChange('region', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter region or state"
+                  placeholder={t("roastAreas.regionPlaceholder")}
                 />
               </div>
 
               {/* City */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  City
+                  {t("roastAreas.city")}
                 </label>
                 <input
                   type="text"
                   value={formData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter city name"
+                  placeholder={t("roastAreas.cityPlaceholder")}
                 />
               </div>
 
@@ -552,7 +551,7 @@ const CoffeeRoastAreaManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Latitude
+                    {t("roastAreas.latitude")}
                   </label>
                   <input
                     type="number"
@@ -578,7 +577,7 @@ const CoffeeRoastAreaManagement = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Longitude
+                    {t("roastAreas.longitude")}
                   </label>
                   <input
                     type="number"
@@ -605,8 +604,7 @@ const CoffeeRoastAreaManagement = () => {
               </div>
 
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Coordinates are optional but help with mapping and location
-                services
+                {t("roastAreas.coordinatesHelp")}
               </p>
 
               {/* Form Actions */}
@@ -617,7 +615,7 @@ const CoffeeRoastAreaManagement = () => {
                   disabled={submitting}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -628,12 +626,12 @@ const CoffeeRoastAreaManagement = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      {editingArea ? 'Updating...' : 'Creating...'}
+                      {editingArea ? t("common.update") + "…" : t("common.create") + "…"}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      {editingArea ? 'Update Area' : 'Create Area'}
+                      {editingArea ? t("roastAreas.updateArea") : t("roastAreas.createArea")}
                     </>
                   )}
                 </button>

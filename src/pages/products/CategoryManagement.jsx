@@ -33,15 +33,17 @@ const SortTh = ({ label, field, sort, onSort }) => (
   </th>
 );
 
-const CATEGORY_TRANSLATE_FIELDS = ["name", "description"];
-const CATEGORY_TRANSLATE_LABELS = { name: "Name", description: "Description" };
+const CATEGORY_TRANSLATE_FIELDS = ["name"];
+const CATEGORY_TRANSLATE_LABELS = { name: "Name" };
 
-const TableRow = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) => (
+const TableRow = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) => {
+  const { t } = useAdminTranslation();
+  return (
   <>
     <tr className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <button onClick={() => onToggleExpand(category._id)} title="Translations"
+          <button onClick={() => onToggleExpand(category._id)} title={t("categories.translations")}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
@@ -63,16 +65,16 @@ const TableRow = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) =>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <button onClick={() => onEdit(category)}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors" title="Edit">
+            className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors" title={t("common.edit")}>
             <Edit className="w-4 h-4" />
           </button>
           <button onClick={() => onDelete(category._id, category.name)}
-            className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title="Delete">
+            className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title={t("common.delete")}>
             <Trash2 className="w-4 h-4" />
           </button>
           <button onClick={() => onToggleExpand(category._id)}
             className={`p-1.5 rounded transition-colors ${isExpanded ? 'text-amber-700 bg-amber-50 dark:bg-amber-900/30' : 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'}`}
-            title="Translate">
+            title={t("categories.translate")}>
             <Languages className="w-4 h-4" />
           </button>
         </div>
@@ -91,9 +93,12 @@ const TableRow = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) =>
       </tr>
     )}
   </>
-);
+  );
+};
 
-const GridCard = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) => (
+const GridCard = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) => {
+  const { t } = useAdminTranslation();
+  return (
   <div className="border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-xl p-4 hover:shadow-md transition-all">
     <div className="aspect-square mb-3 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
       {category.image ? (
@@ -110,15 +115,15 @@ const GridCard = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) =>
     <div className="flex gap-2 mt-3">
       <button onClick={() => onEdit(category)}
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-        <Edit className="w-3 h-3" /> Edit
+        <Edit className="w-3 h-3" /> {t("common.edit")}
       </button>
       <button onClick={() => onDelete(category._id, category.name)}
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-        <Trash2 className="w-3 h-3" /> Delete
+        <Trash2 className="w-3 h-3" /> {t("common.delete")}
       </button>
       <button onClick={() => onToggleExpand(category._id)}
         className={`flex items-center justify-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${isExpanded ? 'bg-amber-100 text-amber-800' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
-        title="Translate">
+        title={t("categories.translate")}>
         <Languages className="w-3 h-3" />
       </button>
     </div>
@@ -131,7 +136,8 @@ const GridCard = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) =>
       />
     )}
   </div>
-);
+  );
+};
 
 const CategoryManagement = () => {
   const { t } = useAdminTranslation();
@@ -156,7 +162,7 @@ const CategoryManagement = () => {
       const cats = await getCategories();
       setCategories(cats);
     } catch {
-      toast.error('Failed to load categories');
+      toast.error(t("categories.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -167,8 +173,8 @@ const CategoryManagement = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Category name is required';
-    if (!formData.image) newErrors.image = 'Category image is required';
+    if (!formData.name.trim()) newErrors.name = t("categories.categoryNameRequired");
+    if (!formData.image) newErrors.image = t("categories.categoryImageRequired");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -188,12 +194,12 @@ const CategoryManagement = () => {
         resetForm();
         clearCategoryCache();
         fetchCategories();
-        toast.success(editingCategory ? 'Category updated successfully!' : 'Category created successfully!');
+        toast.success(editingCategory ? t("categories.categoryUpdated") : t("categories.categoryCreated"));
       } else {
-        toast.error(response.message || 'Failed to save category');
+        toast.error(response.message || t("categories.saveFailed"));
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to save category');
+      toast.error(error.message || t("categories.saveFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -207,19 +213,19 @@ const CategoryManagement = () => {
   };
 
   const handleDelete = async (categoryId, categoryName) => {
-    if (!window.confirm(`Are you sure you want to delete "${categoryName}"?`)) return;
+    if (!window.confirm(t("categories.confirmDelete", { name: categoryName }))) return;
     try {
       setLoading(true);
       const response = await categoryAPI.deleteCategory(categoryId);
       if (response.success) {
         clearCategoryCache();
         fetchCategories();
-        toast.success('Category deleted successfully!');
+        toast.success(t("categories.categoryDeleted"));
       } else {
-        toast.error(response.message || 'Failed to delete category');
+        toast.error(response.message || t("categories.deleteFailed"));
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to delete category');
+      toast.error(error.message || t("categories.deleteFailed"));
     } finally {
       setLoading(false);
     }
@@ -244,13 +250,13 @@ const CategoryManagement = () => {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("categories.title")}</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{categories.length} categories</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{t("categories.categoryCount", { count: categories.length })}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
-          <Plus className="w-4 h-4" /> Add Category
+          <Plus className="w-4 h-4" /> {t("categories.addCategory")}
         </button>
       </div>
 
@@ -267,11 +273,11 @@ const CategoryManagement = () => {
           />
         </div>
         <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
-          <button onClick={() => setViewMode('grid')} title="Grid view"
+          <button onClick={() => setViewMode('grid')} title={t("categories.gridView")}
             className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-gray-600 shadow text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
             <LayoutGrid className="w-4 h-4" />
           </button>
-          <button onClick={() => setViewMode('table')} title="Table view"
+          <button onClick={() => setViewMode('table')} title={t("categories.tableView")}
             className={`p-1.5 rounded-md transition-colors ${viewMode === 'table' ? 'bg-white dark:bg-gray-600 shadow text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
             <List className="w-4 h-4" />
           </button>
@@ -283,12 +289,12 @@ const CategoryManagement = () => {
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-7 h-7 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-500 dark:text-gray-400">Loading categories...</span>
+            <span className="ml-2 text-gray-500 dark:text-gray-400">{t("categories.loadingCategories")}</span>
           </div>
         ) : sorted.length === 0 ? (
           <EmptyState
-            message={searchTerm ? 'No categories found' : 'No categories yet'}
-            sub={searchTerm ? 'Try a different search term' : 'Click "Add Category" to get started'}
+            message={searchTerm ? t("categories.noCategoriesFound") : t("categories.noCategoriesYet")}
+            sub={searchTerm ? t("categories.tryDifferentSearch") : t("categories.clickAddCategory")}
           />
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 p-5">
@@ -302,8 +308,8 @@ const CategoryManagement = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  <SortTh label="Category" field="name" sort={sort} onSort={handleSort} />
-                  <SortTh label="Slug" field="slug" sort={sort} onSort={handleSort} />
+                  <SortTh label={t("categories.categoryColumn")} field="name" sort={sort} onSort={handleSort} />
+                  <SortTh label={t("categories.slugColumn")} field="slug" sort={sort} onSort={handleSort} />
                   <SortTh label={t("blogExt.created")} field="createdAt" sort={sort} onSort={handleSort} />
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t("common.actions")}</th>
                 </tr>
@@ -325,7 +331,7 @@ const CategoryManagement = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
+                {editingCategory ? t("categories.editCategory") : t("categories.addNewCategory")}
               </h3>
               <button onClick={() => { setShowModal(false); resetForm(); }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded">
@@ -334,18 +340,18 @@ const CategoryManagement = () => {
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category Name *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("categories.categoryName")} *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
-                  placeholder="Enter category name"
+                  placeholder={t("categories.categoryNamePlaceholder")}
                 />
                 {errors.name && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category Image *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("categories.categoryImage")} *</label>
                 <ImageUploader
                   images={formData.image ? [formData.image] : []}
                   onImagesChange={(imgs) => handleInputChange('image', imgs[0] || '')}
@@ -356,13 +362,13 @@ const CategoryManagement = () => {
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => { setShowModal(false); resetForm(); }} disabled={submitting}
                   className="flex-1 px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="button" onClick={handleSubmit} disabled={submitting}
                   className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {submitting
-                    ? <><Loader2 className="w-4 h-4 animate-spin" />{editingCategory ? 'Updating...' : 'Creating...'}</>
-                    : <><Save className="w-4 h-4" />{editingCategory ? 'Update Category' : 'Create Category'}</>}
+                    ? <><Loader2 className="w-4 h-4 animate-spin" />{editingCategory ? t("common.update") + "…" : t("common.create") + "…"}</>
+                    : <><Save className="w-4 h-4" />{editingCategory ? t("categories.updateCategory") : t("categories.createCategory")}</>}
                 </button>
               </div>
             </div>

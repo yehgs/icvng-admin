@@ -67,7 +67,7 @@ const BlogCategories = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error(handleApiError(error, 'Failed to fetch categories'));
+      toast.error(handleApiError(error, t("blogCategoriesMgt.fetchFailed")));
       // Fallback data for development
       setCategories([
         {
@@ -143,13 +143,13 @@ const BlogCategories = () => {
         fetchCategories();
         toast.success(
           editingCategory
-            ? 'Category updated successfully!'
-            : 'Category created successfully!'
+            ? t("blogCategoriesMgt.categoryUpdated")
+            : t("blogCategoriesMgt.categoryCreated")
         );
       }
     } catch (error) {
       console.error('Error saving category:', error);
-      toast.error(handleApiError(error, 'Failed to save category'));
+      toast.error(handleApiError(error, t("blogCategoriesMgt.saveFailed")));
     } finally {
       setLoading(false);
     }
@@ -157,9 +157,7 @@ const BlogCategories = () => {
 
   const handleDelete = async (categoryId) => {
     if (
-      !confirm(
-        'Are you sure you want to delete this category? This action cannot be undone.'
-      )
+      !confirm(t("blogCategoriesMgt.confirmDelete"))
     )
       return;
 
@@ -168,11 +166,11 @@ const BlogCategories = () => {
 
       if (response.success) {
         fetchCategories();
-        toast.success('Category deleted successfully!');
+        toast.success(t("blogCategoriesMgt.categoryDeleted"));
       }
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error(handleApiError(error, 'Failed to delete category'));
+      toast.error(handleApiError(error, t("blogCategoriesMgt.deleteFailed")));
     }
   };
 
@@ -271,11 +269,10 @@ const BlogCategories = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
             <Folder className="w-8 h-8 mr-3 text-amber-600" />
-            Blog Categories
+            {t("blogCategoriesMgt.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Organize your blog content with categories for better navigation and
-            SEO
+            {t("blogCategoriesMgt.subtitle")}
           </p>
         </div>
         <div className="flex gap-3">
@@ -285,7 +282,7 @@ const BlogCategories = () => {
             disabled={categories.length === 0}
           >
             <Download className="w-4 h-4" />
-            Export
+            {t("common.export")}
           </button>
           <button
             onClick={() => {
@@ -295,7 +292,7 @@ const BlogCategories = () => {
             className="btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Category
+            {t("blogCategoriesMgt.addCategory")}
           </button>
         </div>
       </div>
@@ -306,7 +303,7 @@ const BlogCategories = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Total Categories
+                {t("blogCategoriesMgt.totalCategories")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {categories.length}
@@ -320,7 +317,7 @@ const BlogCategories = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Active Categories
+                {t("blogCategoriesMgt.activeCategories")}
               </p>
               <p className="text-2xl font-bold text-green-600">
                 {categories.filter((cat) => cat.status === 'ACTIVE').length}
@@ -334,7 +331,7 @@ const BlogCategories = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Total Posts
+                {t("blogCategoriesMgt.totalPosts")}
               </p>
               <p className="text-2xl font-bold text-purple-600">
                 {categories.reduce((sum, cat) => sum + (cat.postCount || 0), 0)}
@@ -348,7 +345,7 @@ const BlogCategories = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Avg Posts/Category
+                {t("blogCategoriesMgt.avgPostsPerCategory")}
               </p>
               <p className="text-2xl font-bold text-orange-600">
                 {categories.length > 0
@@ -427,7 +424,7 @@ const BlogCategories = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Name
+                      {t("common.name")}
                     </label>
                     <p className="mt-1 text-gray-900 dark:text-white">
                       {viewingCategory.name}
@@ -436,7 +433,7 @@ const BlogCategories = () => {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Slug
+                      {t("categories.slugColumn")}
                     </label>
                     <p className="mt-1 text-gray-600 dark:text-gray-400 font-mono">
                       /{viewingCategory.slug}
@@ -445,7 +442,7 @@ const BlogCategories = () => {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Status
+                      {t("common.status")}
                     </label>
                     <div className="mt-1">
                       <span
@@ -453,14 +450,14 @@ const BlogCategories = () => {
                           viewingCategory.status
                         )}`}
                       >
-                        {viewingCategory.status}
+                        {viewingCategory.status === 'ACTIVE' ? t("common.active") : t("common.inactive")}
                       </span>
                     </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Post Count
+                      {t("blogCategoriesMgt.postCount")}
                     </label>
                     <p className="mt-1 text-2xl font-bold text-blue-600">
                       {viewingCategory.postCount || 0}
@@ -471,7 +468,7 @@ const BlogCategories = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Category Image
+                      {t("blogCategoriesMgt.categoryImage")}
                     </label>
                     {viewingCategory.image ? (
                       <div className="mt-2">
@@ -490,7 +487,7 @@ const BlogCategories = () => {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Created
+                      {t("blogExt.created")}
                     </label>
                     <p className="mt-1 text-gray-600 dark:text-gray-400 flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
@@ -500,7 +497,7 @@ const BlogCategories = () => {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Last Updated
+                      {t("blogCategoriesMgt.lastUpdated")}
                     </label>
                     <p className="mt-1 text-gray-600 dark:text-gray-400 flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
@@ -513,10 +510,10 @@ const BlogCategories = () => {
               {/* Description */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Description
+                  {t("common.description")}
                 </label>
                 <p className="mt-1 text-gray-900 dark:text-white">
-                  {viewingCategory.description || 'No description provided'}
+                  {viewingCategory.description || t("blogCategoriesMgt.noDescriptionProvided")}
                 </p>
               </div>
 
@@ -524,33 +521,33 @@ const BlogCategories = () => {
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                   <Globe className="w-5 h-5 mr-2" />
-                  SEO Information
+                  {t("blogCategoriesMgt.seoInformation")}
                 </h4>
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      SEO Title
+                      {t("products.seoTitle")}
                     </label>
                     <p className="mt-1 text-gray-900 dark:text-white">
-                      {viewingCategory.seoTitle || 'Not set'}
+                      {viewingCategory.seoTitle || t("blogCategoriesMgt.notSet")}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      SEO Description
+                      {t("products.seoDescription")}
                     </label>
                     <p className="mt-1 text-gray-900 dark:text-white">
-                      {viewingCategory.seoDescription || 'Not set'}
+                      {viewingCategory.seoDescription || t("blogCategoriesMgt.notSet")}
                     </p>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      SEO Keywords
+                      {t("blogCategoriesMgt.seoKeywords")}
                     </label>
                     <p className="mt-1 text-gray-900 dark:text-white">
-                      {viewingCategory.seoKeywords || 'Not set'}
+                      {viewingCategory.seoKeywords || t("blogCategoriesMgt.notSet")}
                     </p>
                   </div>
                 </div>
@@ -566,7 +563,7 @@ const BlogCategories = () => {
                   className="btn-primary flex items-center gap-2"
                 >
                   <Edit className="w-4 h-4" />
-                  Edit Category
+                  {t("blogCategoriesMgt.editCategory")}
                 </button>
               </div>
             </div>
@@ -600,12 +597,12 @@ const BlogCategories = () => {
                   <div className="flex flex-col items-center">
                     <Folder className="w-16 h-16 text-gray-400 mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      No categories found
+                      {t("blogCategoriesMgt.noCategoriesFound")}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-4">
                       {searchTerm || statusFilter
-                        ? 'Try adjusting your search criteria'
-                        : 'Create your first blog category to get started'}
+                        ? t("blogCategoriesMgt.tryAdjustingCriteria")
+                        : t("blogCategoriesMgt.createFirstCategoryHint")}
                     </p>
                     {!searchTerm && !statusFilter && (
                       <button
@@ -616,7 +613,7 @@ const BlogCategories = () => {
                         className="btn-primary flex items-center gap-2"
                       >
                         <Plus className="w-4 h-4" />
-                        Create First Category
+                        {t("blogCategoriesMgt.createFirstCategory")}
                       </button>
                     )}
                   </div>
@@ -653,7 +650,7 @@ const BlogCategories = () => {
                   <td className="table-cell">
                     <div className="max-w-xs">
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {category.description || 'No description'}
+                        {category.description || t("blogCategoriesMgt.noDescription")}
                       </p>
                     </div>
                   </td>
@@ -662,7 +659,7 @@ const BlogCategories = () => {
                       <span className="text-lg font-semibold text-blue-600 mr-2">
                         {category.postCount || 0}
                       </span>
-                      <span className="text-sm text-gray-500">posts</span>
+                      <span className="text-sm text-gray-500">{t("blogCategoriesMgt.postsLabel")}</span>
                     </div>
                   </td>
                   <td className="table-cell">
@@ -671,7 +668,7 @@ const BlogCategories = () => {
                         category.status
                       )}`}
                     >
-                      {category.status}
+                      {category.status === 'ACTIVE' ? t("common.active") : t("common.inactive")}
                     </span>
                   </td>
                   <td className="table-cell">
@@ -684,21 +681,21 @@ const BlogCategories = () => {
                       <button
                         onClick={() => handleView(category)}
                         className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                        title="View Details"
+                        title={t("blogCategoriesMgt.viewDetails")}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleEdit(category)}
                         className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
-                        title="Edit"
+                        title={t("common.edit")}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(category._id)}
                         className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        title="Delete"
+                        title={t("common.delete")}
                         disabled={category.postCount > 0}
                       >
                         {category.postCount > 0 ? (
@@ -725,7 +722,7 @@ const BlogCategories = () => {
               disabled={currentPage === 1}
               className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             >
-              Previous
+              {t("pagination.previous")}
             </button>
 
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -752,7 +749,7 @@ const BlogCategories = () => {
               disabled={currentPage === totalPages}
               className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             >
-              Next
+              {t("pagination.next")}
             </button>
           </div>
         </div>
@@ -764,7 +761,7 @@ const BlogCategories = () => {
           <div className="modal-container max-w-4xl max-h-[95vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
+                {editingCategory ? t("blogCategoriesMgt.editCategory") : t("blogCategoriesMgt.addNewCategory")}
               </h3>
               <button
                 onClick={() => {
@@ -781,12 +778,12 @@ const BlogCategories = () => {
               {/* Basic Information */}
               <div>
                 <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">
-                  Basic Information
+                  {t("blogCategoriesMgt.basicInfo")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Category Name *
+                      {t("blogCategoriesMgt.categoryName")} *
                     </label>
                     <input
                       type="text"
@@ -799,12 +796,12 @@ const BlogCategories = () => {
                           name: e.target.value,
                         }))
                       }
-                      placeholder="e.g., Coffee Origins, Brewing Tips..."
+                      placeholder={t("blogCategoriesMgt.categoryNamePlaceholder")}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Status
+                      {t("common.status")}
                     </label>
                     <select
                       className="form-select"
@@ -824,7 +821,7 @@ const BlogCategories = () => {
 
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description
+                    {t("common.description")}
                   </label>
                   <textarea
                     rows="3"
@@ -836,25 +833,30 @@ const BlogCategories = () => {
                         description: e.target.value,
                       }))
                     }
-                    placeholder="Brief description of this category..."
+                    placeholder={t("blogCategoriesMgt.descriptionPlaceholder")}
                     maxLength="500"
                   />
                   <div className="text-xs text-gray-500 mt-1">
-                    {formData.description.length}/500 characters
+                    {t("blogCategoriesMgt.charactersCount", { count: formData.description.length, max: 500 })}
                   </div>
                   {editingCategory && (
                     <InlineTranslateFields
                       entityType="blogCategory"
                       entity={editingCategory}
-                      fields={["name", "description"]}
-                      fieldLabels={{ name: "Category Name", description: "Description" }}
+                      fields={["name", "description", "seoTitle", "seoDescription"]}
+                      fieldLabels={{
+                        name: "Category Name",
+                        description: "Description",
+                        seoTitle: "SEO Title",
+                        seoDescription: "SEO Description",
+                      }}
                     />
                   )}
                 </div>
 
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Category Image
+                    {t("blogCategoriesMgt.categoryImage")}
                   </label>
                   <ImageUploader
                     images={formData.image ? [formData.image] : []}
@@ -869,14 +871,14 @@ const BlogCategories = () => {
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                   <Globe className="w-5 h-5 mr-2" />
-                  SEO Settings
+                  {t("blogCategoriesMgt.seoSettings")}
                 </h4>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      SEO Title
+                      {t("products.seoTitle")}
                       <span className="text-xs text-gray-500 ml-1">
-                        (60 chars max)
+                        {t("blogCategoriesMgt.charsMax", { max: 60 })}
                       </span>
                     </label>
                     <input
@@ -889,12 +891,12 @@ const BlogCategories = () => {
                           seoTitle: e.target.value,
                         }))
                       }
-                      placeholder="SEO optimized title for search engines"
+                      placeholder={t("blogCategoriesMgt.seoTitlePlaceholder")}
                       maxLength="60"
                     />
                     <div className="flex justify-between text-xs mt-1">
                       <span className="text-gray-500">
-                        {formData.seoTitle.length}/60 characters
+                        {t("blogCategoriesMgt.charactersCount", { count: formData.seoTitle.length, max: 60 })}
                       </span>
                       <span
                         className={`${
@@ -904,17 +906,17 @@ const BlogCategories = () => {
                         }`}
                       >
                         {formData.seoTitle.length > 50
-                          ? 'Getting long'
-                          : 'Good length'}
+                          ? t("blogCategoriesMgt.gettingLong")
+                          : t("blogCategoriesMgt.goodLength")}
                       </span>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      SEO Description
+                      {t("products.seoDescription")}
                       <span className="text-xs text-gray-500 ml-1">
-                        (160 chars max)
+                        {t("blogCategoriesMgt.charsMax", { max: 160 })}
                       </span>
                     </label>
                     <textarea
@@ -927,12 +929,12 @@ const BlogCategories = () => {
                           seoDescription: e.target.value,
                         }))
                       }
-                      placeholder="Meta description that appears in search results"
+                      placeholder={t("blogCategoriesMgt.seoDescPlaceholder")}
                       maxLength="160"
                     />
                     <div className="flex justify-between text-xs mt-1">
                       <span className="text-gray-500">
-                        {formData.seoDescription.length}/160 characters
+                        {t("blogCategoriesMgt.charactersCount", { count: formData.seoDescription.length, max: 160 })}
                       </span>
                       <span
                         className={`${
@@ -944,17 +946,17 @@ const BlogCategories = () => {
                         }`}
                       >
                         {formData.seoDescription.length > 140
-                          ? 'Getting long'
+                          ? t("blogCategoriesMgt.gettingLong")
                           : formData.seoDescription.length > 120
-                          ? 'Good length'
-                          : 'Could be longer'}
+                          ? t("blogCategoriesMgt.goodLength")
+                          : t("blogCategoriesMgt.couldBeLonger")}
                       </span>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      SEO Keywords
+                      {t("blogCategoriesMgt.seoKeywords")}
                     </label>
                     <input
                       type="text"
@@ -966,11 +968,10 @@ const BlogCategories = () => {
                           seoKeywords: e.target.value,
                         }))
                       }
-                      placeholder="coffee, origins, arabica, brewing (separate with commas)"
+                      placeholder={t("blogCategoriesMgt.seoKeywordsPlaceholder")}
                     />
                     <div className="text-xs text-gray-500 mt-1">
-                      Separate keywords with commas. Focus on 3-5 relevant
-                      keywords.
+                      {t("blogCategoriesMgt.seoKeywordsHelp")}
                     </div>
                   </div>
                 </div>
@@ -979,21 +980,21 @@ const BlogCategories = () => {
               {/* Preview Section */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">
-                  Search Engine Preview
+                  {t("blogCategoriesMgt.searchEnginePreview")}
                 </h4>
                 <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
                   <div className="text-blue-600 text-lg hover:underline cursor-pointer">
-                    {formData.seoTitle || formData.name || 'Category Title'}
+                    {formData.seoTitle || formData.name || t("blogCategoriesMgt.categoryTitleFallback")}
                   </div>
                   <div className="text-green-700 text-sm">
                     https://i-coffee.ng/blog/category/
                     {formData.name.toLowerCase().replace(/\s+/g, '-') ||
-                      'category-slug'}
+                      t("blogCategoriesMgt.categorySlugFallback")}
                   </div>
                   <div className="text-gray-600 text-sm mt-1">
                     {formData.seoDescription ||
                       formData.description ||
-                      'Category description will appear here in search results.'}
+                      t("blogCategoriesMgt.categoryDescFallback")}
                   </div>
                 </div>
               </div>
@@ -1009,7 +1010,7 @@ const BlogCategories = () => {
                   className="btn-outline"
                   disabled={loading}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -1021,7 +1022,7 @@ const BlogCategories = () => {
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  {editingCategory ? 'Update Category' : 'Create Category'}
+                  {editingCategory ? t("blogCategoriesMgt.updateCategory") : t("blogCategoriesMgt.createCategory")}
                 </button>
               </div>
             </form>

@@ -14,6 +14,7 @@ import {
 import { attributeAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 const AttributeManagement = () => {
   const { t } = useAdminTranslation();
@@ -42,7 +43,7 @@ const AttributeManagement = () => {
       setAttributes(response.data || []);
     } catch (error) {
       console.error('Error fetching attributes:', error);
-      toast.error('Failed to fetch attributes');
+      toast.error(t("attributes.fetchFailed"));
     } finally {
       setLoading(false);
     }
@@ -52,12 +53,12 @@ const AttributeManagement = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Attribute name is required';
+      newErrors.name = t("attributes.attributeNameRequired");
     }
 
     const validValues = formData.values.filter((value) => value.trim() !== '');
     if (validValues.length === 0) {
-      newErrors.values = 'At least one attribute value is required';
+      newErrors.values = t("attributes.atLeastOneValueRequired");
     }
 
     setErrors(newErrors);
@@ -97,20 +98,20 @@ const AttributeManagement = () => {
               : attr
           )
         );
-        toast.success('Attribute updated successfully!');
+        toast.success(t("attributes.attributeUpdated"));
       } else {
         const response = await attributeAPI.createAttribute(submitData);
 
         // Add new attribute to local state
         setAttributes((prev) => [...prev, response.data]);
-        toast.success('Attribute created successfully!');
+        toast.success(t("attributes.attributeCreated"));
       }
 
       setShowModal(false);
       resetForm();
     } catch (error) {
       console.error('Error saving attribute:', error);
-      toast.error('Failed to save attribute. Please try again.');
+      toast.error(t("attributes.saveFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +128,7 @@ const AttributeManagement = () => {
 
   const handleDelete = async (attributeId, attributeName) => {
     if (
-      !window.confirm(`Are you sure you want to delete "${attributeName}"?`)
+      !window.confirm(t("attributes.confirmDelete", { name: attributeName }))
     ) {
       return;
     }
@@ -136,10 +137,10 @@ const AttributeManagement = () => {
       setLoading(true);
       await attributeAPI.deleteAttribute(attributeId);
       setAttributes((prev) => prev.filter((attr) => attr._id !== attributeId));
-      toast.success('Attribute deleted successfully!');
+      toast.success(t("attributes.attributeDeleted"));
     } catch (error) {
       console.error('Error deleting attribute:', error);
-      toast.error('Failed to delete attribute. Please try again.');
+      toast.error(t("attributes.deleteFailed"));
     } finally {
       setLoading(false);
     }
@@ -226,11 +227,10 @@ const AttributeManagement = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Attribute Management
+            {t("attributes.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage product attributes and their values ({attributes.length}{' '}
-            attributes, {totalValues} total values)
+            {t("attributes.subtitle", { attrCount: attributes.length, valueCount: totalValues })}
           </p>
         </div>
         <div className="flex gap-3">
@@ -240,7 +240,7 @@ const AttributeManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            Export
+            {t("common.export")}
           </button>
           <button
             onClick={() => {
@@ -250,7 +250,7 @@ const AttributeManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Add Attribute
+            {t("attributes.addAttribute")}
           </button>
         </div>
       </div>
@@ -276,7 +276,7 @@ const AttributeManagement = () => {
             <Settings className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Attributes
+                {t("attributes.totalAttributes")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {attributes.length}
@@ -290,7 +290,7 @@ const AttributeManagement = () => {
             <Tag className="w-8 h-8 text-green-600 dark:text-green-400" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Values
+                {t("attributes.totalValues")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {totalValues}
@@ -304,7 +304,7 @@ const AttributeManagement = () => {
             <Search className="w-8 h-8 text-purple-600 dark:text-purple-400" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Search Results
+                {t("attributes.searchResults")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {filteredAttributes.length}
@@ -320,19 +320,19 @@ const AttributeManagement = () => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             <span className="ml-2 text-gray-600 dark:text-gray-400">
-              Loading attributes...
+              {t("attributes.loadingAttributes")}
             </span>
           </div>
         ) : filteredAttributes.length === 0 ? (
           <div className="text-center py-12">
             <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {searchTerm ? 'No attributes found' : 'No attributes yet'}
+              {searchTerm ? t("attributes.noAttributesFound") : t("attributes.noAttributesYet")}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {searchTerm
-                ? 'Try adjusting your search terms'
-                : 'Get started by creating your first attribute'}
+                ? t("attributes.tryAdjustingSearch")
+                : t("attributes.getStarted")}
             </p>
           </div>
         ) : (
@@ -350,7 +350,7 @@ const AttributeManagement = () => {
                         {attribute.name}
                       </h3>
                       <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 text-xs rounded-full">
-                        {attribute.values.length} values
+                        {t("attributes.valuesCount", { count: attribute.values.length })}
                       </span>
                     </div>
 
@@ -366,7 +366,7 @@ const AttributeManagement = () => {
                     </div>
 
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Created:{' '}
+                      {t("attributes.created")}:{' '}
                       {new Date(attribute.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -375,7 +375,7 @@ const AttributeManagement = () => {
                     <button
                       onClick={() => handleEdit(attribute)}
                       className="p-2 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                      title="Edit Attribute"
+                      title={t("attributes.editAttribute")}
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -384,7 +384,7 @@ const AttributeManagement = () => {
                         handleDelete(attribute._id, attribute.name)
                       }
                       className="p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                      title="Delete Attribute"
+                      title={t("attributes.deleteAttribute")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -408,12 +408,12 @@ const AttributeManagement = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {editingAttribute ? 'Edit Attribute' : 'Add New Attribute'}
+                    {editingAttribute ? t("attributes.editAttribute") : t("attributes.addNewAttribute")}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {editingAttribute
-                      ? 'Update attribute information'
-                      : 'Create a new product attribute'}
+                      ? t("attributes.updateAttributeInfo")
+                      : t("attributes.createNewAttribute")}
                   </p>
                 </div>
               </div>
@@ -430,7 +430,7 @@ const AttributeManagement = () => {
               {/* Attribute Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Attribute Name *
+                  {t("attributes.attributeName")} *
                 </label>
                 <input
                   type="text"
@@ -441,7 +441,7 @@ const AttributeManagement = () => {
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
                   }`}
-                  placeholder="Enter attribute name (e.g., Size, Color)"
+                  placeholder={t("attributes.namePlaceholder")}
                 />
                 {errors.name && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -450,10 +450,19 @@ const AttributeManagement = () => {
                 )}
               </div>
 
+              {editingAttribute && (
+                <InlineTranslateFields
+                  entityType="attribute"
+                  entity={editingAttribute}
+                  fields={["name"]}
+                  fieldLabels={{ name: "Attribute Name" }}
+                />
+              )}
+
               {/* Attribute Values */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Attribute Values *
+                  {t("attributes.attributeValues")} *
                 </label>
                 <div className="space-y-2">
                   {formData.values.map((value, index) => (
@@ -465,7 +474,7 @@ const AttributeManagement = () => {
                           handleValueChange(index, e.target.value)
                         }
                         className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        placeholder={`Value ${index + 1}`}
+                        placeholder={t("attributes.valuePlaceholder", { n: index + 1 })}
                       />
                       {formData.values.length > 1 && (
                         <button
@@ -486,7 +495,7 @@ const AttributeManagement = () => {
                   className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Value
+                  {t("attributes.addValue")}
                 </button>
 
                 {errors.values && (
@@ -504,7 +513,7 @@ const AttributeManagement = () => {
                   disabled={submitting}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -515,14 +524,14 @@ const AttributeManagement = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      {editingAttribute ? 'Updating...' : 'Creating...'}
+                      {editingAttribute ? t("common.update") + "…" : t("common.create") + "…"}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
                       {editingAttribute
-                        ? 'Update Attribute'
-                        : 'Create Attribute'}
+                        ? t("attributes.updateAttribute")
+                        : t("attributes.createAttribute")}
                     </>
                   )}
                 </button>

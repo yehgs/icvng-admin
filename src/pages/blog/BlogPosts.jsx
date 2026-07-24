@@ -57,6 +57,7 @@ import toast from "react-hot-toast";
 import ImageUploader from "../../components/common/ImageUploader";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -113,7 +114,7 @@ const RichEditor = ({ value, onChange }) => {
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Highlight.configure({ multicolor: true }),
       Placeholder.configure({
-        placeholder: "Write your blog post content here…",
+        placeholder: t("blogPostsMgt.writeContentPlaceholder"),
       }),
     ],
     content: value || "",
@@ -136,7 +137,7 @@ const RichEditor = ({ value, onChange }) => {
 
   const setLink = useCallback(() => {
     const prev = editor?.getAttributes("link").href;
-    const url = window.prompt("Enter URL", prev || "https://");
+    const url = window.prompt(t("blogPostsMgt.insertLink"), prev || "https://");
     if (url === null) return;
     if (url === "") {
       editor?.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -158,17 +159,17 @@ const RichEditor = ({ value, onChange }) => {
       if (res.success) {
         const url = res.data?.secure_url || res.data?.url;
         editor.chain().focus().setImage({ src: url, alt: file.name }).run();
-        toast.success("Image inserted");
+        toast.success(t("blogPostsMgt.imageInserted"));
       }
     } catch {
-      toast.error("Image upload failed");
+      toast.error(t("blogPostsMgt.imageUploadFailed"));
     } finally {
       e.target.value = "";
     }
   };
 
   const handleImgUrl = () => {
-    const url = window.prompt("Paste image URL");
+    const url = window.prompt(t("blogPostsMgt.imageByUrl"));
     if (url && editor) editor.chain().focus().setImage({ src: url }).run();
   };
 
@@ -183,14 +184,14 @@ const RichEditor = ({ value, onChange }) => {
         <ToolbarBtn
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          title="Undo"
+          title={t("blogPostsMgt.undo")}
         >
           <Undo size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          title="Redo"
+          title={t("blogPostsMgt.redo")}
         >
           <Redo size={14} />
         </ToolbarBtn>
@@ -199,7 +200,7 @@ const RichEditor = ({ value, onChange }) => {
         <ToolbarBtn
           onClick={() => editor.chain().focus().setParagraph().run()}
           active={editor.isActive("paragraph")}
-          title="Paragraph"
+          title={t("blogPostsMgt.paragraph")}
         >
           <Type size={14} />
         </ToolbarBtn>
@@ -208,7 +209,7 @@ const RichEditor = ({ value, onChange }) => {
             editor.chain().focus().toggleHeading({ level: 1 }).run()
           }
           active={editor.isActive("heading", { level: 1 })}
-          title="Heading 1"
+          title={t("blogPostsMgt.heading1")}
         >
           <Heading1 size={14} />
         </ToolbarBtn>
@@ -217,7 +218,7 @@ const RichEditor = ({ value, onChange }) => {
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
           active={editor.isActive("heading", { level: 2 })}
-          title="Heading 2"
+          title={t("blogPostsMgt.heading2")}
         >
           <Heading2 size={14} />
         </ToolbarBtn>
@@ -226,7 +227,7 @@ const RichEditor = ({ value, onChange }) => {
             editor.chain().focus().toggleHeading({ level: 3 }).run()
           }
           active={editor.isActive("heading", { level: 3 })}
-          title="Heading 3"
+          title={t("blogPostsMgt.heading3")}
         >
           <Heading3 size={14} />
         </ToolbarBtn>
@@ -235,28 +236,28 @@ const RichEditor = ({ value, onChange }) => {
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
-          title="Bold"
+          title={t("blogPostsMgt.bold")}
         >
           <Bold size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive("italic")}
-          title="Italic"
+          title={t("blogPostsMgt.italic")}
         >
           <Italic size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           active={editor.isActive("underline")}
-          title="Underline"
+          title={t("blogPostsMgt.underline")}
         >
           <UnderlineIcon size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleStrike().run()}
           active={editor.isActive("strike")}
-          title="Strikethrough"
+          title={t("blogPostsMgt.strikethrough")}
         >
           <Strikethrough size={14} />
         </ToolbarBtn>
@@ -265,7 +266,7 @@ const RichEditor = ({ value, onChange }) => {
             editor.chain().focus().toggleHighlight({ color: "#fef08a" }).run()
           }
           active={editor.isActive("highlight")}
-          title="Highlight"
+          title={t("blogPostsMgt.highlight")}
         >
           <Highlighter size={14} />
         </ToolbarBtn>
@@ -273,7 +274,7 @@ const RichEditor = ({ value, onChange }) => {
           onClick={() =>
             editor.chain().focus().unsetAllMarks().clearNodes().run()
           }
-          title="Clear Formatting"
+          title={t("blogPostsMgt.clearFormatting")}
         >
           <RemoveFormatting size={14} />
         </ToolbarBtn>
@@ -282,28 +283,28 @@ const RichEditor = ({ value, onChange }) => {
         <ToolbarBtn
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
           active={editor.isActive({ textAlign: "left" })}
-          title="Align Left"
+          title={t("blogPostsMgt.alignLeft")}
         >
           <AlignLeft size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
           active={editor.isActive({ textAlign: "center" })}
-          title="Center"
+          title={t("blogPostsMgt.alignCenter")}
         >
           <AlignCenter size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
           active={editor.isActive({ textAlign: "right" })}
-          title="Align Right"
+          title={t("blogPostsMgt.alignRight")}
         >
           <AlignRight size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().setTextAlign("justify").run()}
           active={editor.isActive({ textAlign: "justify" })}
-          title="Justify"
+          title={t("blogPostsMgt.alignJustify")}
         >
           <AlignJustify size={14} />
         </ToolbarBtn>
@@ -312,41 +313,41 @@ const RichEditor = ({ value, onChange }) => {
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive("bulletList")}
-          title="Bullet List"
+          title={t("blogPostsMgt.bulletList")}
         >
           <List size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive("orderedList")}
-          title="Numbered List"
+          title={t("blogPostsMgt.numberedList")}
         >
           <ListOrdered size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive("blockquote")}
-          title="Blockquote"
+          title={t("blogPostsMgt.blockquote")}
         >
           <Quote size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleCode().run()}
           active={editor.isActive("code")}
-          title="Inline Code"
+          title={t("blogPostsMgt.inlineCode")}
         >
           <Code size={14} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           active={editor.isActive("codeBlock")}
-          title="Code Block"
+          title={t("blogPostsMgt.codeBlock")}
         >
           <span className="font-mono text-xs font-bold">{"</>"}</span>
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Divider"
+          title={t("blogPostsMgt.divider")}
         >
           <Minus size={14} />
         </ToolbarBtn>
@@ -355,7 +356,7 @@ const RichEditor = ({ value, onChange }) => {
         <ToolbarBtn
           onClick={setLink}
           active={editor.isActive("link")}
-          title="Insert Link"
+          title={t("blogPostsMgt.insertLink")}
         >
           <LinkIcon size={14} />
         </ToolbarBtn>
@@ -368,11 +369,11 @@ const RichEditor = ({ value, onChange }) => {
         />
         <ToolbarBtn
           onClick={() => imgInputRef.current?.click()}
-          title="Upload Image"
+          title={t("blogPostsMgt.uploadImage")}
         >
           <ImageIcon size={14} />
         </ToolbarBtn>
-        <ToolbarBtn onClick={handleImgUrl} title="Image by URL">
+        <ToolbarBtn onClick={handleImgUrl} title={t("blogPostsMgt.imageByUrl")}>
           <span className="text-xs font-bold">URL</span>
         </ToolbarBtn>
       </div>
@@ -427,13 +428,10 @@ const ALL_NON_EN_LANGUAGES = [
 // ─── Main page ────────────────────────────────────────────────────────────────
 const BlogPosts = () => {
   const { t } = useAdminTranslation();
-  // NOTE: useAdminCountry() does NOT expose manageableLanguages directly —
-  // it's derived the same way Translation Manager derives it: all non-EN
-  // languages for a GLOBAL admin, or only the languages this market
-  // actually supports for a COUNTRY-scoped admin. (An earlier version of
-  // this file destructured a manageableLanguages field that doesn't exist,
-  // which silently made every `manageableLanguages?.length` check false —
-  // so the whole translation tab/buttons below never rendered.)
+  // Language list still used to decide whether to show the Translations tab
+  // at all (a country-scoped admin whose market only supports English sees
+  // no tab). Per-field translation state/editing itself now lives inside
+  // InlineTranslateFields, shared with Product/Category/etc.
   const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
   const manageableLanguages = React.useMemo(() => {
     if (isGlobalAdmin || !countryScope) return ALL_NON_EN_LANGUAGES;
@@ -441,10 +439,6 @@ const BlogPosts = () => {
     const supported = countryConf?.language?.supported || [];
     return ALL_NON_EN_LANGUAGES.filter((l) => supported.includes(l.code));
   }, [isGlobalAdmin, countryScope, allCountries]);
-
-  // Inline translation state (for the editor's Translations tab)
-  const [blogTranslations, setBlogTranslations] = useState({}); // langCode → {title, excerpt, seo.title, seo.description}
-  const [savingTranslation, setSavingTranslation] = useState(false);
 
   // List state
   const [posts, setPosts] = useState([]);
@@ -489,7 +483,7 @@ const BlogPosts = () => {
         setTotalPages(res.pagination?.pages || 1);
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to fetch posts"));
+      toast.error(handleApiError(err, t("blogPostsMgt.fetchPostsFailed")));
     } finally {
       setLoading(false);
     }
@@ -548,76 +542,7 @@ const BlogPosts = () => {
     });
     setEditingPost(post);
     setActiveTab("content");
-    setBlogTranslations({});
-    // Load existing translations for each manageable language
-    if (post._id && manageableLanguages?.length) {
-      apiFetch(`/translations/blog/${post._id}`)
-        .then((res) => {
-          const docs = res.data || [];
-          const tr = {};
-          for (const doc of docs) {
-            tr[doc.language] = {
-              title: doc.fields?.title || "",
-              excerpt: doc.fields?.excerpt || "",
-              "seo.title": doc.fields?.["seo.title"] || "",
-              "seo.description": doc.fields?.["seo.description"] || "",
-            };
-          }
-          setBlogTranslations(tr);
-        })
-        .catch(() => {});
-    }
     setView("editor");
-  };
-
-  // Save a single language's blog translation manually
-  const saveBlogTranslation = async (langCode) => {
-    if (!editingPost?._id) return;
-    setSavingTranslation(true);
-    try {
-      const fields = blogTranslations[langCode] || {};
-      const res = await apiFetch(
-        `/translations/blog/${editingPost._id}/${langCode}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ fields }),
-        },
-      );
-      if (res.success) {
-        toast.success(`${langCode.toUpperCase()} translation saved`);
-      } else {
-        toast.error("Save failed");
-      }
-    } catch {
-      toast.error("Save failed");
-    } finally {
-      setSavingTranslation(false);
-    }
-  };
-
-  // Auto-translate a blog post for all manageable languages
-  const autoTranslateBlog = async () => {
-    if (!editingPost?._id) return;
-    setSavingTranslation(true);
-    try {
-      const res = await apiFetch("/translations/trigger", {
-        method: "POST",
-        body: JSON.stringify({
-          entityType: "blog",
-          entityId: editingPost._id,
-          document: editingPost,
-        }),
-      });
-      if (res.success) {
-        toast.success("Translation queued — refresh in a few seconds");
-      } else {
-        toast.error("Auto-translate failed");
-      }
-    } catch {
-      toast.error("Auto-translate failed");
-    } finally {
-      setSavingTranslation(false);
-    }
   };
 
   const field = (key, val) => setFormData((p) => ({ ...p, [key]: val }));
@@ -638,9 +563,7 @@ const BlogPosts = () => {
       !formData.featuredImage ||
       !formData.category
     ) {
-      toast.error(
-        "Please fill in: title, excerpt, content, featured image, and category.",
-      );
+      toast.error(t("blogPostsMgt.fillRequiredFields"));
       return;
     }
     setSaving(true);
@@ -656,27 +579,27 @@ const BlogPosts = () => {
         res = await blogAPI.createPost(payload);
       }
       if (res.success) {
-        toast.success(editingPost ? "Post updated!" : "Post created!");
+        toast.success(editingPost ? t("blogPostsMgt.postUpdated") : t("blogPostsMgt.postCreated"));
         setView("list");
         fetchPosts();
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to save post"));
+      toast.error(handleApiError(err, t("blogPostsMgt.savePostFailed")));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (postId) => {
-    if (!confirm("Delete this post? This cannot be undone.")) return;
+    if (!confirm(t("blogPostsMgt.confirmDeletePost"))) return;
     try {
       const res = await blogAPI.deletePost(postId);
       if (res.success) {
-        toast.success("Post deleted");
+        toast.success(t("blogPostsMgt.postDeleted"));
         fetchPosts();
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to delete"));
+      toast.error(handleApiError(err, t("blogPostsMgt.deleteFailed")));
     }
   };
 
@@ -688,7 +611,7 @@ const BlogPosts = () => {
         fetchPosts();
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to update"));
+      toast.error(handleApiError(err, t("blogPostsMgt.updateFailed")));
     }
   };
 
@@ -696,7 +619,7 @@ const BlogPosts = () => {
     const rows = [
       [
         t("common.title"),
-        "Category",
+        t("common.category"),
         t("common.status"),
         t("blogExt.featured"),
         t("blog.views"),
@@ -738,10 +661,10 @@ const BlogPosts = () => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Blog Posts
+              {t("blog.title")}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Create and manage your blog content
+              {t("blogPostsMgt.subtitle")}
             </p>
           </div>
           <div className="flex gap-3">
@@ -749,13 +672,13 @@ const BlogPosts = () => {
               onClick={exportCSV}
               className="btn-outline flex items-center gap-2"
             >
-              <Download className="w-4 h-4" /> Export
+              <Download className="w-4 h-4" /> {t("common.export")}
             </button>
             <button
               onClick={openCreate}
               className="btn-primary flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" /> New Post
+              <Plus className="w-4 h-4" /> {t("blog.addNew")}
             </button>
           </div>
         </div>
@@ -812,12 +735,12 @@ const BlogPosts = () => {
           <table className="w-full">
             <thead>
               <tr className="table-header">
-                <th className="px-6 py-3 text-left">Post</th>
+                <th className="px-6 py-3 text-left">{t("blog.postTitle")}</th>
                 <th className="px-6 py-3 text-left">{t("common.category")}</th>
                 <th className="px-6 py-3 text-left">{t("common.status")}</th>
                 <th className="px-6 py-3 text-left">{t("blogExt.featured")}</th>
-                <th className="px-6 py-3 text-left">Views</th>
-                <th className="px-6 py-3 text-left">Author</th>
+                <th className="px-6 py-3 text-left">{t("blog.views")}</th>
+                <th className="px-6 py-3 text-left">{t("blog.author")}</th>
                 <th className="px-6 py-3 text-left">{t("common.date")}</th>
                 <th className="px-6 py-3 text-left">{t("common.actions")}</th>
               </tr>
@@ -836,12 +759,12 @@ const BlogPosts = () => {
                     className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                   >
                     <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    No posts found.{" "}
+                    {t("common.noData")}{" "}
                     <button
                       onClick={openCreate}
                       className="text-blue-600 underline ml-1"
                     >
-                      Create your first post.
+                      {t("blogPostsMgt.createFirstPost")}
                     </button>
                   </td>
                 </tr>
@@ -880,7 +803,11 @@ const BlogPosts = () => {
                     </td>
                     <td className="table-cell">
                       <span className={`badge ${statusBadge(post.status)}`}>
-                        {post.status}
+                        {post.status === "PUBLISHED"
+                          ? t("blog.published")
+                          : post.status === "DRAFT"
+                            ? t("blog.draft")
+                            : t("purchaseOrders.archived")}
                       </span>
                     </td>
                     <td className="table-cell">
@@ -898,7 +825,7 @@ const BlogPosts = () => {
                     <td className="table-cell">
                       <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 gap-1.5">
                         <User className="w-4 h-4" />
-                        {post.author?.name || "Unknown"}
+                        {post.author?.name || t("blogPostsMgt.unknownAuthor")}
                       </div>
                     </td>
                     <td className="table-cell">
@@ -915,7 +842,7 @@ const BlogPosts = () => {
                           onClick={() => handleToggleFeatured(post._id)}
                           className={`p-1.5 rounded transition-colors ${post.featured ? "text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                           title={
-                            post.featured ? "Remove featured" : "Mark featured"
+                            post.featured ? t("blogPostsMgt.removeFeatured") : t("blogPostsMgt.markFeatured")
                           }
                         >
                           <Star
@@ -931,7 +858,7 @@ const BlogPosts = () => {
                             target="_blank"
                             rel="noreferrer"
                             className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                            title="View live"
+                            title={t("blogPostsMgt.viewLive")}
                           >
                             <Eye className="w-4 h-4" />
                           </a>
@@ -939,14 +866,14 @@ const BlogPosts = () => {
                         <button
                           onClick={() => openEdit(post)}
                           className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                          title="Edit"
+                          title={t("common.edit")}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(post._id)}
                           className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                          title="Delete"
+                          title={t("common.delete")}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -990,13 +917,13 @@ const BlogPosts = () => {
           <button
             onClick={() => setView("list")}
             className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Back to posts"
+            title={t("blogPostsMgt.backToPosts")}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              {editingPost ? "Edit Post" : "New Blog Post"}
+              {editingPost ? t("blog.editPost") : t("blogPostsMgt.newBlogPost")}
             </h1>
             {editingPost && (
               <p className="text-sm text-gray-400 mt-0.5 line-clamp-1">
@@ -1015,7 +942,7 @@ const BlogPosts = () => {
             className="btn-outline flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
-            {formData.status === "DRAFT" ? "Save Draft" : "Save"}
+            {formData.status === "DRAFT" ? t("blogPostsMgt.saveDraft") : t("common.save")}
           </button>
           {formData.status !== "PUBLISHED" ? (
             <button
@@ -1029,7 +956,7 @@ const BlogPosts = () => {
               ) : (
                 <CheckCircle className="w-4 h-4" />
               )}
-              Publish Now
+              {t("blogPostsMgt.publishNow")}
             </button>
           ) : (
             <button
@@ -1043,7 +970,7 @@ const BlogPosts = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              Update Post
+              {t("blogPostsMgt.updatePost")}
             </button>
           )}
         </div>
@@ -1056,7 +983,7 @@ const BlogPosts = () => {
           <div className="card p-5">
             <input
               type="text"
-              placeholder="Post title…"
+              placeholder={t("blogPostsMgt.postTitlePlaceholder")}
               value={formData.title}
               onChange={(e) => field("title", e.target.value)}
               className="w-full text-2xl font-bold text-gray-900 dark:text-white bg-transparent placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none border-0"
@@ -1087,10 +1014,10 @@ const BlogPosts = () => {
                   }`}
                 >
                   {tab === "content"
-                    ? "Content & Excerpt"
+                    ? t("blogPostsMgt.contentExcerptTab")
                     : tab === "seo"
-                      ? "SEO Settings"
-                      : "🌐 Translations"}
+                      ? t("blogPostsMgt.seoSettingsTab")
+                      : t("blogPostsMgt.translationsTab")}
                 </button>
               ))}
             </div>
@@ -1100,9 +1027,9 @@ const BlogPosts = () => {
                 {/* Excerpt */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    Excerpt <span className="text-red-500">*</span>
+                    {t("blog.excerpt")} <span className="text-red-500">*</span>
                     <span className="text-xs text-gray-400 ml-1">
-                      (shown in listings)
+                      {t("blogPostsMgt.shownInListings")}
                     </span>
                   </label>
                   <textarea
@@ -1110,7 +1037,7 @@ const BlogPosts = () => {
                     value={formData.excerpt}
                     onChange={(e) => field("excerpt", e.target.value)}
                     maxLength={300}
-                    placeholder="A concise summary of the post…"
+                    placeholder={t("blog.excerptPlaceholder")}
                     className="form-textarea"
                   />
                   <p className="text-xs text-gray-400 mt-1">
@@ -1121,7 +1048,7 @@ const BlogPosts = () => {
                 {/* Rich text editor */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    Content <span className="text-red-500">*</span>
+                    {t("blog.content")} <span className="text-red-500">*</span>
                   </label>
                   <RichEditor
                     value={formData.content}
@@ -1134,15 +1061,15 @@ const BlogPosts = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      SEO Title{" "}
-                      <span className="text-xs text-gray-400">(60 max)</span>
+                      {t("blog.seoTitle")}{" "}
+                      <span className="text-xs text-gray-400">{t("blogPostsMgt.sixtyMax")}</span>
                     </label>
                     <input
                       type="text"
                       className="form-input"
                       value={formData.seoTitle}
                       onChange={(e) => field("seoTitle", e.target.value)}
-                      placeholder="Leave blank to use post title"
+                      placeholder={t("blogPostsMgt.leaveBlankTitle")}
                       maxLength={60}
                     />
                     <p className="text-xs text-gray-400 mt-1">
@@ -1151,28 +1078,28 @@ const BlogPosts = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      SEO Keywords
+                      {t("blogPostsMgt.seoKeywordsLabel")}
                     </label>
                     <input
                       type="text"
                       className="form-input"
                       value={formData.seoKeywords}
                       onChange={(e) => field("seoKeywords", e.target.value)}
-                      placeholder="coffee, origins, arabica"
+                      placeholder={t("blog.tagsPlaceholder")}
                     />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    Meta Description{" "}
-                    <span className="text-xs text-gray-400">(160 max)</span>
+                    {t("blogPostsMgt.metaDescription")}{" "}
+                    <span className="text-xs text-gray-400">{t("blogPostsMgt.hundredSixtyMax")}</span>
                   </label>
                   <textarea
                     rows={3}
                     className="form-textarea"
                     value={formData.seoDescription}
                     onChange={(e) => field("seoDescription", e.target.value)}
-                    placeholder="Leave blank to use excerpt"
+                    placeholder={t("blogPostsMgt.leaveBlankExcerpt")}
                     maxLength={160}
                   />
                   <p className="text-xs text-gray-400 mt-1">
@@ -1182,7 +1109,7 @@ const BlogPosts = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      Canonical URL
+                      {t("blogPostsMgt.canonicalUrlLabel")}
                     </label>
                     <input
                       type="url"
@@ -1194,28 +1121,28 @@ const BlogPosts = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      Social Title
+                      {t("blogPostsMgt.socialTitleLabel")}
                     </label>
                     <input
                       type="text"
                       className="form-input"
                       value={formData.socialTitle}
                       onChange={(e) => field("socialTitle", e.target.value)}
-                      placeholder="Title for social media"
+                      placeholder={t("blogPostsMgt.socialTitlePlaceholder")}
                       maxLength={100}
                     />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    Social Description
+                    {t("blogPostsMgt.socialDescLabel")}
                   </label>
                   <textarea
                     rows={2}
                     className="form-textarea"
                     value={formData.socialDescription}
                     onChange={(e) => field("socialDescription", e.target.value)}
-                    placeholder="Description for social media shares"
+                    placeholder={t("blogPostsMgt.socialDescPlaceholder")}
                     maxLength={200}
                   />
                 </div>
@@ -1224,7 +1151,7 @@ const BlogPosts = () => {
                 {(formData.seoTitle || formData.title) && (
                   <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-dashed border-gray-200 dark:border-gray-700">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                      Google Search Preview
+                      {t("blogPostsMgt.googleSearchPreview")}
                     </p>
                     <p className="text-blue-700 dark:text-blue-400 text-base line-clamp-1">
                       {formData.seoTitle || formData.title}
@@ -1246,117 +1173,49 @@ const BlogPosts = () => {
 
             {/* ── Translations tab ─────────────────────────────────────────── */}
             {activeTab === "translations" && editingPost && (
-              <div className="p-5 space-y-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Edit translations for this blog post inline. Changes are
-                    saved per language.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={autoTranslateBlog}
-                    disabled={savingTranslation}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-50 disabled:opacity-50"
-                  >
-                    ⚡ Auto-translate all
-                  </button>
-                </div>
-
-                {(manageableLanguages || []).map((lang) => {
-                  const langCode = lang.code;
-                  const tr = blogTranslations[langCode] || {};
-                  const setTr = (field, value) =>
-                    setBlogTranslations((prev) => ({
-                      ...prev,
-                      [langCode]: { ...(prev[langCode] || {}), [field]: value },
-                    }));
-                  return (
-                    <div
-                      key={langCode}
-                      className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          {lang.flag} {lang.label}
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => saveBlogTranslation(langCode)}
-                          disabled={savingTranslation}
-                          className="px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
-                        >
-                          Save {langCode.toUpperCase()}
-                        </button>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          Title
-                        </label>
-                        <input
-                          type="text"
-                          className="form-input text-sm"
-                          value={tr.title || ""}
-                          onChange={(e) => setTr("title", e.target.value)}
-                          placeholder={formData.title}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          Excerpt
-                        </label>
-                        <textarea
-                          rows={2}
-                          className="form-textarea text-sm"
-                          value={tr.excerpt || ""}
-                          onChange={(e) => setTr("excerpt", e.target.value)}
-                          placeholder={formData.excerpt}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          SEO Title
-                        </label>
-                        <input
-                          type="text"
-                          className="form-input text-sm"
-                          value={tr["seo.title"] || ""}
-                          onChange={(e) => setTr("seo.title", e.target.value)}
-                          placeholder={formData.seoTitle}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          SEO Description
-                        </label>
-                        <textarea
-                          rows={2}
-                          className="form-textarea text-sm"
-                          value={tr["seo.description"] || ""}
-                          onChange={(e) =>
-                            setTr("seo.description", e.target.value)
-                          }
-                          placeholder={formData.seoDescription}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="p-5">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  {t("blogPostsMgt.translationsHint")}
+                </p>
+                <InlineTranslateFields
+                  entityType="blog"
+                  entity={editingPost}
+                  fields={[
+                    "title",
+                    "excerpt",
+                    "content",
+                    "seoTitle",
+                    "seoDescription",
+                    "seoKeywords",
+                    "socialTitle",
+                  ]}
+                  fieldLabels={{
+                    title: "Title",
+                    excerpt: "Excerpt",
+                    content: "Content",
+                    seoTitle: "SEO Title",
+                    seoDescription: "SEO Description",
+                    seoKeywords: "SEO Keywords",
+                    socialTitle: "Social Title",
+                  }}
+                />
               </div>
             )}
           </div>
         </div>
+
 
         {/* ── Right: Sidebar ─────────────────────────────────────────── */}
         <div className="space-y-5">
           {/* Publish settings */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-600" /> Publish Settings
+              <Clock className="w-4 h-4 text-blue-600" /> {t("blogPostsMgt.publishSettings")}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                  Status
+                  {t("common.status")}
                 </label>
                 <select
                   className="form-select"
@@ -1373,9 +1232,9 @@ const BlogPosts = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Featured Post
+                    {t("blogPostsMgt.featuredPostLabel")}
                   </p>
-                  <p className="text-xs text-gray-400">Show on homepage</p>
+                  <p className="text-xs text-gray-400">{t("blogExt.showOnHomepage")}</p>
                 </div>
                 <button
                   type="button"
@@ -1396,7 +1255,7 @@ const BlogPosts = () => {
               has published its own. */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-              <Globe className="w-4 h-4 text-blue-600" /> Market
+              <Globe className="w-4 h-4 text-blue-600" /> {t("blogPostsMgt.market")}
             </h3>
             {isGlobalAdmin ? (
               <select
@@ -1412,7 +1271,7 @@ const BlogPosts = () => {
               </select>
             ) : (
               <div className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                {countryScope} (your assigned market)
+                {t("blogPostsMgt.yourAssignedMarket", { scope: countryScope })}
               </div>
             )}
           </div>
@@ -1421,7 +1280,7 @@ const BlogPosts = () => {
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-blue-600" />
-              Featured Image <span className="text-red-500">*</span>
+              {t("blogPostsMgt.featuredImageLabel")} <span className="text-red-500">*</span>
             </h3>
             <ImageUploader
               images={formData.featuredImage ? [formData.featuredImage] : []}
@@ -1433,7 +1292,7 @@ const BlogPosts = () => {
                 type="text"
                 value={formData.imageAlt}
                 onChange={(e) => field("imageAlt", e.target.value)}
-                placeholder="Alt text for accessibility…"
+                placeholder={t("content.altText")}
                 className="form-input mt-2 text-sm"
               />
             )}
@@ -1443,14 +1302,14 @@ const BlogPosts = () => {
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <Folder className="w-4 h-4 text-blue-600" />
-              Category <span className="text-red-500">*</span>
+              {t("common.category")} <span className="text-red-500">*</span>
             </h3>
             <select
               className="form-select"
               value={formData.category}
               onChange={(e) => field("category", e.target.value)}
             >
-              <option value="">Select category…</option>
+              <option value="">{t("blogPostsMgt.selectCategoryOption")}</option>
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
@@ -1462,10 +1321,10 @@ const BlogPosts = () => {
           {/* Tags */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-              <TagIcon className="w-4 h-4 text-blue-600" /> Tags
+              <TagIcon className="w-4 h-4 text-blue-600" /> {t("blog.tags")}
             </h3>
             {tags.length === 0 ? (
-              <p className="text-xs text-gray-400">No tags available.</p>
+              <p className="text-xs text-gray-400">{t("blogExt.noTagsAvailable")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => {

@@ -135,6 +135,15 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
   const publishStates = ["PUBLISHED", "PENDING", "DRAFT"];
 
+  const PRODUCT_TYPE_KEYS = {
+    COFFEE: "coffee",
+    MACHINE: "machine",
+    ACCESSORIES: "accessories",
+    COFFEE_BEANS: "coffeeBeans",
+    TEA: "tea",
+    DRINKS: "drinks",
+  };
+
   const blendOptions = [
     "100% Arabica",
     "100% Robusta",
@@ -233,7 +242,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       if (suppliersRes.success) setSuppliers(suppliersRes.data || []);
 
       if (!cats || cats.length === 0) {
-        toast.error("Categories not loaded. Check server connection.");
+        toast.error(t("productForm.categoriesNotLoaded"));
       }
     } catch (error) {
       console.error("Error fetching form data:", error);
@@ -268,15 +277,15 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
   const handleCreateSupplier = async () => {
     if (!newSupplierName.trim()) {
-      toast.error("Supplier name is required");
+      toast.error(t("productForm.supplierNameRequired"));
       return;
     }
     if (!newSupplierEmail.trim()) {
-      toast.error("Email is required");
+      toast.error(t("productForm.emailRequired"));
       return;
     }
     if (!newSupplierPhone.trim()) {
-      toast.error("Phone is required");
+      toast.error(t("productForm.phoneRequired"));
       return;
     }
     setCreatingSupplier(true);
@@ -305,12 +314,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
         setNewSupplierEmail("");
         setNewSupplierPhone("");
         setShowNewSupplier(false);
-        toast.success(`Supplier "${newSupplier.name}" created and selected`);
+        toast.success(t("productForm.supplierCreatedSelected", { name: newSupplier.name }));
       } else {
-        toast.error(res.message || "Failed to create supplier");
+        toast.error(res.message || t("productForm.supplierCreateFailed"));
       }
     } catch (_) {
-      toast.error("Failed to create supplier");
+      toast.error(t("productForm.supplierCreateFailed"));
     } finally {
       setCreatingSupplier(false);
     }
@@ -448,19 +457,19 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Product name is required";
+      newErrors.name = t("productForm.productNameRequired");
     }
 
     if (!formData.image || formData.image.length === 0) {
-      newErrors.image = "At least one product image is required";
+      newErrors.image = t("productForm.imageRequired");
     }
 
     if (!formData.category) {
-      newErrors.category = "Category is required";
+      newErrors.category = t("productForm.categoryRequired");
     }
 
     if (!formData.shortDescription.trim()) {
-      newErrors.shortDescription = "Short description is required";
+      newErrors.shortDescription = t("productForm.shortDescRequired");
     }
 
     // At least one of BTC, 3-week, or 5-week price must be set
@@ -468,8 +477,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     const w3 = parseFloat(formData.price3weeksDelivery) || 0;
     const w5 = parseFloat(formData.price5weeksDelivery) || 0;
     if (btc === 0 && w3 === 0 && w5 === 0) {
-      newErrors.prices =
-        "At least one of BTC Price, 2-Week Price, or 5-Week Price must be greater than 0";
+      newErrors.prices = t("productForm.priceRequiredError");
     }
 
     setErrors(newErrors);
@@ -505,17 +513,17 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       if (response.success) {
         toast.success(
           product
-            ? "Product updated successfully!"
-            : "Product created successfully!",
+            ? t("productForm.productUpdated")
+            : t("productForm.productCreated"),
         );
         onSuccess && onSuccess();
         onClose();
       } else {
-        toast.error(response.message || "Failed to save product");
+        toast.error(response.message || t("productForm.saveFailed"));
       }
     } catch (error) {
       console.error("Error saving product:", error);
-      toast.error(error.message || "Failed to save product");
+      toast.error(error.message || t("productForm.saveFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -567,12 +575,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {product ? "Edit Product" : "Create New Product"}
+                {product ? t("productForm.editTitle") : t("productForm.createTitle")}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {product
-                  ? "Update product information"
-                  : "Add a new product to your catalog"}
+                  ? t("productForm.editSubtitle")
+                  : t("productForm.createSubtitle")}
               </p>
             </div>
           </div>
@@ -588,7 +596,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             <span className="ml-2 text-gray-600 dark:text-gray-400">
-              Loading form data...
+              {t("productForm.loadingFormData")}
             </span>
           </div>
         ) : (
@@ -596,12 +604,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* Basic Information */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Basic Information
+                {t("productForm.basicInformation")}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Product Name *
+                    {t("products.productName")} *
                   </label>
                   <input
                     type="text"
@@ -612,7 +620,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         ? "border-red-300 dark:border-red-600"
                         : "border-gray-300 dark:border-gray-600"
                     }`}
-                    placeholder="Enter product name"
+                    placeholder={t("productForm.productNamePlaceholder")}
                   />
                   {errors.name && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -623,7 +631,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Product Type *
+                    {t("products.productType")} *
                   </label>
                   <select
                     value={formData.productType}
@@ -634,7 +642,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   >
                     {productTypes.map((type) => (
                       <option key={type} value={type}>
-                        {type}
+                        {t(`productTypes.${PRODUCT_TYPE_KEYS[type] || type}`)}
                       </option>
                     ))}
                   </select>
@@ -642,7 +650,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Weight (kg)
+                    {t("productForm.weightKg")}
                   </label>
                   <input
                     type="number"
@@ -653,26 +661,26 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       handleInputChange("weight", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Product weight"
+                    placeholder={t("productForm.weightPlaceholder")}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Unit
+                    {t("common.unit")}
                   </label>
                   <input
                     type="text"
                     value={formData.unit}
                     onChange={(e) => handleInputChange("unit", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="e.g., kg, g, ml, pieces"
+                    placeholder={t("productForm.unitPlaceholder")}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Packaging
+                    {t("importExport.packaging")}
                   </label>
                   <input
                     type="text"
@@ -681,7 +689,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       handleInputChange("packaging", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="e.g., Bag, Box, Bottle"
+                    placeholder={t("productForm.packagingPlaceholder")}
                   />
                 </div>
               </div>
@@ -690,7 +698,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* Product Images */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Product Images *
+                {t("productForm.productImages")} *
               </h4>
               <ImageUploader
                 images={formData.image}
@@ -708,12 +716,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* Category & Classification */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Category & Classification
+                {t("productForm.categoryClassification")}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category *
+                    {t("common.category")} *
                   </label>
                   <select
                     value={formData.category}
@@ -742,7 +750,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    SubCategory
+                    {t("products.subCategory")}
                   </label>
                   <select
                     value={formData.subCategory}
@@ -765,7 +773,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Brands
+                    {t("productForm.brandsLabel")}
                   </label>
                   <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
                     {regularBrands.length === 0 ? (
@@ -809,15 +817,14 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* Compatible System — single select, only brands marked as compatible systems */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Compatible System
+                    {t("products.compatibleSystem")}
                     <span className="ml-1 text-xs font-normal text-gray-400">
-                      — e.g. Nespresso&reg;, Dolce Gusto&reg;
+                      {t("productForm.compatibleSystemHint")}
                     </span>
                   </label>
                   {compatibleSystems.length === 0 ? (
                     <p className="text-xs text-gray-400 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-2">
-                      No compatible system brands available. Go to Brand
-                      Management and mark a brand as a Compatible System first.
+                      {t("productForm.noCompatibleSystemBrands")}
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -836,7 +843,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                           className="text-blue-600 focus:ring-blue-500"
                         />
                         <span className="text-sm text-gray-700 dark:text-gray-300">
-                          None
+                          {t("common.none")}
                         </span>
                       </label>
                       {compatibleSystems.map((brand) => (
@@ -876,7 +883,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Colors
+                    {t("productForm.colorsLabel")}
                   </label>
                   <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
                     {colors.map((color) => (
@@ -914,12 +921,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {formData.productType === "COFFEE" && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                  Coffee Details
+                  {t("productForm.coffeeDetails")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Roast Level
+                      {t("products.roastLevel")}
                     </label>
                     <select
                       value={formData.roastLevel}
@@ -941,7 +948,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Intensity
+                      {t("products.intensity")}
                     </label>
                     <select
                       value={formData.intensity}
@@ -963,7 +970,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Blend
+                      {t("products.blend")}
                     </label>
                     <select
                       value={formData.blend}
@@ -983,7 +990,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Coffee Origin
+                      {t("products.coffeeOrigin")}
                     </label>
                     <input
                       type="text"
@@ -992,13 +999,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         handleInputChange("coffeeOrigin", e.target.value)
                       }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      placeholder="e.g., Colombia, Ethiopia"
+                      placeholder={t("productForm.coffeeOriginPlaceholder")}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Aromatic Profile
+                      {t("products.aromaticProfile")}
                     </label>
                     <input
                       type="text"
@@ -1007,13 +1014,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         handleInputChange("aromaticProfile", e.target.value)
                       }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      placeholder="e.g., Fruity, Nutty, Chocolate"
+                      placeholder={t("productForm.aromaticProfilePlaceholder")}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Roast Origin
+                      {t("productForm.roastOrigin")}
                     </label>
                     <input
                       type="text"
@@ -1022,7 +1029,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         handleInputChange("roastOrigin", e.target.value)
                       }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      placeholder="Where the coffee was roasted"
+                      placeholder={t("productForm.roastOriginPlaceholder")}
                     />
                   </div>
                 </div>
@@ -1032,12 +1039,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* Descriptions */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Product Descriptions
+                {t("productForm.productDescriptions")}
               </h4>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Short Description *
+                    {t("products.shortDescription")} *
                   </label>
                   <textarea
                     rows={3}
@@ -1050,7 +1057,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         ? "border-red-300 dark:border-red-600"
                         : "border-gray-300 dark:border-gray-600"
                     }`}
-                    placeholder="Brief product description for listings"
+                    placeholder={t("productForm.shortDescPlaceholder")}
                   />
                   {errors.shortDescription && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -1061,7 +1068,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Full Description
+                    {t("common.description")}
                   </label>
                   <textarea
                     rows={5}
@@ -1070,13 +1077,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       handleInputChange("description", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                    placeholder="Detailed product description"
+                    placeholder={t("productForm.fullDescPlaceholder")}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Additional Information
+                    {t("products.additionalInfo")}
                   </label>
                   <textarea
                     rows={3}
@@ -1085,7 +1092,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       handleInputChange("additionalInfo", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                    placeholder="Additional product information, care instructions, etc."
+                    placeholder={t("productForm.additionalInfoPlaceholder")}
                   />
                 </div>
 
@@ -1093,12 +1100,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   <InlineTranslateFields
                     entityType="product"
                     entity={product}
-                    fields={["name", "shortDescription", "description", "additionalInfo", "roastOrigin", "coffeeOrigin", "blend"]}
+                    fields={["name", "shortDescription", "description", "additionalInfo", "unit", "roastOrigin", "coffeeOrigin", "blend"]}
                     fieldLabels={{
                       name: "Product Name",
                       shortDescription: "Short Description",
                       description: "Full Description",
                       additionalInfo: "Additional Information",
+                      unit: "Unit",
                       roastOrigin: "Roast Origin",
                       coffeeOrigin: "Coffee Origin",
                       blend: "Blend",
@@ -1111,10 +1119,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* ── Pricing ── */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
-                Pricing
+                {t("productForm.pricing")}
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                At least one of BTC, 2-Week, or 5-Week price is required.
+                {t("productForm.pricingHint")}
               </p>
 
               {/* ── DirectPricing lock banner ──────────────────────────────── */}
@@ -1126,11 +1134,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       {t("productForm.pricesManagedByDirect")}
                     </p>
                     <p className="text-blue-700 text-xs mt-0.5">
-                      BTC Price, 3-Week, and 5-Week Delivery prices are locked
-                      because an Accountant has set them via{" "}
-                      <strong>{t("productForm.directPricing")}</strong>. To
-                      change them, go to{" "}
-                      <strong>Pricing Management → Direct Pricing</strong>.
+                      {t("productForm.directPricingLockedDetail")}
                     </p>
                   </div>
                 </div>
@@ -1159,21 +1163,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
                     <div>
                       <p className="font-semibold">
-                        ⚠️ This product will be hidden from the shop
+                        {t("productForm.hiddenShopWarningTitle")}
                       </p>
                       <p className="text-xs mt-1 text-amber-700">
-                        It has a BTC price but no online stock
-                        {canSeePartnerStock ? ", no partner stock," : ""} and no
-                        3-week or 5-week delivery price. Customers would see
-                        "Pricing Unavailable". To make it visible,
-                        {canSeePartnerStock ? (
-                          <>
-                            {" "}either <strong> add a 3-week or 5-week delivery price</strong>,
-                            or <strong> enable partner stock</strong>.
-                          </>
-                        ) : (
-                          <strong> add a 3-week or 5-week delivery price</strong>
-                        )}
+                        {canSeePartnerStock
+                          ? t("productForm.hiddenShopWarningWithPartner")
+                          : t("productForm.hiddenShopWarningNoPartner")}
                       </p>
                     </div>
                   </div>
@@ -1184,9 +1179,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* BTB Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    BTB Price (Business-to-Business){" "}
+                    {t("productForm.btbPriceLabel")}{" "}
                     <span className="text-gray-400 font-normal">
-                      — optional
+                      {t("productForm.optionalHint")}
                     </span>
                   </label>
                   <div className="relative">
@@ -1210,13 +1205,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* BTC Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    BTC Price <span className="text-red-500">*</span>
+                    {t("productForm.btcPriceLabel")} <span className="text-red-500">*</span>
                     <span className="text-gray-400 font-normal ml-1">
-                      — shown as regular price on website
+                      {t("productForm.btcPriceHint")}
                     </span>
                     {directPricingLocked && (
                       <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
-                        <Lock className="w-3 h-3" /> Locked
+                        <Lock className="w-3 h-3" /> {t("productForm.locked")}
                       </span>
                     )}
                   </label>
@@ -1248,10 +1243,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* 2-Week Delivery Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    2-Week Delivery Price{" "}
+                    {t("productForm.twoWeekDeliveryLabel")}{" "}
                     <span className="text-red-500">*</span>
                     <span className="text-gray-400 font-normal ml-1">
-                      — most categories
+                      {t("productForm.twoWeekHint")}
                     </span>
                   </label>
                   <div className="relative">
@@ -1280,10 +1275,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* 5-Week Delivery Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    5-Week Delivery Price{" "}
+                    {t("productForm.fiveWeekDeliveryLabel")}{" "}
                     <span className="text-red-500">*</span>
                     <span className="text-gray-400 font-normal ml-1">
-                      — Capsule Machines & Coffee Makers
+                      {t("productForm.fiveWeekHint")}
                     </span>
                   </label>
                   <div className="relative">
@@ -1312,9 +1307,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* Discount */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Discount (%){" "}
+                    {t("productForm.discountLabel")}{" "}
                     <span className="text-gray-400 font-normal">
-                      — applied to all prices
+                      {t("productForm.discountHint")}
                     </span>
                   </label>
                   <input
@@ -1340,13 +1335,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-                    Partner / Online Stock
+                    {t("productForm.partnerOnlineStock")}
                   </h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    For products held by partners or sourced externally. This
-                    sets the online stock visible to customers. Warehouse staff
-                    can <strong>view</strong> this but cannot manage it — only
-                    editors can. No offline stock applies to these products.
+                    {t("productForm.partnerStockDescription")}
                   </p>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1371,7 +1363,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Online Stock Quantity{" "}
+                      {t("productForm.onlineStockQty")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1391,7 +1383,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Supplier <span className="text-red-500">*</span>
+                        {t("productForm.supplier")} <span className="text-red-500">*</span>
                       </label>
                       <button
                         type="button"
@@ -1399,7 +1391,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                       >
                         <Plus className="w-3 h-3" />
-                        {showNewSupplier ? "Cancel" : "Create New"}
+                        {showNewSupplier ? t("common.cancel") : t("productForm.createNew")}
                       </button>
                     </div>
 
@@ -1434,7 +1426,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                             s.supplierType === "PARTNER" || !s.supplierType,
                         ).length === 0 && (
                           <option disabled value="">
-                            No partner suppliers yet — create one below
+                            {t("productForm.noPartnerSuppliersYet")}
                           </option>
                         )}
                       </select>
@@ -1450,21 +1442,21 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                           type="text"
                           value={newSupplierName}
                           onChange={(e) => setNewSupplierName(e.target.value)}
-                          placeholder="Company / partner name *"
+                          placeholder={t("productForm.companyPartnerNamePlaceholder")}
                           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <input
                           type="email"
                           value={newSupplierEmail}
                           onChange={(e) => setNewSupplierEmail(e.target.value)}
-                          placeholder="Email *"
+                          placeholder={t("productForm.emailPlaceholder")}
                           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <input
                           type="tel"
                           value={newSupplierPhone}
                           onChange={(e) => setNewSupplierPhone(e.target.value)}
-                          placeholder="Phone *"
+                          placeholder={t("productForm.phonePlaceholder")}
                           className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <button
@@ -1481,11 +1473,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                           {creatingSupplier ? (
                             <>
                               <Loader2 className="w-3 h-3 animate-spin" />{" "}
-                              Creating...
+                              {t("common.create")}…
                             </>
                           ) : (
                             <>
-                              <Plus className="w-3 h-3" /> Create & Select
+                              <Plus className="w-3 h-3" /> {t("productForm.createAndSelect")}
                             </>
                           )}
                         </button>
@@ -1494,7 +1486,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Notes
+                      {t("common.notes")}
                     </label>
                     <input
                       type="text"
@@ -1506,7 +1498,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                      placeholder="e.g. Restocked monthly"
+                      placeholder={t("productForm.notesPlaceholder")}
                     />
                   </div>
                 </div>
@@ -1517,12 +1509,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* SEO & Publishing */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                SEO & Publishing
+                {t("productForm.seoPublishing")}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    SEO Title
+                    {t("products.seoTitle")}
                   </label>
                   <input
                     type="text"
@@ -1531,13 +1523,13 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       handleInputChange("seoTitle", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="SEO optimized title"
+                    placeholder={t("productForm.seoTitlePlaceholder")}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Publish Status
+                    {t("products.publishStatus")}
                   </label>
                   <select
                     value={formData.publish}
@@ -1548,7 +1540,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   >
                     {publishStates.map((state) => (
                       <option key={state} value={state}>
-                        {state}
+                        {state === "PUBLISHED"
+                          ? t("products.publish")
+                          : state === "PENDING"
+                            ? t("products.pending")
+                            : t("products.draft")}
                       </option>
                     ))}
                   </select>
@@ -1556,7 +1552,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    SEO Description
+                    {t("products.seoDescription")}
                   </label>
                   <textarea
                     rows={3}
@@ -1565,16 +1561,30 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       handleInputChange("seoDescription", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                    placeholder="SEO meta description"
+                    placeholder={t("productForm.seoDescPlaceholder")}
                   />
                 </div>
+
+                {product && (
+                  <div className="md:col-span-2">
+                    <InlineTranslateFields
+                      entityType="product"
+                      entity={product}
+                      fields={["seoTitle", "seoDescription"]}
+                      fieldLabels={{
+                        seoTitle: "SEO Title",
+                        seoDescription: "SEO Description",
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Product Settings */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Product Settings
+                {t("productForm.productSettings")}
               </h4>
               <div className="space-y-3">
                 <label className="flex items-center">
@@ -1588,7 +1598,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   />
                   <Star className="ml-2 mr-1 h-4 w-4 text-yellow-400" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Featured Product
+                    {t("productForm.featuredProduct")}
                   </span>
                 </label>
 
@@ -1610,22 +1620,21 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     />
                     <Sparkles className="ml-2 mr-1 h-4 w-4 text-red-500" />
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Limited Edition Product
+                      {t("productForm.limitedEditionProduct")}
                     </span>
                   </label>
 
                   {formData.limitedEdition?.isLimitedEdition && (
                     <div className="mt-3 pl-1 space-y-3">
                       <p className="text-xs text-gray-400">
-                        Limited Edition products are shown in a dedicated banner
-                        + carousel on the homepage.
+                        {t("productForm.limitedEditionHint")}
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {/* Banner Text */}
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Banner Text
+                            {t("productForm.bannerText")}
                           </label>
                           <input
                             type="text"
@@ -1636,7 +1645,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                                 e.target.value,
                               )
                             }
-                            placeholder="e.g. Limited Edition"
+                            placeholder={t("productForm.bannerTextPlaceholder")}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
                           />
                         </div>
@@ -1644,7 +1653,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         {/* Banner Color */}
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Banner Color
+                            {t("productForm.bannerColor")}
                           </label>
                           <div className="flex items-center gap-2">
                             <input
@@ -1681,7 +1690,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         {/* Total Units */}
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Total Units Available
+                            {t("productForm.totalUnitsAvailable")}
                           </label>
                           <input
                             type="number"
@@ -1701,9 +1710,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         {/* Carousel Order */}
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Carousel Order
+                            {t("productForm.carouselOrder")}
                             <span className="text-gray-400 font-normal ml-1">
-                              — lower shows first
+                              {t("productForm.carouselOrderHint")}
                             </span>
                           </label>
                           <input
@@ -1733,7 +1742,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                         <Sparkles className="text-white w-4 h-4 flex-shrink-0" />
                         <span className="text-white text-sm font-semibold">
                           {formData.limitedEdition?.bannerText ||
-                            "Limited Edition"}
+                            t("products.limitedEdition")}
                         </span>
                       </div>
                     </div>
@@ -1751,7 +1760,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    Product Available for Sale
+                    {t("productForm.productAvailableForSale")}
                   </span>
                 </label>
               </div>
@@ -1764,7 +1773,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 disabled={submitting}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleSubmit}
@@ -1774,12 +1783,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {product ? "Updating..." : "Creating..."}
+                    {product ? t("common.update") + "…" : t("common.create") + "…"}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {product ? "Update Product" : "Create Product"}
+                    {product ? t("productForm.updateProduct") : t("productForm.createProduct")}
                   </>
                 )}
               </button>

@@ -14,6 +14,7 @@ import {
 import { blogAPI, handleApiError } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
 const BlogTags = () => {
   const { t } = useAdminTranslation();
@@ -76,7 +77,7 @@ const BlogTags = () => {
       }
     } catch (error) {
       console.error('Error fetching tags:', error);
-      toast.error(handleApiError(error, 'Failed to fetch tags'));
+      toast.error(handleApiError(error, t("blogTagsMgt.fetchFailed")));
     } finally {
       setLoading(false);
     }
@@ -100,30 +101,30 @@ const BlogTags = () => {
         resetForm();
         fetchTags();
         toast.success(
-          editingTag ? 'Tag updated successfully!' : 'Tag created successfully!'
+          editingTag ? t("blogTagsMgt.tagUpdated") : t("blogTagsMgt.tagCreated")
         );
       }
     } catch (error) {
       console.error('Error saving tag:', error);
-      toast.error(handleApiError(error, 'Failed to save tag'));
+      toast.error(handleApiError(error, t("blogTagsMgt.saveFailed")));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (tagId) => {
-    if (!confirm('Are you sure you want to delete this tag?')) return;
+    if (!confirm(t("blogTagsMgt.confirmDelete"))) return;
 
     try {
       const response = await blogAPI.deleteTag(tagId);
 
       if (response.success) {
         fetchTags();
-        toast.success('Tag deleted successfully!');
+        toast.success(t("blogTagsMgt.tagDeleted"));
       }
     } catch (error) {
       console.error('Error deleting tag:', error);
-      toast.error(handleApiError(error, 'Failed to delete tag'));
+      toast.error(handleApiError(error, t("blogTagsMgt.deleteFailed")));
     }
   };
 
@@ -177,10 +178,10 @@ const BlogTags = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Blog Tags
+            {t("blogTagsMgt.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage tags for better content categorization and discovery
+            {t("blogTagsMgt.subtitle")}
           </p>
         </div>
         <div className="flex gap-3">
@@ -189,7 +190,7 @@ const BlogTags = () => {
             className="btn-outline flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Export
+            {t("blogTagsMgt.export")}
           </button>
           <button
             onClick={() => {
@@ -199,7 +200,7 @@ const BlogTags = () => {
             className="btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Tag
+            {t("blogTagsMgt.addTag")}
           </button>
         </div>
       </div>
@@ -210,7 +211,7 @@ const BlogTags = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder={t("blog.searchPlaceholder")}
+            placeholder={t("blogTagsMgt.searchPlaceholder")}
             className="form-input pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -236,10 +237,10 @@ const BlogTags = () => {
         <div className="text-center py-12">
           <Tag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-600 mb-2">
-            No tags found
+            {t("blogTagsMgt.noTagsFound")}
           </h3>
           <p className="text-gray-500 mb-4">
-            Create your first tag to get started with content organization.
+            {t("blogTagsMgt.createFirstTagHint")}
           </p>
           <button
             onClick={() => {
@@ -248,7 +249,7 @@ const BlogTags = () => {
             }}
             className="btn-primary"
           >
-            Create First Tag
+            {t("blogTagsMgt.createFirstTag")}
           </button>
         </div>
       ) : (
@@ -266,7 +267,7 @@ const BlogTags = () => {
                       {tag.name}
                     </h3>
                     <p className="text-sm text-gray-600 line-clamp-2">
-                      {tag.description || 'No description'}
+                      {tag.description || t("blogTagsMgt.noDescription")}
                     </p>
                   </div>
                   <div
@@ -278,7 +279,7 @@ const BlogTags = () => {
 
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-xs text-gray-500">
-                    {tag.postCount || 0} posts
+                    {t("blogTagsMgt.postsCount", { count: tag.postCount || 0 })}
                   </span>
                   <span
                     className={`badge text-xs ${
@@ -287,7 +288,7 @@ const BlogTags = () => {
                         : 'badge-warning'
                     }`}
                   >
-                    {tag.status}
+                    {tag.status === 'ACTIVE' ? t("common.active") : t("common.inactive")}
                   </span>
                 </div>
 
@@ -295,14 +296,14 @@ const BlogTags = () => {
                   <button
                     onClick={() => handleEdit(tag)}
                     className="flex-1 p-2 text-green-600 hover:bg-green-50 rounded text-center transition-colors"
-                    title="Edit"
+                    title={t("common.edit")}
                   >
                     <Edit className="w-4 h-4 mx-auto" />
                   </button>
                   <button
                     onClick={() => handleDelete(tag._id)}
                     className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded text-center transition-colors"
-                    title="Delete"
+                    title={t("common.delete")}
                   >
                     <Trash2 className="w-4 h-4 mx-auto" />
                   </button>
@@ -342,7 +343,7 @@ const BlogTags = () => {
           <div className="modal-container max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingTag ? 'Edit Tag' : 'Add New Tag'}
+                {editingTag ? t("blogTagsMgt.editTag") : t("blogTagsMgt.addNewTag")}
               </h3>
               <button
                 onClick={() => {
@@ -358,7 +359,7 @@ const BlogTags = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tag Name *
+                  {t("blogTagsMgt.tagName")} *
                 </label>
                 <input
                   type="text"
@@ -368,13 +369,13 @@ const BlogTags = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  placeholder="e.g., Arabica, Ethiopia, Single Origin"
+                  placeholder={t("blogTagsMgt.tagNamePlaceholder")}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description
+                  {t("common.description")}
                 </label>
                 <textarea
                   rows="3"
@@ -386,13 +387,22 @@ const BlogTags = () => {
                       description: e.target.value,
                     }))
                   }
-                  placeholder="Brief description of this tag..."
+                  placeholder={t("blogTagsMgt.descriptionPlaceholder")}
                 />
               </div>
 
+              {editingTag && (
+                <InlineTranslateFields
+                  entityType="blogTag"
+                  entity={editingTag}
+                  fields={["name", "description"]}
+                  fieldLabels={{ name: "Tag Name", description: "Description" }}
+                />
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tag Color
+                  {t("blogTagsMgt.tagColor")}
                 </label>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -426,7 +436,7 @@ const BlogTags = () => {
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Quick Colors:</p>
+                    <p className="text-sm text-gray-600 mb-2">{t("blogTagsMgt.quickColors")}</p>
                     <div className="grid grid-cols-10 gap-2">
                       {predefinedColors.map((color) => (
                         <button
@@ -451,7 +461,7 @@ const BlogTags = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Status
+                  {t("blogTagsMgt.status")}
                 </label>
                 <select
                   className="form-select"
@@ -470,12 +480,12 @@ const BlogTags = () => {
 
               {/* Preview */}
               <div className="border rounded-lg p-4 bg-gray-50">
-                <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                <p className="text-sm text-gray-600 mb-2">{t("blogTagsMgt.preview")}</p>
                 <span
                   className="inline-block px-3 py-1 text-sm rounded-full text-white font-medium"
                   style={{ backgroundColor: formData.color }}
                 >
-                  {formData.name || 'Tag Name'}
+                  {formData.name || t("blogTagsMgt.tagNamePreviewFallback")}
                 </span>
               </div>
 
@@ -490,7 +500,7 @@ const BlogTags = () => {
                   className="btn-outline"
                   disabled={loading}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -502,7 +512,7 @@ const BlogTags = () => {
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  {editingTag ? 'Update Tag' : 'Create Tag'}
+                  {editingTag ? t("blogTagsMgt.updateTag") : t("blogTagsMgt.createTag")}
                 </button>
               </div>
             </form>
