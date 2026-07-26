@@ -14,7 +14,7 @@ const CustomerFilters = ({ filters, setFilters }) => {
       <div className="flex items-center gap-2 mb-4">
         <Filter className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Filters
+          {t('customer.filtersHeading')}
         </h3>
       </div>
 
@@ -24,7 +24,7 @@ const CustomerFilters = ({ filters, setFilters }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <input
             type="text"
-            placeholder="Search customers..."
+            placeholder={t('customer.searchCustomersPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={filters.searchTerm}
             onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
@@ -38,8 +38,8 @@ const CustomerFilters = ({ filters, setFilters }) => {
           onChange={(e) => handleFilterChange('filterType', e.target.value)}
         >
           <option value="">{t("orders.allTypes")}</option>
-          <option value="BTC">BTC (Business to Consumer)</option>
-          <option value="BTB">BTB (Business to Business)</option>
+          <option value="BTC">{t('customer.btc')}</option>
+          <option value="BTB">{t('customer.btb')}</option>
         </select>
 
         {/* Customer Mode */}
@@ -70,7 +70,7 @@ const CustomerFilters = ({ filters, setFilters }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Sort By
+            {t('customer.sortByLabel')}
           </label>
           <select
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -78,7 +78,7 @@ const CustomerFilters = ({ filters, setFilters }) => {
             onChange={(e) => handleFilterChange('sortBy', e.target.value)}
           >
             <option value="createdAt">{t("customer.dateCreated")}</option>
-            <option value="name">Name</option>
+            <option value="name">{t('common.name')}</option>
             <option value="email">{t("common.email")}</option>
             <option value="totalOrders">{t("customer.totalOrders")}</option>
             <option value="totalOrderValue">{t("customer.totalValue")}</option>
@@ -87,7 +87,7 @@ const CustomerFilters = ({ filters, setFilters }) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Order
+            {t('customer.orderLabel')}
           </label>
           <select
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"

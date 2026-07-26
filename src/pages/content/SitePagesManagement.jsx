@@ -22,19 +22,20 @@ import {
 import toast from "react-hot-toast";
 import { apiCall, handleApiError } from "../../utils/api";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 // ── Known pages (slug -> label). New pages can be added by typing a new
 // slug in the "custom slug" box below — nothing here is a hard limit. ─────
 const KNOWN_PAGES = [
-  { slug: "about-us", label: "About Us" },
-  { slug: "our-story", label: "Our Story" },
-  { slug: "partner-with-us", label: "Partner With Us" },
-  { slug: "contact-us", label: "Contact Us" },
-  { slug: "faq", label: "FAQ" },
-  { slug: "shipping-policy", label: "Shipping Policy" },
-  { slug: "return-policy", label: "Returns & Refunds" },
-  { slug: "terms-conditions", label: "Terms & Conditions" },
-  { slug: "privacy-policy", label: "Privacy Policy" },
+  { slug: "about-us", key: "pageAboutUs" },
+  { slug: "our-story", key: "pageOurStory" },
+  { slug: "partner-with-us", key: "pagePartnerWithUs" },
+  { slug: "contact-us", key: "pageContactUs" },
+  { slug: "faq", key: "pageFaq" },
+  { slug: "shipping-policy", key: "pageShippingPolicy" },
+  { slug: "return-policy", key: "pageReturnPolicy" },
+  { slug: "terms-conditions", key: "pageTermsConditions" },
+  { slug: "privacy-policy", key: "pagePrivacyPolicy" },
 ];
 
 const ALL_NON_EN = [
@@ -57,6 +58,7 @@ function humanizeKey(key) {
 // makes the CRUD "dynamic": it never assumes a page's shape in advance.
 // ─────────────────────────────────────────────────────────────────────────
 function ValueEditor({ value, onChange, depth = 0 }) {
+  const { t } = useAdminTranslation();
   if (typeof value === "string") {
     const long = value.length > 60 || value.includes("\n");
     return long ? (
@@ -94,7 +96,7 @@ function ValueEditor({ value, onChange, depth = 0 }) {
     return (
       <label className="inline-flex items-center gap-2 text-sm">
         <input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} />
-        {value ? "true" : "false"}
+        {value ? t('content.spTrue') : t('content.spFalse')}
       </label>
     );
   }
@@ -119,7 +121,7 @@ function ValueEditor({ value, onChange, depth = 0 }) {
             <button
               type="button"
               className="text-red-500 hover:text-red-700 mt-2"
-              title="Remove item"
+              title={t('content.spRemoveItem')}
               onClick={() => {
                 const copy = clone(value);
                 copy.splice(idx, 1);
@@ -142,7 +144,7 @@ function ValueEditor({ value, onChange, depth = 0 }) {
             onChange([...value, template]);
           }}
         >
-          <Plus className="w-3.5 h-3.5" /> Add item
+          <Plus className="w-3.5 h-3.5" /> {t('content.spAddItem')}
         </button>
       </div>
     );
@@ -161,7 +163,7 @@ function ValueEditor({ value, onChange, depth = 0 }) {
               <button
                 type="button"
                 className="text-gray-300 hover:text-red-500"
-                title={`Remove "${k}"`}
+                title={t('content.spRemoveField', { key: k })}
                 onClick={() => {
                   const copy = clone(value);
                   delete copy[k];
@@ -192,7 +194,7 @@ function ValueEditor({ value, onChange, depth = 0 }) {
       type="text"
       className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
       value=""
-      placeholder="(empty)"
+      placeholder={t('content.spEmpty')}
       onChange={(e) => onChange(e.target.value)}
     />
   );
@@ -203,6 +205,7 @@ function ValueEditor({ value, onChange, depth = 0 }) {
 // an "Inherited from HQ" badge when the country doc hasn't overridden it.
 // ─────────────────────────────────────────────────────────────────────────
 function TopLevelFieldCard({ fieldKey, value, onChange, onDelete, isOverride, isInherited }) {
+  const { t } = useAdminTranslation();
   const [open, setOpen] = useState(true);
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -214,15 +217,15 @@ function TopLevelFieldCard({ fieldKey, value, onChange, onDelete, isOverride, is
         <div className="flex items-center gap-2">
           {isInherited && (
             <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300">
-              Inherited from HQ
+              {t('content.spInheritedFromHQ')}
             </span>
           )}
           {isOverride && (
             <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300">
-              Overridden here
+              {t('content.spOverriddenHere')}
             </span>
           )}
-          <button type="button" className="text-gray-300 hover:text-red-500" title="Delete this field" onClick={onDelete}>
+          <button type="button" className="text-gray-300 hover:text-red-500" title={t('content.spDeleteThisField')} onClick={onDelete}>
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -240,6 +243,7 @@ function TopLevelFieldCard({ fieldKey, value, onChange, onDelete, isOverride, is
 // Main page
 // ─────────────────────────────────────────────────────────────────────────
 export default function SitePagesManagement() {
+  const { t } = useAdminTranslation();
   const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
 
   const [slug, setSlug] = useState(KNOWN_PAGES[0].slug);
@@ -300,7 +304,7 @@ export default function SitePagesManagement() {
         setIsPublished(res.data.doc?.isPublished !== false);
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to load page content"));
+      toast.error(handleApiError(err, t('content.spFailedToLoad')));
     } finally {
       setLoading(false);
     }
@@ -332,27 +336,27 @@ export default function SitePagesManagement() {
         body: { content, seo, isPublished, inherit: true },
       });
       if (res.success) {
-        toast.success("Saved");
+        toast.success(t('content.savedGeneric'));
         fetchDoc();
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to save"));
+      toast.error(handleApiError(err, t('content.spFailedToSave')));
     } finally {
       setSaving(false);
     }
   };
 
   const handleResetToHQ = async () => {
-    if (!window.confirm(`Remove ${countryCode}'s override for "${slug}"? It will go back to inheriting HQ's content.`)) return;
+    if (!window.confirm(t('content.spConfirmResetOverride', { country: countryCode, slug }))) return;
     try {
       const res = await apiCall(`/site-pages/admin/${slug}/${countryCode}`, { method: "DELETE" });
       if (res.success) {
-        toast.success(res.message || "Reverted to HQ content");
+        toast.success(res.message || t('content.spRevertedToHQ'));
         fetchDoc();
         fetchTranslations();
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to reset"));
+      toast.error(handleApiError(err, t('content.spFailedToReset')));
     }
   };
 
@@ -360,7 +364,7 @@ export default function SitePagesManagement() {
     const key = newKeyName.trim().replace(/\s+/g, "");
     if (!key) return;
     if (content[key] !== undefined) {
-      toast.error("That key already exists");
+      toast.error(t('content.spKeyExists'));
       return;
     }
     setContent({ ...content, [key]: "" });
@@ -375,11 +379,11 @@ export default function SitePagesManagement() {
         body: { targetLangs: [langCode] },
       });
       if (res.success) {
-        toast.success("Translation queued — refreshing shortly");
+        toast.success(t('content.spTranslationQueued'));
         setTimeout(fetchTranslations, 3000);
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Save this page/country before translating"));
+      toast.error(handleApiError(err, t('content.spSaveBeforeTranslate')));
     } finally {
       setTranslatingLang(null);
     }
@@ -399,11 +403,11 @@ export default function SitePagesManagement() {
         body: { content: langDraft, seo: translations[activeLangTab]?.fields?.seo || {} },
       });
       if (res.success) {
-        toast.success("Translation saved");
+        toast.success(t('content.spTranslationSaved'));
         fetchTranslations();
       }
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to save translation"));
+      toast.error(handleApiError(err, t('content.spFailedToSaveTranslation')));
     } finally {
       setLangSaving(false);
     }
@@ -416,18 +420,16 @@ export default function SitePagesManagement() {
     <div className="p-4 md:p-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-2 mb-1">
         <FileText className="w-5 h-5 text-amber-600" />
-        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Site Pages</h1>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('content.sitePagesTitle')}</h1>
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Edit the copy on About Us, Our Story, Contact Us, FAQ, Shipping Policy, Returns & Refunds,
-        Terms & Conditions, Privacy Policy, and Partner With Us — per country and language. HQ's
-        content is the default every market falls back to until it creates its own override.
+        {t('content.sitePagesSubtitle')}
       </p>
 
       {/* Page + country selectors */}
       <div className="flex flex-wrap gap-4 mb-4">
         <div className="min-w-[220px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Page</label>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('content.pageLabel')}</label>
           <select
             className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
             value={KNOWN_PAGES.some((p) => p.slug === slug) ? slug : "__custom__"}
@@ -437,19 +439,19 @@ export default function SitePagesManagement() {
             }}
           >
             {KNOWN_PAGES.map((p) => (
-              <option key={p.slug} value={p.slug}>{p.label}</option>
+              <option key={p.slug} value={p.slug}>{t(`content.${p.key}`)}</option>
             ))}
-            <option value="__custom__">Custom slug…</option>
+            <option value="__custom__">{t('content.customSlugOption')}</option>
           </select>
         </div>
 
         {!KNOWN_PAGES.some((p) => p.slug === slug) && (
           <div className="min-w-[220px]">
-            <label className="block text-xs font-semibold text-gray-500 mb-1">Custom slug</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">{t('content.customSlugLabel')}</label>
             <div className="flex gap-2">
               <input
                 className="border rounded-md px-2 py-1.5 text-sm flex-1 dark:bg-gray-800 dark:border-gray-600"
-                placeholder="e.g. careers"
+                placeholder={t('content.egCareers')}
                 value={customSlug}
                 onChange={(e) => setCustomSlug(e.target.value)}
               />
@@ -458,14 +460,14 @@ export default function SitePagesManagement() {
                 className="text-xs px-2 py-1 rounded border border-amber-300 text-amber-700 hover:bg-amber-50"
                 onClick={() => customSlug.trim() && setSlug(customSlug.trim().toLowerCase().replace(/\s+/g, "-"))}
               >
-                Use
+                {t('content.useLabel')}
               </button>
             </div>
           </div>
         )}
 
         <div className="min-w-[220px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Country</label>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('common.country')}</label>
           <select
             className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
             value={countryCode}
@@ -485,7 +487,7 @@ export default function SitePagesManagement() {
             onClick={fetchDoc}
             className="text-xs px-3 py-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 inline-flex items-center gap-1 dark:border-gray-600 dark:text-gray-300"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Reload
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> {t('content.reload')}
           </button>
         </div>
       </div>
@@ -495,20 +497,20 @@ export default function SitePagesManagement() {
           <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" />
           <span>
             {doc
-              ? `${countryCode} has its own content for this page. Fields marked "Inherited from HQ" below are still coming from the master copy — only the fields you edit here get overridden.`
-              : `${countryCode} has no override yet — this page currently shows HQ's content as-is. Editing and saving below will create a ${countryCode}-specific override; unedited fields stay inherited.`}
+              ? t('content.spHasOwnContent', { country: countryCode })
+              : t('content.spNoOverrideYet', { country: countryCode })}
           </span>
         </div>
       )}
 
       {readOnly && (
         <div className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" /> You don't have permission to edit {countryCode === "GLOBAL" ? "the HQ master copy" : countryCode}. Viewing read-only.
+          <AlertCircle className="w-4 h-4" /> {t('content.spReadOnlyWarning', { scope: countryCode === "GLOBAL" ? t('content.spHqMasterCopy') : countryCode })}
         </div>
       )}
 
       {loading ? (
-        <div className="py-16 text-center text-gray-400 text-sm">Loading…</div>
+        <div className="py-16 text-center text-gray-400 text-sm">{t('common.loading')}</div>
       ) : (
         <>
           {/* Tabs: base content vs a translation */}
@@ -520,7 +522,7 @@ export default function SitePagesManagement() {
                 activeLangTab === null ? "bg-amber-600 text-white border-amber-600" : "border-gray-300 text-gray-600 dark:text-gray-300"
               }`}
             >
-              <Globe2 className="w-3.5 h-3.5 inline mr-1" /> Base content
+              <Globe2 className="w-3.5 h-3.5 inline mr-1" /> {t('content.baseContent')}
             </button>
             {selectedCountryLanguages.map((l) => {
               const state = translations[l.code];
@@ -548,10 +550,10 @@ export default function SitePagesManagement() {
             <>
               {/* SEO */}
               <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">SEO</h3>
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">{t('content.seoHeading')}</h3>
                 <div className="grid md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Page title</label>
+                    <label className="block text-xs text-gray-500 mb-1">{t('content.pageTitleLabel')}</label>
                     <input
                       className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
                       value={seo.title || ""}
@@ -561,7 +563,7 @@ export default function SitePagesManagement() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Meta description</label>
+                    <label className="block text-xs text-gray-500 mb-1">{t('content.metaDescriptionLabel')}</label>
                     <input
                       className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
                       value={seo.description || ""}
@@ -583,7 +585,7 @@ export default function SitePagesManagement() {
                   }`}
                 >
                   {isPublished ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  {isPublished ? "Published" : "Unpublished (falls back to HQ)"}
+                  {isPublished ? t('content.published') : t('content.unpublishedFallsBack')}
                 </button>
               </div>
 
@@ -626,7 +628,7 @@ export default function SitePagesManagement() {
                     onClick={handleAddKey}
                     className="text-xs px-3 py-1.5 rounded border border-amber-300 text-amber-700 hover:bg-amber-50 inline-flex items-center gap-1"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add field
+                    <Plus className="w-3.5 h-3.5" /> {t('content.addField')}
                   </button>
                 </div>
               )}
@@ -640,7 +642,7 @@ export default function SitePagesManagement() {
                     disabled={saving}
                     className="px-4 py-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50"
                   >
-                    <Save className="w-4 h-4" /> {saving ? "Saving…" : "Save"}
+                    <Save className="w-4 h-4" /> {saving ? t('content.savingEllipsis') : t('common.save')}
                   </button>
                   {isOverrideDoc && (
                     <button
@@ -648,7 +650,7 @@ export default function SitePagesManagement() {
                       onClick={handleResetToHQ}
                       className="px-4 py-2 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm inline-flex items-center gap-2 dark:border-gray-600 dark:text-gray-300"
                     >
-                      <RotateCcw className="w-4 h-4" /> Reset to HQ default
+                      <RotateCcw className="w-4 h-4" /> {t('content.resetToHqDefault')}
                     </button>
                   )}
                 </div>
@@ -659,8 +661,7 @@ export default function SitePagesManagement() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  Editing the <strong>{ALL_NON_EN.find((l) => l.code === activeLangTab)?.label}</strong> translation of{" "}
-                  {countryCode === "GLOBAL" ? "HQ's" : `${countryCode}'s`} content for this page.
+                  {t('content.spEditingTranslationOf', { lang: ALL_NON_EN.find((l) => l.code === activeLangTab)?.label, scope: countryCode === "GLOBAL" ? "HQ's" : `${countryCode}'s` })}
                 </div>
                 <button
                   type="button"
@@ -668,7 +669,7 @@ export default function SitePagesManagement() {
                   disabled={translatingLang === activeLangTab}
                   className="text-xs px-3 py-1.5 rounded border border-amber-300 text-amber-700 hover:bg-amber-50 inline-flex items-center gap-1 disabled:opacity-50"
                 >
-                  <Bot className="w-3.5 h-3.5" /> {translatingLang === activeLangTab ? "Translating…" : "Auto-translate all"}
+                  <Bot className="w-3.5 h-3.5" /> {translatingLang === activeLangTab ? t('content.translatingEllipsis') : t('content.autoTranslateAll')}
                 </button>
               </div>
 
@@ -699,7 +700,7 @@ export default function SitePagesManagement() {
                       disabled={langSaving}
                       className="px-4 py-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50"
                     >
-                      <Save className="w-4 h-4" /> {langSaving ? "Saving…" : "Save translation"}
+                      <Save className="w-4 h-4" /> {langSaving ? t('content.savingEllipsis') : t('content.saveTranslation')}
                     </button>
                   </div>
                 </>

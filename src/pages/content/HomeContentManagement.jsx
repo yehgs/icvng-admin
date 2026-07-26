@@ -28,18 +28,17 @@ const EMPTY_FOOTER = {
   isActive: true, countryCode: "NG",
 };
 
-const TABS = [
-  { id: "header", label: "Header", icon: Megaphone },
-  { id: "footer", label: "Footer", icon: MapPin },
-  { id: "trustBadge", label: "Trust Badges", icon: Heart },
-  { id: "testimonial", label: "Testimonials", icon: Star },
-];
-
 const SINGLETON_TYPES = ["header", "footer"];
 
 const HomeContentManagement = () => {
   const { t } = useAdminTranslation();
   const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
+  const TABS = [
+    { id: "header", label: t('content.tabHeader'), icon: Megaphone },
+    { id: "footer", label: t('content.tabFooter'), icon: MapPin },
+    { id: "trustBadge", label: t('content.tabTrustBadges'), icon: Heart },
+    { id: "testimonial", label: t('content.tabTestimonials'), icon: Star },
+  ];
   const [tab, setTab] = useState("header");
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +68,7 @@ const HomeContentManagement = () => {
       const res = await apiCall(`/home-content/admin?type=${tab}${countryParam}`);
       if (res.success) setBlocks(res.data || []);
     } catch (err) {
-      toast.error(handleApiError(err, "Failed to load content"));
+      toast.error(handleApiError(err, t('content.failedToLoadContent')));
     } finally {
       setLoading(false);
     }
@@ -83,14 +82,14 @@ const HomeContentManagement = () => {
   const openEdit = (b) => { setEditing(b); setForm({ ...emptyForTab, ...b }); setShowForm(true); };
 
   const handleSubmit = async () => {
-    if (tab === "trustBadge" && !form.title?.trim()) { toast.error("Title is required"); return; }
+    if (tab === "trustBadge" && !form.title?.trim()) { toast.error(t('content.titleRequired')); return; }
     if (tab === "testimonial" && (!form.customerName?.trim() || !form.quote?.trim())) {
-      toast.error("Customer name and quote are required");
+      toast.error(t('content.customerNameQuoteRequired'));
       return;
     }
-    if (tab === "header" && !form.message?.trim()) { toast.error("Message is required"); return; }
+    if (tab === "header" && !form.message?.trim()) { toast.error(t('content.messageRequired')); return; }
     if (tab === "footer" && !form.contactAddress?.trim() && !form.contactEmail?.trim() && !form.contactPhone?.trim()) {
-      toast.error("Add at least an address, phone, or email");
+      toast.error(t('content.addAtLeastContact'));
       return;
     }
     setSubmitting(true);
@@ -99,12 +98,12 @@ const HomeContentManagement = () => {
         ? await apiCall("/home-content/update", { method: "PUT", body: { ...form, _id: editing._id } })
         : await apiCall("/home-content/add", { method: "POST", body: form });
       if (res.success) {
-        toast.success(editing ? "Updated" : "Created");
+        toast.success(editing ? t('content.updatedGeneric') : t('content.createdGeneric'));
         setShowForm(false);
         fetchBlocks();
-      } else toast.error(res.message || "Failed");
+      } else toast.error(res.message || t('content.failed'));
     } catch (err) {
-      toast.error(handleApiError(err, "Save failed"));
+      toast.error(handleApiError(err, t('content.saveFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -114,15 +113,15 @@ const HomeContentManagement = () => {
     if (!deleteTarget) return;
     try {
       const res = await apiCall("/home-content/delete", { method: "DELETE", body: { _id: deleteTarget._id } });
-      if (res.success) { toast.success("Deleted"); setDeleteTarget(null); fetchBlocks(); }
-    } catch { toast.error("Delete failed"); }
+      if (res.success) { toast.success(t('content.deletedGeneric')); setDeleteTarget(null); fetchBlocks(); }
+    } catch { toast.error(t('content.deleteFailed')); }
   };
 
   const toggleActive = async (b) => {
     try {
       const res = await apiCall("/home-content/update", { method: "PUT", body: { _id: b._id, isActive: !b.isActive } });
       if (res.success) fetchBlocks();
-    } catch { toast.error("Toggle failed"); }
+    } catch { toast.error(t('content.toggleFailed')); }
   };
 
   // ── Singleton save (header/footer) — edit in place, no modal ───────────
@@ -144,11 +143,11 @@ const HomeContentManagement = () => {
         ? await apiCall("/home-content/update", { method: "PUT", body: { ...payload, _id: singletonDoc._id } })
         : await apiCall("/home-content/add", { method: "POST", body: payload });
       if (res.success) {
-        toast.success("Saved");
+        toast.success(t('content.savedGeneric'));
         fetchBlocks();
-      } else toast.error(res.message || "Save failed");
+      } else toast.error(res.message || t('content.saveFailed'));
     } catch (err) {
-      toast.error(handleApiError(err, "Save failed"));
+      toast.error(handleApiError(err, t('content.saveFailed')));
     } finally {
       setSingletonSaving(false);
     }
@@ -162,11 +161,10 @@ const HomeContentManagement = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Heart className="w-6 h-6 text-rose-600" />
-            Site Content
+            {t('content.siteContentTitle')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Country-scoped, translatable content blocks used across the site — header banner, footer contact
-            details, trust badges, testimonials, and more sections as they're added.
+            {t('content.siteContentSubtitle')}
           </p>
         </div>
         {!isSingleton && (
@@ -174,21 +172,21 @@ const HomeContentManagement = () => {
             {isGlobalAdmin ? (
               <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}
                 className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800">
-                <option value="ALL">All markets</option>
+                <option value="ALL">{t('content.allMarkets')}</option>
                 {allCountries.map((c) => (
                   <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name}</option>
                 ))}
               </select>
             ) : (
               <span className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                {countryScope} only
+                {t('dashboard.scopeCountry', { country: countryScope })}
               </span>
             )}
             <button onClick={fetchBlocks} className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50">
               <RefreshCw className="w-4 h-4 text-gray-500" />
             </button>
             <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 text-sm">
-              <Plus className="w-4 h-4" /> Add
+              <Plus className="w-4 h-4" /> {t('common.add')}
             </button>
           </div>
         )}
@@ -209,7 +207,7 @@ const HomeContentManagement = () => {
       {isSingleton && (
         <div className="max-w-2xl">
           <div className="flex items-center gap-3 mb-4">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Market</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('content.marketLabel')}</label>
             {isGlobalAdmin ? (
               <select value={singletonCountry} onChange={(e) => setSingletonCountry(e.target.value)}
                 className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-800">
@@ -219,12 +217,12 @@ const HomeContentManagement = () => {
               </select>
             ) : (
               <span className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-1.5">
-                {countryScope} only
+                {t('dashboard.scopeCountry', { country: countryScope })}
               </span>
             )}
             {singletonCountry !== "NG" && (
               <span className="text-xs text-gray-400">
-                Falls back to HQ's (Nigeria's) {tab === "header" ? "banner" : "contact details"} until this market has its own.
+                {t('content.marketFallback', { type: tab === "header" ? t('content.contentTypeBanner') : t('content.contentTypeContactDetails') })}
               </span>
             )}
           </div>
@@ -236,17 +234,17 @@ const HomeContentManagement = () => {
               {tab === "header" ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Preheader banner message
+                    {t('content.preheaderLabel')}
                   </label>
                   <input type="text" value={singletonForm.message}
                     onChange={(e) => setSingletonForm((p) => ({ ...p, message: e.target.value }))}
-                    placeholder="Free shipping on orders over ₦100,000 within Lagos!"
+                    placeholder={t('content.preheaderPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.address')}</label>
                     <input type="text" value={singletonForm.contactAddress}
                       onChange={(e) => setSingletonForm((p) => ({ ...p, contactAddress: e.target.value }))}
                       placeholder="3 Kaffi Street, Alausa, Ikeja, Lagos, Nigeria"
@@ -254,14 +252,14 @@ const HomeContentManagement = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.phone')}</label>
                       <input type="text" value={singletonForm.contactPhone}
                         onChange={(e) => setSingletonForm((p) => ({ ...p, contactPhone: e.target.value }))}
                         placeholder="+234 805 242 3935"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.email')}</label>
                       <input type="text" value={singletonForm.contactEmail}
                         onChange={(e) => setSingletonForm((p) => ({ ...p, contactEmail: e.target.value }))}
                         placeholder="customercare@i-coffee.ng"
@@ -269,32 +267,32 @@ const HomeContentManagement = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.whatsapp')}</label>
                     <input type="text" value={singletonForm.contactWhatsapp}
                       onChange={(e) => setSingletonForm((p) => ({ ...p, contactWhatsapp: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                   </div>
                   <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                     <span className="text-xs text-gray-400">
-                      Social links — leave blank to keep using HQ's (Nigeria's) Facebook/Twitter/Instagram until this market has its own accounts.
+                      {t('content.socialLinksHint')}
                     </span>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Facebook URL</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.facebookUrl')}</label>
                     <input type="text" value={singletonForm.socialFacebook}
                       onChange={(e) => setSingletonForm((p) => ({ ...p, socialFacebook: e.target.value }))}
                       placeholder="https://www.facebook.com/..."
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Twitter / X URL</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.twitterUrl')}</label>
                     <input type="text" value={singletonForm.socialTwitter}
                       onChange={(e) => setSingletonForm((p) => ({ ...p, socialTwitter: e.target.value }))}
                       placeholder="https://twitter.com/..."
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instagram URL</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.instagramUrl')}</label>
                     <input type="text" value={singletonForm.socialInstagram}
                       onChange={(e) => setSingletonForm((p) => ({ ...p, socialInstagram: e.target.value }))}
                       placeholder="https://www.instagram.com/..."
@@ -308,7 +306,7 @@ const HomeContentManagement = () => {
                   entityType="homeContentBlock"
                   entity={singletonDoc}
                   fields={tab === "header" ? ["message"] : ["contactAddress"]}
-                  fieldLabels={tab === "header" ? { message: "Preheader message" } : { contactAddress: "Address" }}
+                  fieldLabels={tab === "header" ? { message: t('content.preheaderMessageFieldLabel') } : { contactAddress: t('content.address') }}
                 />
               )}
 
@@ -316,11 +314,11 @@ const HomeContentManagement = () => {
                 <button onClick={saveSingleton} disabled={singletonSaving}
                   className="flex items-center gap-2 px-5 py-2 bg-rose-600 text-white rounded-lg text-sm hover:bg-rose-700 disabled:opacity-50">
                   {singletonSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Save
+                  {t('common.save')}
                 </button>
                 {!singletonDoc && (
                   <p className="text-xs text-gray-400 mt-2">
-                    Not saved yet for {singletonCountry} — the storefront is currently showing HQ's (Nigeria's) content for this market.
+                    {t('content.notSavedYetFor', { country: singletonCountry })}
                   </p>
                 )}
               </div>
@@ -335,8 +333,8 @@ const HomeContentManagement = () => {
           <div className="flex justify-center py-12"><RefreshCw className="w-6 h-6 text-rose-500 animate-spin" /></div>
         ) : visible.length === 0 ? (
           <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center text-gray-400 text-sm">
-            Nothing here yet for this market — the storefront falls back to HQ's (Nigeria's) content until you add some.
-            <button onClick={openCreate} className="block mx-auto mt-2 text-rose-500 hover:underline text-xs">+ Add one</button>
+            {t('content.nothingHereYet')}
+            <button onClick={openCreate} className="block mx-auto mt-2 text-rose-500 hover:underline text-xs">{t('content.addOne')}</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -347,7 +345,7 @@ const HomeContentManagement = () => {
                     {b.countryCode || "NG"}
                   </span>
                   <button onClick={() => toggleActive(b)} className={`text-xs px-2 py-0.5 rounded-full ${b.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                    {b.isActive ? "Active" : "Inactive"}
+                    {b.isActive ? t('common.active') : t('common.inactive')}
                   </button>
                 </div>
                 {tab === "trustBadge" ? (
@@ -368,10 +366,10 @@ const HomeContentManagement = () => {
                 )}
                 <div className="flex gap-2 mt-3">
                   <button onClick={() => openEdit(b)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">
-                    <Edit2 className="w-3 h-3" />Edit
+                    <Edit2 className="w-3 h-3" />{t('common.edit')}
                   </button>
                   <button onClick={() => setDeleteTarget(b)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
-                    <Trash2 className="w-3 h-3" />Delete
+                    <Trash2 className="w-3 h-3" />{t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -386,13 +384,13 @@ const HomeContentManagement = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                {editing ? "Edit" : "Add"} {tab === "trustBadge" ? "Trust Badge" : "Testimonial"}
+                {editing ? t('common.edit') : t('common.add')} {tab === "trustBadge" ? t('content.trustBadgeSingular') : t('content.testimonialSingular')}
               </h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Market</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.marketLabel')}</label>
                 {isGlobalAdmin ? (
                   <select value={form.countryCode} onChange={(e) => setForm((p) => ({ ...p, countryCode: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
@@ -402,13 +400,13 @@ const HomeContentManagement = () => {
                   </select>
                 ) : (
                   <div className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                    {countryScope} (your assigned market)
+                    {t('content.yourAssignedMarket', { country: countryScope })}
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.iconLabel')}</label>
                 <select value={form.icon} onChange={(e) => setForm((p) => ({ ...p, icon: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
                   {ICON_OPTIONS.map((i) => <option key={i} value={i}>{i}</option>)}
@@ -418,7 +416,7 @@ const HomeContentManagement = () => {
               {tab === "trustBadge" ? (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.title')} <span className="text-red-500">*</span></label>
                     <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                   </div>
@@ -432,7 +430,7 @@ const HomeContentManagement = () => {
                       entityType="homeContentBlock"
                       entity={editing}
                       fields={["title", "description"]}
-                      fieldLabels={{ title: "Title", description: t("common.description") }}
+                      fieldLabels={{ title: t('common.title'), description: t('common.description') }}
                     />
                   )}
                 </>
@@ -440,33 +438,33 @@ const HomeContentManagement = () => {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.customerNameLabel')} <span className="text-red-500">*</span></label>
                       <input type="text" value={form.customerName} onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.location')}</label>
                       <input type="text" value={form.customerLocation} onChange={(e) => setForm((p) => ({ ...p, customerLocation: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quote <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.quoteLabel')} <span className="text-red-500">*</span></label>
                     <textarea rows={3} value={form.quote} onChange={(e) => setForm((p) => ({ ...p, quote: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white resize-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Badge label</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.badgeLabelField')}</label>
                       <input type="text" value={form.badge} onChange={(e) => setForm((p) => ({ ...p, badge: e.target.value }))}
-                        placeholder="e.g. Fast delivery"
+                        placeholder={t('content.badgePlaceholder')}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rating</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.rating')}</label>
                       <select value={form.rating} onChange={(e) => setForm((p) => ({ ...p, rating: Number(e.target.value) }))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
-                        {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n !== 1 ? "s" : ""}</option>)}
+                        {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{t('content.starCount', { count: n })}</option>)}
                       </select>
                     </div>
                   </div>
@@ -475,7 +473,7 @@ const HomeContentManagement = () => {
                       entityType="homeContentBlock"
                       entity={editing}
                       fields={["quote", "badge"]}
-                      fieldLabels={{ quote: "Quote", badge: "Badge label" }}
+                      fieldLabels={{ quote: t('content.quoteLabel'), badge: t('content.badgeLabelField') }}
                     />
                   )}
                 </>
@@ -494,7 +492,7 @@ const HomeContentManagement = () => {
               <button onClick={handleSubmit} disabled={submitting}
                 className="px-5 py-2 bg-rose-600 text-white rounded-lg text-sm hover:bg-rose-700 disabled:opacity-50 flex items-center gap-2">
                 {submitting && <RefreshCw className="w-3 h-3 animate-spin" />}
-                {editing ? "Save Changes" : "Create"}
+                {editing ? t('content.saveChanges') : t('common.create')}
               </button>
             </div>
           </div>
@@ -506,7 +504,7 @@ const HomeContentManagement = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full text-center shadow-xl">
             <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
-            <h3 className="text-lg font-bold mb-2 dark:text-white">Delete this item?</h3>
+            <h3 className="text-lg font-bold mb-2 dark:text-white">{t('content.deleteThisItem')}</h3>
             <div className="flex gap-3 justify-center">
               <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border rounded-lg text-sm">{t("common.cancel")}</button>
               <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">{t("common.delete")}</button>

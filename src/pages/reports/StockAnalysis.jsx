@@ -93,6 +93,12 @@ function daysUntil(d) {
   if (!d) return null;
   return Math.ceil((new Date(d) - Date.now()) / 86400000);
 }
+const STATUS_LABEL_KEYS = {
+  IN_STOCK: "reports2.statusInStock",
+  LOW_STOCK: "reports2.statusLowStock",
+  CRITICAL_STOCK: "reports2.statusCritical",
+  OUT_OF_STOCK: "reports2.statusOutOfStock",
+};
 
 // Resolve effective stock from product document (mirrors InventoryReports logic)
 function resolveStock(p) {
@@ -197,7 +203,7 @@ export default function StockAnalysis() {
     ...p,
     _stock: resolveStock(p),
     _status: getStockStatus(resolveStock(p).total),
-    _catName: p.category?.name || "Uncategorised",
+    _catName: p.category?.name || t('reports2.uncategorised'),
   }));
 
   // ── Filtered list ──────────────────────────────────────────────────────────
@@ -222,7 +228,7 @@ export default function StockAnalysis() {
     statusCounts[p._status] = (statusCounts[p._status] || 0) + 1;
   });
   const statusPieData = Object.entries(statusCounts)
-    .map(([key, value]) => ({ name: STATUS_CONFIG[key].label, value, key }))
+    .map(([key, value]) => ({ name: t(STATUS_LABEL_KEYS[key]), value, key }))
     .filter((d) => d.value > 0);
 
   // ── Category breakdown ─────────────────────────────────────────────────────
@@ -289,16 +295,16 @@ export default function StockAnalysis() {
   const exportCSV = () => {
     const rows = [
       [
-        "Product",
+        t('reports2.colProduct'),
         "SKU",
-        "Category",
-        "Source",
-        "Status",
-        "Total",
-        "Online",
-        "Offline",
-        "Damaged",
-        "Expired",
+        t('common.category'),
+        t('crm.colSource'),
+        t('common.status'),
+        t('common.total'),
+        t('customer.online'),
+        t('customer.offline'),
+        t('reports2.damaged'),
+        t('reports2.expired'),
       ],
     ];
     filtered.forEach((p) =>
@@ -307,7 +313,7 @@ export default function StockAnalysis() {
         p.sku || "",
         p._catName,
         p._stock.source,
-        STATUS_CONFIG[p._status]?.label || p._status,
+        t(STATUS_LABEL_KEYS[p._status]) || p._status,
         p._stock.total,
         p._stock.online,
         p._stock.offline,
@@ -333,7 +339,7 @@ export default function StockAnalysis() {
             {t("reports.stockAnalysis")}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Stock levels, quality issues, expiry tracking and category breakdown
+            {t('reports2.stockAnalysisSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -358,17 +364,17 @@ export default function StockAnalysis() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Total SKUs",
+            label: t('reports2.totalSkus'),
             value: loading
               ? "…"
               : fmtN(summary?.totalProducts ?? products.length),
             icon: Package,
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
-            sub: "Active product catalogue",
+            sub: t('reports2.activeCatalogueSub'),
           },
           {
-            label: "Total Units",
+            label: t('reports2.totalUnits'),
             value: loading
               ? "…"
               : fmtN(
@@ -378,20 +384,20 @@ export default function StockAnalysis() {
             icon: Layers,
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
-            sub: `${fmtN(summary?.onlineStock ?? 0)} online · ${fmtN(summary?.offlineStock ?? 0)} offline`,
+            sub: t('reports2.onlineOfflineSub', { online: fmtN(summary?.onlineStock ?? 0), offline: fmtN(summary?.offlineStock ?? 0) }),
           },
           {
-            label: "Low / Out of Stock",
+            label: t('reports2.lowOutOfStock'),
             value: loading
               ? "…"
               : `${fmtN(urgentProducts.filter((p) => p._status !== "OUT_OF_STOCK").length)} / ${fmtN(statusCounts.OUT_OF_STOCK)}`,
             icon: AlertTriangle,
             color: "text-orange-600",
             bg: "bg-orange-50 dark:bg-orange-900/20",
-            sub: `${fmtN(statusCounts.CRITICAL_STOCK)} critical (≤3 units)`,
+            sub: t('reports2.criticalUnitsSub', { count: fmtN(statusCounts.CRITICAL_STOCK) }),
           },
           {
-            label: "Quality / Damaged",
+            label: t('reports2.qualityDamaged'),
             value: loading
               ? "…"
               : fmtN(
@@ -400,7 +406,7 @@ export default function StockAnalysis() {
             icon: AlertCircle,
             color: "text-red-600",
             bg: "bg-red-50 dark:bg-red-900/20",
-            sub: `${fmtN(summary?.damagedItems ?? 0)} damaged · ${fmtN(summary?.expiredItems ?? 0)} expired`,
+            sub: t('reports2.damagedExpiredSub', { damaged: fmtN(summary?.damagedItems ?? 0), expired: fmtN(summary?.expiredItems ?? 0) }),
           },
         ].map((s) => (
           <div
@@ -437,7 +443,7 @@ export default function StockAnalysis() {
             <span
               className={`w-2 h-2 rounded-full ${STATUS_CONFIG[key].dot}`}
             />
-            {STATUS_CONFIG[key].label}
+            {t(STATUS_LABEL_KEYS[key])}
             <span className={`text-xs font-bold ${STATUS_CONFIG[key].color}`}>
               {count}
             </span>
@@ -448,7 +454,7 @@ export default function StockAnalysis() {
             onClick={() => setFilterStatus("")}
             className="text-xs text-gray-400 hover:text-gray-600 px-2 underline"
           >
-            clear
+            {t('reports2.clear')}
           </button>
         )}
       </div>
@@ -456,21 +462,21 @@ export default function StockAnalysis() {
       {/* ── Tabs ───────────────────────────────────────────────────────── */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
         {[
-          { id: "overview", label: "Overview" },
-          { id: "products", label: `All Products (${filtered.length})` },
+          { id: "overview", label: t('reports2.tabOverview') },
+          { id: "products", label: t('reports2.tabAllProductsCount', { count: filtered.length }) },
           {
             id: "urgent",
-            label: `Urgent (${urgentProducts.length})`,
+            label: t('reports2.tabUrgentCount', { count: urgentProducts.length }),
             alert: urgentProducts.length > 0,
           },
           {
             id: "quality",
-            label: `Quality Issues (${damagedItems.length})`,
+            label: t('reports2.tabQualityIssuesCount', { count: damagedItems.length }),
             alert: damagedItems.length > 0,
           },
           {
             id: "expiry",
-            label: `Expiring (${batches.length})`,
+            label: t('reports2.tabExpiringCount', { count: batches.length }),
             alert: batches.some((b) => daysUntil(b.expiryDate) <= 7),
           },
         ].map(({ id, label, alert }) => (
@@ -497,7 +503,7 @@ export default function StockAnalysis() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Stock Units by Category
+                {t('reports2.stockUnitsByCategory')}
               </h3>
               {catData.length === 0 ? (
                 <p className="text-gray-400 text-sm text-center py-12">
@@ -530,19 +536,19 @@ export default function StockAnalysis() {
                       dataKey="online"
                       fill="#3B82F6"
                       stackId="a"
-                      name="Online"
+                      name={t('customer.online')}
                     />
                     <Bar
                       dataKey="offline"
                       fill="#10B981"
                       stackId="a"
-                      name="Offline"
+                      name={t('customer.offline')}
                     />
                     <Bar
                       dataKey="damaged"
                       fill="#EF4444"
                       stackId="a"
-                      name="Damaged"
+                      name={t('reports2.damaged')}
                       radius={[0, 3, 3, 0]}
                     />
                   </BarChart>
@@ -552,7 +558,7 @@ export default function StockAnalysis() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Stock Health Distribution
+                {t('reports2.stockHealthDistribution')}
               </h3>
               {statusPieData.length === 0 ? (
                 <p className="text-gray-400 text-sm text-center py-12">
@@ -601,7 +607,7 @@ export default function StockAnalysis() {
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Category Summary
+                {t('reports2.categorySummary')}
               </h3>
             </div>
             <div className="overflow-x-auto">
@@ -609,12 +615,12 @@ export default function StockAnalysis() {
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
                     {[
-                      "Category",
-                      "Products",
-                      "Total Units",
-                      "Online",
-                      "Offline",
-                      "Damaged",
+                      t('common.category'),
+                      t('reports2.colProducts'),
+                      t('reports2.colTotalUnits'),
+                      t('customer.online'),
+                      t('customer.offline'),
+                      t('reports2.damaged'),
                     ].map((h) => (
                       <th
                         key={h}
@@ -698,12 +704,12 @@ export default function StockAnalysis() {
               <option value="">{t("products.allStatus")}</option>
               {Object.entries(STATUS_CONFIG).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v.label}
+                  {t(STATUS_LABEL_KEYS[k])}
                 </option>
               ))}
             </select>
             <span className="text-sm text-gray-400 self-center">
-              {filtered.length} products
+              {t('reports2.productsCountLabel', { count: filtered.length })}
             </span>
           </div>
 
@@ -713,37 +719,37 @@ export default function StockAnalysis() {
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Product
+                    {t('reports2.colProduct')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Source
+                    {t('crm.colSource')}
                   </th>
                   <th
                     className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-indigo-600"
                     onClick={() => toggleSort("total")}
                   >
-                    Total <SortIcon col="total" />
+                    {t('common.total')} <SortIcon col="total" />
                   </th>
                   <th
                     className="px-4 py-3 text-left text-xs font-semibold text-blue-500 uppercase tracking-wide cursor-pointer hover:text-blue-700"
                     onClick={() => toggleSort("online")}
                   >
-                    Online <SortIcon col="online" />
+                    {t('customer.online')} <SortIcon col="online" />
                   </th>
                   <th
                     className="px-4 py-3 text-left text-xs font-semibold text-green-500 uppercase tracking-wide cursor-pointer hover:text-green-700"
                     onClick={() => toggleSort("offline")}
                   >
-                    Offline <SortIcon col="offline" />
+                    {t('customer.offline')} <SortIcon col="offline" />
                   </th>
                   <th
                     className="px-4 py-3 text-left text-xs font-semibold text-red-500 uppercase tracking-wide cursor-pointer hover:text-red-700"
                     onClick={() => toggleSort("damaged")}
                   >
-                    Damaged <SortIcon col="damaged" />
+                    {t('reports2.damaged')} <SortIcon col="damaged" />
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Status
+                    {t('common.status')}
                   </th>
                 </tr>
               </thead>
@@ -826,7 +832,7 @@ export default function StockAnalysis() {
                             <span
                               className={`inline-block w-1.5 h-1.5 rounded-full ${cfg.dot} mr-1 align-middle`}
                             />
-                            {cfg.label}
+                            {t(STATUS_LABEL_KEYS[p._status])}
                           </span>
                         </td>
                       </tr>
@@ -848,10 +854,10 @@ export default function StockAnalysis() {
             <div className="p-16 text-center text-gray-400">
               <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-30 text-green-400" />
               <p className="font-medium text-green-600 dark:text-green-400">
-                All products are well stocked!
+                {t('reports2.allWellStocked')}
               </p>
               <p className="text-sm mt-1 text-gray-400">
-                No products below the 10-unit threshold.
+                {t('reports2.noProductsBelowThreshold')}
               </p>
             </div>
           ) : (
@@ -859,14 +865,14 @@ export default function StockAnalysis() {
               <thead className="bg-red-50 dark:bg-red-900/10">
                 <tr>
                   {[
-                    "Product",
-                    "Category",
-                    "Source",
-                    "Online",
-                    "Offline",
-                    "Total Stock",
-                    "Status",
-                    "Action",
+                    t('reports2.colProduct'),
+                    t('common.category'),
+                    t('crm.colSource'),
+                    t('customer.online'),
+                    t('customer.offline'),
+                    t('reports2.totalStockLabel'),
+                    t('common.status'),
+                    t('logistics2.action'),
                   ].map((h) => (
                     <th
                       key={h}
@@ -919,7 +925,7 @@ export default function StockAnalysis() {
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.bg} ${cfg.color}`}
                         >
-                          {cfg.label}
+                          {t(STATUS_LABEL_KEYS[p._status])}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -927,7 +933,7 @@ export default function StockAnalysis() {
                           href="/admin/purchase-orders"
                           className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-semibold hover:underline whitespace-nowrap"
                         >
-                          Create PO →
+                          {t('reports2.createPO')}
                         </a>
                       </td>
                     </tr>
@@ -948,7 +954,7 @@ export default function StockAnalysis() {
           <div className="grid grid-cols-3 gap-4">
             {[
               {
-                label: "Damaged Units",
+                label: t('reports2.damagedUnits'),
                 value: fmtN(
                   summary?.damagedItems ??
                     damagedItems.reduce((s, p) => s + p._stock.damaged, 0),
@@ -957,7 +963,7 @@ export default function StockAnalysis() {
                 bg: "bg-red-50 dark:bg-red-900/20",
               },
               {
-                label: "Expired Units",
+                label: t('reports2.expiredUnits'),
                 value: fmtN(
                   summary?.expiredItems ??
                     damagedItems.reduce((s, p) => s + p._stock.expired, 0),
@@ -966,7 +972,7 @@ export default function StockAnalysis() {
                 bg: "bg-orange-50 dark:bg-orange-900/20",
               },
               {
-                label: "Refurbished Units",
+                label: t('reports2.refurbishedUnits'),
                 value: fmtN(
                   summary?.refurbishedItems ??
                     damagedItems.reduce((s, p) => s + p._stock.refurb, 0),
@@ -994,7 +1000,7 @@ export default function StockAnalysis() {
               <div className="p-16 text-center text-gray-400">
                 <Archive className="h-12 w-12 mx-auto mb-3 opacity-30 text-green-400" />
                 <p className="font-medium text-green-600 dark:text-green-400">
-                  No quality issues detected.
+                  {t('reports2.noQualityIssues')}
                 </p>
               </div>
             ) : (
@@ -1002,13 +1008,13 @@ export default function StockAnalysis() {
                 <thead className="bg-orange-50 dark:bg-orange-900/10">
                   <tr>
                     {[
-                      "Product",
-                      "Category",
-                      "Damaged",
-                      "Expired",
-                      "Refurbished",
-                      "Total Stock",
-                      "Action",
+                      t('reports2.colProduct'),
+                      t('common.category'),
+                      t('reports2.damaged'),
+                      t('reports2.expired'),
+                      t('reports2.refurbished'),
+                      t('reports2.totalStockLabel'),
+                      t('logistics2.action'),
                     ].map((h) => (
                       <th
                         key={h}
@@ -1058,7 +1064,7 @@ export default function StockAnalysis() {
                           href="/admin/warehouse"
                           className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-semibold hover:underline"
                         >
-                          Manage →
+                          {t('reports2.manageArrow')}
                         </a>
                       </td>
                     </tr>
@@ -1079,7 +1085,7 @@ export default function StockAnalysis() {
           <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
             <Clock className="h-4 w-4 text-gray-400" />
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Show batches expiring within:
+              {t('reports2.showBatchesExpiringWithin')}
             </label>
             <select
               value={expiryDays}
@@ -1088,12 +1094,12 @@ export default function StockAnalysis() {
             >
               {["7", "14", "30", "60", "90"].map((d) => (
                 <option key={d} value={d}>
-                  {d} days
+                  {t('reports2.daysOption', { count: d })}
                 </option>
               ))}
             </select>
             <span className="text-sm text-gray-400">
-              {batches.length} batch{batches.length !== 1 ? "es" : ""} found
+              {t('reports2.batchesFound', { count: batches.length })}
             </span>
           </div>
 
@@ -1102,7 +1108,7 @@ export default function StockAnalysis() {
               <div className="p-16 text-center text-gray-400">
                 <Archive className="h-12 w-12 mx-auto mb-3 opacity-30 text-green-400" />
                 <p className="font-medium text-green-600 dark:text-green-400">
-                  No batches expiring within {expiryDays} days.
+                  {t('reports2.noBatchesExpiring', { days: expiryDays })}
                 </p>
               </div>
             ) : (
@@ -1110,13 +1116,13 @@ export default function StockAnalysis() {
                 <thead className="bg-red-50 dark:bg-red-900/10">
                   <tr>
                     {[
-                      "Product",
-                      "Batch #",
-                      "Quality",
-                      "Qty",
-                      "Expiry Date",
-                      "Days Left",
-                      "Location",
+                      t('reports2.colProduct'),
+                      t('reports2.colBatchNum'),
+                      t('reports2.colQuality'),
+                      t('common.quantity'),
+                      t('reports2.colExpiryDate'),
+                      t('reports2.colDaysLeft'),
+                      t('supplier2.location'),
                     ].map((h) => (
                       <th
                         key={h}
@@ -1168,7 +1174,7 @@ export default function StockAnalysis() {
                               <span
                                 className={`text-sm font-bold ${isExpired ? "text-red-600" : days <= 7 ? "text-orange-600" : "text-yellow-600"}`}
                               >
-                                {isExpired ? "EXPIRED" : `${days}d`}
+                                {isExpired ? t('reports2.expiredBadge') : t('reports2.daysSuffix', { count: days })}
                               </span>
                             )}
                           </td>

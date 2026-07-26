@@ -211,17 +211,17 @@ export default function PricingReports() {
   const exportCSV = () => {
     const rows = [
       [
-        "Product",
+        t('reports2.colProduct'),
         "SKU",
-        "Cost/Unit",
-        "Sale Price",
-        "B2B Price",
-        "B2C Price",
-        "3wk Price",
-        "5wk Price",
-        "Sale Margin%",
-        "B2B Margin%",
-        "B2C Margin%",
+        t('reports2.colCostUnit'),
+        t('reports2.colSalePrice'),
+        t('reports2.colB2BPrice'),
+        t('reports2.colB2CPrice'),
+        t('reports2.delivery3wk'),
+        t('reports2.delivery5wk'),
+        t('reports2.saleMarginPct'),
+        t('reports2.b2bMarginPct'),
+        t('reports2.b2cMarginPct'),
         t("purchaseOrders.approved"),
       ],
     ];
@@ -238,7 +238,7 @@ export default function PricingReports() {
         getMarginSale(r).toFixed(1),
         getMarginBtb(r).toFixed(1),
         getMarginBtc(r).toFixed(1),
-        r.isApproved ? "Yes" : "No",
+        r.isApproved ? t('common.yes') : t('common.no'),
       ]),
     );
     const csv = rows.map((r) => r.join(",")).join("\n");
@@ -268,10 +268,10 @@ export default function PricingReports() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-green-600" /> Pricing Reports
+            <DollarSign className="h-6 w-6 text-green-600" /> {t('reports.pricingReport')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            B2B, B2C and delivery pricing with margins and cost breakdown
+            {t('reports2.pricingSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -287,7 +287,7 @@ export default function PricingReports() {
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
           >
-            <Download className="h-4 w-4" /> Export CSV
+            <Download className="h-4 w-4" /> {t('reports.exportCsv')}
           </button>
         </div>
       </div>
@@ -296,36 +296,36 @@ export default function PricingReports() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Avg Sale Price (B2C retail)",
+            label: t('reports2.avgSalePriceB2C'),
             value: fmtC(Math.round(avgSalePrice)),
             icon: DollarSign,
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
-            sub: "With tax, retail",
+            sub: t('reports2.withTaxRetail'),
           },
           {
-            label: "Avg B2B Price",
+            label: t('reports2.avgB2BPrice'),
             value: fmtC(Math.round(avgBtbPrice)),
             icon: TrendingDown,
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
-            sub: "Business-to-Business",
+            sub: t('reports2.b2bSub'),
           },
           {
-            label: "Avg B2C Price",
+            label: t('reports2.avgB2CPrice'),
             value: fmtC(Math.round(avgBtcPrice)),
             icon: TrendingUp,
             color: "text-purple-600",
             bg: "bg-purple-50 dark:bg-purple-900/20",
-            sub: "Business-to-Consumer",
+            sub: t('reports2.b2cSub'),
           },
           {
-            label: "Approved Pricing Records",
+            label: t('reports2.approvedPricingRecords'),
             value: `${approved}/${records.length}`,
             icon: CheckCircle,
             color: "text-teal-600",
             bg: "bg-teal-50 dark:bg-teal-900/20",
-            sub: `${total} total records`,
+            sub: t('reports2.totalRecordsSub', { count: total }),
           },
         ].map((s) => (
           <div
@@ -348,14 +348,14 @@ export default function PricingReports() {
 
       {/* Explanation banner */}
       <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-sm text-blue-800 dark:text-blue-300">
-        <p className="font-medium mb-1">Price Types Explained</p>
+        <p className="font-medium mb-1">{t('reports2.priceTypesExplained')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-blue-700 dark:text-blue-400">
           {[
-            ["Sale Price", "Standard retail price with tax (BTC customers)"],
-            ["B2B Price", "Business-to-Business: bulk buyers, resellers"],
-            ["B2C Price", "Business-to-Consumer: direct consumer rate"],
-            ["3wk Delivery", "Pre-order price: 3 weeks delivery lead time"],
-            ["5wk Delivery", "Pre-order price: 5 weeks delivery lead time"],
+            [t('reports2.colSalePrice'), t('reports2.salePriceDesc')],
+            [t('reports2.colB2BPrice'), t('reports2.b2bPriceDesc')],
+            [t('reports2.colB2CPrice'), t('reports2.b2cPriceDesc')],
+            [t('reports2.delivery3wk'), t('reports2.delivery3wkDesc')],
+            [t('reports2.delivery5wk'), t('reports2.delivery5wkDesc')],
           ].map(([k, v]) => (
             <div
               key={k}
@@ -370,13 +370,18 @@ export default function PricingReports() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["prices", "comparison", "margins", "exchange-rates"].map((tabKey) => (
+        {[
+          ["prices", t('reports2.tabPrices')],
+          ["comparison", t('reports2.tabComparison')],
+          ["margins", t('reports2.tabMargins')],
+          ["exchange-rates", t('reports2.tabExchangeRates')],
+        ].map(([tabKey, tabLabel]) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === t ? "border-green-600 text-green-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === tabKey ? "border-green-600 text-green-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            {t.replace("-", " ")}
+            {tabLabel}
           </button>
         ))}
       </div>
@@ -407,10 +412,10 @@ export default function PricingReports() {
             >
               <option value="">{t("products.allStatus")}</option>
               <option value="true">{t("purchaseOrders.approved")}</option>
-              <option value="false">Pending Approval</option>
+              <option value="false">{t('reports2.pendingApproval')}</option>
             </select>
             <span className="text-sm text-gray-400 self-center">
-              {total} records
+              {t('reports2.recordsCountLabel', { count: total })}
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -418,21 +423,21 @@ export default function PricingReports() {
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Product
+                    {t('reports2.colProduct')}
                   </th>
-                  <SortTh col="cost" label="Cost/Unit" />
-                  <SortTh col="salePrice" label="Sale Price" />
-                  <SortTh col="btbPrice" label="B2B Price" />
-                  <SortTh col="btcPrice" label="B2C Price" />
+                  <SortTh col="cost" label={t('reports2.colCostUnit')} />
+                  <SortTh col="salePrice" label={t('reports2.colSalePrice')} />
+                  <SortTh col="btbPrice" label={t('reports2.colB2BPrice')} />
+                  <SortTh col="btcPrice" label={t('reports2.colB2CPrice')} />
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                    3wk Delivery
+                    {t('reports2.delivery3wk')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                    5wk Delivery
+                    {t('reports2.delivery5wk')}
                   </th>
-                  <SortTh col="marginSale" label="Margin %" />
+                  <SortTh col="marginSale" label={t('reports2.colMarginPct')} />
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Status
+                    {t('common.status')}
                   </th>
                 </tr>
               </thead>
@@ -443,7 +448,7 @@ export default function PricingReports() {
                       colSpan={9}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      Loading pricing data...
+                      {t('reports2.loadingPricingData')}
                     </td>
                   </tr>
                 ) : sorted.length === 0 ? (
@@ -452,7 +457,7 @@ export default function PricingReports() {
                       colSpan={9}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      No pricing records found
+                      {t('reports2.noPricingRecordsFound')}
                     </td>
                   </tr>
                 ) : (
@@ -535,7 +540,7 @@ export default function PricingReports() {
           {total > PER_PAGE && (
             <div className="flex items-center justify-between p-4 border-t border-gray-100 dark:border-gray-700">
               <p className="text-sm text-gray-500">
-                Page {page} of {Math.ceil(total / PER_PAGE)}
+                {t('common.page', { current: page, total: Math.ceil(total / PER_PAGE) })}
               </p>
               <div className="flex gap-2">
                 <button
@@ -543,7 +548,7 @@ export default function PricingReports() {
                   disabled={page === 1}
                   className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  Prev
+                  {t('common.previous')}
                 </button>
                 <button
                   onClick={() =>
@@ -552,7 +557,7 @@ export default function PricingReports() {
                   disabled={page >= Math.ceil(total / PER_PAGE)}
                   className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  Next
+                  {t('common.next')}
                 </button>
               </div>
             </div>
@@ -565,10 +570,10 @@ export default function PricingReports() {
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Top 10 Products — Price Comparison (₦)
+              {t('reports2.top10Comparison')}
             </h3>
             {chartData.length === 0 ? (
-              <p className="text-center text-gray-400 py-8">No data yet</p>
+              <p className="text-center text-gray-400 py-8">{t('reports2.noDataYet')}</p>
             ) : (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={chartData} layout="vertical">
@@ -597,35 +602,35 @@ export default function PricingReports() {
                     dataKey="Sale"
                     fill="#3B82F6"
                     radius={[0, 3, 3, 0]}
-                    name="Sale Price"
+                    name={t('reports2.colSalePrice')}
                   />
                   <Bar
                     dataKey="B2B"
                     fill="#10B981"
                     radius={[0, 3, 3, 0]}
-                    name="B2B Price"
+                    name={t('reports2.colB2BPrice')}
                   />
                   <Bar
                     dataKey="B2C"
                     fill="#8B5CF6"
                     radius={[0, 3, 3, 0]}
-                    name="B2C Price"
+                    name={t('reports2.colB2CPrice')}
                   />
                   <Bar
                     dataKey="3wk Delivery"
                     fill="#F59E0B"
                     radius={[0, 3, 3, 0]}
-                    name="3wk Delivery"
+                    name={t('reports2.delivery3wk')}
                   />
                 </BarChart>
               </ResponsiveContainer>
             )}
             <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
               {[
-                ["Sale Price", "#3B82F6"],
-                ["B2B Price", "#10B981"],
-                ["B2C Price", "#8B5CF6"],
-                ["3wk Delivery", "#F59E0B"],
+                [t('reports2.colSalePrice'), "#3B82F6"],
+                [t('reports2.colB2BPrice'), "#10B981"],
+                [t('reports2.colB2CPrice'), "#8B5CF6"],
+                [t('reports2.delivery3wk'), "#F59E0B"],
               ].map(([l, c]) => (
                 <span
                   key={l}
@@ -648,7 +653,7 @@ export default function PricingReports() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Sale Price Margin Distribution
+              {t('reports2.saleMarginDist')}
             </h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={marginBuckets}>
@@ -660,7 +665,7 @@ export default function PricingReports() {
                   dataKey="count"
                   fill="#10B981"
                   radius={[4, 4, 0, 0]}
-                  name="Products"
+                  name={t('reports2.productsWord')}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -668,7 +673,7 @@ export default function PricingReports() {
 
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Avg Margins by Price Type
+              {t('reports2.avgMarginsByType')}
             </h3>
             {records.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-8">{t("common.noData")}</p>
@@ -676,21 +681,21 @@ export default function PricingReports() {
               <div className="space-y-4 mt-2">
                 {[
                   {
-                    label: "Sale Price Margin",
+                    label: t('reports2.saleMarginLabel'),
                     value:
                       records.reduce((s, r) => s + getMarginSale(r), 0) /
                       records.length,
                     color: "bg-blue-500",
                   },
                   {
-                    label: "B2B Margin",
+                    label: t('reports2.b2bMarginLabel'),
                     value:
                       records.reduce((s, r) => s + getMarginBtb(r), 0) /
                       records.length,
                     color: "bg-green-500",
                   },
                   {
-                    label: "B2C Margin",
+                    label: t('reports2.b2cMarginLabel'),
                     value:
                       records.reduce((s, r) => s + getMarginBtc(r), 0) /
                       records.length,
@@ -726,16 +731,16 @@ export default function PricingReports() {
           {rates.length === 0 ? (
             <div className="p-10 text-center text-gray-400">
               <DollarSign className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>No exchange rates configured</p>
+              <p>{t('reports2.noExchangeRates')}</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   {[
-                    "Currency Pair",
-                    "Rate (to NGN)",
-                    "Last Updated",
+                    t('reports2.currencyPair'),
+                    t('reports2.rateToNgn'),
+                    t('reports2.lastUpdated'),
                     t("common.status"),
                   ].map((h) => (
                     <th

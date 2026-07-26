@@ -63,14 +63,14 @@ const STATUS_COLORS = {
   CUSTOM: "bg-gray-100 text-gray-700",
 };
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr, t) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('common.updatedJustNow');
+  if (mins < 60) return t('common.timeAgo', { time: `${mins}m` });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return t('common.timeAgo', { time: `${hrs}h` });
+  return t('common.timeAgo', { time: `${Math.floor(hrs / 24)}d` });
 }
 
 const EMPTY_FORM = {
@@ -120,26 +120,26 @@ export default function NotificationManagement() {
 
   const handleCreate = async () => {
     if (!form.title.trim() || !form.message.trim()) {
-      toast.error("Title and message are required");
+      toast.error(t('notifications.titleMessageRequired'));
       return;
     }
     if (form.targetType === "role" && form.targetRoles.length === 0) {
-      toast.error("Select at least one target role");
+      toast.error(t('notifications.selectTargetRole'));
       return;
     }
     setSending(true);
     try {
       const res = await createNotification(form);
       if (res.success) {
-        toast.success("Notification sent!");
+        toast.success(t('notifications.notificationSent'));
         setForm(EMPTY_FORM);
         setShowCreate(false);
         fetchNotifications(1);
       } else {
-        toast.error(res.message || "Failed to send");
+        toast.error(res.message || t('notifications.failedToSend'));
       }
     } catch (e) {
-      toast.error("Error sending notification");
+      toast.error(t('notifications.errorSendingNotification'));
     } finally {
       setSending(false);
     }
@@ -159,12 +159,12 @@ export default function NotificationManagement() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Bell className="h-6 w-6 text-blue-600" />
-            Notification Center
+            {t('notifications.notificationCenter')}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             {unreadCount > 0
-              ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
-              : "All caught up"}
+              ? t('notifications.unreadCount', { count: unreadCount })
+              : t('notifications.allCaughtUp')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function NotificationManagement() {
               onClick={markAllRead}
               className="flex items-center gap-1 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
-              <CheckCheck className="h-4 w-4" /> Mark all read
+              <CheckCheck className="h-4 w-4" /> {t('notifications.markAllRead')}
             </button>
           )}
           <button
@@ -189,7 +189,7 @@ export default function NotificationManagement() {
               onClick={() => setShowCreate(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
             >
-              <Plus className="h-4 w-4" /> Send Notification
+              <Plus className="h-4 w-4" /> {t('notifications.sendNotification')}
             </button>
           )}
         </div>
@@ -215,12 +215,12 @@ export default function NotificationManagement() {
           onChange={(e) => setFilterRead(e.target.value)}
           className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
-          <option value="">All</option>
+          <option value="">{t('common.all')}</option>
           <option value="unread">{t("notifications.unread")}</option>
           <option value="read">{t("notifications.read")}</option>
         </select>
         <span className="text-sm text-gray-500 ml-auto">
-          {filtered.length} notification{filtered.length !== 1 ? "s" : ""}
+          {t('notifications.notificationCount', { count: filtered.length })}
         </span>
       </div>
 
@@ -229,7 +229,7 @@ export default function NotificationManagement() {
         {filtered.length === 0 ? (
           <div className="p-12 text-center text-gray-400 dark:text-gray-500">
             <Bell className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p>No notifications found</p>
+            <p>{t('notifications.noNotificationsFound')}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -270,7 +270,7 @@ export default function NotificationManagement() {
                             onClick={() => markRead(n._id)}
                             className="text-xs text-blue-600 dark:text-blue-400 hover:underline px-2 py-1"
                           >
-                            Mark read
+                            {t('notifications.markRead')}
                           </button>
                         )}
                         <button
@@ -288,8 +288,8 @@ export default function NotificationManagement() {
                       {n.message}
                     </p>
                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                      <span>{timeAgo(n.createdAt)}</span>
-                      {n.triggeredByName && <span>by {n.triggeredByName}</span>}
+                      <span>{timeAgo(n.createdAt, t)}</span>
+                      {n.triggeredByName && <span>{t('notifications.byName', { name: n.triggeredByName })}</span>}
                       {n.targetRoles?.length > 0 && (
                         <span>→ {n.targetRoles.join(", ")}</span>
                       )}
@@ -308,7 +308,7 @@ export default function NotificationManagement() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Send Notification
+                {t('notifications.sendNotification')}
               </h2>
               <button
                 onClick={() => setShowCreate(false)}
@@ -321,7 +321,7 @@ export default function NotificationManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Type
+                    {t('common.type')}
                   </label>
                   <select
                     value={form.type}
@@ -339,7 +339,7 @@ export default function NotificationManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Priority
+                    {t('common.priority')}
                   </label>
                   <select
                     value={form.priority}
@@ -348,9 +348,9 @@ export default function NotificationManagement() {
                     }
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                   >
-                    <option value="low">Low</option>
+                    <option value="low">{t('notifications.low')}</option>
                     <option value="medium">{t("notificationsExt.medium")}</option>
-                    <option value="high">High</option>
+                    <option value="high">{t('notifications.high')}</option>
                     <option value="urgent">{t("logistics2.urgent")}</option>
                   </select>
                 </div>
@@ -358,21 +358,21 @@ export default function NotificationManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Title *
+                  {t('common.title')} *
                 </label>
                 <input
                   value={form.title}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, title: e.target.value }))
                   }
-                  placeholder="Notification title"
+                  placeholder={t('notifications.notificationTitlePlaceholder')}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Message *
+                  {t('common.description')} *
                 </label>
                 <textarea
                   value={form.message}
@@ -380,14 +380,14 @@ export default function NotificationManagement() {
                     setForm((f) => ({ ...f, message: e.target.value }))
                   }
                   rows={3}
-                  placeholder="Notification message"
+                  placeholder={t('notifications.notificationMessagePlaceholder')}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Link (optional)
+                  {t('notifications.linkOptional')}
                 </label>
                 <input
                   value={form.link}
@@ -401,12 +401,12 @@ export default function NotificationManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Target
+                  {t('notifications.target')}
                 </label>
                 <div className="flex gap-3 mb-3">
                   {["all", "role"].map((targetType) => (
                     <label
-                      key={t}
+                      key={targetType}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <input
@@ -422,7 +422,7 @@ export default function NotificationManagement() {
                         className="text-blue-600"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                        {t === "all" ? t("userManagement.allRoles") : "Specific Roles"}
+                        {targetType === "all" ? t("userManagement.allRoles") : t('notifications.specificRoles')}
                       </span>
                     </label>
                   ))}
@@ -451,7 +451,7 @@ export default function NotificationManagement() {
                 onClick={() => setShowCreate(false)}
                 className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreate}
@@ -459,10 +459,10 @@ export default function NotificationManagement() {
                 className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
               >
                 {sending ? (
-                  "Sending..."
+                  t('notifications.sendingEllipsis')
                 ) : (
                   <>
-                    <Send className="h-4 w-4" /> Send
+                    <Send className="h-4 w-4" /> {t('notifications.send')}
                   </>
                 )}
               </button>

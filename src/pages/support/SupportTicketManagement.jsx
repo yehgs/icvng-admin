@@ -110,18 +110,18 @@ export default function SupportTicketManagement() {
   useEffect(() => { fetchCategories(); fetchTickets(); }, [fetchTickets, fetchCategories]);
 
   const handleCreate = async () => {
-    if (!form.title.trim() || !form.description.trim()) { toast.error('Title and description required'); return; }
+    if (!form.title.trim() || !form.description.trim()) { toast.error(t('support.titleAndDescRequired')); return; }
     setSubmitting(true);
     try {
       const data = await apiFetch('/admin/support-tickets', { method: 'POST', body: JSON.stringify(form) });
-      if (!data.success) { toast.error(data.message || 'Failed'); return; }
+      if (!data.success) { toast.error(data.message || t('content.failed')); return; }
       // Upload any images attached to the create form
       if (createImages.length > 0 && data.data?._id) {
         for (const file of createImages) {
           await uploadImageMessage(data.data._id, file);
         }
       }
-      toast.success('Ticket created!');
+      toast.success(t('support.ticketCreated'));
       setForm(EMPTY_FORM); setShowCreate(false); setCreateImages([]);
       fetchTickets();
     } finally { setSubmitting(false); }
@@ -140,7 +140,7 @@ export default function SupportTicketManagement() {
         const data = await uploadImageMessage(selectedTicket._id, imageFile);
         if (data.success) {
           setSelectedTicket(data.data); setImageFile(null); setImagePreview(null);
-          toast.success('Image sent'); fetchTickets();
+          toast.success(t('support.imageSent')); fetchTickets();
         }
       } finally { setUploadingImg(false); }
       return;
@@ -150,7 +150,7 @@ export default function SupportTicketManagement() {
       const data = await apiFetch(`/admin/support-tickets/${selectedTicket._id}/message`, {
         method: 'POST', body: JSON.stringify({ message: replyMsg }),
       });
-      if (data.success) { setSelectedTicket(data.data); setReplyMsg(''); toast.success('Message sent'); fetchTickets(); }
+      if (data.success) { setSelectedTicket(data.data); setReplyMsg(''); toast.success(t('support.messageSent')); fetchTickets(); }
     } finally { setReplying(false); }
   };
 
@@ -161,7 +161,7 @@ export default function SupportTicketManagement() {
       const data = await apiFetch(`/admin/support-tickets/${selectedTicket._id}/status`, {
         method: 'PUT', body: JSON.stringify({ status }),
       });
-      if (data.success) { setSelectedTicket(data.data); toast.success(`Status: ${STATUS_CONFIG[status]?.label}`); fetchTickets(); }
+      if (data.success) { setSelectedTicket(data.data); toast.success(t('support.statusUpdatedTo', { status: t(`support.status${status.charAt(0).toUpperCase()}${status.slice(1).replace(/_([a-z])/g, (_, ch) => ch.toUpperCase())}`) })); fetchTickets(); }
     } finally { setUpdatingStatus(false); }
   };
 
@@ -180,9 +180,9 @@ export default function SupportTicketManagement() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <LifeBuoy className="h-6 w-6 text-blue-600" /> Support Tickets
+              <LifeBuoy className="h-6 w-6 text-blue-600" /> {t('support.title')}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{total} ticket{total !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t('support.ticketCount', { count: total })}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={fetchTickets} className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -190,7 +190,7 @@ export default function SupportTicketManagement() {
             </button>
             <button onClick={() => setShowCreate(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
-              <Plus className="h-4 w-4" /> New Ticket
+              <Plus className="h-4 w-4" /> {t('support.newTicket')}
             </button>
           </div>
         </div>
@@ -199,14 +199,14 @@ export default function SupportTicketManagement() {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tickets..."
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('support.searchPlaceholder')}
               className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
           </div>
           <div className="flex gap-2 flex-wrap">
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
               <option value="">{t("products.allStatus")}</option>
-              {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              {Object.entries(STATUS_CONFIG).map(([k]) => <option key={k} value={k}>{t(`support.status${k.charAt(0).toUpperCase()}${k.slice(1).replace(/_([a-z])/g, (_, ch) => ch.toUpperCase())}`)}</option>)}
             </select>
             <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
@@ -216,7 +216,7 @@ export default function SupportTicketManagement() {
             <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
               <option value="">{t("supportExt.allPriority")}</option>
-              {['low','medium','high','critical'].map((p) => <option key={p} value={p}>{p}</option>)}
+              {['low','medium','high','critical'].map((p) => <option key={p} value={p}>{p === 'low' ? t('scraper.low') : p === 'medium' ? t('notificationsExt.medium') : p === 'high' ? t('scraper.high') : t('supportExt.critical')}</option>)}
             </select>
           </div>
         </div>
@@ -226,28 +226,28 @@ export default function SupportTicketManagement() {
           {loading && tickets.length === 0 ? (
             <div className="p-10 text-center text-gray-400">{t("common.loading")}</div>
           ) : tickets.length === 0 ? (
-            <div className="p-10 text-center text-gray-400"><LifeBuoy className="h-10 w-10 mx-auto mb-3 opacity-30" /><p>No tickets found</p></div>
+            <div className="p-10 text-center text-gray-400"><LifeBuoy className="h-10 w-10 mx-auto mb-3 opacity-30" /><p>{t('support.noTicketsFound')}</p></div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {tickets.map((t) => {
-                const sc = STATUS_CONFIG[t.status] || STATUS_CONFIG.open;
+              {tickets.map((tk) => {
+                const sc = STATUS_CONFIG[tk.status] || STATUS_CONFIG.open;
                 const Icon = sc.icon;
                 return (
-                  <div key={t._id} onClick={() => openTicket(t)}
-                    className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${selectedTicket?._id === t._id ? 'bg-blue-50 dark:bg-blue-900/10 border-l-2 border-blue-500' : ''}`}>
+                  <div key={tk._id} onClick={() => openTicket(tk)}
+                    className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${selectedTicket?._id === tk._id ? 'bg-blue-50 dark:bg-blue-900/10 border-l-2 border-blue-500' : ''}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-mono text-gray-400">{t.ticketNumber}</span>
+                          <span className="text-xs font-mono text-gray-400">{tk.ticketNumber}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${sc.color}`}>
-                            <Icon className="h-3 w-3" /> {sc.label}
+                            <Icon className="h-3 w-3" /> {t(`support.status${tk.status.charAt(0).toUpperCase()}${tk.status.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())}`)}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${PRIORITY_CONFIG[t.priority]}`}>{t.priority}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${PRIORITY_CONFIG[tk.priority]}`}>{tk.priority}</span>
                         </div>
-                        <p className="font-medium text-gray-900 dark:text-white mt-1 truncate">{t.title}</p>
+                        <p className="font-medium text-gray-900 dark:text-white mt-1 truncate">{tk.title}</p>
                         <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
-                          <span>{t.category}</span><span>{t.createdByName}</span><span>{timeAgo(t.createdAt)}</span>
-                          {t.messages?.length > 1 && <span className="flex items-center gap-0.5"><Paperclip className="h-3 w-3" />{t.messages.length}</span>}
+                          <span>{tk.category}</span><span>{tk.createdByName}</span><span>{timeAgo(tk.createdAt)}</span>
+                          {tk.messages?.length > 1 && <span className="flex items-center gap-0.5"><Paperclip className="h-3 w-3" />{tk.messages.length}</span>}
                         </div>
                       </div>
                       <Eye className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1" />
@@ -270,11 +270,11 @@ export default function SupportTicketManagement() {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-mono text-gray-400">{selectedTicket.ticketNumber}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_CONFIG[selectedTicket.status]?.color}`}>
-                    {STATUS_CONFIG[selectedTicket.status]?.label}
+                    {t(`support.status${selectedTicket.status.charAt(0).toUpperCase()}${selectedTicket.status.slice(1).replace(/_([a-z])/g, (_, ch) => ch.toUpperCase())}`)}
                   </span>
                 </div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">{selectedTicket.title}</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{selectedTicket.category} · {selectedTicket.priority} · by {selectedTicket.createdByName} ({selectedTicket.createdBySubRole})</p>
+                <p className="text-xs text-gray-400 mt-0.5">{selectedTicket.category} · {selectedTicket.priority} · {t('support.byCreator', { name: selectedTicket.createdByName, role: selectedTicket.createdBySubRole })}</p>
               </div>
               <button onClick={() => setSelectedTicket(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><X className="h-5 w-5" /></button>
             </div>
@@ -283,7 +283,7 @@ export default function SupportTicketManagement() {
                 {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
                   <button key={key} onClick={() => handleStatusUpdate(key)} disabled={updatingStatus || selectedTicket.status === key}
                     className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors disabled:opacity-40 ${selectedTicket.status === key ? cfg.color + ' border-transparent' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-blue-400'}`}>
-                    {cfg.label}
+                    {t(`support.status${key.charAt(0).toUpperCase()}${key.slice(1).replace(/_([a-z])/g, (_, ch) => ch.toUpperCase())}`)}
                   </button>
                 ))}
               </div>
@@ -332,13 +332,13 @@ export default function SupportTicketManagement() {
               {/* Image attach button */}
               <button onClick={() => imageInputRef.current?.click()}
                 className="p-2 text-gray-400 hover:text-blue-500 rounded-lg border border-gray-300 dark:border-gray-600 flex-shrink-0"
-                title="Attach image">
+                title={t('support.attachImage')}>
                 <Image className="h-4 w-4" />
               </button>
               <input ref={imageInputRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => handleImageSelect(e.target.files[0])} />
               <textarea value={replyMsg} onChange={(e) => setReplyMsg(e.target.value)}
-                placeholder={imageFile ? 'Image ready to send — click send' : 'Type a message...'}
+                placeholder={imageFile ? t('support.imageReadyToSend') : t('support.typeMessage')}
                 rows={2} disabled={!!imageFile}
                 className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 resize-none disabled:opacity-50"
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply(); } }} />
@@ -361,9 +361,9 @@ export default function SupportTicketManagement() {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.title')} *</label>
                 <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="Brief description of the issue"
+                  placeholder={t('support.briefDescription')}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -378,24 +378,24 @@ export default function SupportTicketManagement() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("common.priority")}</label>
                   <select value={form.priority} onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                    <option value="low">Low</option><option value="medium">{t("notificationsExt.medium")}</option>
-                    <option value="high">High</option><option value="critical">{t("supportExt.critical")}</option>
+                    <option value="low">{t('scraper.low')}</option><option value="medium">{t("notificationsExt.medium")}</option>
+                    <option value="high">{t('scraper.high')}</option><option value="critical">{t("supportExt.critical")}</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.description')} *</label>
                 <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  rows={4} placeholder="Describe the issue in detail..."
+                  rows={4} placeholder={t('support.describeIssue')}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
               </div>
               {/* Images */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attach Screenshots (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('support.attachScreenshots')}</label>
                 <div onClick={() => createImgRef.current?.click()}
                   className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:border-blue-400">
                   <Image className="h-5 w-5 mx-auto text-gray-400 mb-1" />
-                  <p className="text-xs text-gray-500">Click to attach images</p>
+                  <p className="text-xs text-gray-500">{t('support.clickToAttach')}</p>
                 </div>
                 <input ref={createImgRef} type="file" multiple accept="image/*" className="hidden"
                   onChange={(e) => setCreateImages((prev) => [...prev, ...Array.from(e.target.files)])} />
@@ -416,7 +416,7 @@ export default function SupportTicketManagement() {
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{t("common.cancel")}</button>
               <button onClick={handleCreate} disabled={submitting}
                 className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
-                {submitting ? 'Submitting...' : 'Submit Ticket'}
+                {submitting ? t('support.submittingEllipsis') : t('support.submitTicket')}
               </button>
             </div>
           </div>

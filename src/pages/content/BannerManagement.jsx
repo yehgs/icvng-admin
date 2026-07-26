@@ -7,17 +7,16 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 
-const POSITIONS = [
-  { value: 'homepage_side1', label: 'Homepage – Left Side Banner'  },
-  { value: 'homepage_side2', label: 'Homepage – Right Side Banner' },
-  { value: 'footer',         label: 'Footer Banner'                },
-];
-
 const EMPTY_FORM = { title: '', subtitle: '', image: '', link: '', linkText: 'Shop Now', position: 'homepage_side1', isActive: true, countryCode: 'NG' };
 
 const BannerManagement = () => {
   const { t } = useAdminTranslation();
   const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
+  const POSITIONS = [
+    { value: 'homepage_side1', label: t('content.posHomepageLeft')  },
+    { value: 'homepage_side2', label: t('content.posHomepageRight') },
+    { value: 'footer',         label: t('content.posFooter')        },
+  ];
   const [banners, setBanners]         = useState([]);
   const [loading, setLoading]         = useState(false);
   const [showForm, setShowForm]       = useState(false);
@@ -38,7 +37,7 @@ const BannerManagement = () => {
       const res = await apiCall('/banner/get');
       if (res.success) setBanners(res.data || []);
     } catch (err) {
-      toast.error(handleApiError(err, 'Failed to load banners'));
+      toast.error(handleApiError(err, t('content.failedToLoadBanners')));
     } finally {
       setLoading(false);
     }
@@ -57,23 +56,23 @@ const BannerManagement = () => {
     setUploadingImg(true);
     try {
       const res = await fileAPI.uploadImage(file);
-      if (res?.data?.url) { setForm((p) => ({ ...p, image: res.data.url })); toast.success('Image uploaded'); }
-    } catch { toast.error('Upload failed'); }
+      if (res?.data?.url) { setForm((p) => ({ ...p, image: res.data.url })); toast.success(t('content.imageUploaded')); }
+    } catch { toast.error(t('content.uploadFailed')); }
     finally { setUploadingImg(false); }
   };
 
   const handleSubmit = async () => {
-    if (!form.image?.trim()) { toast.error('Banner image is required'); return; }
-    if (!form.position)      { toast.error('Position is required'); return; }
+    if (!form.image?.trim()) { toast.error(t('content.bannerImageRequired')); return; }
+    if (!form.position)      { toast.error(t('content.positionRequired')); return; }
     setSubmitting(true);
     try {
       const res = editing
         ? await apiCall('/banner/update', { method: 'PUT',  body: { ...form, _id: editing._id } })
         : await apiCall('/banner/add',    { method: 'POST', body: form });
-      if (res.success) { toast.success(editing ? 'Banner updated' : 'Banner created'); setShowForm(false); fetchBanners(); }
-      else toast.error(res.message || 'Failed');
+      if (res.success) { toast.success(editing ? t('content.bannerUpdated') : t('content.bannerCreated')); setShowForm(false); fetchBanners(); }
+      else toast.error(res.message || t('content.failed'));
     } catch (err) {
-      toast.error(handleApiError(err, 'Save failed'));
+      toast.error(handleApiError(err, t('content.saveFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -83,8 +82,8 @@ const BannerManagement = () => {
     if (!deleteTarget) return;
     try {
       const res = await apiCall('/banner/delete', { method: 'DELETE', body: { _id: deleteTarget._id } });
-      if (res.success) { toast.success('Banner deleted'); setDeleteTarget(null); fetchBanners(); }
-    } catch { toast.error('Delete failed'); }
+      if (res.success) { toast.success(t('content.bannerDeleted')); setDeleteTarget(null); fetchBanners(); }
+    } catch { toast.error(t('content.deleteFailed')); }
   };
 
   const positionLabel = (pos) => POSITIONS.find((p) => p.value === pos)?.label || pos;
@@ -103,9 +102,9 @@ const BannerManagement = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Layout className="w-6 h-6 text-indigo-600" />
-            Banner Management
+            {t('content.bannersTitle')}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage promotional banners shown on the website</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('content.bannersSubtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           {isGlobalAdmin ? (
@@ -114,14 +113,14 @@ const BannerManagement = () => {
               onChange={(e) => setCountryFilter(e.target.value)}
               className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800"
             >
-              <option value="ALL">All markets</option>
+              <option value="ALL">{t('content.allMarkets')}</option>
               {allCountries.map((c) => (
                 <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name}</option>
               ))}
             </select>
           ) : (
             <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
-              {countryScope} only
+              {t('dashboard.scopeCountry', { country: countryScope })}
             </span>
           )}
           <button onClick={fetchBanners} className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50">
@@ -129,7 +128,7 @@ const BannerManagement = () => {
           </button>
           <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
             <Plus className="w-4 h-4" />
-            Add Banner
+            {t('content.addBanner')}
           </button>
         </div>
       </div>
@@ -147,8 +146,8 @@ const BannerManagement = () => {
               </h2>
               {group.items.length === 0 ? (
                 <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center text-gray-400 text-sm">
-                  No banners for this position.
-                  <button onClick={openCreate} className="block mx-auto mt-2 text-indigo-500 hover:underline text-xs">+ Add one</button>
+                  {t('content.noBannersForPosition')}
+                  <button onClick={openCreate} className="block mx-auto mt-2 text-indigo-500 hover:underline text-xs">{t('content.addOne')}</button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -161,14 +160,14 @@ const BannerManagement = () => {
                           <div className="flex items-center justify-center h-full"><Image className="w-10 h-10 text-gray-400" /></div>
                         )}
                         <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${b.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {b.isActive ? 'Active' : 'Inactive'}
+                          {b.isActive ? t('common.active') : t('common.inactive')}
                         </span>
                         <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 text-gray-700">
                           {b.countryCode || 'NG'}
                         </span>
                       </div>
                       <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{b.title || 'Untitled Banner'}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{b.title || t('content.untitledBanner')}</h3>
                         {b.subtitle && <p className="text-xs text-gray-500 mt-0.5">{b.subtitle}</p>}
                         {b.link && (
                           <a href={b.link} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1">
@@ -177,10 +176,10 @@ const BannerManagement = () => {
                         )}
                         <div className="flex gap-2 mt-3">
                           <button onClick={() => openEdit(b)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">
-                            <Edit2 className="w-3 h-3" />Edit
+                            <Edit2 className="w-3 h-3" />{t('common.edit')}
                           </button>
                           <button onClick={() => setDeleteTarget(b)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
-                            <Trash2 className="w-3 h-3" />Delete
+                            <Trash2 className="w-3 h-3" />{t('common.delete')}
                           </button>
                         </div>
                       </div>
@@ -198,27 +197,27 @@ const BannerManagement = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editing ? 'Edit Banner' : 'Add Banner'}</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editing ? t('content.editBanner') : t('content.addBanner')}</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
             <div className="p-5 space-y-4">
               {/* Image */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Image <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('common.image')} <span className="text-red-500">*</span></label>
                 {form.image && <img src={form.image} alt="preview" className="w-full h-32 object-cover rounded-lg mb-2 border" />}
-                <input type="text" placeholder="Paste image URL…"
+                <input type="text" placeholder={t('content.pasteImageUrl')}
                   value={form.image} onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white mb-2" />
                 <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 cursor-pointer hover:bg-gray-50">
                   {uploadingImg ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                  {uploadingImg ? 'Uploading…' : 'Upload image'}
+                  {uploadingImg ? t('content.uploading') : t('content.uploadImage')}
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImg} />
                 </label>
               </div>
 
               {/* Position */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.position')} <span className="text-red-500">*</span></label>
                 <select value={form.position} onChange={(e) => setForm((p) => ({ ...p, position: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
                   {POSITIONS.map((pos) => <option key={pos.value} value={pos.value}>{pos.label}</option>)}
@@ -228,7 +227,7 @@ const BannerManagement = () => {
               {/* Market — which domain this banner shows on. If a market never
                   adds its own, HQ's (Nigeria's) banner is shown there instead. */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Market</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.marketLabel')}</label>
                 {isGlobalAdmin ? (
                   <select value={form.countryCode} onChange={(e) => setForm((p) => ({ ...p, countryCode: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
@@ -238,16 +237,16 @@ const BannerManagement = () => {
                   </select>
                 ) : (
                   <div className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                    {countryScope} (your assigned market)
+                    {t('content.yourAssignedMarket', { country: countryScope })}
                   </div>
                 )}
                 <p className="text-xs text-gray-400 mt-1">
-                  Shown only on this market's domain. If left unset for a market, HQ's (Nigeria's) banner shows there instead.
+                  {t('content.marketHintBanner')}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.title')}</label>
                 <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                   placeholder={t("content.headline")}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
@@ -255,7 +254,7 @@ const BannerManagement = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("content.subtitle")}</label>
                 <input type="text" value={form.subtitle} onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
-                  placeholder="Optional sub-heading"
+                  placeholder={t('content.optionalSubheading')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -278,7 +277,7 @@ const BannerManagement = () => {
                   entityType="banner"
                   entity={editing}
                   fields={["title", "subtitle", "linkText"]}
-                  fieldLabels={{ title: "Title", subtitle: "Subtitle", linkText: "Button text" }}
+                  fieldLabels={{ title: t('common.title'), subtitle: t('content.subtitle'), linkText: t('content.buttonTextFieldLabel') }}
                 />
               )}
 
@@ -295,7 +294,7 @@ const BannerManagement = () => {
               <button onClick={handleSubmit} disabled={submitting}
                 className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
                 {submitting && <RefreshCw className="w-3 h-3 animate-spin" />}
-                {editing ? 'Save Changes' : 'Create Banner'}
+                {editing ? t('content.saveChangesBanner') : t('content.createBanner')}
               </button>
             </div>
           </div>
@@ -307,8 +306,8 @@ const BannerManagement = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full text-center shadow-xl">
             <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
-            <h3 className="text-lg font-bold mb-2 dark:text-white">Delete Banner?</h3>
-            <p className="text-sm text-gray-500 mb-5">This will remove the banner from <strong>{positionLabel(deleteTarget.position)}</strong>.</p>
+            <h3 className="text-lg font-bold mb-2 dark:text-white">{t('content.deleteBanner')}</h3>
+            <p className="text-sm text-gray-500 mb-5">{t('content.deleteBannerConfirm', { position: positionLabel(deleteTarget.position) })}</p>
             <div className="flex gap-3 justify-center">
               <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border rounded-lg text-sm">{t("common.cancel")}</button>
               <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">{t("common.delete")}</button>

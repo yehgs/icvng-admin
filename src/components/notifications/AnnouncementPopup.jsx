@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Bell, Megaphone, Zap } from 'lucide-react';
 import { getCurrentUser } from '../../utils/api';
+import { useAdminTranslation } from '../../hooks/useAdminTranslation.js';
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8080/api';
 
@@ -28,6 +29,7 @@ function markSeenId(id) {
 }
 
 export default function AnnouncementPopup() {
+  const { t } = useAdminTranslation();
   const [announcements, setAnnouncements] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -89,10 +91,10 @@ export default function AnnouncementPopup() {
             </div>
             <div>
               <p className="text-white/70 text-xs uppercase tracking-wider font-medium">
-                {isFeature ? 'New Feature' : 'Announcement'}
+                {isFeature ? t('notifications.newFeature') : t('notifications.announcement')}
               </p>
               {announcements.length > 1 && (
-                <p className="text-white/60 text-xs">{currentIndex + 1} of {announcements.length}</p>
+                <p className="text-white/60 text-xs">{t('notifications.xOfY', { current: currentIndex + 1, total: announcements.length })}</p>
               )}
             </div>
           </div>
@@ -103,7 +105,7 @@ export default function AnnouncementPopup() {
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{current.message}</p>
 
           {current.triggeredByName && current.triggeredByName !== 'System' && (
-            <p className="text-xs text-gray-400 mt-4">Posted by {current.triggeredByName}</p>
+            <p className="text-xs text-gray-400 mt-4">{t('notifications.postedBy', { name: current.triggeredByName })}</p>
           )}
         </div>
 
@@ -114,10 +116,10 @@ export default function AnnouncementPopup() {
               isFeature ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
             }`}
           >
-            {currentIndex < announcements.length - 1 ? 'Next →' : 'Got it!'}
+            {currentIndex < announcements.length - 1 ? t('notifications.next') : t('notifications.gotIt')}
           </button>
           <button onClick={dismiss} className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            Dismiss
+            {t('notifications.dismiss')}
           </button>
         </div>
       </div>

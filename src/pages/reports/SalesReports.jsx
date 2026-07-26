@@ -125,13 +125,13 @@ export default function SalesReports() {
     .reduce((s, o) => s + (o.totalAmt || o.subTotalAmt || 0), 0);
 
   const deliveredOrders = filteredOrders.filter(
-    (o) => o.order_status === t("orders.statuses.Delivered"),
+    (o) => o.order_status === "Delivered",
   );
   const cancelledOrders = filteredOrders.filter(
     (o) => o.order_status === "Cancel",
   );
   const pendingOrders = filteredOrders.filter(
-    (o) => ![t("orders.statuses.Delivered"), "Cancel"].includes(o.order_status),
+    (o) => !["Delivered", "Cancel"].includes(o.order_status),
   );
 
   // Monthly revenue trend (last 12 months)
@@ -207,10 +207,10 @@ export default function SalesReports() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <ShoppingCart className="h-6 w-6 text-green-600" /> Sales Reports
+            <ShoppingCart className="h-6 w-6 text-green-600" /> {t('reports.salesReport')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Revenue, order performance and customer analytics
+            {t('reports2.salesSubtitle')}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -237,7 +237,7 @@ export default function SalesReports() {
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
           >
-            <Download className="h-4 w-4" /> Export CSV
+            <Download className="h-4 w-4" /> {t('reports.exportCsv')}
           </button>
         </div>
       </div>
@@ -251,7 +251,7 @@ export default function SalesReports() {
             icon: DollarSign,
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
-            sub: `${filteredOrders.filter((o) => o.order_status !== "Cancel").length} paid orders`,
+            sub: t('reports2.paidOrdersSub', { count: filteredOrders.filter((o) => o.order_status !== "Cancel").length }),
           },
           {
             label: t("reports.totalOrders"),
@@ -259,7 +259,7 @@ export default function SalesReports() {
             icon: ShoppingCart,
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
-            sub: `${pendingOrders.length} pending`,
+            sub: t('reports2.pendingSub', { count: pendingOrders.length }),
           },
           {
             label: t("orders.statuses.Delivered"),
@@ -267,7 +267,7 @@ export default function SalesReports() {
             icon: Award,
             color: "text-teal-600",
             bg: "bg-teal-50 dark:bg-teal-900/20",
-            sub: `${filteredOrders.length ? ((deliveredOrders.length / filteredOrders.length) * 100).toFixed(0) : 0}% fulfilment rate`,
+            sub: t('reports2.fulfilmentRateSub', { pct: filteredOrders.length ? ((deliveredOrders.length / filteredOrders.length) * 100).toFixed(0) : 0 }),
           },
           {
             label: t("orders.statuses.Cancelled"),
@@ -275,7 +275,7 @@ export default function SalesReports() {
             icon: Target,
             color: "text-red-500",
             bg: "bg-red-50 dark:bg-red-900/20",
-            sub: `${filteredOrders.length ? ((cancelledOrders.length / filteredOrders.length) * 100).toFixed(0) : 0}% cancellation rate`,
+            sub: t('reports2.cancellationRateSub', { pct: filteredOrders.length ? ((cancelledOrders.length / filteredOrders.length) * 100).toFixed(0) : 0 }),
           },
         ].map((s) => (
           <div
@@ -338,13 +338,17 @@ export default function SalesReports() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["overview", "orders", "customers"].map((tabKey) => (
+        {[
+          ["overview", t('reports2.tabOverview')],
+          ["orders", t('reports2.tabOrders')],
+          ["customers", t('reports2.tabCustomers')],
+        ].map(([tabKey, tabLabel]) => (
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === tabKey ? "border-green-600 text-green-600" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
           >
-            {tabKey}
+            {tabLabel}
           </button>
         ))}
       </div>
@@ -354,7 +358,7 @@ export default function SalesReports() {
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Monthly Revenue Trend
+              {t('reports2.monthlyRevenueTrend')}
             </h3>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={monthlyData}>
@@ -393,7 +397,7 @@ export default function SalesReports() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Monthly Orders
+                {t('reports2.monthlyOrders')}
               </h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={monthlyData}>
@@ -413,7 +417,7 @@ export default function SalesReports() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Order Status Breakdown
+                {t('reports2.orderStatusBreakdown')}
               </h3>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -454,7 +458,7 @@ export default function SalesReports() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search order ID or customer..."
+                placeholder={t('reports2.searchOrderPlaceholder')}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
@@ -471,7 +475,7 @@ export default function SalesReports() {
               ))}
             </select>
             <span className="text-sm text-gray-400 self-center">
-              {filteredOrders.length} results
+              {t('reports2.resultsCountLabel', { count: filteredOrders.length })}
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -501,7 +505,7 @@ export default function SalesReports() {
                       colSpan={5}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      Loading...
+                      {t('reports2.loadingEllipsis')}
                     </td>
                   </tr>
                 ) : filteredOrders.length === 0 ? (
@@ -510,7 +514,7 @@ export default function SalesReports() {
                       colSpan={5}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      No orders found
+                      {t('reports2.noOrdersFound')}
                     </td>
                   </tr>
                 ) : (
@@ -557,17 +561,17 @@ export default function SalesReports() {
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="p-4 border-b border-gray-100 dark:border-gray-700">
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Top Customers by Spend
+                {t('reports2.topCustomersBySpend')}
               </h3>
             </div>
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   {[
-                    "Rank",
+                    t('reports2.rank'),
                     t("reports.customerCol"),
-                    "Total Spend",
-                    "Share",
+                    t('reports2.totalSpend'),
+                    t('reports2.share'),
                   ].map((h) => (
                     <th
                       key={h}
@@ -623,7 +627,7 @@ export default function SalesReports() {
                       colSpan={4}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      No customer data available
+                      {t('reports2.noCustomerData')}
                     </td>
                   </tr>
                 )}
@@ -635,7 +639,7 @@ export default function SalesReports() {
           {customers.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                Customer Growth
+                {t('reports2.customerGrowth')}
               </h3>
               {(() => {
                 const cMap = {};
@@ -687,7 +691,7 @@ export default function SalesReports() {
                         stroke="#8B5CF6"
                         fill="url(#custGrad)"
                         strokeWidth={2}
-                        name="New Customers"
+                        name={t('reports2.newCustomers')}
                       />
                     </AreaChart>
                   </ResponsiveContainer>

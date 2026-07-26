@@ -175,7 +175,7 @@ export default function InventoryReports() {
   // Category breakdown
   const catMap = {};
   enriched.forEach((p) => {
-    const cat = p.category?.name || "Uncategorised";
+    const cat = p.category?.name || t('reports2.uncategorised');
     catMap[cat] = catMap[cat] || {
       name: cat,
       total: 0,
@@ -194,25 +194,25 @@ export default function InventoryReports() {
 
   // Stock source breakdown
   const sourceData = [
-    { name: "Online (Warehouse)", value: totalOnline },
-    { name: "Offline (In-store)", value: totalOffline },
-    { name: "Partner Stock", value: totalPartner },
+    { name: t('reports2.onlineWarehouse'), value: totalOnline },
+    { name: t('reports2.offlineInStore'), value: totalOffline },
+    { name: t('reports2.partnerStockLabel'), value: totalPartner },
   ].filter((d) => d.value > 0);
 
   const exportCSV = () => {
     const rows = [
       [
-        "Product",
-        "Category",
-        "Stock Source",
-        "Total Stock",
+        t('reports2.colProduct'),
+        t('common.category'),
+        t('reports2.colStockSource'),
+        t('reports2.totalStockLabel'),
         t("customer.online"),
         t("customer.offline"),
-        "Damaged",
-        "Expired",
-        "Sale Price",
-        "B2B Price",
-        "B2C Price",
+        t('reports2.damaged'),
+        t('reports2.expired'),
+        t('reports2.colSalePrice'),
+        t('reports2.colB2BPrice'),
+        t('reports2.colB2CPrice'),
       ],
     ];
     filtered.forEach((p) =>
@@ -246,7 +246,7 @@ export default function InventoryReports() {
             <Package className="h-6 w-6 text-blue-600" /> {t("reports.inventoryReport")}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Online, offline and partner stock with product-level breakdown
+            {t('reports2.invSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -273,21 +273,21 @@ export default function InventoryReports() {
           {
             icon: Globe,
             label: t("products.onlineStock"),
-            desc: "Warehouse → onlineStock. Available on website.",
+            desc: t('reports2.legendOnlineDesc'),
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
           },
           {
             icon: Store,
             label: t("products.offlineStock"),
-            desc: "Warehouse → offlineStock. In-store / walk-in only.",
+            desc: t('reports2.legendOfflineDesc'),
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
           },
           {
             icon: Truck,
-            label: "Partner Stock",
-            desc: "partnerStock.quantity. Held by partner, sold online.",
+            label: t('reports2.partnerStockLabel'),
+            desc: t('reports2.legendPartnerDesc'),
             color: "text-purple-600",
             bg: "bg-purple-50 dark:bg-purple-900/20",
           },
@@ -309,20 +309,20 @@ export default function InventoryReports() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Total Products",
+            label: t('dashboard.lbl.totalProducts'),
             value: fmtN(whSummary?.totalProducts ?? products.length),
             icon: Package,
             color: "text-blue-600",
             bg: "bg-blue-50 dark:bg-blue-900/20",
-            sub: "In catalog",
+            sub: t('dashboard.sub.inCatalog'),
           },
           {
-            label: "Online Stock Units",
+            label: t('reports2.onlineStockUnits'),
             value: fmtN(whSummary?.onlineStock ?? totalOnline),
             icon: Globe,
             color: "text-green-600",
             bg: "bg-green-50 dark:bg-green-900/20",
-            sub: "Website-available units",
+            sub: t('reports2.websiteAvailableUnits'),
           },
           {
             label: t("products.offlineStock"),
@@ -330,15 +330,15 @@ export default function InventoryReports() {
             icon: Store,
             color: "text-indigo-600",
             bg: "bg-indigo-50 dark:bg-indigo-900/20",
-            sub: "In-store only units",
+            sub: t('reports2.inStoreOnlyUnits'),
           },
           {
-            label: "Low / Out of Stock",
+            label: t('reports2.lowOutOfStock'),
             value: `${fmtN(whSummary?.lowStockItems ?? lowStock.length)} / ${fmtN(whSummary?.outOfStockItems ?? outOfStock.length)}`,
             icon: AlertTriangle,
             color: "text-red-600",
             bg: "bg-red-50 dark:bg-red-900/20",
-            sub: "Low (≤10) / Zero stock",
+            sub: t('reports2.lowOutOfStockSub'),
           },
         ].map((s) => (
           <div
@@ -364,32 +364,32 @@ export default function InventoryReports() {
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {[
             {
-              label: "Total Stock",
+              label: t('reports2.totalStockLabel'),
               value: fmtN(whSummary.totalStock),
               color: "text-gray-800 dark:text-gray-200",
             },
             {
-              label: "Damaged",
+              label: t('reports2.damaged'),
               value: fmtN(whSummary.damagedItems),
               color: "text-red-600",
             },
             {
-              label: "Refurbished",
+              label: t('reports2.refurbished'),
               value: fmtN(whSummary.refurbishedItems),
               color: "text-yellow-600",
             },
             {
-              label: "Expired",
+              label: t('reports2.expired'),
               value: fmtN(whSummary.expiredItems),
               color: "text-orange-600",
             },
             {
-              label: "Manual Override",
+              label: t('reports2.manualOverride'),
               value: fmtN(whSummary.manualOverrideCount),
               color: "text-blue-600",
             },
             {
-              label: "Batch-tracked",
+              label: t('reports2.batchTracked'),
               value: fmtN(whSummary.stockBatchCount),
               color: "text-green-600",
             },
@@ -408,15 +408,15 @@ export default function InventoryReports() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
         {[
-          { id: "overview", label: "Overview" },
-          { id: "products", label: `Products (${products.length})` },
+          { id: "overview", label: t('reports2.tabOverview') },
+          { id: "products", label: t('reports2.tabProductsCount', { count: products.length }) },
           {
             id: "low-stock",
-            label: `Low Stock${lowStock.length > 0 ? ` (${lowStock.length})` : ""}`,
+            label: `${t('reports2.tabLowStock')}${lowStock.length > 0 ? ` (${lowStock.length})` : ""}`,
           },
           {
             id: "expiring",
-            label: `Expiring${expiring.length > 0 ? ` (${expiring.length})` : ""}`,
+            label: `${t('reports2.tabExpiring')}${expiring.length > 0 ? ` (${expiring.length})` : ""}`,
           },
         ].map(({ id, label }) => (
           <button
@@ -434,7 +434,7 @@ export default function InventoryReports() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Stock by Category (Online + Offline + Partner)
+              {t('reports2.stockByCategoryChart')}
             </h3>
             {catData.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-8">
@@ -487,7 +487,7 @@ export default function InventoryReports() {
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Stock Channel Distribution
+              {t('reports2.stockChannelDistribution')}
             </h3>
             {sourceData.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-8">
@@ -513,7 +513,7 @@ export default function InventoryReports() {
                       <Cell key={i} fill={COLORS[i]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v) => fmtN(v) + " units"} />
+                  <Tooltip formatter={(v) => t('reports2.unitsCount', { count: fmtN(v) })} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -545,7 +545,7 @@ export default function InventoryReports() {
               <option value="Default">{t("reports2.default")}</option>
             </select>
             <span className="text-sm text-gray-400 self-center">
-              {filtered.length} products
+              {t('reports2.productsCountLabel', { count: filtered.length })}
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -553,34 +553,34 @@ export default function InventoryReports() {
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Product
+                    {t('reports2.colProduct')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Source
+                    {t('crm.colSource')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-blue-500 uppercase tracking-wide">
-                    Online
+                    {t('customer.online')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-green-500 uppercase tracking-wide">
-                    Offline
+                    {t('customer.offline')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Total
+                    {t('common.total')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Damaged
+                    {t('reports2.colDamaged')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Sale Price
+                    {t('reports2.colSalePrice')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-green-500 uppercase tracking-wide">
-                    B2B
+                    {t('reports2.colB2B')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-purple-500 uppercase tracking-wide">
-                    B2C
+                    {t('reports2.colB2C')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Status
+                    {t('common.status')}
                   </th>
                 </tr>
               </thead>
@@ -591,7 +591,7 @@ export default function InventoryReports() {
                       colSpan={10}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      Loading...
+                      {t('reports2.loadingEllipsis')}
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
@@ -600,7 +600,7 @@ export default function InventoryReports() {
                       colSpan={10}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      No products found
+                      {t('reports2.noProductsFound')}
                     </td>
                   </tr>
                 ) : (
@@ -610,7 +610,7 @@ export default function InventoryReports() {
                     const total = s.total;
                     const status =
                       total === 0
-                        ? { l: "Out of Stock", cls: "bg-red-100 text-red-700" }
+                        ? { l: t('reports2.outOfStock'), cls: "bg-red-100 text-red-700" }
                         : total <= 10
                           ? {
                               l: t("products.lowStock"),
@@ -703,13 +703,13 @@ export default function InventoryReports() {
               <thead className="bg-orange-50 dark:bg-orange-900/10">
                 <tr>
                   {[
-                    "Product",
-                    "Category",
-                    "Source",
+                    t('reports2.colProduct'),
+                    t('common.category'),
+                    t('crm.colSource'),
                     t("customer.online"),
                     t("customer.offline"),
                     t("common.total"),
-                    "Sale Price",
+                    t('reports2.colSalePrice'),
                     t("logistics2.action"),
                   ].map((h) => (
                     <th
@@ -765,7 +765,7 @@ export default function InventoryReports() {
                             href="/admin/purchase-orders"
                             className="text-xs text-blue-600 hover:underline font-medium"
                           >
-                            Create PO →
+                            {t('reports2.createPO')}
                           </a>
                         </td>
                       </tr>
@@ -782,7 +782,7 @@ export default function InventoryReports() {
         <div className="space-y-4">
           <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Show expiring within:
+              {t('reports2.showExpiringWithin')}
             </label>
             <select
               value={expiryDays}
@@ -791,7 +791,7 @@ export default function InventoryReports() {
             >
               {["7", "14", "30", "60", "90"].map((d) => (
                 <option key={d} value={d}>
-                  {d} days
+                  {t('reports2.daysOption', { count: d })}
                 </option>
               ))}
             </select>
@@ -800,19 +800,19 @@ export default function InventoryReports() {
             {expiring.length === 0 ? (
               <div className="p-10 text-center text-gray-400">
                 <Archive className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
-                <p>No items expiring within {expiryDays} days</p>
+                <p>{t('reports2.noItemsExpiring', { days: expiryDays })}</p>
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-red-50 dark:bg-red-900/10">
                   <tr>
                     {[
-                      "Product",
-                      "Batch",
-                      "Quality",
-                      "Qty",
-                      "Expiry Date",
-                      "Days Left",
+                      t('reports2.colProduct'),
+                      t('reports2.colBatch'),
+                      t('reports2.colQuality'),
+                      t("common.quantity"),
+                      t('reports2.colExpiryDate'),
+                      t('reports2.colDaysLeft'),
                       t("supplier2.location"),
                     ].map((h) => (
                       <th
@@ -853,7 +853,7 @@ export default function InventoryReports() {
                           <span
                             className={`text-sm font-bold ${days <= 0 ? "text-red-600" : days <= 7 ? "text-orange-600" : "text-yellow-600"}`}
                           >
-                            {days <= 0 ? "Expired" : `${days}d`}
+                            {days <= 0 ? t('reports2.expired') : t('reports2.daysSuffix', { count: days })}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-500 font-mono">

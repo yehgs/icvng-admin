@@ -154,6 +154,7 @@ function timeAgo(d) {
 
 // ── Delete Request Modal ──────────────────────────────────────────────────────
 function DeleteRequestModal({ lead, onClose, onSubmit }) {
+  const { t } = useAdminTranslation();
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   return (
@@ -165,28 +166,27 @@ function DeleteRequestModal({ lead, onClose, onSubmit }) {
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
-              Request Lead Deletion
+              {t('crm.requestLeadDeletion')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Only IT or Director can delete CRM leads. Submit a reason and they
-              will be notified to review it.
+              {t('crm.onlyItDirectorCanDelete')}
             </p>
           </div>
         </div>
         <div className="p-6 space-y-4">
           <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
-            <span className="font-medium">Lead:</span>{" "}
+            <span className="font-medium">{t('crm.leadColon')}</span>{" "}
             {lead.companyName || lead.contactName}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Reason for deletion <span className="text-red-500">*</span>
+              {t('crm.reasonForDeletion')} <span className="text-red-500">*</span>
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
-              placeholder="Explain why this lead should be deleted (e.g. duplicate entry, invalid data, opted out)..."
+              placeholder={t('crm.explainWhyDeleted')}
               className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 resize-none"
             />
           </div>
@@ -196,12 +196,12 @@ function DeleteRequestModal({ lead, onClose, onSubmit }) {
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={async () => {
               if (!reason.trim()) {
-                toast.error("Reason is required");
+                toast.error(t('crm.reasonRequired'));
                 return;
               }
               setSubmitting(true);
@@ -216,7 +216,7 @@ function DeleteRequestModal({ lead, onClose, onSubmit }) {
             ) : (
               <ShieldAlert className="h-4 w-4" />
             )}
-            {submitting ? "Submitting..." : "Submit Request"}
+            {submitting ? t('crm.submittingEllipsis') : t('crm.submitRequest')}
           </button>
         </div>
       </div>
@@ -226,6 +226,7 @@ function DeleteRequestModal({ lead, onClose, onSubmit }) {
 
 // ── Review Modal (IT / Director) ──────────────────────────────────────────────
 function ReviewDeleteModal({ lead, onClose, onReview }) {
+  const { t } = useAdminTranslation();
   const [reviewNote, setReviewNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const req = lead.pendingDeleteRequest;
@@ -234,11 +235,10 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-gray-900 dark:text-white">
-            Review Delete Request
+            {t('crm.reviewDeleteRequest')}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {req?.requestedByName} ({req?.requestedBySubRole}) wants to delete
-            this lead.
+            {t('crm.wantsToDeleteLead', { name: req?.requestedByName, role: req?.requestedBySubRole })}
           </p>
         </div>
         <div className="p-6 space-y-4">
@@ -252,24 +252,24 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
           </div>
           <div>
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              Reason given
+              {t('crm.reasonGiven')}
             </p>
             <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
               {req?.reason}
             </p>
           </div>
           <p className="text-xs text-gray-400">
-            Requested {timeAgo(req?.createdAt)}
+            {t('crm.requestedAgo', { time: timeAgo(req?.createdAt) })}
           </p>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Review note (optional)
+              {t('crm.reviewNoteOptional')}
             </label>
             <textarea
               value={reviewNote}
               onChange={(e) => setReviewNote(e.target.value)}
               rows={2}
-              placeholder="Add a note for the requester..."
+              placeholder={t('support.addNote')}
               className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 resize-none"
             />
           </div>
@@ -279,7 +279,7 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400"
           >
-            Close
+            {t('common.close')}
           </button>
           <button
             onClick={async () => {
@@ -290,7 +290,7 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
             disabled={submitting}
             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium disabled:opacity-50"
           >
-            Reject
+            {t('crm.reject')}
           </button>
           <button
             onClick={async () => {
@@ -306,7 +306,7 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            Approve & Delete
+            {t('crm.approveAndDelete')}
           </button>
         </div>
       </div>
@@ -405,7 +405,7 @@ export default function CrmManagement() {
 
   const handleSave = async () => {
     if (!form.companyName && !form.contactName) {
-      toast.error("Company or contact name required");
+      toast.error(t('crm.companyOrContactRequired'));
       return;
     }
     setSaving(true);
@@ -430,7 +430,7 @@ export default function CrmManagement() {
             body: JSON.stringify(payload),
           });
       if (d.success) {
-        toast.success(editLead ? "Lead updated" : "Lead created");
+        toast.success(editLead ? t('crm.leadUpdated') : t('crm.leadCreated'));
         setShowForm(false);
         setEditLead(null);
         setForm(EMPTY_FORM);
@@ -447,14 +447,14 @@ export default function CrmManagement() {
     if (canHardDelete) {
       if (
         !confirm(
-          `Permanently delete "${lead.companyName || lead.contactName}"?`,
+          t('crm.permanentlyDeleteConfirm', { name: lead.companyName || lead.contactName }),
         )
       )
         return;
       apiFetch(`/admin/crm/leads/${lead._id}`, { method: "DELETE" }).then(
         (d) => {
           if (d.success) {
-            toast.success("Lead deleted");
+            toast.success(t('crm.leadDeleted'));
             fetchLeads();
             fetchStats();
             if (selectedLead?._id === lead._id) setSelectedLead(null);
@@ -491,8 +491,8 @@ export default function CrmManagement() {
     if (d.success) {
       toast.success(
         action === "approve"
-          ? "Lead deleted and requester notified"
-          : "Request rejected",
+          ? t('crm.leadDeletedNotified')
+          : t('crm.requestRejected'),
       );
       setReviewTarget(null);
       fetchLeads();
@@ -529,7 +529,7 @@ export default function CrmManagement() {
       if (d.success) {
         setSelectedLead(d.data);
         setActivityInput("");
-        toast.success("Activity logged");
+        toast.success(t('crm.activityLogged'));
       }
     } finally {
       setAddingActivity(false);
@@ -610,7 +610,7 @@ export default function CrmManagement() {
                     {lead.pendingDeleteRequest?.status === "pending" && (
                       <AlertTriangle
                         className="h-3.5 w-3.5 text-orange-400 flex-shrink-0"
-                        title="Delete request pending"
+                        title={t('crm.deleteRequestPending')}
                       />
                     )}
                   </div>
@@ -656,7 +656,7 @@ export default function CrmManagement() {
               ))}
               {stageLeads.length === 0 && (
                 <div className="text-center py-6 text-gray-300 dark:text-gray-600 text-xs">
-                  Drop here
+                  {t('crm.dropHere')}
                 </div>
               )}
             </div>
@@ -674,14 +674,14 @@ export default function CrmManagement() {
           <thead className="bg-gray-50 dark:bg-gray-700/50">
             <tr>
               {[
-                "Company",
-                "Contact",
+                t('crm.colCompany'),
+                t('crm.colContact'),
                 t("common.email"),
                 t("common.phone"),
-                "Stage",
-                "Value",
-                "Source",
-                "Updated",
+                t('crm.colStage'),
+                t('crm.colValue'),
+                t('crm.colSource'),
+                t('crm.colUpdated'),
                 "",
               ].map((h) => (
                 <th
@@ -767,7 +767,7 @@ export default function CrmManagement() {
                               setReviewTarget(lead);
                             }}
                             className="p-1 text-orange-400 hover:text-orange-600 rounded"
-                            title="Review delete request"
+                            title={t('crm.review')}
                           >
                             <AlertTriangle className="h-3.5 w-3.5" />
                           </button>
@@ -782,7 +782,7 @@ export default function CrmManagement() {
         {leads.length === 0 && (
           <div className="p-12 text-center text-gray-400">
             <Users className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p>No leads found</p>
+            <p>{t('crm.noLeadsFound')}</p>
           </div>
         )}
       </div>
@@ -795,7 +795,7 @@ export default function CrmManagement() {
       {pendingDeletes.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-10 text-center text-gray-400">
           <CheckCircle className="h-10 w-10 mx-auto mb-3 opacity-30 text-green-400" />
-          <p>No pending delete requests</p>
+          <p>{t('crm.noPendingDeleteRequests')}</p>
         </div>
       ) : (
         pendingDeletes.map((lead) => {
@@ -817,13 +817,12 @@ export default function CrmManagement() {
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                     <UserCircle className="h-3.5 w-3.5" />
                     <span>
-                      Requested by <strong>{req.requestedByName}</strong> (
-                      {req.requestedBySubRole}) · {timeAgo(req.createdAt)}
+                      {t('crm.requestedByRole', { name: req.requestedByName, role: req.requestedBySubRole, time: timeAgo(req.createdAt) })}
                     </span>
                   </div>
                   <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
                     <span className="font-medium text-orange-700 dark:text-orange-400 text-xs uppercase tracking-wide block mb-1">
-                      Reason
+                      {t('common.reason')}
                     </span>
                     {req.reason}
                   </div>
@@ -833,7 +832,7 @@ export default function CrmManagement() {
                     onClick={() => setReviewTarget(lead)}
                     className="flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium"
                   >
-                    <ShieldAlert className="h-4 w-4" /> Review
+                    <ShieldAlert className="h-4 w-4" /> {t('crm.review')}
                   </button>
                 </div>
               </div>
@@ -851,7 +850,7 @@ export default function CrmManagement() {
       return (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-10 text-center text-gray-400">
           <ShieldAlert className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>Metrics visible to IT, Director, Manager and Sales-Manager</p>
+          <p>{t('crm.metricsVisibleTo')}</p>
         </div>
       );
     const metrics = stats?.data?.userMetrics || stats?.userMetrics || [];
@@ -860,12 +859,12 @@ export default function CrmManagement() {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700">
             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-blue-500" /> Activity by User
+              <BarChart3 className="h-4 w-4 text-blue-500" /> {t('crm.activityByUser')}
             </h3>
           </div>
           {metrics.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">
-              No data yet
+              {t('crm.noDataYet')}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -873,12 +872,12 @@ export default function CrmManagement() {
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
                     {[
-                      "Team Member",
-                      "Total Leads",
-                      "Won",
-                      "Lost",
-                      "Conversion",
-                      "Won Value",
+                      t('crm.colTeamMember'),
+                      t('crm.colTotalLeads'),
+                      t('crm.colWon'),
+                      t('crm.colLost'),
+                      t('crm.colConversion'),
+                      t('crm.colWonValue'),
                     ].map((h) => (
                       <th
                         key={h}
@@ -905,7 +904,7 @@ export default function CrmManagement() {
                               {(m._id?.name || "?").charAt(0).toUpperCase()}
                             </div>
                             <span className="font-medium text-gray-800 dark:text-gray-200">
-                              {m._id?.name || "Unknown"}
+                              {m._id?.name || t('reports.unknown')}
                             </span>
                           </div>
                         </td>
@@ -954,10 +953,10 @@ export default function CrmManagement() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="h-6 w-6 text-blue-600" /> CRM Pipeline
+            <Users className="h-6 w-6 text-blue-600" /> {t('crm.title')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {total} leads · Pipeline: {formatNGN(pipelineValue)}
+            {t('crm.leadsPipelineSummary', { count: total, value: formatNGN(pipelineValue) })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -995,7 +994,7 @@ export default function CrmManagement() {
             }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
           >
-            <Plus className="h-4 w-4" /> Add Lead
+            <Plus className="h-4 w-4" /> {t('crm.addLead')}
           </button>
         </div>
       </div>
@@ -1005,28 +1004,28 @@ export default function CrmManagement() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             {
-              label: "Total Leads",
+              label: t('crm.colTotalLeads'),
               value: stats.data?.totalLeads || stats.totalLeads || 0,
               icon: Users,
               color: "text-blue-600",
               bg: "bg-blue-50 dark:bg-blue-900/20",
             },
             {
-              label: "Won",
+              label: t('crm.colWon'),
               value: stats.data?.wonLeads || stats.wonLeads || 0,
               icon: Award,
               color: "text-green-600",
               bg: "bg-green-50 dark:bg-green-900/20",
             },
             {
-              label: "Lost",
+              label: t('crm.colLost'),
               value: stats.data?.lostLeads || stats.lostLeads || 0,
               icon: Target,
               color: "text-red-500",
               bg: "bg-red-50 dark:bg-red-900/20",
             },
             {
-              label: "Conversion",
+              label: t('crm.colConversion'),
               value: `${stats.data?.conversionRate || stats.conversionRate || 0}%`,
               icon: TrendingUp,
               color: "text-purple-600",
@@ -1052,13 +1051,13 @@ export default function CrmManagement() {
       {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
         {[
-          { id: "pipeline", label: "Pipeline" },
+          { id: "pipeline", label: t('crm.tabPipeline') },
           canHardDelete && {
             id: "requests",
-            label: `Delete Requests${pendingDeleteCount > 0 ? ` (${pendingDeleteCount})` : ""}`,
+            label: `${t('crm.tabDeleteRequests')}${pendingDeleteCount > 0 ? ` (${pendingDeleteCount})` : ""}`,
             alert: pendingDeleteCount > 0,
           },
-          canSeeMetrics && { id: "metrics", label: "User Metrics" },
+          canSeeMetrics && { id: "metrics", label: t('crm.tabUserMetrics') },
         ]
           .filter(Boolean)
           .map(({ id, label, alert }) => (
@@ -1087,7 +1086,7 @@ export default function CrmManagement() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search leads..."
+                placeholder={t('crm.searchPlaceholder')}
                 className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               />
             </div>
@@ -1137,7 +1136,7 @@ export default function CrmManagement() {
                   </span>
                   {selectedLead.pendingDeleteRequest?.status === "pending" && (
                     <span className="flex items-center gap-1 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
-                      <AlertTriangle className="h-3 w-3" /> Delete pending
+                      <AlertTriangle className="h-3 w-3" /> {t('crm.deleteRequestPending')}
                     </span>
                   )}
                 </div>
@@ -1168,7 +1167,7 @@ export default function CrmManagement() {
                     setSelectedLead(null);
                   }}
                   className={`p-2 rounded ${canHardDelete ? "text-gray-400 hover:text-red-500" : "text-gray-400 hover:text-orange-500"}`}
-                  title={canHardDelete ? "Delete" : "Request deletion"}
+                  title={canHardDelete ? t('common.delete') : t('crm.requestDeletion')}
                 >
                   {canHardDelete ? (
                     <Trash2 className="h-4 w-4" />
@@ -1181,7 +1180,7 @@ export default function CrmManagement() {
                     <button
                       onClick={() => setReviewTarget(selectedLead)}
                       className="p-2 text-orange-400 hover:text-orange-600 rounded"
-                      title="Review delete request"
+                      title={t('crm.review')}
                     >
                       <AlertTriangle className="h-4 w-4" />
                     </button>
@@ -1198,7 +1197,7 @@ export default function CrmManagement() {
             {/* Stage move */}
             <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
               <p className="text-xs text-gray-400 mb-2 font-medium">
-                Move stage:
+                {t('crm.moveStage')}
               </p>
               <div className="flex gap-1 flex-wrap">
                 {meta.CRM_STAGES.map((s) => (
@@ -1274,7 +1273,7 @@ export default function CrmManagement() {
             {/* Activities */}
             <div className="flex-1 overflow-y-auto p-5">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Activity
+                {t('crm.activityLabel')}
               </p>
               <div className="space-y-3 mb-4">
                 {(selectedLead.activities || [])
@@ -1297,7 +1296,7 @@ export default function CrmManagement() {
                   ))}
                 {!selectedLead.activities?.length && (
                   <p className="text-xs text-gray-400 italic">
-                    No activity yet
+                    {t('crm.noActivityYet')}
                   </p>
                 )}
               </div>
@@ -1320,7 +1319,7 @@ export default function CrmManagement() {
                     value={activityInput}
                     onChange={(e) => setActivityInput(e.target.value)}
                     rows={2}
-                    placeholder={`Add ${activityType}...`}
+                    placeholder={t('crm.addActivityPlaceholder', { type: activityType })}
                     className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 resize-none"
                   />
                   <button
@@ -1328,7 +1327,7 @@ export default function CrmManagement() {
                     disabled={!activityInput.trim() || addingActivity}
                     className="px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 text-sm font-medium"
                   >
-                    Add
+                    {t('common.add')}
                   </button>
                 </div>
               </div>
@@ -1343,7 +1342,7 @@ export default function CrmManagement() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl my-8">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editLead ? "Edit Lead" : "Add Lead"}
+                {editLead ? t('crm.editLead') : t('crm.addLead')}
               </h2>
               <button
                 onClick={() => {
@@ -1358,12 +1357,12 @@ export default function CrmManagement() {
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  ["companyName", "Company Name"],
-                  ["contactName", "Contact Name"],
-                  ["jobTitle", "Job Title"],
+                  ["companyName", t('crm.colCompanyName')],
+                  ["contactName", t('crm.colContactName')],
+                  ["jobTitle", t('crm.colJobTitle')],
                   ["email", t("common.email")],
                   ["phone", t("common.phone")],
-                  ["website", "Website"],
+                  ["website", t('crm.colWebsite')],
                 ].map(([k, l]) => (
                   <div key={k}>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1382,7 +1381,7 @@ export default function CrmManagement() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Stage
+                    {t('crm.colStage')}
                   </label>
                   <select
                     value={form.stage}
@@ -1398,7 +1397,7 @@ export default function CrmManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Source
+                    {t('crm.colSource')}
                   </label>
                   <select
                     value={form.source}
@@ -1414,7 +1413,7 @@ export default function CrmManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Industry
+                    {t('crm.industryLabel')}
                   </label>
                   <select
                     value={form.industry}
@@ -1432,7 +1431,7 @@ export default function CrmManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Deal Value
+                    {t('crm.dealValueLabel')}
                   </label>
                   <input
                     type="number"
@@ -1445,7 +1444,7 @@ export default function CrmManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Probability (%)
+                    {t('crm.probabilityLabel')}
                   </label>
                   <input
                     type="number"
@@ -1469,7 +1468,7 @@ export default function CrmManagement() {
                 ].map(([k, l]) => (
                   <div key={k}>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {l} URL
+                      {t('crm.urlLabel', { platform: l })}
                     </label>
                     <input
                       value={form[k] || ""}
@@ -1483,8 +1482,8 @@ export default function CrmManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  ["nextFollowUpDate", "Next Follow-up"],
-                  ["expectedCloseDate", "Expected Close"],
+                  ["nextFollowUpDate", t('crm.nextFollowUp')],
+                  ["expectedCloseDate", t('crm.expectedClose')],
                 ].map(([k, l]) => (
                   <div key={k}>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1503,20 +1502,20 @@ export default function CrmManagement() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tags (comma-separated)
+                  {t('crm.tagsCommaSeparated')}
                 </label>
                 <input
                   value={form.tags}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, tags: e.target.value }))
                   }
-                  placeholder="coffee, b2b, lagos"
+                  placeholder={t('crm.tagsPlaceholder')}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Notes
+                  {t('common.notes')}
                 </label>
                 <textarea
                   value={form.notes}
@@ -1536,14 +1535,14 @@ export default function CrmManagement() {
                 }}
                 className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
               >
-                {saving ? "Saving..." : editLead ? "Update Lead" : "Add Lead"}
+                {saving ? t('crm.submittingEllipsis') : editLead ? t('crm.updateLead') : t('crm.addLead')}
               </button>
             </div>
           </div>

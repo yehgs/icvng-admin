@@ -1,5 +1,6 @@
 // src/components/customer/CustomerTable.jsx
 import React from 'react';
+import { useAdminTranslation } from '../../hooks/useAdminTranslation.js';
 import {
   Building2,
   User,
@@ -19,6 +20,7 @@ const CustomerTable = ({
   onToggleFeatured,
   currentUser,
 }) => {
+  const { t } = useAdminTranslation();
   const canEdit = (customer) => {
     const allowedRoles = ['DIRECTOR', 'IT', 'MANAGER'];
     if (allowedRoles.includes(currentUser?.subRole)) {
@@ -41,25 +43,25 @@ const CustomerTable = ({
         <thead className="bg-gray-50 dark:bg-gray-900">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Customer
+              {t('customer.colCustomer')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Type & Mode
+              {t('customer.colTypeMode')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Contact
+              {t('customer.colContact')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Orders
+              {t('customer.colOrders')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Created By
+              {t('customer.colCreatedBy')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Status
+              {t('common.status')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Actions
+              {t('common.actions')}
             </th>
           </tr>
         </thead>
@@ -99,7 +101,7 @@ const CustomerTable = ({
                       {customer.isFeatured && (
                         <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                           <Star className="h-3 w-3 mr-1 fill-current" />
-                          Featured
+                          {t('customer.featuredBadge')}
                         </span>
                       )}
                     </div>
@@ -109,7 +111,7 @@ const CustomerTable = ({
                     {customer.customerType === 'BTB' &&
                       customer.registrationNumber && (
                         <div className="text-xs text-gray-400 dark:text-gray-500">
-                          CAC: {customer.registrationNumber}
+                          {t('customer.cacLabel', { number: customer.registrationNumber })}
                         </div>
                       )}
                   </div>
@@ -156,7 +158,7 @@ const CustomerTable = ({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900 dark:text-white">
-                  {customer.totalOrders || 0} orders
+                  {t('customer.ordersCount', { count: customer.totalOrders || 0 })}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   ₦{(customer.totalOrderValue || 0).toLocaleString()}
@@ -165,13 +167,12 @@ const CustomerTable = ({
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900 dark:text-white">
                   {customer.isWebsiteCustomer
-                    ? 'Website'
-                    : customer.createdBy?.name || 'Unknown'}
+                    ? t('customer.websiteLabel')
+                    : customer.createdBy?.name || t('reports.unknown')}
                 </div>
                 {customer.assignedTo && customer.assignedTo.length > 0 && (
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Assigned: {customer.assignedTo.length} user
-                    {customer.assignedTo.length > 1 ? 's' : ''}
+                    {t('customer.assignedUsersCount', { count: customer.assignedTo.length })}
                   </div>
                 )}
               </td>
@@ -193,7 +194,7 @@ const CustomerTable = ({
                   <button
                     onClick={() => onViewDetails(customer)}
                     className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                    title="View details"
+                    title={t('customer.viewDetailsTooltip')}
                   >
                     <Eye className="h-4 w-4" />
                   </button>
@@ -201,7 +202,7 @@ const CustomerTable = ({
                     <button
                       onClick={() => onEdit(customer)}
                       className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors"
-                      title="Edit customer"
+                      title={t('customer.editCustomerTooltip')}
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -210,7 +211,7 @@ const CustomerTable = ({
                     <button
                       onClick={() => onAssign(customer)}
                       className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
-                      title="Assign customer"
+                      title={t('customer.assignCustomerTooltip')}
                     >
                       <UserPlus className="h-4 w-4" />
                     </button>
@@ -225,8 +226,8 @@ const CustomerTable = ({
                       }`}
                       title={
                         customer.isFeatured
-                          ? 'Remove from featured'
-                          : 'Add to featured'
+                          ? t('customer.removeFromFeatured')
+                          : t('customer.addToFeatured')
                       }
                     >
                       <Star

@@ -79,11 +79,11 @@ const CustomerManagement = () => {
         setCustomers(response.data.docs || []);
         setTotalCustomers(response.data.totalDocs || 0);
       } else {
-        throw new Error(response.message || 'Failed to load customers');
+        throw new Error(response.message || t('customer.failedToLoadCustomers'));
       }
     } catch (error) {
       console.error('Error fetching customers:', error);
-      const errorMessage = error.message || 'Failed to load customers';
+      const errorMessage = error.message || t('customer.failedToLoadCustomers');
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -110,7 +110,7 @@ const CustomerManagement = () => {
   // Export customers
   const handleExportCustomers = async () => {
     if (!canExport) {
-      toast.error('Only directors and IT can export customer data');
+      toast.error(t('customer.exportOnlyDirectorsIT'));
       return;
     }
 
@@ -139,10 +139,10 @@ const CustomerManagement = () => {
         a.click();
         window.URL.revokeObjectURL(url);
 
-        toast.success('Customer data exported successfully');
+        toast.success(t('customer.customerDataExported'));
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to export customers');
+      toast.error(error.message || t('customer.failedToExport'));
     } finally {
       setLoading(false);
     }
@@ -166,7 +166,7 @@ const CustomerManagement = () => {
   const handleToggleFeatured = async (customer) => {
     // Validation: Check if customer has an image
     if (!customer.image || customer.image === '') {
-      toast.error('Only customers with images can be featured');
+      toast.error(t('customer.onlyImagedCanBeFeatured'));
       return;
     }
 
@@ -177,16 +177,16 @@ const CustomerManagement = () => {
       if (response.success) {
         toast.success(
           customer.isFeatured
-            ? 'Customer removed from featured'
-            : 'Customer added to featured'
+            ? t('customer.removedFromFeatured')
+            : t('customer.addedToFeatured')
         );
         fetchCustomers();
       } else {
-        toast.error(response.message || 'Failed to update featured status');
+        toast.error(response.message || t('customer.failedToUpdateFeatured'));
       }
     } catch (error) {
       console.error('Toggle featured error:', error);
-      toast.error(error.message || 'Failed to update featured status');
+      toast.error(error.message || t('customer.failedToUpdateFeatured'));
     } finally {
       setLoading(false);
     }
@@ -213,10 +213,10 @@ const CustomerManagement = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Customer Management
+            {t('customer.customerManagementTitle')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Manage customer accounts ({totalCustomers} total customers)
+            {t('customer.manageAccountsCount', { count: totalCustomers })}
           </p>
         </div>
 
@@ -227,7 +227,7 @@ const CustomerManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </button>
 
           {canExport && (
@@ -237,7 +237,7 @@ const CustomerManagement = () => {
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
-              Export CSV
+              {t('reports.exportCsv')}
             </button>
           )}
 
@@ -247,7 +247,7 @@ const CustomerManagement = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
-              Add Customer
+              {t('customer.addCustomer')}
             </button>
           )}
         </div>
@@ -272,14 +272,14 @@ const CustomerManagement = () => {
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-2" />
             <p className="text-gray-500 dark:text-gray-400">
-              Loading customers...
+              {t('customer.loadingCustomers')}
             </p>
           </div>
         ) : customers.length === 0 ? (
           <div className="text-center py-12">
             <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
-              No customers found
+              {t('customer.noCustomersFound')}
             </p>
             {canCreate && (
               <button
@@ -287,7 +287,7 @@ const CustomerManagement = () => {
                 className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                Create Customer
+                {t('customer.createCustomer')}
               </button>
             )}
           </div>

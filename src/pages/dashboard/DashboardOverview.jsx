@@ -87,11 +87,12 @@ const Action = ({ title, desc, icon: Icon, color, onClick }) => (
 
 /** Country breakdown table — for DIRECTOR/IT global view */
 const CountryBreakdown = ({ data, formatPrice }) => {
+  const { t } = useAdminTranslation();
   if (!data?.length) return null;
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4 flex items-center gap-2">
-        <Globe className="h-4 w-4" /> Country Breakdown
+        <Globe className="h-4 w-4" /> {t('dashboard.countryBreakdownHeader')}
       </h2>
       <div className="space-y-3">
         {data.map((row) => (
@@ -101,7 +102,7 @@ const CountryBreakdown = ({ data, formatPrice }) => {
               <div>
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{row.name || row._id}</p>
                 <p className="text-xs text-gray-400">
-                  {fmt(row.totalOrders)} orders · {fmt(row.totalCustomers)} customers · {fmt(row.crmWon)} CRM won
+                  {t('dashboard.countryRowSummary', { orders: fmt(row.totalOrders), customers: fmt(row.totalCustomers), crmWon: fmt(row.crmWon) })}
                 </p>
               </div>
             </div>
@@ -315,179 +316,179 @@ export default function DashboardOverview() {
     DIRECTOR: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Global Orders",    value: fmt(d.totalGlobalOrders), icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: "All countries combined" },
-        { title: "Global Revenue",   value: fmtC(d.totalGlobalRevenue), icon: DollarSign, color: "text-green-600",  bg: "bg-green-50",  sub: "All countries combined" },
-        { title: "Total Customers",  value: fmt(d.totalCustomers),    icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: "Registered customers" },
-        { title: "CRM Deals Won",    value: fmt(d.wonLeads),          icon: Award,        color: "text-amber-600",  bg: "bg-amber-50",  sub: `${d.convRate || 0}% conversion` },
+        { title: t('dashboard.lbl.globalOrders'),    value: fmt(d.totalGlobalOrders), icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.allCountriesCombined') },
+        { title: t('dashboard.lbl.globalRevenue'),   value: fmtC(d.totalGlobalRevenue), icon: DollarSign, color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.allCountriesCombined') },
+        { title: t('dashboard.lbl.totalCustomers'),  value: fmt(d.totalCustomers),    icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.registeredCustomers') },
+        { title: t('dashboard.lbl.crmDealsWon'),    value: fmt(d.wonLeads),          icon: Award,        color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.subConversion', { rate: d.convRate || 0 }) },
       ],
       actions: [
-        { title: "Finance Manager",   desc: "Review P&L and entries",       icon: DollarSign, color: "bg-green-600",  path: "/admin/dashboard/finance" },
-        { title: "CRM Pipeline",      desc: "Leads and deal tracking",       icon: Users,      color: "bg-blue-600",   path: "/admin/dashboard/crm" },
-        { title: "User Management",   desc: "Staff and admin accounts",      icon: Shield,     color: "bg-purple-600", path: "/admin/users" },
-        { title: "Country Admins",    desc: "Manage foreign admin access",   icon: Globe,      color: "bg-sky-600",    path: "/admin/users" },
+        { title: t('dashboard.lbl.financeManager'),   desc: t('dashboard.desc.reviewPLAndEntries'),       icon: DollarSign, color: "bg-green-600",  path: "/admin/dashboard/finance" },
+        { title: t('dashboard.lbl.crmPipeline'),      desc: t('dashboard.desc.leadsAndDealTracking'),       icon: Users,      color: "bg-blue-600",   path: "/admin/dashboard/crm" },
+        { title: t('dashboard.lbl.userManagement'),   desc: t('dashboard.desc.staffAndAdminAccounts'),      icon: Shield,     color: "bg-purple-600", path: "/admin/users" },
+        { title: t('dashboard.lbl.countryAdmins'),    desc: t('dashboard.desc.manageForeignAdminAccess'),   icon: Globe,      color: "bg-sky-600",    path: "/admin/users" },
       ],
     },
 
     IT: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Users",     value: fmt(d.totalUsers),          icon: Users,        color: "text-blue-600",   bg: "bg-blue-50",   sub: "All registered users" },
-        { title: "Admin Staff",     value: fmt(d.totalAdmins),         icon: Shield,       color: "text-purple-600", bg: "bg-purple-50", sub: "Active admin accounts" },
-        { title: "Global Orders",   value: fmt(d.totalGlobalOrders),   icon: ShoppingCart, color: "text-green-600",  bg: "bg-green-50",  sub: "Across all countries" },
-        { title: "Notifications",   value: fmt(d.notif),               icon: Bell,         color: "text-amber-600",  bg: "bg-amber-50",  sub: "Unread" },
+        { title: t('dashboard.lbl.totalUsers'),     value: fmt(d.totalUsers),          icon: Users,        color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.allRegisteredUsers') },
+        { title: t('dashboard.lbl.adminStaff'),     value: fmt(d.totalAdmins),         icon: Shield,       color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.activeAdminAccounts') },
+        { title: t('dashboard.lbl.globalOrders'),   value: fmt(d.totalGlobalOrders),   icon: ShoppingCart, color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.acrossAllCountries') },
+        { title: t('dashboard.lbl.notifications'),   value: fmt(d.notif),               icon: Bell,         color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.unread') },
       ],
       actions: [
-        { title: "User Management",   desc: "Staff and admin accounts",    icon: Users,    color: "bg-blue-600",   path: "/admin/users" },
-        { title: "Country Admins",    desc: "Foreign admin management",    icon: Globe,    color: "bg-sky-600",    path: "/admin/users" },
-        { title: "Password Vault",    desc: "Secure credentials",          icon: Shield,   color: "bg-gray-700",   path: "/admin/dashboard/password-vault" },
-        { title: "System Settings",   desc: "Server & platform config",    icon: Monitor,  color: "bg-indigo-600", path: "/admin/settings" },
+        { title: t('dashboard.lbl.userManagement'),   desc: t('dashboard.desc.staffAndAdminAccounts'),    icon: Users,    color: "bg-blue-600",   path: "/admin/users" },
+        { title: t('dashboard.lbl.countryAdmins'),    desc: t('dashboard.desc.foreignAdminManagement'),    icon: Globe,    color: "bg-sky-600",    path: "/admin/users" },
+        { title: t('dashboard.lbl.passwordVault'),    desc: t('dashboard.desc.secureCredentials'),          icon: Shield,   color: "bg-gray-700",   path: "/admin/dashboard/password-vault" },
+        { title: t('dashboard.lbl.systemSettings'),   desc: t('dashboard.desc.serverPlatformConfig'),    icon: Monitor,  color: "bg-indigo-600", path: "/admin/settings" },
       ],
     },
 
 MANAGER: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Orders",    value: fmt(d.totalOrders),   icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: "All orders" },
-        { title: "Customers",       value: fmt(d.totalCustomers), icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: "Registered" },
-        { title: "CRM Won",         value: fmt(d.wonLeads),       icon: Award,        color: "text-green-600",  bg: "bg-green-50",  sub: `of ${d.totalLeads || 0} leads` },
+        { title: t('dashboard.lbl.totalOrders'),    value: fmt(d.totalOrders),   icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.allOrders') },
+        { title: t('dashboard.lbl.customers'),       value: fmt(d.totalCustomers), icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.registered') },
+        { title: t('dashboard.lbl.crmWon'),         value: fmt(d.wonLeads),       icon: Award,        color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.subOfLeads', { count: d.totalLeads || 0 }) },
         // Stock is a single NG facility — omit entirely for foreign country offices
         ...(d.showStock
-          ? [{ title: "Low Stock Items", value: fmt(d.lowStock), icon: AlertCircle, color: "text-orange-600", bg: "bg-orange-50", sub: `${d.outOfStock || 0} out of stock` }]
+          ? [{ title: t('dashboard.lbl.lowStockItems'), value: fmt(d.lowStock), icon: AlertCircle, color: "text-orange-600", bg: "bg-orange-50", sub: t('dashboard.subOutOfStock', { count: d.outOfStock || 0 }) }]
           : []),
       ],
       actions: [
-        { title: "Orders",            desc: "Website orders view",    icon: ShoppingCart, color: "bg-blue-600",   path: "/admin/website-orders" },
-        { title: "CRM",               desc: "Leads and pipeline",     icon: Users,        color: "bg-green-600",  path: "/admin/dashboard/crm" },
-        { title: "Country Admins",    desc: "Manage foreign admins",  icon: Globe,        color: "bg-sky-600",    path: "/admin/users" },
-        { title: "Reports",           desc: "Analytics overview",     icon: BarChart3,    color: "bg-purple-600", path: "/admin/reports/inventory" },
+        { title: t('dashboard.lbl.orders'),            desc: t('dashboard.desc.websiteOrdersView'),    icon: ShoppingCart, color: "bg-blue-600",   path: "/admin/website-orders" },
+        { title: t('dashboard.lbl.crm'),               desc: t('dashboard.desc.leadsAndPipeline'),     icon: Users,        color: "bg-green-600",  path: "/admin/dashboard/crm" },
+        { title: t('dashboard.lbl.countryAdmins'),    desc: t('dashboard.desc.manageForeignAdmins'),  icon: Globe,        color: "bg-sky-600",    path: "/admin/users" },
+        { title: t('dashboard.lbl.reports'),           desc: t('dashboard.desc.analyticsOverview'),     icon: BarChart3,    color: "bg-purple-600", path: "/admin/reports/inventory" },
       ],
     },
 
     SALES_MANAGER: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Customers", value: fmt(d.totalCustomers), icon: Users,      color: "text-blue-600",   bg: "bg-blue-50",   sub: "Registered customers" },
-        { title: "Total Leads",     value: fmt(d.totalLeads),     icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", sub: "In CRM pipeline" },
-        { title: "Won Deals",       value: fmt(d.wonLeads),       icon: Award,      color: "text-green-600",  bg: "bg-green-50",  sub: `${d.convRate || 0}% conversion` },
-        { title: "Notifications",   value: fmt(d.notif),          icon: Bell,       color: "text-amber-600",  bg: "bg-amber-50",  sub: "Unread" },
+        { title: t('dashboard.lbl.totalCustomers'), value: fmt(d.totalCustomers), icon: Users,      color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.registeredCustomers') },
+        { title: t('dashboard.lbl.totalLeads'),     value: fmt(d.totalLeads),     icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.inCrmPipeline') },
+        { title: t('dashboard.lbl.wonDeals'),       value: fmt(d.wonLeads),       icon: Award,      color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.subConversion', { rate: d.convRate || 0 }) },
+        { title: t('dashboard.lbl.notifications'),   value: fmt(d.notif),          icon: Bell,       color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.unread') },
       ],
       actions: [
-        { title: "CRM Pipeline",  desc: "Leads and deal tracking",  icon: Users,    color: "bg-blue-600",   path: "/admin/dashboard/crm" },
-        { title: "Web Scraper",   desc: "Prospect research tool",   icon: Zap,      color: "bg-yellow-500", path: "/admin/dashboard/scraper" },
-        { title: "Customers",     desc: "Customer management",      icon: Coffee,   color: "bg-green-600",  path: "/admin/customers" },
-        { title: "Sales Reports", desc: "Performance analytics",    icon: BarChart3,color: "bg-purple-600", path: "/admin/reports/sales" },
+        { title: t('dashboard.lbl.crmPipeline'),  desc: t('dashboard.desc.leadsAndDealTracking'),  icon: Users,    color: "bg-blue-600",   path: "/admin/dashboard/crm" },
+        { title: t('dashboard.lbl.webScraper'),   desc: t('dashboard.desc.prospectResearchTool'),   icon: Zap,      color: "bg-yellow-500", path: "/admin/dashboard/scraper" },
+        { title: t('dashboard.lbl.customers'),     desc: t('dashboard.desc.customerManagement'),      icon: Coffee,   color: "bg-green-600",  path: "/admin/customers" },
+        { title: t('dashboard.lbl.salesReports'), desc: t('dashboard.desc.performanceAnalytics'),    icon: BarChart3,color: "bg-purple-600", path: "/admin/reports/sales" },
       ],
     },
 
     SALES: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Orders",   value: fmt(d.totalOrders),    icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: "All orders" },
-        { title: "Customers",      value: fmt(d.totalCustomers), icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: "Total registered" },
-        { title: "CRM Leads",      value: fmt(d.totalLeads),     icon: TrendingUp,   color: "text-green-600",  bg: "bg-green-50",  sub: "Active pipeline" },
-        { title: "Won Deals",      value: fmt(d.wonLeads),       icon: Award,        color: "text-amber-600",  bg: "bg-amber-50",  sub: "Closed deals" },
+        { title: t('dashboard.lbl.totalOrders'),   value: fmt(d.totalOrders),    icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.allOrders') },
+        { title: t('dashboard.lbl.customers'),      value: fmt(d.totalCustomers), icon: Users,        color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.totalRegistered') },
+        { title: t('dashboard.lbl.crmLeads'),      value: fmt(d.totalLeads),     icon: TrendingUp,   color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.activePipeline') },
+        { title: t('dashboard.lbl.wonDeals'),      value: fmt(d.wonLeads),       icon: Award,        color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.closedDeals') },
       ],
       actions: [
-        { title: "CRM Pipeline",    desc: "Track leads",       icon: Users,       color: "bg-blue-600",   path: "/admin/dashboard/crm" },
-        { title: "Web Scraper",     desc: "Find prospects",    icon: Zap,         color: "bg-yellow-500", path: "/admin/dashboard/scraper" },
-        { title: "Customers",       desc: "Manage accounts",   icon: Coffee,      color: "bg-green-600",  path: "/admin/customers" },
-        { title: "Orders",          desc: "Track orders",      icon: ShoppingCart,color: "bg-purple-600", path: "/admin/website-orders" },
+        { title: t('dashboard.lbl.crmPipeline'),    desc: t('dashboard.desc.trackLeads'),       icon: Users,       color: "bg-blue-600",   path: "/admin/dashboard/crm" },
+        { title: t('dashboard.lbl.webScraper'),     desc: t('dashboard.desc.findProspects'),    icon: Zap,         color: "bg-yellow-500", path: "/admin/dashboard/scraper" },
+        { title: t('dashboard.lbl.customers'),       desc: t('dashboard.desc.manageAccounts'),   icon: Coffee,      color: "bg-green-600",  path: "/admin/customers" },
+        { title: t('dashboard.lbl.orders'),          desc: t('dashboard.desc.trackOrders'),      icon: ShoppingCart,color: "bg-purple-600", path: "/admin/website-orders" },
       ],
     },
 
     HR: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Staff",     value: fmt(d.totalAdmins),   icon: Users,  color: "text-blue-600",   bg: "bg-blue-50",   sub: "Admin accounts" },
-        { title: "Departments",     value: fmt(d.deptCount),     icon: Shield, color: "text-purple-600", bg: "bg-purple-50", sub: "Active departments" },
-        { title: "Customers",       value: fmt(d.totalCustomers),icon: Coffee, color: "text-green-600",  bg: "bg-green-50",  sub: "Registered customers" },
-        { title: "Notifications",   value: fmt(d.notif),         icon: Bell,   color: "text-amber-600",  bg: "bg-amber-50",  sub: "Unread" },
+        { title: t('dashboard.lbl.totalStaff'),     value: fmt(d.totalAdmins),   icon: Users,  color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.adminAccounts') },
+        { title: t('dashboard.lbl.departments'),     value: fmt(d.deptCount),     icon: Shield, color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.activeDepartments') },
+        { title: t('dashboard.lbl.customers'),       value: fmt(d.totalCustomers),icon: Coffee, color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.registeredCustomers') },
+        { title: t('dashboard.lbl.notifications'),   value: fmt(d.notif),         icon: Bell,   color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.unread') },
       ],
       actions: [
-        { title: "User Management", desc: "Staff accounts",       icon: Users,    color: "bg-blue-600",   path: "/admin/users" },
-        { title: "Add Employee",    desc: "Create new staff",     icon: UserPlus, color: "bg-green-600",  path: "/admin/users" },
-        { title: "Customers",       desc: "Customer accounts",    icon: Coffee,   color: "bg-orange-600", path: "/admin/customers" },
-        { title: "Support Tickets", desc: "HR support queue",     icon: LifeBuoy, color: "bg-red-600",    path: "/admin/dashboard/support-tickets" },
+        { title: t('dashboard.lbl.userManagement'), desc: t('dashboard.desc.staffAccounts'),       icon: Users,    color: "bg-blue-600",   path: "/admin/users" },
+        { title: t('dashboard.lbl.addEmployee'),    desc: t('dashboard.desc.createNewStaff'),     icon: UserPlus, color: "bg-green-600",  path: "/admin/users" },
+        { title: t('dashboard.lbl.customers'),       desc: t('dashboard.desc.customerAccounts'),    icon: Coffee,   color: "bg-orange-600", path: "/admin/customers" },
+        { title: t('dashboard.lbl.supportTickets'), desc: t('dashboard.desc.hrSupportQueue'),     icon: LifeBuoy, color: "bg-red-600",    path: "/admin/dashboard/support-tickets" },
       ],
     },
 
     WAREHOUSE: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Products",  value: fmt(d.totalProducts), icon: Package,    color: "text-blue-600",   bg: "bg-blue-50",   sub: "In catalog" },
-        { title: "Purchase Orders", value: fmt(d.totalPOs),      icon: Inbox,      color: "text-green-600",  bg: "bg-green-50",  sub: "Total POs" },
-        { title: "Low Stock",       value: fmt(d.lowStock),      icon: AlertCircle,color: "text-orange-600", bg: "bg-orange-50", sub: "Need reorder" },
-        { title: "Out of Stock",    value: fmt(d.outOfStock),    icon: AlertCircle,color: "text-red-600",    bg: "bg-red-50",    sub: "Zero units" },
+        { title: t('dashboard.lbl.totalProducts'),  value: fmt(d.totalProducts), icon: Package,    color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.inCatalog') },
+        { title: t('dashboard.lbl.purchaseOrders'), value: fmt(d.totalPOs),      icon: Inbox,      color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.totalPos') },
+        { title: t('dashboard.lbl.lowStock'),       value: fmt(d.lowStock),      icon: AlertCircle,color: "text-orange-600", bg: "bg-orange-50", sub: t('dashboard.sub.needReorder') },
+        { title: t('dashboard.lbl.outOfStock'),    value: fmt(d.outOfStock),    icon: AlertCircle,color: "text-red-600",    bg: "bg-red-50",    sub: t('dashboard.sub.zeroUnits') },
       ],
       actions: [
-        { title: "Stock Management",   desc: "Inventory control",    icon: Package,  color: "bg-blue-600",   path: "/admin/stock" },
-        { title: "Warehouse",          desc: "Warehouse overview",   icon: Warehouse,color: "bg-green-600",  path: "/admin/warehouse" },
-        { title: "Purchase Orders",    desc: "Order management",     icon: Inbox,    color: "bg-orange-600", path: "/admin/purchase-orders" },
-        { title: "Stock Analysis",     desc: "Reports & trends",     icon: BarChart3,color: "bg-purple-600", path: "/admin/reports/stock-analysis" },
+        { title: t('dashboard.lbl.stockManagement'),   desc: t('dashboard.desc.inventoryControl'),    icon: Package,  color: "bg-blue-600",   path: "/admin/stock" },
+        { title: t('dashboard.lbl.warehouse'),          desc: t('dashboard.desc.warehouseOverview'),   icon: Warehouse,color: "bg-green-600",  path: "/admin/warehouse" },
+        { title: t('dashboard.lbl.purchaseOrders'),    desc: t('dashboard.desc.orderManagement'),     icon: Inbox,    color: "bg-orange-600", path: "/admin/purchase-orders" },
+        { title: t('dashboard.lbl.stockAnalysis'),     desc: t('dashboard.desc.reportsTrends'),     icon: BarChart3,color: "bg-purple-600", path: "/admin/reports/stock-analysis" },
       ],
     },
 
     ACCOUNTANT: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Income",   value: fmtC(d.income),  icon: ArrowUpCircle,  color: "text-green-600", bg: "bg-green-50", sub: "All-time income" },
-        { title: "Total Expenses", value: fmtC(d.expense), icon: ArrowDownCircle,color: "text-red-600",   bg: "bg-red-50",   sub: "All-time expenses" },
-        { title: "Net Balance",    value: fmtC(d.netNGN),  icon: DollarSign,     color: "text-blue-600",  bg: "bg-blue-50",  sub: "Income minus expenses" },
-        { title: "Notifications",  value: fmt(d.notif),    icon: Bell,           color: "text-amber-600", bg: "bg-amber-50", sub: "Unread" },
+        { title: t('dashboard.lbl.totalIncome'),   value: fmtC(d.income),  icon: ArrowUpCircle,  color: "text-green-600", bg: "bg-green-50", sub: t('dashboard.sub.allTimeIncome') },
+        { title: t('dashboard.lbl.totalExpenses'), value: fmtC(d.expense), icon: ArrowDownCircle,color: "text-red-600",   bg: "bg-red-50",   sub: t('dashboard.sub.allTimeExpenses') },
+        { title: t('dashboard.lbl.netBalance'),    value: fmtC(d.netNGN),  icon: DollarSign,     color: "text-blue-600",  bg: "bg-blue-50",  sub: t('dashboard.sub.incomeMinusExpenses') },
+        { title: t('dashboard.lbl.notifications'),  value: fmt(d.notif),    icon: Bell,           color: "text-amber-600", bg: "bg-amber-50", sub: t('dashboard.sub.unread') },
       ],
       actions: [
-        { title: "Pricing",         desc: "Manage price config",   icon: DollarSign, color: "bg-green-600",  path: "/admin/pricing" },
-        { title: "Exchange Rates",  desc: "Currency rates",        icon: TrendingUp, color: "bg-purple-600", path: "/admin/exchange-rates" },
-        { title: "Pricing Reports", desc: "Analytics",             icon: BarChart3,  color: "bg-indigo-600", path: "/admin/reports/pricing" },
-        { title: "Purchase Reports",desc: "Procurement tracking",  icon: FileText,   color: "bg-blue-600",   path: "/admin/reports/purchase" },
+        { title: t('dashboard.lbl.pricing'),         desc: t('dashboard.desc.managePriceConfig'),   icon: DollarSign, color: "bg-green-600",  path: "/admin/pricing" },
+        { title: t('dashboard.lbl.exchangeRates'),  desc: t('dashboard.desc.currencyRates'),        icon: TrendingUp, color: "bg-purple-600", path: "/admin/exchange-rates" },
+        { title: t('dashboard.lbl.pricingReports'), desc: t('dashboard.desc.analytics'),             icon: BarChart3,  color: "bg-indigo-600", path: "/admin/reports/pricing" },
+        { title: t('dashboard.lbl.purchaseReports'),desc: t('dashboard.desc.procurementTracking'),  icon: FileText,   color: "bg-blue-600",   path: "/admin/reports/purchase" },
       ],
     },
 
     LOGISTICS: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Orders",    value: fmt(d.totalOrders),   icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: "All orders" },
-        { title: "Pending Dispatch",value: fmt(d.pendingOrders), icon: Truck,        color: "text-orange-600", bg: "bg-orange-50", sub: "Not yet delivered" },
-        { title: "Notifications",   value: fmt(d.notif),         icon: Bell,         color: "text-amber-600",  bg: "bg-amber-50",  sub: "Unread" },
-        { title: "Support Tickets", value: "—",                  icon: LifeBuoy,     color: "text-purple-600", bg: "bg-purple-50", sub: "Open issues" },
+        { title: t('dashboard.lbl.totalOrders'),    value: fmt(d.totalOrders),   icon: ShoppingCart, color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.allOrders') },
+        { title: t('dashboard.lbl.pendingDispatch'),value: fmt(d.pendingOrders), icon: Truck,        color: "text-orange-600", bg: "bg-orange-50", sub: t('dashboard.sub.notYetDelivered') },
+        { title: t('dashboard.lbl.notifications'),   value: fmt(d.notif),         icon: Bell,         color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.unread') },
+        { title: t('dashboard.lbl.supportTickets'), value: "—",                  icon: LifeBuoy,     color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.openIssues') },
       ],
       actions: [
-        { title: "Logistics",    desc: "Zones & methods",  icon: Truck,       color: "bg-blue-600",   path: "/admin/logistics" },
-        { title: "Tracking",     desc: "Shipment tracking",icon: Eye,         color: "bg-green-600",  path: "/admin/tracking" },
-        { title: "Orders",       desc: "View all orders",  icon: ShoppingCart,color: "bg-purple-600", path: "/admin/website-orders" },
-        { title: "Support",      desc: "Open tickets",     icon: LifeBuoy,    color: "bg-red-600",    path: "/admin/dashboard/support-tickets" },
+        { title: t('dashboard.lbl.logistics'),    desc: t('dashboard.desc.zonesMethods'),  icon: Truck,       color: "bg-blue-600",   path: "/admin/logistics" },
+        { title: t('dashboard.lbl.tracking'),     desc: t('dashboard.desc.shipmentTracking'),icon: Eye,         color: "bg-green-600",  path: "/admin/tracking" },
+        { title: t('dashboard.lbl.orders'),       desc: t('dashboard.desc.viewAllOrders'),  icon: ShoppingCart,color: "bg-purple-600", path: "/admin/website-orders" },
+        { title: t('dashboard.lbl.support'),      desc: t('dashboard.desc.openTickets'),     icon: LifeBuoy,    color: "bg-red-600",    path: "/admin/dashboard/support-tickets" },
       ],
     },
 
     EDITOR: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Products", value: fmt(d.totalProducts), icon: Package,  color: "text-blue-600",   bg: "bg-blue-50",   sub: "In catalog" },
-        { title: "Blog Posts",     value: fmt(d.totalBlogs),    icon: FileText, color: "text-green-600",  bg: "bg-green-50",  sub: "Published posts" },
-        { title: "Notifications",  value: fmt(d.notif),         icon: Bell,     color: "text-amber-600",  bg: "bg-amber-50",  sub: "Unread" },
-        { title: "Support Tickets",value: "—",                  icon: LifeBuoy, color: "text-purple-600", bg: "bg-purple-50", sub: "Open tickets" },
+        { title: t('dashboard.lbl.totalProducts'), value: fmt(d.totalProducts), icon: Package,  color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.inCatalog') },
+        { title: t('dashboard.lbl.blogPosts'),     value: fmt(d.totalBlogs),    icon: FileText, color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.publishedPosts') },
+        { title: t('dashboard.lbl.notifications'),  value: fmt(d.notif),         icon: Bell,     color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.unread') },
+        { title: t('dashboard.lbl.supportTickets'),value: "—",                  icon: LifeBuoy, color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.openTickets') },
       ],
       actions: [
-        { title: "Products",  desc: "Edit catalog",      icon: Package,  color: "bg-blue-600",   path: "/admin/products" },
-        { title: "Blog",      desc: "Manage posts",      icon: FileText, color: "bg-green-600",  path: "/admin/blog" },
-        { title: "Sliders",   desc: "Homepage sliders",  icon: Palette,  color: "bg-purple-600", path: "/admin/sliders" },
-        { title: "Support",   desc: "Editor tickets",    icon: LifeBuoy, color: "bg-red-600",    path: "/admin/dashboard/support-tickets" },
+        { title: t('dashboard.lbl.products'),  desc: t('dashboard.desc.editCatalog'),      icon: Package,  color: "bg-blue-600",   path: "/admin/products" },
+        { title: t('dashboard.lbl.blog'),      desc: t('dashboard.desc.managePosts'),      icon: FileText, color: "bg-green-600",  path: "/admin/blog" },
+        { title: t('dashboard.lbl.sliders'),   desc: t('dashboard.desc.homepageSliders'),  icon: Palette,  color: "bg-purple-600", path: "/admin/sliders" },
+        { title: t('dashboard.lbl.support'),   desc: t('dashboard.desc.editorTickets'),    icon: LifeBuoy, color: "bg-red-600",    path: "/admin/dashboard/support-tickets" },
       ],
     },
 
     DESIGNER: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
-        { title: "Total Products", value: fmt(d.totalProducts), icon: Package,  color: "text-blue-600",   bg: "bg-blue-50",   sub: "In catalog" },
-        { title: "Notifications",  value: fmt(d.notif),         icon: Bell,     color: "text-amber-600",  bg: "bg-amber-50",  sub: "Unread" },
-        { title: "Support Tickets",value: "—",                  icon: LifeBuoy, color: "text-purple-600", bg: "bg-purple-50", sub: "Open tickets" },
-        { title: "Active Sliders", value: "—",                  icon: Palette,  color: "text-green-600",  bg: "bg-green-50",  sub: "Homepage banners" },
+        { title: t('dashboard.lbl.totalProducts'), value: fmt(d.totalProducts), icon: Package,  color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.inCatalog') },
+        { title: t('dashboard.lbl.notifications'),  value: fmt(d.notif),         icon: Bell,     color: "text-amber-600",  bg: "bg-amber-50",  sub: t('dashboard.sub.unread') },
+        { title: t('dashboard.lbl.supportTickets'),value: "—",                  icon: LifeBuoy, color: "text-purple-600", bg: "bg-purple-50", sub: t('dashboard.sub.openTickets') },
+        { title: t('dashboard.lbl.activeSliders'), value: "—",                  icon: Palette,  color: "text-green-600",  bg: "bg-green-50",  sub: t('dashboard.sub.homepageBanners') },
       ],
       actions: [
-        { title: "Sliders",  desc: "Manage sliders",   icon: Palette, color: "bg-purple-600", path: "/admin/sliders" },
-        { title: "Banners",  desc: "Banner management",icon: Palette, color: "bg-pink-600",   path: "/admin/banners" },
-        { title: "Colors",   desc: "Color swatches",   icon: Palette, color: "bg-indigo-600", path: "/admin/colors" },
-        { title: "Brands",   desc: "Brand management", icon: Tag,     color: "bg-blue-600",   path: "/admin/brands" },
+        { title: t('dashboard.lbl.sliders'),  desc: t('dashboard.desc.manageSliders'),   icon: Palette, color: "bg-purple-600", path: "/admin/sliders" },
+        { title: t('dashboard.lbl.banners'),  desc: t('dashboard.desc.bannerManagement'),icon: Palette, color: "bg-pink-600",   path: "/admin/banners" },
+        { title: t('dashboard.lbl.colors'),   desc: t('dashboard.desc.colorSwatches'),   icon: Palette, color: "bg-indigo-600", path: "/admin/colors" },
+        { title: t('dashboard.lbl.brands'),   desc: t('dashboard.desc.brandManagement'), icon: Tag,     color: "bg-blue-600",   path: "/admin/brands" },
       ],
     },
   };
@@ -521,7 +522,7 @@ MANAGER: {
               )}
               {d.notif > 0 && (
                 <span className="text-xs bg-red-500 px-3 py-1 rounded-full font-medium flex items-center gap-1">
-                  <Bell className="h-3 w-3" /> {d.notif} new
+                  <Bell className="h-3 w-3" /> {t('dashboard.notifNew', { count: d.notif })}
                 </span>
               )}
             </div>
@@ -531,7 +532,7 @@ MANAGER: {
             <RefreshCw className={`h-5 w-5 text-white ${refreshing ? "animate-spin" : ""}`} />
           </button>
         </div>
-        {updated && <p className="text-white/40 text-xs mt-3">Updated just now</p>}
+        {updated && <p className="text-white/40 text-xs mt-3">{t('common.updatedJustNow')}</p>}
       </div>
 
       {/* Stats */}
@@ -542,7 +543,7 @@ MANAGER: {
       {/* Actions + Recent orders / Country breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('dashboard.quickActions')}</h2>
           {cfg.actions.map((a, i) => <Action key={i} {...a} onClick={() => nav(a.path)} />)}
         </div>
 
@@ -555,10 +556,10 @@ MANAGER: {
           {d.recentOrders?.length > 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Recent Orders</h2>
+                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('common.recentOrders')}</h2>
                 <button onClick={() => nav("/admin/website-orders")}
                   className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                  View All <ArrowRight className="h-3 w-3" />
+                  {t('dashboard.viewAll')} <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
               <div className="space-y-3">
@@ -570,7 +571,7 @@ MANAGER: {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-36">
-                          {o.userId?.name || o.customerId?.name || "Customer"}
+                          {o.userId?.name || o.customerId?.name || t('common.customer')}
                         </p>
                         <p className="text-xs text-gray-400">{ago(o.createdAt)}</p>
                       </div>
@@ -578,7 +579,7 @@ MANAGER: {
                     <div className="text-right">
                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{fmtC(o.totalAmt || o.subTotalAmt)}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${o.order_status === "Delivered" ? "bg-green-100 text-green-700" : o.order_status === "Cancel" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
-                        {o.order_status || "Pending"}
+                        {o.order_status || t('common.pending')}
                       </span>
                     </div>
                   </div>
@@ -588,19 +589,19 @@ MANAGER: {
           ) : !showCountryBreakdown ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center text-center gap-3">
               <Coffee className="h-10 w-10 text-gray-200 dark:text-gray-700" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Welcome back, {user?.name}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.welcome', { name: user?.name })}</p>
             </div>
           ) : null}
 
           {countryScope && d.topProducts?.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Top Products in {d.countryMeta?.name}</h2>
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">{t('dashboard.topProductsIn', { country: d.countryMeta?.name })}</h2>
               <div className="space-y-2">
                 {d.topProducts.map((p, i) => (
                   <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
                     <p className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-48">{p.name || "Product"}</p>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">{fmt(p.totalSold)} sold</p>
+                      <p className="text-xs text-gray-500">{t('dashboard.soldCount', { count: fmt(p.totalSold) })}</p>
                     </div>
                   </div>
                 ))}

@@ -134,19 +134,19 @@ function timeAgo(d) {
 
 // ── Quota bar ────────────────────────────────────────────────────────────────
 function QuotaBar({ quota }) {
+  const { t } = useAdminTranslation();
   if (!quota) return null;
   if (quota.unlimited) {
     return (
       <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-        <Unlock className="h-3.5 w-3.5" /> Unlimited API access
+        <Unlock className="h-3.5 w-3.5" /> {t('scraper.unlimitedApiAccess')}
       </div>
     );
   }
   if (quota.limit === 0) {
     return (
       <div className="flex items-center gap-2 text-xs text-orange-600 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-3 py-2">
-        <Lock className="h-3.5 w-3.5" /> No quota assigned — contact Manager or
-        IT
+        <Lock className="h-3.5 w-3.5" /> {t('scraper.noQuotaAssigned')}
       </div>
     );
   }
@@ -157,12 +157,12 @@ function QuotaBar({ quota }) {
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
-          <Gauge className="h-3 w-3" /> Monthly quota
+          <Gauge className="h-3 w-3" /> {t('scraper.monthlyQuota')}
         </span>
         <span
           className={`font-semibold ${pct >= 90 ? "text-red-600" : pct >= 70 ? "text-orange-600" : "text-gray-700 dark:text-gray-300"}`}
         >
-          {quota.used}/{quota.limit} calls
+          {t('scraper.callsUsed', { used: quota.used, limit: quota.limit })}
         </span>
       </div>
       <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -172,7 +172,7 @@ function QuotaBar({ quota }) {
         />
       </div>
       <p className="text-xs text-gray-400">
-        {quota.remaining} remaining · resets 1st of month
+        {t('scraper.remainingResets', { count: quota.remaining })}
       </p>
     </div>
   );
@@ -196,7 +196,7 @@ function QuotaManagerModal({ onClose }) {
   const handleSave = async (userId, name) => {
     const val = parseInt(editing[userId]);
     if (isNaN(val) || val < 0) {
-      toast.error("Enter a valid number");
+      toast.error(t('scraper.enterValidNumber'));
       return;
     }
     setSaving(userId);
@@ -205,7 +205,7 @@ function QuotaManagerModal({ onClose }) {
       body: JSON.stringify({ monthlyLimit: val }),
     });
     if (d.success) {
-      toast.success(`Quota for ${name} set to ${val}`);
+      toast.success(t('scraper.quotaSetTo', { name, value: val }));
       setAllQuotas((qs) =>
         qs.map((q) =>
           q._id === userId
@@ -223,12 +223,12 @@ function QuotaManagerModal({ onClose }) {
   };
 
   const handleReset = async (userId, name) => {
-    if (!confirm(`Reset usage counter for ${name}?`)) return;
+    if (!confirm(t('scraper.resetUsageConfirm', { name }))) return;
     const d = await apiFetch(`/admin/scraper/quota/${userId}/reset`, {
       method: "POST",
     });
     if (d.success) {
-      toast.success(`Usage reset for ${name}`);
+      toast.success(t('scraper.usageResetFor', { name }));
       setAllQuotas((qs) =>
         qs.map((q) =>
           q._id === userId
@@ -253,8 +253,7 @@ function QuotaManagerModal({ onClose }) {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Gauge className="h-5 w-5 text-blue-500" /> Scraper API Quota
-            Management
+            <Gauge className="h-5 w-5 text-blue-500" /> {t('scraper.scraperQuotaManagement')}
           </h2>
           <button
             onClick={onClose}
@@ -266,10 +265,7 @@ function QuotaManagerModal({ onClose }) {
 
         <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-800 flex-shrink-0">
           <p className="text-xs text-blue-700 dark:text-blue-400">
-            Set monthly API call limits per team member. IT, Director, and
-            Manager have <strong>unlimited</strong> access and cannot be
-            restricted. Each SerpAPI call = 1 credit from the user's quota.
-            Quotas auto-reset on the 1st of every month.
+            {t('scraper.quotaModalDescription')}
           </p>
         </div>
 
@@ -283,10 +279,10 @@ function QuotaManagerModal({ onClose }) {
               <thead className="bg-gray-50 dark:bg-gray-700/50 sticky top-0">
                 <tr>
                   {[
-                    "Team Member",
-                    "Role",
-                    "Used / Limit",
-                    "New Limit",
+                    t('crm.colTeamMember'),
+                    t('scraper.colRole'),
+                    t('scraper.colUsedLimit'),
+                    t('scraper.colNewLimit'),
                     t("common.actions"),
                   ].map((h) => (
                     <th
@@ -327,11 +323,11 @@ function QuotaManagerModal({ onClose }) {
                     <td className="px-4 py-3">
                       {q.unlimited ? (
                         <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                          <Unlock className="h-3 w-3" /> Unlimited
+                          <Unlock className="h-3 w-3" /> {t('scraper.unlimitedLabel')}
                         </span>
                       ) : q.limit === 0 ? (
                         <span className="text-xs text-orange-500 flex items-center gap-1">
-                          <Lock className="h-3 w-3" /> Not set
+                          <Lock className="h-3 w-3" /> {t('scraper.notSet')}
                         </span>
                       ) : (
                         <div className="space-y-1">
@@ -352,7 +348,7 @@ function QuotaManagerModal({ onClose }) {
                     <td className="px-4 py-3">
                       {q.unlimited ? (
                         <span className="text-xs text-gray-400 italic">
-                          n/a
+                          {t('scraper.naLabel')}
                         </span>
                       ) : (
                         <input
@@ -365,7 +361,7 @@ function QuotaManagerModal({ onClose }) {
                               [q._id]: e.target.value,
                             }))
                           }
-                          placeholder="e.g. 100"
+                          placeholder={t('scraper.limitPlaceholder')}
                           className="w-24 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                         />
                       )}
@@ -380,14 +376,14 @@ function QuotaManagerModal({ onClose }) {
                             }
                             className="text-xs px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-40 font-medium"
                           >
-                            {saving === q._id ? "..." : "Save"}
+                            {saving === q._id ? '...' : t('common.save')}
                           </button>
                           {(q.used || 0) > 0 && (
                             <button
                               onClick={() => handleReset(q._id, q.name)}
                               className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                             >
-                              Reset
+                              {t('scraper.resetBtn')}
                             </button>
                           )}
                         </div>
@@ -492,7 +488,7 @@ export default function ScraperTool() {
 
   const handleRunJob = async () => {
     if (!jobForm.searchQuery && !jobForm.targetUrl) {
-      toast.error("Enter a search query or target URL");
+      toast.error(t('scraper.enterSearchOrUrl'));
       return;
     }
 
@@ -500,7 +496,7 @@ export default function ScraperTool() {
     if (!isUnlimited) {
       const check = await apiFetch("/admin/scraper/quota/check");
       if (!check.allowed) {
-        toast.error(check.reason || "Quota exhausted");
+        toast.error(check.reason || t('scraper.quotaExhausted'));
         return;
       }
     }
@@ -512,12 +508,12 @@ export default function ScraperTool() {
         body: JSON.stringify(jobForm),
       });
       if (d.success) {
-        toast.success("Scrape job started!");
+        toast.success(t('scraper.scrapeJobStarted'));
         setShowNewJob(false);
         setJobForm(EMPTY_JOB);
         fetchJobs();
         fetchQuota();
-      } else toast.error(d.message || "Failed to start");
+      } else toast.error(d.message || t('scraper.failedToStart'));
     } finally {
       setRunning(false);
     }
@@ -539,10 +535,10 @@ export default function ScraperTool() {
   };
 
   const handleDeleteJob = async (id) => {
-    if (!confirm("Delete this scrape job?")) return;
+    if (!confirm(t('scraper.deleteScrapeJobConfirm'))) return;
     const d = await apiFetch(`/admin/scraper/jobs/${id}`, { method: "DELETE" });
     if (d.success) {
-      toast.success("Deleted");
+      toast.success(t('content.deletedGeneric'));
       fetchJobs();
       if (selectedJob?._id === id) setSelectedJob(null);
     }
@@ -580,7 +576,7 @@ export default function ScraperTool() {
 
   const handleCommitDeletes = async () => {
     if (markedForDelete.size === 0) return;
-    if (!confirm(`Remove ${markedForDelete.size} row(s)?`)) return;
+    if (!confirm(t('scraper.removeRowsConfirm', { count: markedForDelete.size }))) return;
     setDeletingRows(true);
     const d = await apiFetch(
       `/admin/scraper/jobs/${selectedJob._id}/results/bulk`,
@@ -590,7 +586,7 @@ export default function ScraperTool() {
       },
     );
     if (d.success) {
-      toast.success(`${markedForDelete.size} row(s) removed`);
+      toast.success(t('scraper.rowsRemoved', { count: markedForDelete.size }));
       setJobResults(d.data);
       setMarkedForDelete(new Set());
       setSelectedIndices(new Set());
@@ -604,7 +600,7 @@ export default function ScraperTool() {
       ? jobResults.map((_, i) => i).filter((i) => !markedForDelete.has(i))
       : [...selectedIndices].filter((i) => !markedForDelete.has(i));
     if (!toImport.length) {
-      toast.error("Select results to import");
+      toast.error(t('scraper.selectResultsToImport'));
       return;
     }
     setImporting(true);
@@ -616,7 +612,7 @@ export default function ScraperTool() {
       toast.success(d.message);
       setSelectedIndices(new Set());
       fetchJobs();
-    } else toast.error(d.message || "Import failed");
+    } else toast.error(d.message || t('scraper.importFailed'));
     setImporting(false);
   };
 
@@ -630,13 +626,13 @@ export default function ScraperTool() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Zap className="h-6 w-6 text-yellow-500" /> Web Scraper
+            <Zap className="h-6 w-6 text-yellow-500" /> {t('scraper.title')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Extract B2B and B2C leads from Google, LinkedIn, Maps & more
+            {t('scraper.extractLeadsDesc')}
             {!isSuperRole && (
               <span className="ml-2 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 px-2 py-0.5 rounded-full">
-                Your jobs only
+                {t('scraper.yourJobsOnly')}
               </span>
             )}
           </p>
@@ -647,7 +643,7 @@ export default function ScraperTool() {
               onClick={() => setShowQuotaMgr(true)}
               className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-600 dark:text-gray-400"
             >
-              <Gauge className="h-4 w-4" /> Manage Quotas
+              <Gauge className="h-4 w-4" /> {t('scraper.manageQuotas')}
             </button>
           )}
           <button
@@ -665,7 +661,7 @@ export default function ScraperTool() {
             }}
             className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium"
           >
-            <Play className="h-4 w-4" /> New Scrape Job
+            <Play className="h-4 w-4" /> {t('scraper.newScrapeJob')}
           </button>
         </div>
       </div>
@@ -684,10 +680,10 @@ export default function ScraperTool() {
         )}
         <p className="text-xs text-gray-700 dark:text-gray-300">
           {capabilities.serpApi
-            ? "✅ SerpAPI configured — Google, Maps, LinkedIn, Facebook, Instagram available"
+            ? t('scraper.serpApiConfigured')
             : capabilities.googleCse
-              ? "✅ Google CSE configured — basic search available"
-              : "⚠️ No API key — only VConnect NG, Yellow Pages NG and Custom URL work without an API key."}
+              ? t('scraper.googleCseConfigured')
+              : t('scraper.noApiKeyWarning')}
         </p>
       </div>
 
@@ -699,7 +695,7 @@ export default function ScraperTool() {
           {jobs.length === 0 && !loading ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-10 text-center text-gray-400">
               <Zap className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>No scrape jobs yet</p>
+              <p>{t('scraper.noScrapeJobsYet')}</p>
             </div>
           ) : (
             jobs.map((job) => {
@@ -723,7 +719,7 @@ export default function ScraperTool() {
                           <Icon
                             className={`h-3 w-3 ${job.status === "running" ? "animate-spin" : ""}`}
                           />{" "}
-                          {sc.label}
+                          {t(`scraper.status${job.status.charAt(0).toUpperCase()}${job.status.slice(1)}`)}
                         </span>
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded font-medium ${job.leadType === "B2C" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
@@ -747,17 +743,17 @@ export default function ScraperTool() {
                         <span>{job.platform}</span>
                         {job.totalFound > 0 && (
                           <span className="text-green-600 font-medium">
-                            {job.totalFound} found
+                            {t('scraper.foundCount', { count: job.totalFound })}
                           </span>
                         )}
                         {job.totalImported > 0 && (
                           <span className="text-blue-600">
-                            {job.totalImported} imported
+                            {t('scraper.importedCount', { count: job.totalImported })}
                           </span>
                         )}
                         {job.apiCallsUsed > 0 && (
                           <span className="text-orange-500">
-                            {job.apiCallsUsed} API calls
+                            {t('scraper.apiCallsCount', { count: job.apiCallsUsed })}
                           </span>
                         )}
                         <span>{timeAgo(job.createdAt)}</span>
@@ -807,11 +803,10 @@ export default function ScraperTool() {
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {jobResults.length} result
-                    {jobResults.length !== 1 ? "s" : ""}
+                    {t('scraper.resultCount', { count: jobResults.length })}
                     {markedForDelete.size > 0 && (
                       <span className="ml-2 text-red-500 font-medium">
-                        {markedForDelete.size} marked
+                        {t('scraper.markedCount', { count: markedForDelete.size })}
                       </span>
                     )}
                   </p>
@@ -837,8 +832,8 @@ export default function ScraperTool() {
                       <Square className="h-3.5 w-3.5" />
                     )}
                     {selectedIndices.size > 0
-                      ? `${selectedIndices.size} selected`
-                      : "Select all"}
+                      ? t('scraper.selectedCount', { count: selectedIndices.size })
+                      : t('scraper.selectAll')}
                   </button>
 
                   {markedForDelete.size > 0 && (
@@ -852,7 +847,7 @@ export default function ScraperTool() {
                       ) : (
                         <Trash2 className="h-3.5 w-3.5" />
                       )}
-                      Remove {markedForDelete.size}
+                      {t('scraper.removeCount', { count: markedForDelete.size })}
                     </button>
                   )}
 
@@ -864,8 +859,7 @@ export default function ScraperTool() {
                       disabled={importing}
                       className="flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg disabled:opacity-50 font-medium"
                     >
-                      <Upload className="h-3.5 w-3.5" /> Import{" "}
-                      {selectedIndices.size}
+                      <Upload className="h-3.5 w-3.5" /> {t('scraper.importCount', { count: selectedIndices.size })}
                     </button>
                   )}
                   <button
@@ -873,8 +867,7 @@ export default function ScraperTool() {
                     disabled={importing || importableCount === 0}
                     className="flex items-center gap-1.5 text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg disabled:opacity-50 font-medium"
                   >
-                    <Upload className="h-3.5 w-3.5" /> Import all (
-                    {importableCount})
+                    <Upload className="h-3.5 w-3.5" /> {t('scraper.importAllCount', { count: importableCount })}
                   </button>
                 </div>
               )}
@@ -884,7 +877,7 @@ export default function ScraperTool() {
               {selectedJob.status === "running" ? (
                 <div className="p-10 text-center text-gray-400">
                   <RefreshCw className="h-8 w-8 mx-auto mb-3 animate-spin text-blue-500" />
-                  <p>Scraping...</p>
+                  <p>{t('scraper.scrapingEllipsisAction')}</p>
                 </div>
               ) : selectedJob.status === "failed" ? (
                 <div className="p-8 text-center text-red-400">
@@ -894,7 +887,7 @@ export default function ScraperTool() {
               ) : jobResults.length === 0 ? (
                 <div className="p-10 text-center text-gray-400">
                   <Globe className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>No results</p>
+                  <p>{t('scraper.noResultsShort')}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -928,7 +921,7 @@ export default function ScraperTool() {
                               </p>
                               {isB2C && r.fullName && (
                                 <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded flex-shrink-0">
-                                  Person
+                                  {t('scraper.personLabel')}
                                 </span>
                               )}
                             </div>
@@ -982,7 +975,7 @@ export default function ScraperTool() {
                           {selectedJob.status === "completed" && (
                             <button
                               onClick={(e) => toggleMarkDelete(e, i)}
-                              title={isMarked ? "Unmark" : "Mark for removal"}
+                              title={isMarked ? t('scraper.unmark') : t('scraper.markForRemoval')}
                               className={`flex-shrink-0 p-1.5 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ${isMarked ? "bg-red-100 text-red-600 opacity-100" : "text-gray-400 hover:bg-red-50 hover:text-red-500"}`}
                             >
                               {isMarked ? (
@@ -1009,7 +1002,7 @@ export default function ScraperTool() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-500" /> New Scrape Job
+                <Zap className="h-5 w-5 text-yellow-500" /> {t('scraper.newScrapeJob')}
               </h2>
               <button
                 onClick={() => setShowNewJob(false)}
@@ -1022,19 +1015,19 @@ export default function ScraperTool() {
               {/* Lead type toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Lead Type
+                  {t('scraper.leadTypeLabel')}
                 </label>
                 <div className="flex gap-2">
                   {[
                     {
                       val: "B2B",
-                      label: "🏢 B2B — Companies & Shops",
-                      desc: "Find businesses, retailers, suppliers",
+                      label: t('scraper.b2bLabel'),
+                      desc: t('scraper.b2bDesc'),
                     },
                     {
                       val: "B2C",
-                      label: "👤 B2C — Individuals",
-                      desc: "Find individual contacts and people",
+                      label: t('scraper.b2cLabel'),
+                      desc: t('scraper.b2cDesc'),
                     },
                   ].map(({ val, label, desc }) => (
                     <button
@@ -1054,16 +1047,10 @@ export default function ScraperTool() {
                 {jobForm.leadType === "B2C" && (
                   <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg">
                     <p className="text-xs text-purple-700 dark:text-purple-400">
-                      <strong>B2C mode:</strong> Automatically searches for
-                      individual people using people-specific queries and
-                      LinkedIn profile search (<code>linkedin.com/in</code>).
-                      Results show full name, job title and contact details
-                      instead of company names.
+                      <strong>{t('scraper.b2cModeLabel')}</strong> {t('scraper.b2cModeInfo')}
                     </p>
                     <p className="text-xs text-purple-600 dark:text-purple-500 mt-1">
-                      <strong>Example queries:</strong> "coffee enthusiasts
-                      Lagos", "small business owners Abuja", "HR managers tech
-                      companies Nigeria"
+                      <strong>{t('scraper.exampleQueriesLabel')}</strong> {t('scraper.exampleQueriesText')}
                     </p>
                   </div>
                 )}
@@ -1071,7 +1058,7 @@ export default function ScraperTool() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Job Name
+                  {t('scraper.jobNameLabel')}
                 </label>
                 <input
                   value={jobForm.name}
@@ -1080,8 +1067,8 @@ export default function ScraperTool() {
                   }
                   placeholder={
                     jobForm.leadType === "B2C"
-                      ? "e.g. Individual coffee buyers Lagos"
-                      : "e.g. Coffee shops Lagos"
+                      ? t('scraper.jobNamePlaceholderB2C')
+                      : t('scraper.jobNamePlaceholderB2B')
                   }
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 />
@@ -1089,7 +1076,7 @@ export default function ScraperTool() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Platform
+                  {t('scraper.platformLabel')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {platforms.map((p) => (
@@ -1117,7 +1104,7 @@ export default function ScraperTool() {
               {jobForm.platform === "Custom URL" ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Target URL *
+                    {t('scraper.targetUrlLabel')}
                   </label>
                   <input
                     value={jobForm.targetUrl}
@@ -1131,7 +1118,7 @@ export default function ScraperTool() {
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Search Query *
+                    {t('scraper.searchQueryLabel')}
                   </label>
                   <input
                     value={jobForm.searchQuery}
@@ -1140,8 +1127,8 @@ export default function ScraperTool() {
                     }
                     placeholder={
                       jobForm.leadType === "B2C"
-                        ? "e.g. coffee buyers Lagos Nigeria"
-                        : "e.g. coffee importers Lagos Nigeria"
+                        ? t('scraper.searchQueryPlaceholderB2C')
+                        : t('scraper.searchQueryPlaceholderB2B')
                     }
                     className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                   />
@@ -1151,7 +1138,7 @@ export default function ScraperTool() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Max Pages (1–10)
+                    {t('scraper.maxPagesLabel')}
                   </label>
                   <input
                     type="number"
@@ -1169,7 +1156,7 @@ export default function ScraperTool() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Max Results (1–200)
+                    {t('scraper.maxResultsLabel')}
                   </label>
                   <input
                     type="number"
@@ -1191,9 +1178,7 @@ export default function ScraperTool() {
                 <div
                   className={`rounded-lg p-3 text-xs ${(quota.remaining || 0) <= 5 ? "bg-red-50 border border-red-200 text-red-700" : "bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400"}`}
                 >
-                  <span className="font-medium">Quota:</span> {quota.remaining}{" "}
-                  calls remaining this month ({quota.used}/{quota.limit} used).
-                  This job will use ~{Math.min(jobForm.maxPages, 10)} call(s).
+                  {t('scraper.quotaInfoLine', { remaining: quota.remaining, used: quota.used, limit: quota.limit, pages: Math.min(jobForm.maxPages, 10) })}
                 </div>
               )}
             </div>
@@ -1202,7 +1187,7 @@ export default function ScraperTool() {
                 onClick={() => setShowNewJob(false)}
                 className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleRunJob}
@@ -1210,7 +1195,7 @@ export default function ScraperTool() {
                 className="flex items-center gap-2 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
               >
                 <Play className="h-4 w-4" />{" "}
-                {running ? "Starting..." : "Start Scraping"}
+                {running ? t('scraper.startingEllipsis') : t('scraper.startScraping')}
               </button>
             </div>
           </div>

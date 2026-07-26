@@ -133,7 +133,7 @@ export default function PurchaseReports() {
 
   const exportCSV = () => {
     const rows = [
-      ["PO Number", t("suppliers.title"), t("common.status"), t("purchaseOrder.items"), "Total (₦)", t("blogExt.created")],
+      [t('reports2.poNumber'), t("suppliers.title"), t("common.status"), t("purchaseOrder.items"), "Total (₦)", t("blogExt.created")],
     ];
     filtered.forEach((o) =>
       rows.push([
@@ -157,10 +157,10 @@ export default function PurchaseReports() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Inbox className="h-6 w-6 text-indigo-600" /> Purchase Reports
+            <Inbox className="h-6 w-6 text-indigo-600" /> {t('reports.purchaseReport')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Purchase order analysis and supplier metrics
+            {t('reports2.purchaseSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -176,7 +176,7 @@ export default function PurchaseReports() {
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
-            <Download className="h-4 w-4" /> Export CSV
+            <Download className="h-4 w-4" /> {t('reports.exportCsv')}
           </button>
         </div>
       </div>
@@ -199,7 +199,7 @@ export default function PurchaseReports() {
             bg: "bg-green-50 dark:bg-green-900/20",
           },
           {
-            label: "Received",
+            label: t('reports2.received'),
             value: fmtN(orders.filter((o) => o.status === "received").length),
             icon: CheckCircle,
             color: "text-teal-600",
@@ -234,13 +234,17 @@ export default function PurchaseReports() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-        {["overview", "orders", "suppliers"].map((tabKey) => (
+        {[
+          ["overview", t('reports2.tabOverview')],
+          ["orders", t('reports2.tabOrders')],
+          ["suppliers", t('reports2.tabSuppliers')],
+        ].map(([tabKey, tabLabel]) => (
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${tab === tabKey ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            {tabKey}
+            {tabLabel}
           </button>
         ))}
       </div>
@@ -249,7 +253,7 @@ export default function PurchaseReports() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Monthly PO Value (₦)
+              {t('reports2.monthlyPoValue')}
             </h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={monthlyData}>
@@ -277,7 +281,7 @@ export default function PurchaseReports() {
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-              Status Breakdown
+              {t('reports2.statusBreakdown')}
             </h3>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -342,7 +346,7 @@ export default function PurchaseReports() {
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   {[
-                    "PO Number",
+                    t('reports2.poNumber'),
                     t("suppliers.title"),
                     t("purchaseOrder.items"),
                     t("common.total"),
@@ -365,7 +369,7 @@ export default function PurchaseReports() {
                       colSpan={6}
                       className="px-4 py-8 text-center text-gray-400"
                     >
-                      Loading...
+                      {t('reports2.loadingEllipsis')}
                     </td>
                   </tr>
                 ) : (
@@ -410,7 +414,7 @@ export default function PurchaseReports() {
           {(() => {
             const suppMap = {};
             orders.forEach((o) => {
-              const name = o.supplier?.name || "Unknown";
+              const name = o.supplier?.name || t('reports.unknown');
               suppMap[name] = suppMap[name] || {
                 name,
                 orders: 0,
@@ -431,9 +435,9 @@ export default function PurchaseReports() {
                     {[
                       t("suppliers.title"),
                       t("reports.totalOrders"),
-                      "Received",
+                      t('reports2.received'),
                       t("customer.totalValue"),
-                      "Completion",
+                      t('reports2.colCompletion'),
                     ].map((h) => (
                       <th
                         key={h}
@@ -451,7 +455,7 @@ export default function PurchaseReports() {
                         colSpan={5}
                         className="px-4 py-8 text-center text-gray-400"
                       >
-                        No supplier data
+                        {t('reports2.noSupplierData')}
                       </td>
                     </tr>
                   ) : (
