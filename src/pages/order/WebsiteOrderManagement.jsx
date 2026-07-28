@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import WebsiteOrderDetailsModal from "../../components/order/WebsiteOrderDetailsModal";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 
 // ─────────────────────────────────────────────────────────────
 // Constants
@@ -324,6 +325,18 @@ const WebsiteOrderManagement = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const currentUser = getCurrentUser();
+
+  // Only IT / DIRECTOR see orders across every country/domain (per policy),
+  // so only they need a country indicator — everyone else's list is already
+  // scoped to a single country and the column would be redundant noise.
+  const canSeeAllCountries = ["IT", "DIRECTOR"].includes(currentUser?.subRole);
+  const { allCountries } = useAdminCountry();
+  const countryMeta = (code) =>
+    allCountries?.find((c) => c.code === code) || {
+      code,
+      name: code || "Nigeria",
+      flagEmoji: code === "NG" || !code ? "🇳🇬" : "🌍",
+    };
 
   // ── Debounce ref for search ─────────────────────────────────
   const searchDebounce = useRef(null);
@@ -776,6 +789,7 @@ const WebsiteOrderManagement = () => {
               <tr className="bg-gray-50 dark:bg-gray-700/30">
                 {[
                   "Order Group",
+                  ...(canSeeAllCountries ? ["Country"] : []),
                   "Customer",
                   "Products",
                   t("orders.amount"),
@@ -800,7 +814,7 @@ const WebsiteOrderManagement = () => {
               {loading &&
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    {Array.from({ length: 9 }).map((_, j) => (
+                    {Array.from({ length: canSeeAllCountries ? 10 : 9 }).map((_, j) => (
                       <td key={j} className="px-4 py-4">
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
                         {j < 2 && (
@@ -814,7 +828,7 @@ const WebsiteOrderManagement = () => {
               {/* Empty state */}
               {!loading && orderGroups.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-6 py-16 text-center">
+                  <td colSpan={canSeeAllCountries ? 10 : 9} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-full">
                         <Globe className="w-8 h-8 text-gray-400 dark:text-gray-500" />
@@ -882,6 +896,23 @@ const WebsiteOrderManagement = () => {
                           </div>
                         </div>
                       </td>
+
+                      {/* Country — only rendered for IT/DIRECTOR, who are the
+                          only roles that ever see orders from more than one
+                          country in this table */}
+                      {canSeeAllCountries && (
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {(() => {
+                            const cm = countryMeta(main.countryCode);
+                            return (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                <span>{cm.flagEmoji}</span>
+                                <span>{main.countryCode || "NG"}</span>
+                              </span>
+                            );
+                          })()}
+                        </td>
+                      )}
 
                       {/* Customer */}
                       <td className="px-4 py-4">

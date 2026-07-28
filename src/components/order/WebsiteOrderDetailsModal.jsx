@@ -4,6 +4,7 @@ import { adminOrderAPI } from "../../utils/api";
 import { generateOrderPDF } from "../../utils/pdfGenerator";
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import {
   X,
   User,
@@ -857,6 +858,10 @@ const WebsiteOrderDetailsModal = ({
   currentUser,
 }) => {
   const { t } = useAdminTranslation();
+  const { allCountries } = useAdminCountry();
+  // Only IT/DIRECTOR see cross-country order data — show the country badge
+  // only for them, since everyone else's orders are already single-country.
+  const canSeeAllCountries = ["IT", "DIRECTOR"].includes(currentUser?.subRole);
   const [editMode, setEditMode] = useState(false);
   const [updateMode, setUpdateMode] = useState("collective"); // 'collective' | 'individual'
   const [updating, setUpdating] = useState(false);
@@ -1074,6 +1079,16 @@ const WebsiteOrderDetailsModal = ({
                 <Globe className="w-3 h-3" />
                 Website Order
               </span>
+              {canSeeAllCountries && (() => {
+                const code = mainOrder?.countryCode || "NG";
+                const meta = allCountries?.find((c) => c.code === code);
+                return (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                    <span>{meta?.flagEmoji || (code === "NG" ? "🇳🇬" : "🌍")}</span>
+                    {meta?.name || code}
+                  </span>
+                );
+              })()}
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300">
                 <CreditCard className="w-3 h-3" />
                 {mainOrder?.payment_method?.replace(/_/g, " ")}
