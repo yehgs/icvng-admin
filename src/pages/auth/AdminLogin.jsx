@@ -7,6 +7,7 @@ import {
   HelpCircle, CheckCircle, ArrowLeft, Send,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import { authAPI, setAuthData, getCurrentUser, isTokenValid } from "../../utils/api";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -29,6 +30,13 @@ const ADMIN_SUBROLES = [
 
 const AdminLogin = () => {
   const { t } = useAdminTranslation();
+  // Item #3: activeCountry is resolved from the current hostname's
+  // adminDomain (e.g. app.i-coffee.tg → Togo, app.i-coffee.it → Italy) by
+  // AdminCountryProvider even before anyone logs in — see
+  // detectCountryFromHostname() in AdminCountryContext.jsx. `language` is
+  // therefore already the right default for whichever admin domain this
+  // page is being viewed on.
+  const { activeCountry } = useAdminCountry();
   const [formData, setFormData]     = useState({ email: "", password: "", subRole: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading]   = useState(false);
@@ -57,9 +65,9 @@ const AdminLogin = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!formData.email.trim())  { setError("Please enter your email address"); return; }
-    if (!formData.password)      { setError("Please enter your password"); return; }
-    if (!formData.subRole)       { setError("Please select your department"); return; }
+    if (!formData.email.trim())  { setError(t("auth.enterEmailError")); return; }
+    if (!formData.password)      { setError(t("auth.enterPasswordError")); return; }
+    if (!formData.subRole)       { setError(t("auth.selectDepartmentError")); return; }
 
     setIsLoading(true);
     setError("");
@@ -70,10 +78,10 @@ const AdminLogin = () => {
         setAuthData(accessToken, refreshToken, user);
         navigate("/admin", { replace: true });
       } else {
-        setError(response.message || "Invalid credentials. Please try again.");
+        setError(response.message || t("auth.invalidCredentialsError"));
       }
     } catch (err) {
-      setError(err?.response?.data?.message || "Connection error. Please try again.");
+      setError(err?.response?.data?.message || t("auth.connectionError"));
     } finally {
       setIsLoading(false);
     }
@@ -81,8 +89,8 @@ const AdminLogin = () => {
 
   const handleForgotRequest = async (e) => {
     e.preventDefault();
-    if (!forgotEmail.trim()) { setForgotError("Please enter your email address"); return; }
-    if (!forgotSubRole)      { setForgotError("Please select your department"); return; }
+    if (!forgotEmail.trim()) { setForgotError(t("auth.enterEmailError")); return; }
+    if (!forgotSubRole)      { setForgotError(t("auth.selectDepartmentError")); return; }
 
     setForgotLoading(true);
     setForgotError("");
@@ -94,9 +102,9 @@ const AdminLogin = () => {
       });
       const data = await res.json();
       if (data.success) setForgotSent(true);
-      else setForgotError(data.message || "Something went wrong. Please try again.");
+      else setForgotError(data.message || t("auth.somethingWentWrong"));
     } catch {
-      setForgotError("Connection error. Please try again.");
+      setForgotError(t("auth.connectionError"));
     } finally {
       setForgotLoading(false);
     }
@@ -121,6 +129,13 @@ const AdminLogin = () => {
     </div>
   );
 
+  // Item #3: brand line reflects the domain-detected country instead of a
+  // hardcoded "I-COFFEE.NG" (that hardcoding is exactly why a Togo/Italy
+  // admin saw the Nigeria brand name on their own login screen).
+  const brandLine = activeCountry?.seo?.siteName
+    ? activeCountry.seo.siteName.toUpperCase()
+    : "I-COFFEE.NG";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -129,7 +144,7 @@ const AdminLogin = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl mb-4 shadow-lg">
             <Coffee className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">I-COFFEE.NG</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{brandLine}</h1>
           <p className="text-gray-500 text-sm mt-1">{t("auth.title")}</p>
         </div>
 
@@ -143,8 +158,8 @@ const AdminLogin = () => {
                   <Shield className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Admin Sign In</h2>
-                  <p className="text-xs text-gray-500">Authorized personnel only</p>
+                  <h2 className="text-lg font-bold text-gray-900">{t("auth.signInHeading")}</h2>
+                  <p className="text-xs text-gray-500">{t("auth.authorizedOnly")}</p>
                 </div>
               </div>
 
@@ -158,7 +173,7 @@ const AdminLogin = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.email")}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
@@ -172,14 +187,14 @@ const AdminLogin = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.password")}</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       name="password" type={showPassword ? "text" : "password"} required
                       value={formData.password} onChange={handleInputChange} disabled={isLoading}
                       className="w-full pl-9 pr-10 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 bg-gray-50 focus:bg-white disabled:opacity-50 transition-all"
-                      placeholder="Enter your password"
+                      placeholder={t("auth.enterPassword")}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} disabled={isLoading}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -190,15 +205,15 @@ const AdminLogin = () => {
 
                 {/* Department */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.department")}</label>
                   <SelectField value={formData.subRole} onChange={handleInputChange} disabled={isLoading} />
                 </div>
 
                 <button type="submit" disabled={isLoading}
                   className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 focus:ring-2 focus:ring-amber-500 transition-all disabled:opacity-50">
                   {isLoading
-                    ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Signing In...</span>
-                    : "Sign In to Dashboard"}
+                    ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t("auth.signingIn")}</span>
+                    : t("auth.signInToDashboard")}
                 </button>
               </form>
 
@@ -206,7 +221,7 @@ const AdminLogin = () => {
                 <button
                   onClick={() => { setMode("forgot"); setForgotEmail(formData.email); setForgotSubRole(formData.subRole); setForgotError(""); setForgotSent(false); }}
                   className="flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 mx-auto font-medium">
-                  <HelpCircle className="h-4 w-4" /> Forgot your password?
+                  <HelpCircle className="h-4 w-4" /> {t("auth.forgotPassword")}
                 </button>
                 <p className="text-xs text-gray-400 mt-2">{t("auth.itTeamNote")}</p>
               </div>
@@ -223,13 +238,13 @@ const AdminLogin = () => {
                       <ArrowLeft className="h-4 w-4" />
                     </button>
                     <div>
-                      <h2 className="text-lg font-bold text-gray-900">Forgot Password?</h2>
-                      <p className="text-xs text-gray-500">Notify IT & Manager to reset your access</p>
+                      <h2 className="text-lg font-bold text-gray-900">{t("auth.forgotPasswordHeading")}</h2>
+                      <p className="text-xs text-gray-500">{t("auth.forgotPasswordSubtitle")}</p>
                     </div>
                   </div>
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
                     <p className="text-sm text-amber-800">
-                      Submitting this form will alert your <strong>IT team and Manager</strong> who will reset your password through the admin panel.
+                      {t("auth.forgotPasswordInfo")}
                     </p>
                   </div>
                   {forgotError && (
@@ -239,7 +254,7 @@ const AdminLogin = () => {
                   )}
                   <form onSubmit={handleForgotRequest} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Your Email Address</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.yourEmailAddress")}</label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input type="email" required value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
@@ -248,7 +263,7 @@ const AdminLogin = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Your Department</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.yourDepartment")}</label>
                       <SelectField
                         value={forgotSubRole}
                         onChange={e => setForgotSubRole(e.target.value)}
@@ -257,11 +272,11 @@ const AdminLogin = () => {
                     </div>
                     <button type="submit" disabled={forgotLoading}
                       className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
-                      {forgotLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Notifying...</> : <><Send className="h-4 w-4" /> Notify IT & Manager</>}
+                      {forgotLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("auth.notifying")}</> : <><Send className="h-4 w-4" /> {t("auth.notifyItManager")}</>}
                     </button>
                   </form>
                   <button onClick={() => setMode("login")} className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700 text-center">
-                    ← Back to Sign In
+                    ← {t("auth.backToSignIn")}
                   </button>
                 </>
               ) : (
@@ -269,11 +284,11 @@ const AdminLogin = () => {
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="h-8 w-8 text-green-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Request Sent!</h3>
-                  <p className="text-gray-600 text-sm mb-6">Your IT team and Manager have been notified.</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{t("auth.requestSentHeading")}</h3>
+                  <p className="text-gray-600 text-sm mb-6">{t("auth.requestSentBody")}</p>
                   <button onClick={() => { setMode("login"); setForgotSent(false); }}
                     className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700">
-                    Back to Sign In
+                    {t("auth.backToSignIn")}
                   </button>
                 </div>
               )}
@@ -282,7 +297,7 @@ const AdminLogin = () => {
         </div>
 
         <div className="mt-6 text-center space-y-2">
-          <p className="text-xs text-gray-400">Authorized personnel only. All access is monitored and logged.</p>
+          <p className="text-xs text-gray-400">{t("auth.monitoredNote")}</p>
           <div className="flex items-center justify-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-xs text-gray-500">{t("auth.systemOnline")}</span>

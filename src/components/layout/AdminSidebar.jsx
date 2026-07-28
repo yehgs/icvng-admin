@@ -13,9 +13,105 @@ import {
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 
+// hasAccess — standard subRole check, no country-scope special-casing.
+// Hoisted to module scope so it's not recreated (and doesn't force MenuItem
+// to be recreated) on every AdminSidebar render.
+const hasAccessTo = (userSubRole, roles) => {
+  if (!roles || roles.length === 0) return true;
+  return roles.includes(userSubRole);
+};
+
+// MenuItem used to be declared INSIDE AdminSidebar's function body. That made
+// it a brand-new component type on every render (every navigation click
+// re-renders AdminSidebar because currentPath changes), which forced React
+// to unmount + remount the entire <nav> subtree — resetting its scroll
+// position to the top every time. That's the "sidebar jumps up, I have to
+// scroll back down" bug. Hoisting MenuItem to module scope keeps its
+// component identity stable across renders, so React only patches the DOM
+// instead of tearing it down, and the nav's scroll position is preserved.
+const MenuItem = React.memo(function MenuItem({
+  item, currentPath, userSubRole, isGlobalAdmin, isCollapsed, openMenus, toggleMenu, onNavigate,
+}) {
+  const isOpen = openMenus[item.key];
+  const hasItems = item.items?.length > 0;
+  const Icon = item.icon;
+  const isActive = currentPath === item.path ||
+    (hasItems && item.items.some(s => currentPath === s.path && hasAccessTo(userSubRole, s.allowedSubRoles)));
+
+  // Filter sub-items:
+  // Country-scoped admins never see logistics sub-items
+  // Item #7: nor warehouse/quality-management (inventory is HQ stock
+  // custody, not a per-country concern) or pricing/purchase/stock-analysis
+  // reports (those roll up HQ-wide pricing and procurement data) — a
+  // foreign admin keeps only manual/website orders and inventory+sales
+  // reports scoped to their own country.
+  const COUNTRY_BLOCKED_SUB_PATHS = [
+    "/logistics", "/tracking",
+    "/warehouse", "/stock",
+    "/reports/pricing", "/reports/purchase", "/reports/stock-analysis",
+  ];
+  const filteredSubs = hasItems
+    ? item.items.filter(s => {
+        if (!isGlobalAdmin && COUNTRY_BLOCKED_SUB_PATHS.some((p) => s.path?.includes(p))) return false;
+        return hasAccessTo(userSubRole, s.allowedSubRoles);
+      })
+    : [];
+
+  if (hasItems && filteredSubs.length === 0) return null;
+
+  const activeClass = "bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-r-2 border-blue-500";
+  const inactiveClass = "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800";
+  const iconActive = "text-blue-600 dark:text-blue-400";
+  const iconInactive = "text-gray-500 dark:text-gray-400";
+
+  if (item.single) {
+    return (
+      <div className="mb-1">
+        <button onClick={() => onNavigate(item.path)}
+          className={`w-full flex items-center px-4 py-3 text-left text-sm font-medium rounded-lg transition-all duration-200 ${isActive ? activeClass : inactiveClass}`}
+          title={isCollapsed ? item.title : ""}>
+          <Icon className={`w-5 h-5 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
+          {!isCollapsed && <span className="flex-1">{item.title}</span>}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-1">
+      <button onClick={() => toggleMenu(item.key)}
+        className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 ${isActive ? "bg-gray-50 dark:bg-gray-800" : ""}`}
+        title={isCollapsed ? item.title : ""}>
+        <div className="flex items-center">
+          <Icon className={`w-5 h-5 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
+          {!isCollapsed && <span className="flex-1">{item.title}</span>}
+        </div>
+        {!isCollapsed && (isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />)}
+      </button>
+      {isOpen && !isCollapsed && (
+        <div className="mt-1 space-y-1">
+          {filteredSubs.map((sub, i) => (
+            <button key={i} onClick={() => onNavigate(sub.path)}
+              className={`w-full flex items-center px-8 py-2 text-left text-sm rounded-lg transition-all duration-200 ${currentPath === sub.path ? activeClass : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"}`}>
+              <sub.icon className="w-4 h-4 mr-3" />
+              <span className="flex-1">{sub.title}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
 const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollapsed, onToggle }) => {
   const { t } = useAdminTranslation();
-  const { isGlobalAdmin, countryScope } = useAdminCountry();
+  const { isGlobalAdmin, countryScope, activeCountry } = useAdminCountry();
+
+  // Item #3: reflect the logged-in admin's actual country instead of a
+  // hardcoded "I-COFFEE.NG" everywhere in the shell.
+  const brandLine = activeCountry?.seo?.siteName
+    ? activeCountry.seo.siteName.toUpperCase()
+    : "I-COFFEE.NG";
 
   const [openMenus, setOpenMenus] = useState({
     products: true, procurement: true, inventory: true, pricing: true, reports: true,
@@ -24,10 +120,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
   const toggleMenu = (key) => { if (isCollapsed) return; setOpenMenus(p => ({ ...p, [key]: !p[key] })); };
 
   // hasAccess — standard subRole check, no country-scope special-casing.
-  const hasAccess = (roles) => {
-    if (!roles || roles.length === 0) return true;
-    return roles.includes(userSubRole);
-  };
+  const hasAccess = (roles) => hasAccessTo(userSubRole, roles);
 
   const isLogisticsItem = (key) => ["logistics"].includes(key);
 
@@ -48,6 +141,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
       ],
     },
     { key: "crm",           title: t("nav.crmPipeline"),   path: "/admin/dashboard/crm",           icon: Users,   single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
+    { key: "contact-messages", title: t("nav.contactMessages"), path: "/admin/dashboard/contact-messages", icon: Inbox, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
     { key: "scraper",       title: t("nav.webScraper"),    path: "/admin/dashboard/scraper",        icon: Zap,     single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
     { key: "notifications", title: t("nav.notifications"), path: "/admin/dashboard/notifications",  icon: Bell,    single: true, allowedSubRoles: [] },
     { key: "support-tickets",title: t("nav.supportTickets"),path: "/admin/dashboard/support-tickets",icon: LifeBuoy,single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","HR","SALES","WAREHOUSE","ACCOUNTANT","LOGISTICS","EDITOR","DESIGNER"] },
@@ -124,80 +218,28 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
       ],
     },
     { key: "customers",   title: t("nav.customerManagement"), path: "/admin/customers", icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","SALES","SALES_MANAGER","MANAGER"] },
-    { key: "users",       title: t("nav.userManagement"),     path: "/admin/users",     icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","HR","MANAGER"] },
-    { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    // MANAGER (HQ or country/"foreign" scoped) never sees User Management —
+    // only IT / DIRECTOR (full access) and HR (people-ops function).
+    { key: "users",       title: t("nav.userManagement"),     path: "/admin/users",     icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","HR"] },
+    { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "settings",    title: t("nav.settings"),           path: "/admin/settings",  icon: Settings, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
   ];
+
+  // Item #7: entire modules that are HQ-only regardless of subRole —
+  // a country/"foreign" MANAGER holds the same subRole as an HQ MANAGER,
+  // so subRole alone (hasAccess) can't tell them apart. These sections are
+  // hidden outright for any non-GLOBAL admin; enforcement also lives
+  // server-side (blockCountryScopedAdmins on the procurement/pricing
+  // routes) — this is UX, not the security boundary.
+  const COUNTRY_BLOCKED_TOP_LEVEL = ["procurement", "pricing"];
 
   // Filter top-level items:
   // 1. Standard hasAccess check
   // 2. Country-scoped admins cannot see HQ-only sections
   const filteredMenuItems = menuItems.filter(item => {
-
+    if (!isGlobalAdmin && COUNTRY_BLOCKED_TOP_LEVEL.includes(item.key)) return false;
     return hasAccess(item.allowedSubRoles);
   });
-
-  const MenuItem = ({ item }) => {
-    const isOpen = openMenus[item.key];
-    const hasItems = item.items?.length > 0;
-    const Icon = item.icon;
-    const isActive = currentPath === item.path ||
-      (hasItems && item.items.some(s => currentPath === s.path && hasAccess(s.allowedSubRoles)));
-
-    // Filter sub-items:
-    // Country-scoped admins never see logistics sub-items
-    const filteredSubs = hasItems
-      ? item.items.filter(s => {
-          if (!isGlobalAdmin && (s.path?.includes("/logistics") || s.path?.includes("/tracking"))) return false;
-          return hasAccess(s.allowedSubRoles);
-        })
-      : [];
-
-    if (hasItems && filteredSubs.length === 0) return null;
-
-    const activeClass = "bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-r-2 border-blue-500";
-    const inactiveClass = "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800";
-    const iconActive = "text-blue-600 dark:text-blue-400";
-    const iconInactive = "text-gray-500 dark:text-gray-400";
-
-    if (item.single) {
-      return (
-        <div className="mb-1">
-          <button onClick={() => onNavigate(item.path)}
-            className={`w-full flex items-center px-4 py-3 text-left text-sm font-medium rounded-lg transition-all duration-200 ${isActive ? activeClass : inactiveClass}`}
-            title={isCollapsed ? item.title : ""}>
-            <Icon className={`w-5 h-5 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
-            {!isCollapsed && <span className="flex-1">{item.title}</span>}
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="mb-1">
-        <button onClick={() => toggleMenu(item.key)}
-          className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 ${isActive ? "bg-gray-50 dark:bg-gray-800" : ""}`}
-          title={isCollapsed ? item.title : ""}>
-          <div className="flex items-center">
-            <Icon className={`w-5 h-5 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
-            {!isCollapsed && <span className="flex-1">{item.title}</span>}
-          </div>
-          {!isCollapsed && (isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />)}
-        </button>
-        {isOpen && !isCollapsed && (
-          <div className="mt-1 space-y-1">
-            {filteredSubs.map((sub, i) => (
-              <button key={i} onClick={() => onNavigate(sub.path)}
-                className={`w-full flex items-center px-8 py-2 text-left text-sm rounded-lg transition-all duration-200 ${currentPath === sub.path ? activeClass : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"}`}>
-                <sub.icon className="w-4 h-4 mr-3" />
-                <span className="flex-1">{sub.title}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-30 ${isCollapsed ? "w-16" : "w-64"}`}>
@@ -208,7 +250,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
             {!isCollapsed && (
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t("common.adminPanel")}</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">I-COFFEE.NG</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{brandLine}</p>
               </div>
             )}
             <button onClick={onToggle}
@@ -240,7 +282,19 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
         {/* Nav */}
         <div className="flex-1 overflow-y-auto">
           <nav className="p-4 space-y-2">
-            {filteredMenuItems.map(item => <MenuItem key={item.key} item={item} />)}
+            {filteredMenuItems.map(item => (
+              <MenuItem
+                key={item.key}
+                item={item}
+                currentPath={currentPath}
+                userSubRole={userSubRole}
+                isGlobalAdmin={isGlobalAdmin}
+                isCollapsed={isCollapsed}
+                openMenus={openMenus}
+                toggleMenu={toggleMenu}
+                onNavigate={onNavigate}
+              />
+            ))}
           </nav>
         </div>
 
@@ -248,7 +302,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
         {!isCollapsed && (
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="text-center">
-              <p className="text-xs text-gray-500 dark:text-gray-400">{t("common.version")} | I-COFFEE.NG</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t("common.version")} | {brandLine}</p>
             </div>
           </div>
         )}

@@ -1275,8 +1275,20 @@ export const orderAPI = {
 // Product API calls
 export const productAPI = {
   // Get products
+  // Item #5: this used to POST to "/product/get" — the PUBLIC storefront
+  // listing endpoint (getProductController), which silently ignores half
+  // of the params this admin page sends (publish/lowStock/priceFilter/
+  // hiddenFromShop aren't read there at all) and applies
+  // CLIENT_VISIBILITY_FILTER, the same "would a customer see this"
+  // filter used on the storefront. That's what made partnership
+  // (partnerStock-managed) and otherwise-unpublished products vanish from
+  // the admin product list. "/product/get-admin" (getProductControllerAdmin)
+  // is the real admin listing endpoint: it honors every param this page
+  // sends, returns products regardless of publish status, and already
+  // treats partnerStock as valid online stock via req.countryScope
+  // (see server/controllers/product.controller.js).
   getProducts: async (params = {}) => {
-    return apiCall("/product/get", {
+    return apiCall("/product/get-admin", {
       method: "POST",
       body: params,
     });

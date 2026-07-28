@@ -17,6 +17,7 @@ const CreateUserModal = ({
   onSubmit,
   canCreateUser,
   loading,
+  actorSubRole,
 }) => {
   const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
@@ -50,8 +51,17 @@ const CreateUserModal = ({
   ];
   const userSubRoles = ["BTC", "BTB"];
 
+  // Item #4: HR cannot create DIRECTOR, IT, or MANAGER accounts (matches
+  // checkUserCreationPermissions on the backend) — so those options
+  // shouldn't even be selectable/visible ("exposed") in HR's dropdown.
+  const HR_HIDDEN_SUBROLES = ["DIRECTOR", "IT", "MANAGER"];
+
   const getAvailableSubRoles = (role) => {
-    return role === "ADMIN" ? adminSubRoles : userSubRoles;
+    if (role !== "ADMIN") return userSubRoles;
+    if (actorSubRole === "HR") {
+      return adminSubRoles.filter((r) => !HR_HIDDEN_SUBROLES.includes(r));
+    }
+    return adminSubRoles;
   };
 
   const validateForm = () => {

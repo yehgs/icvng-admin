@@ -50,6 +50,7 @@ import DirectPricingManagement from "./pages/pricing/DirectPricingManagement.jsx
 
 // Reports Components
 import InventoryReports from "./pages/reports/InventoryReports";
+import InventoryReportsRouter from "./pages/reports/InventoryReportsRouter";
 import PricingReports from "./pages/reports/PricingReports";
 import PurchaseReports from "./pages/reports/PurchaseReports";
 import SalesReports from "./pages/reports/SalesReports";
@@ -90,6 +91,7 @@ import FomoManagement from "./pages/content/FomoManagement.jsx";
 import ProductRequestManagement from "./pages/products/ProductRequestManagement.jsx";
 
 import CrmManagement from "./pages/crm/CrmManagement";
+import ContactMessages from "./pages/contact/ContactMessages";
 import ProfilePage from "./pages/profile/ProfilePage";
 import ScraperTool from "./pages/scraper/ScraperTool";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -187,7 +189,17 @@ const App = () => {
                 {/* Dashboard */}
                 <Route index element={<DashboardOverview />} />
                 <Route path="dashboard" element={<DashboardOverview />} />
-                <Route path="activity" element={<ActivityLog />} />
+                {/* Activity Log — item #4: IT/DIRECTOR (global) + MANAGER
+                    (country-scoped server-side). Previously unguarded on
+                    the frontend entirely. */}
+                <Route
+                  path="activity"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR", "MANAGER"]}>
+                      <ActivityLog />
+                    </RoleProtectedRoute>
+                  }
+                />
 
                 {/* Notifications, Support, Password Vault — nested inside /admin */}
                 <Route
@@ -604,7 +616,7 @@ const App = () => {
                           "ACCOUNTANT",
                         ]}
                       >
-                        <InventoryReports />
+                        <InventoryReportsRouter />
                       </RoleProtectedRoute>
                     }
                   />
@@ -677,8 +689,9 @@ const App = () => {
                 <Route
                   path="users"
                   element={
+                    // MANAGER (HQ or country-scoped) intentionally excluded — see #8.
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "HR", "MANAGER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "HR"]}
                     >
                       <UserManagement />
                     </RoleProtectedRoute>
@@ -789,6 +802,26 @@ const App = () => {
                       ]}
                     >
                       <CrmManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Contact & Subscribers — item #1. Same subRoles that hold
+                    the backend's contact.view permission (config/roles.js):
+                    MANAGER/SALES_MANAGER/SALES, plus IT/DIRECTOR (wildcard). */}
+                <Route
+                  path="dashboard/contact-messages"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "SALES",
+                        "SALES_MANAGER",
+                        "MANAGER",
+                        "IT",
+                        "DIRECTOR",
+                      ]}
+                    >
+                      <ContactMessages />
                     </RoleProtectedRoute>
                   }
                 />

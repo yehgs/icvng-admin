@@ -208,9 +208,11 @@ const UserManagement = () => {
     const { subRole } = currentUser;
 
     if (['IT', 'DIRECTOR'].includes(subRole)) return true;
+    // Item #4: HR cannot create/promote to DIRECTOR, IT, or MANAGER —
+    // MANAGER holds near-full permissions and isn't HR's to grant.
     if (
       subRole === 'HR' &&
-      !(targetRole === 'ADMIN' && targetSubRole === 'DIRECTOR')
+      !(targetRole === 'ADMIN' && ['DIRECTOR', 'IT', 'MANAGER'].includes(targetSubRole))
     )
       return true;
     if (targetRole === 'USER') return true;
@@ -379,6 +381,7 @@ const UserManagement = () => {
           onSubmit={handleCreateUser}
           canCreateUser={canCreateUser}
           loading={loading}
+          actorSubRole={currentUser?.subRole}
         />
       )}
 
@@ -390,6 +393,7 @@ const UserManagement = () => {
           user={selectedUser}
           canCreateUser={canCreateUser}
           loading={loading}
+          actorSubRole={currentUser?.subRole}
         />
       )}
 

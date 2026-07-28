@@ -21,6 +21,7 @@ const EditUserModal = ({
   user,
   canCreateUser,
   loading,
+  actorSubRole,
 }) => {
   const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
@@ -55,8 +56,17 @@ const EditUserModal = ({
   const userSubRoles = ["BTC", "BTB"];
   const statusOptions = ["Active", "Inactive", "Suspended"];
 
+  // Item #4: HR cannot edit/promote to DIRECTOR, IT, or MANAGER — hide
+  // those options from HR's dropdown, matching CreateUserModal and the
+  // backend's checkUserUpdatePermissions.
+  const HR_HIDDEN_SUBROLES = ["DIRECTOR", "IT", "MANAGER"];
+
   const getAvailableSubRoles = (role) => {
-    return role === "ADMIN" ? adminSubRoles : userSubRoles;
+    if (role !== "ADMIN") return userSubRoles;
+    if (actorSubRole === "HR") {
+      return adminSubRoles.filter((r) => !HR_HIDDEN_SUBROLES.includes(r));
+    }
+    return adminSubRoles;
   };
 
   // Initialize form with user data

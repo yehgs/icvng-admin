@@ -1,11 +1,13 @@
 /**
  * admin/src/pages/foreign-admins/ForeignAdminManagement.jsx
  *
- * Accessible to DIRECTOR, IT, and MANAGER subRoles.
+ * Accessible to DIRECTOR and IT subRoles only.
  * Full CRUD for FOREIGN_ADMIN accounts with multi-subrole assignment.
  *
+ * MANAGER (HQ or country/"foreign" scoped) is intentionally excluded — user
+ * management, foreign or normal, is not a MANAGER capability. See item #8.
+ *
  * Key changes:
- *  - MANAGER can also create / update (not delete)
  *  - Multi-subrole checkboxes (foreignSubRoles)
  *  - LOGISTICS is never shown as an option
  *  - Promote existing admin to FOREIGN_ADMIN
@@ -64,7 +66,8 @@ export default function ForeignAdminManagement() {
 
   // Permission flags
   const canDelete = ["DIRECTOR", "IT"].includes(currentUser?.subRole);
-  const canCreate = ["DIRECTOR", "IT", "MANAGER"].includes(currentUser?.subRole);
+  // MANAGER intentionally excluded — see item #8.
+  const canCreate = ["DIRECTOR", "IT"].includes(currentUser?.subRole);
 
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);

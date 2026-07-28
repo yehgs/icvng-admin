@@ -42,6 +42,29 @@ const DEFAULT_COUNTRY = {
 
 const AdminCountryContext = createContext(null);
 
+/**
+ * Item #3 — resolve a country purely from window.location.hostname against
+ * each country's `adminDomain` (e.g. "app.i-coffee.tg", "app.i-coffee.it").
+ * This is what makes the login page itself (before any user/token exists,
+ * so nothing else here has country info yet) show the right default
+ * language for the domain it's being viewed on.
+ */
+function detectCountryFromHostname(countries) {
+  if (typeof window === "undefined" || !Array.isArray(countries)) return null;
+  const host = window.location.hostname.replace(/^www\./i, "").toLowerCase();
+  return (
+    countries.find((c) => (c.adminDomain || "").toLowerCase() === host) ||
+    // Fall back to the storefront domain(s) in case adminDomain isn't set
+    // for a given country yet — better than silently defaulting to NG.
+    countries.find(
+      (c) =>
+        (c.domain || "").toLowerCase() === host ||
+        (Array.isArray(c.domains) && c.domains.some((d) => (d || "").toLowerCase() === host))
+    ) ||
+    null
+  );
+}
+
 export function useAdminCountry() {
   const ctx = useContext(AdminCountryContext);
   if (!ctx)
@@ -91,6 +114,14 @@ export function AdminCountryProvider({ children }) {
           if (countryScope) {
             const match = data.data.find((c) => c.code === countryScope);
             if (match) setActiveCountry(match);
+          } else {
+            // Item #3: no COUNTRY-scoped user to key off (either nobody's
+            // logged in yet — the login page itself — or this is a GLOBAL
+            // admin who hasn't explicitly switched). Fall back to whichever
+            // country's adminDomain matches the hostname we're actually
+            // being viewed on, instead of silently defaulting to Nigeria.
+            const domainMatch = detectCountryFromHostname(data.data);
+            if (domainMatch) setActiveCountry(domainMatch);
           }
         }
       } catch (e) {
