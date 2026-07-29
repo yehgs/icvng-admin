@@ -52,6 +52,7 @@ const ProductManagement = () => {
     lowStock: "", // 'true' = online stock <= 5
     priceFilter: "", // 'hasbtc', 'has3week', 'has5week', 'noPrice'
     hiddenFromShop: "", // 'true' = published but invisible to customers
+    partnerStock: "", // 'true' = partner-managed online stock enabled
   });
 
   const productTypes = [
@@ -98,6 +99,7 @@ const ProductManagement = () => {
         lowStock: filters.lowStock,
         priceFilter: filters.priceFilter,
         hiddenFromShop: filters.hiddenFromShop,
+        partnerStock: filters.partnerStock,
       };
 
       const response = await productAPI.getProducts(params);
@@ -184,6 +186,10 @@ const ProductManagement = () => {
       productType: "",
       publish: "",
       featured: "",
+      lowStock: "",
+      priceFilter: "",
+      hiddenFromShop: "",
+      partnerStock: "",
     });
     setSearchTerm("");
     setCurrentPage(1);
@@ -298,6 +304,7 @@ const ProductManagement = () => {
       lowStock: filters.lowStock,
       priceFilter: filters.priceFilter,
       hiddenFromShop: filters.hiddenFromShop,
+      partnerStock: filters.partnerStock,
     };
 
     if (scope === "page") {
@@ -547,6 +554,19 @@ const ProductManagement = () => {
             <option value="">{t("products.allVisibility")}</option>
             <option value="true">{t("products.hiddenFromShopOption")}</option>
             <option value="false">{t("products.visibleInShopOption")}</option>
+          </select>
+
+          {/* Partner Stock filter */}
+          <select
+            value={filters.partnerStock}
+            onChange={(e) =>
+              handleFilterChange("partnerStock", e.target.value)
+            }
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="">{t("products.allPartnerStock")}</option>
+            <option value="true">{t("products.hasPartnerStock")}</option>
+            <option value="false">{t("products.noPartnerStock")}</option>
           </select>
 
           {/* Category Filter */}

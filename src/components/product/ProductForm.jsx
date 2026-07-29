@@ -13,10 +13,11 @@ import {
 } from "lucide-react";
 import ImageUploader from "../common/ImageUploader";
 import { productAPI, brandAPI, colorAPI } from "../../utils/manageApi";
-import { supplierAPI, directPricingAPI } from "../../utils/api";
+import { supplierAPI, directPricingAPI, getCurrentUser } from "../../utils/api";
 import { getCategories, getSubCategories } from "../../utils/categoryService";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import { isFiveWeekDeliveryCategory } from "../../config/deliveryCategories.js";
 import InlineTranslateFields from "../translations/InlineTranslateFields";
 import toast from "react-hot-toast";
 
@@ -27,6 +28,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   // Nigeria-specific arrangement — only Nigeria-scoped or global/HQ admins
   // can see or manage it. A foreign-country admin has no such partners.
   const canSeePartnerStock = isGlobalAdmin || countryScope === "NG";
+  const currentUser = getCurrentUser();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -108,6 +110,14 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       notes: "",
     },
   });
+
+  // Pricing (BTB/BTC/2-week/5-week price, discount) is an Accountant
+  // function — IT/DIRECTOR keep override access — UNLESS this product is
+  // toggled as a partner/supplier product, in which case pricing is
+  // supplier-driven and any role may set it. Matches server enforcement.
+  const canEditPricing =
+    formData.partnerStock?.enabled === true ||
+    ["ACCOUNTANT", "IT", "DIRECTOR"].includes(currentUser?.subRole);
 
   const productTypes = [
     "COFFEE",
@@ -1149,14 +1159,53 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 </div>
               )}
 
-              {/* Live visibility warning: BTC price only + no stock + no partner = hidden from shop */}
+              {/* Live visibility warning — mirrors the server's canonical
+                  purchasability rule exactly (see PRODUCT_VISIBILITY_RULES.md) */}
               {(() => {
                 const btc = parseFloat(formData.btcPrice) || 0;
-                const w3 = parseFloat(formData.price3weeksDelivery) || 0;
+                const w3 = parseFloat(formData.price3weeksDelivery) || 0; // "2 Weeks Delivery" in the UI
                 const w5 = parseFloat(formData.price5weeksDelivery) || 0;
                 const isPartner = formData.partnerStock?.enabled === true;
+                const partnerQty = parseFloat(formData.partnerStock?.quantity) || 0;
+
+                // Five-week-type if EITHER signal says so — productType
+                // alone isn't fully reliable in this data (e.g. a Tassimo
+                // coffee machine filed under category "Coffee Maker" but
+                // left with productType "COFFEE"), so check both, same as
+                // the server and client do.
+                const selectedCategory = categories.find(
+                  (c) => c._id === formData.category,
+                );
+                const isMachine = isFiveWeekDeliveryCategory(
+                  formData.productType,
+                  selectedCategory?.slug,
+                );
+
+                // Warehouse online stock isn't editable from this form (it's
+                // managed in Warehouse Management) — read it from the
+                // currently-loaded product so the warning reflects reality.
+                const warehouseOnlineStock =
+                  product?.warehouseStock?.enabled
+                    ? parseFloat(product.warehouseStock?.onlineStock) || 0
+                    : parseFloat(product?.stock) || 0;
+
+                const hasOnlineStock = isPartner
+                  ? partnerQty > 0
+                  : warehouseOnlineStock > 0;
+
+                // Machine-type products (by type OR category): the
+                // storefront ONLY reads the 5-week price — a 2-week price
+                // doesn't count for them.
+                const hasUsableDeliveryPrice = isMachine ? w5 > 0 : w3 > 0 || w5 > 0;
+
                 const willBeHidden =
-                  btc > 0 && w3 === 0 && w5 === 0 && !isPartner;
+                  !hasUsableDeliveryPrice && !(btc > 0 && hasOnlineStock);
+
+                // Special case: a Machine product that *does* have a 2-week
+                // price set (which the storefront will never read for a
+                // Machine) — this looks fine at a glance but is still hidden.
+                const wrongFieldForType = isMachine && w3 > 0 && w5 === 0;
+
                 if (!willBeHidden) return null;
                 return (
                   <div className="mb-3 p-3 bg-amber-50 border border-amber-300 rounded-md text-sm text-amber-800 flex items-start gap-2">
@@ -1165,11 +1214,17 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       <p className="font-semibold">
                         {t("productForm.hiddenShopWarningTitle")}
                       </p>
-                      <p className="text-xs mt-1 text-amber-700">
-                        {canSeePartnerStock
-                          ? t("productForm.hiddenShopWarningWithPartner")
-                          : t("productForm.hiddenShopWarningNoPartner")}
-                      </p>
+                      {wrongFieldForType ? (
+                        <p className="text-xs mt-1 text-amber-700">
+                          {t("productForm.hiddenShopWarningWrongFieldForMachine")}
+                        </p>
+                      ) : (
+                        <p className="text-xs mt-1 text-amber-700">
+                          {canSeePartnerStock
+                            ? t("productForm.hiddenShopWarningWithPartner")
+                            : t("productForm.hiddenShopWarningNoPartner")}
+                        </p>
+                      )}
                     </div>
                   </div>
                 );
@@ -1183,6 +1238,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal">
                       {t("productForm.optionalHint")}
                     </span>
+                    {!canEditPricing && (
+                      <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> {t("productForm.locked")}
+                      </span>
+                    )}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
@@ -1194,9 +1254,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       step="0.01"
                       value={formData.btbPrice || ""}
                       onChange={(e) =>
+                        canEditPricing &&
                         handleInputChange("btbPrice", e.target.value)
                       }
-                      className="w-full pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      readOnly={!canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${!canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>
@@ -1209,7 +1271,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.btcPriceHint")}
                     </span>
-                    {directPricingLocked && (
+                    {(directPricingLocked || !canEditPricing) && (
                       <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
                         <Lock className="w-3 h-3" /> {t("productForm.locked")}
                       </span>
@@ -1226,10 +1288,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       value={formData.btcPrice || ""}
                       onChange={(e) =>
                         !directPricingLocked &&
+                        canEditPricing &&
                         handleInputChange("btcPrice", e.target.value)
                       }
-                      readOnly={directPricingLocked}
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
+                      readOnly={directPricingLocked || !canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked || !canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>
@@ -1248,6 +1311,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.twoWeekHint")}
                     </span>
+                    {(directPricingLocked || !canEditPricing) && (
+                      <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> {t("productForm.locked")}
+                      </span>
+                    )}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
@@ -1259,9 +1327,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       step="0.01"
                       value={formData.price3weeksDelivery || ""}
                       onChange={(e) =>
+                        !directPricingLocked &&
+                        canEditPricing &&
                         handleInputChange("price3weeksDelivery", e.target.value)
                       }
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price3weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"}`}
+                      readOnly={directPricingLocked || !canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price3weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked || !canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>
@@ -1280,6 +1351,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.fiveWeekHint")}
                     </span>
+                    {(directPricingLocked || !canEditPricing) && (
+                      <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> {t("productForm.locked")}
+                      </span>
+                    )}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
@@ -1291,9 +1367,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       step="0.01"
                       value={formData.price5weeksDelivery || ""}
                       onChange={(e) =>
+                        !directPricingLocked &&
+                        canEditPricing &&
                         handleInputChange("price5weeksDelivery", e.target.value)
                       }
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price5weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"}`}
+                      readOnly={directPricingLocked || !canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price5weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked || !canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>
@@ -1311,6 +1390,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal">
                       {t("productForm.discountHint")}
                     </span>
+                    {!canEditPricing && (
+                      <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> {t("productForm.locked")}
+                      </span>
+                    )}
                   </label>
                   <input
                     type="number"
@@ -1319,9 +1403,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     step="1"
                     value={formData.discount || ""}
                     onChange={(e) =>
+                      canEditPricing &&
                       handleInputChange("discount", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    readOnly={!canEditPricing}
+                    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${!canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                     placeholder="0"
                   />
                 </div>

@@ -3460,16 +3460,22 @@ export const directPricingUtils = {
     let hasValidPrice = false;
 
     validPriceTypes.forEach((priceType) => {
-      if (prices[priceType] !== undefined) {
-        const price = parseFloat(prices[priceType]);
+      const raw = prices[priceType];
+      // An empty/blank field means "not set" — that's valid (it's an
+      // optional field; only ONE of price3weeksDelivery/price5weeksDelivery
+      // needs to be filled, matching whichever delivery option applies to
+      // the product's type). Only flag it once something was actually
+      // typed but doesn't parse as a number.
+      if (raw === undefined || raw === null || raw === "") return;
 
-        if (isNaN(price)) {
-          errors[priceType] = "Must be a valid number";
-        } else if (price < 0) {
-          errors[priceType] = "Price cannot be negative";
-        } else if (price > 0) {
-          hasValidPrice = true;
-        }
+      const price = parseFloat(raw);
+
+      if (isNaN(price)) {
+        errors[priceType] = "Must be a valid number";
+      } else if (price < 0) {
+        errors[priceType] = "Price cannot be negative";
+      } else if (price > 0) {
+        hasValidPrice = true;
       }
     });
 
