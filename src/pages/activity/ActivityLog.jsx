@@ -125,18 +125,26 @@ export default function ActivityLog() {
     URL.revokeObjectURL(url);
   };
 
-  // Guard: only DIRECTOR and IT
-  if (!['DIRECTOR', 'IT'].includes(currentUser?.subRole)) {
+  // Guard: DIRECTOR, IT (unrestricted), and MANAGER (HQ or Foreign — scoped
+  // server-side to their own visibility bucket, excluding IT/DIRECTOR logs).
+  if (!['DIRECTOR', 'IT', 'MANAGER'].includes(currentUser?.subRole)) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">{t("auth.accessRestricted")}</h2>
-          <p className="text-gray-500 mt-2">This page is only visible to Directors and IT administrators.</p>
+          <p className="text-gray-500 mt-2">This page is only visible to Directors, IT administrators, and Managers.</p>
         </div>
       </div>
     );
   }
+
+  const isScopedManager = currentUser?.subRole === 'MANAGER';
+  const scopeNote = isScopedManager
+    ? (currentUser?.scope === 'COUNTRY'
+        ? "Showing your country's staff activity only (excludes IT & Director)"
+        : 'Showing HQ staff activity only (excludes IT & Director)')
+    : 'Directors & IT see all activity';
 
   return (
     <div className="p-6 space-y-6">
@@ -147,7 +155,7 @@ export default function ActivityLog() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("activity.title")}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {totalCount.toLocaleString()} total records · Directors &amp; IT only
+              {totalCount.toLocaleString()} total records · {scopeNote}
             </p>
           </div>
         </div>
