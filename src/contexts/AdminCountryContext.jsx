@@ -76,7 +76,14 @@ async function apiFetch(path) {
   const token = localStorage.getItem("accessToken");
   try {
     const res = await fetch(`${API_BASE}${path}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Same as api.js: the server can only see its own API hostname,
+        // never the admin panel's — send the real one explicitly.
+        ...(typeof window !== "undefined" && window.location?.hostname
+          ? { "x-storefront-host": window.location.hostname }
+          : {}),
+      },
     });
     if (!res.ok) return null;
     return res.json();

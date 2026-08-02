@@ -349,6 +349,16 @@ export const apiCall = async (endpoint, options = {}) => {
   // Default headers
   const defaultHeaders = {
     ...(token && { Authorization: `Bearer ${token}` }),
+    // The API is served from one shared domain across every country's
+    // deployment (req.headers.host is always the API's own host, e.g.
+    // api.i-coffee.ng — never the admin panel's hostname). Without this
+    // header the server falls back to its own Host header and always
+    // resolves country as NG, which is why app.i-coffee.tg admins were
+    // rejected with "This account can only log in from app.i-coffee.tg."
+    // and the country switcher/branding fell back to Nigeria defaults.
+    ...(typeof window !== "undefined" && window.location?.hostname
+      ? { "x-storefront-host": window.location.hostname }
+      : {}),
   };
 
   // Only add Content-Type for non-FormData requests
@@ -444,6 +454,13 @@ export const apiCallFileUploader = async (endpoint, options = {}) => {
     // Add authorization header if token exists
     if (token) {
       processedOptions.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Same reasoning as apiCall(): tell the server which admin domain the
+    // browser is actually on, since req.headers.host on the server is
+    // always the API's own host.
+    if (typeof window !== "undefined" && window.location?.hostname) {
+      processedOptions.headers["x-storefront-host"] = window.location.hostname;
     }
 
     // Handle FormData vs JSON differently
