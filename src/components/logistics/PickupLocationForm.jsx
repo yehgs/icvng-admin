@@ -1,7 +1,8 @@
 // admin/src/components/logistics/PickupLocationForm.jsx - FIXED VERSION
-import React, { useState, useEffect } from 'react';
-import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas.js';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { nigeriaStatesLgas } from "../../data/nigeria-states-lgas.js";
+import { AlertCircle } from "lucide-react";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const PickupLocationForm = ({
   location,
@@ -11,7 +12,8 @@ const PickupLocationForm = ({
   isZoneLocation = false,
   zoneIndex = null,
 }) => {
-  const [selectedState, setSelectedState] = useState(location?.state || '');
+  const { t } = useAdminTranslation();
+  const [selectedState, setSelectedState] = useState(location?.state || "");
   const [availableLgas, setAvailableLgas] = useState([]);
   const [errors, setErrors] = useState({});
 
@@ -19,7 +21,7 @@ const PickupLocationForm = ({
   useEffect(() => {
     if (selectedState) {
       const stateData = nigeriaStatesLgas.find(
-        (s) => s.state.toLowerCase() === selectedState.toLowerCase()
+        (s) => s.state.toLowerCase() === selectedState.toLowerCase(),
       );
       if (stateData) {
         setAvailableLgas(stateData.lga);
@@ -43,19 +45,19 @@ const PickupLocationForm = ({
     const newErrors = {};
 
     if (!updatedLocation.name || !updatedLocation.name.trim()) {
-      newErrors.name = 'Location name is required';
+      newErrors.name = "Location name is required";
     }
     if (!updatedLocation.address || !updatedLocation.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = "Address is required";
     }
     if (!updatedLocation.city || !updatedLocation.city.trim()) {
-      newErrors.city = 'City is required';
+      newErrors.city = "City is required";
     }
     if (!updatedLocation.state || !updatedLocation.state.trim()) {
-      newErrors.state = 'State is required';
+      newErrors.state = "State is required";
     }
     if (!updatedLocation.lga || !updatedLocation.lga.trim()) {
-      newErrors.lga = 'LGA is required';
+      newErrors.lga = "LGA is required";
     }
 
     setErrors(newErrors);
@@ -66,14 +68,14 @@ const PickupLocationForm = ({
     const updatedLocation = { ...location, [field]: value };
 
     // If updating state, reset LGA
-    if (field === 'state') {
+    if (field === "state") {
       setSelectedState(value);
       // Reset LGA when state changes since available LGAs change
       const stateData = nigeriaStatesLgas.find(
-        (s) => s.state.toLowerCase() === value.toLowerCase()
+        (s) => s.state.toLowerCase() === value.toLowerCase(),
       );
       if (stateData && location.lga && !stateData.lga.includes(location.lga)) {
-        updatedLocation.lga = '';
+        updatedLocation.lga = "";
       }
     }
 
@@ -107,13 +109,13 @@ const PickupLocationForm = ({
   };
 
   const days = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
   ];
 
   return (
@@ -139,12 +141,12 @@ const PickupLocationForm = ({
           </label>
           <input
             type="text"
-            value={location.name || ''}
-            onChange={(e) => updateLocationField('name', e.target.value)}
+            value={location.name || ""}
+            onChange={(e) => updateLocationField("name", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
               errors.name
-                ? 'border-red-500'
-                : 'border-gray-300 dark:border-gray-600'
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
             placeholder="e.g., Main Store, Downtown Branch"
             required
@@ -162,8 +164,8 @@ const PickupLocationForm = ({
           </label>
           <input
             type="tel"
-            value={location.phone || ''}
-            onChange={(e) => updateLocationField('phone', e.target.value)}
+            value={location.phone || ""}
+            onChange={(e) => updateLocationField("phone", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             placeholder="+234 xxx xxx xxxx"
           />
@@ -178,12 +180,12 @@ const PickupLocationForm = ({
           </label>
           <input
             type="text"
-            value={location.address || ''}
-            onChange={(e) => updateLocationField('address', e.target.value)}
+            value={location.address || ""}
+            onChange={(e) => updateLocationField("address", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
               errors.address
-                ? 'border-red-500'
-                : 'border-gray-300 dark:border-gray-600'
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
             placeholder="Street address"
             required
@@ -205,11 +207,11 @@ const PickupLocationForm = ({
           </label>
           <select
             value={selectedState}
-            onChange={(e) => updateLocationField('state', e.target.value)}
+            onChange={(e) => updateLocationField("state", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
               errors.state
-                ? 'border-red-500'
-                : 'border-gray-300 dark:border-gray-600'
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
             required
           >
@@ -232,12 +234,12 @@ const PickupLocationForm = ({
             Local Government Area (LGA) *
           </label>
           <select
-            value={location.lga || ''}
-            onChange={(e) => updateLocationField('lga', e.target.value)}
+            value={location.lga || ""}
+            onChange={(e) => updateLocationField("lga", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
               errors.lga
-                ? 'border-red-500'
-                : 'border-gray-300 dark:border-gray-600'
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
             disabled={!selectedState || availableLgas.length === 0}
             required
@@ -271,12 +273,12 @@ const PickupLocationForm = ({
           </label>
           <input
             type="text"
-            value={location.city || ''}
-            onChange={(e) => updateLocationField('city', e.target.value)}
+            value={location.city || ""}
+            onChange={(e) => updateLocationField("city", e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
               errors.city
-                ? 'border-red-500'
-                : 'border-gray-300 dark:border-gray-600'
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
             placeholder="City or town name"
             required
@@ -297,8 +299,8 @@ const PickupLocationForm = ({
           </label>
           <input
             type="text"
-            value={location.postalCode || ''}
-            onChange={(e) => updateLocationField('postalCode', e.target.value)}
+            value={location.postalCode || ""}
+            onChange={(e) => updateLocationField("postalCode", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             placeholder="6-digit postal code"
             maxLength="6"
@@ -312,7 +314,7 @@ const PickupLocationForm = ({
           <input
             type="checkbox"
             checked={location.isActive !== false}
-            onChange={(e) => updateLocationField('isActive', e.target.checked)}
+            onChange={(e) => updateLocationField("isActive", e.target.checked)}
             className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
           />
           <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -334,18 +336,18 @@ const PickupLocationForm = ({
               </div>
               <input
                 type="time"
-                value={location.operatingHours?.[day]?.open || ''}
+                value={location.operatingHours?.[day]?.open || ""}
                 onChange={(e) =>
-                  updateOperatingHours(day, 'open', e.target.value)
+                  updateOperatingHours(day, "open", e.target.value)
                 }
                 className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
                 placeholder="Open"
               />
               <input
                 type="time"
-                value={location.operatingHours?.[day]?.close || ''}
+                value={location.operatingHours?.[day]?.close || ""}
                 onChange={(e) =>
-                  updateOperatingHours(day, 'close', e.target.value)
+                  updateOperatingHours(day, "close", e.target.value)
                 }
                 className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
                 placeholder="Close"
@@ -353,8 +355,8 @@ const PickupLocationForm = ({
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {location.operatingHours?.[day]?.open &&
                 location.operatingHours?.[day]?.close
-                  ? 'Open'
-                  : 'Closed'}
+                  ? "Open"
+                  : "Closed"}
               </div>
             </div>
           ))}

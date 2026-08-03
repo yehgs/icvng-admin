@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   X,
   Truck,
@@ -9,9 +9,10 @@ import {
   Search,
   ChevronDown,
   Check,
-} from 'lucide-react';
-import { logisticsAPI } from '../../utils/api.js';
-import PickupLocationForm from './PickupLocationForm.jsx';
+} from "lucide-react";
+import { logisticsAPI } from "../../utils/api.js";
+import PickupLocationForm from "./PickupLocationForm.jsx";
+import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const LogisticsMethodModal = ({
   isOpen,
@@ -21,11 +22,12 @@ const LogisticsMethodModal = ({
   zones,
   loading,
 }) => {
+  const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    description: '',
-    type: 'flat_rate',
+    name: "",
+    code: "",
+    description: "",
+    type: "flat_rate",
     isActive: true,
     sortOrder: 0,
 
@@ -33,51 +35,52 @@ const LogisticsMethodModal = ({
     flatRate: {
       defaultCost: 0, // Used when no zone-specific rates
       cost: 0, // Backward compatibility
-      assignment: 'all_products',
+      assignment: "all_products",
       categories: [],
       products: [],
       zoneRates: [], // NEW: Zone-specific rates
       freeShipping: {
         enabled: false,
         minimumOrderAmount: 0,
+        hideWhenBelowMinimum: false,
       },
-      validFrom: new Date().toISOString().split('T')[0],
-      validUntil: '',
+      validFrom: new Date().toISOString().split("T")[0],
+      validUntil: "",
     },
 
     // Table shipping configuration (unchanged)
     tableShipping: {
-      assignment: 'all_products',
+      assignment: "all_products",
       categories: [],
       products: [],
       zoneRates: [],
-      validFrom: new Date().toISOString().split('T')[0],
-      validUntil: '',
+      validFrom: new Date().toISOString().split("T")[0],
+      validUntil: "",
     },
 
     // Enhanced pickup configuration with zone support
     pickup: {
-      assignment: 'all_products',
+      assignment: "all_products",
       categories: [],
       products: [],
       zoneLocations: [], // NEW: Zone-specific locations
       defaultLocations: [
         // Used when no zone-specific locations
         {
-          name: '',
-          address: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          phone: '',
+          name: "",
+          address: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          phone: "",
           operatingHours: {
-            monday: { open: '09:00', close: '17:00' },
-            tuesday: { open: '09:00', close: '17:00' },
-            wednesday: { open: '09:00', close: '17:00' },
-            thursday: { open: '09:00', close: '17:00' },
-            friday: { open: '09:00', close: '17:00' },
-            saturday: { open: '09:00', close: '14:00' },
-            sunday: { open: '', close: '' },
+            monday: { open: "09:00", close: "17:00" },
+            tuesday: { open: "09:00", close: "17:00" },
+            wednesday: { open: "09:00", close: "17:00" },
+            thursday: { open: "09:00", close: "17:00" },
+            friday: { open: "09:00", close: "17:00" },
+            saturday: { open: "09:00", close: "14:00" },
+            sunday: { open: "", close: "" },
           },
           isActive: true,
         },
@@ -93,15 +96,15 @@ const LogisticsMethodModal = ({
   const [products, setProducts] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
-  const [categorySearch, setCategorySearch] = useState('');
-  const [productSearch, setProductSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
   const [categoryPage, setCategoryPage] = useState(1);
   const [productPage, setProductPage] = useState(1);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
 
   // Fetch categories
-  const fetchCategories = async (search = '', page = 1) => {
+  const fetchCategories = async (search = "", page = 1) => {
     try {
       setCategoriesLoading(true);
       const response = await logisticsAPI.getCategoriesForAssignment({
@@ -116,14 +119,14 @@ const LogisticsMethodModal = ({
         setCategories((prev) => [...prev, ...(response.data || [])]);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     } finally {
       setCategoriesLoading(false);
     }
   };
 
   // Fetch products
-  const fetchProducts = async (search = '', page = 1, category = '') => {
+  const fetchProducts = async (search = "", page = 1, category = "") => {
     try {
       setProductsLoading(true);
       const response = await logisticsAPI.getProductsForAssignment({
@@ -139,7 +142,7 @@ const LogisticsMethodModal = ({
         setProducts((prev) => [...prev, ...(response.data || [])]);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
     } finally {
       setProductsLoading(false);
     }
@@ -180,10 +183,10 @@ const LogisticsMethodModal = ({
   useEffect(() => {
     if (method) {
       setFormData({
-        name: method.name || '',
-        code: method.code || '',
-        description: method.description || '',
-        type: method.type || 'flat_rate',
+        name: method.name || "",
+        code: method.code || "",
+        description: method.description || "",
+        type: method.type || "flat_rate",
         isActive: method.isActive !== undefined ? method.isActive : true,
         sortOrder: method.sortOrder || 0,
 
@@ -192,45 +195,51 @@ const LogisticsMethodModal = ({
               defaultCost:
                 method.flatRate.defaultCost || method.flatRate.cost || 0,
               cost: method.flatRate.cost || 0,
-              assignment: method.flatRate.assignment || 'all_products',
+              assignment: method.flatRate.assignment || "all_products",
               categories: method.flatRate.categories || [],
               products: method.flatRate.products || [],
               zoneRates: method.flatRate.zoneRates || [],
-              freeShipping: method.flatRate.freeShipping || {
+              freeShipping: {
                 enabled: false,
                 minimumOrderAmount: 0,
+                hideWhenBelowMinimum: false,
+                ...method.flatRate.freeShipping,
               },
               validFrom: method.flatRate.validFrom
-                ? method.flatRate.validFrom.split('T')[0]
-                : new Date().toISOString().split('T')[0],
+                ? method.flatRate.validFrom.split("T")[0]
+                : new Date().toISOString().split("T")[0],
               validUntil: method.flatRate.validUntil
-                ? method.flatRate.validUntil.split('T')[0]
-                : '',
+                ? method.flatRate.validUntil.split("T")[0]
+                : "",
             }
           : {
               defaultCost: 0,
               cost: 0,
-              assignment: 'all_products',
+              assignment: "all_products",
               categories: [],
               products: [],
               zoneRates: [],
-              freeShipping: { enabled: false, minimumOrderAmount: 0 },
-              validFrom: new Date().toISOString().split('T')[0],
-              validUntil: '',
+              freeShipping: {
+                enabled: false,
+                minimumOrderAmount: 0,
+                hideWhenBelowMinimum: false,
+              },
+              validFrom: new Date().toISOString().split("T")[0],
+              validUntil: "",
             },
 
         tableShipping: method.tableShipping || {
-          assignment: 'all_products',
+          assignment: "all_products",
           categories: [],
           products: [],
           zoneRates: [],
-          validFrom: new Date().toISOString().split('T')[0],
-          validUntil: '',
+          validFrom: new Date().toISOString().split("T")[0],
+          validUntil: "",
         },
 
         pickup: method.pickup
           ? {
-              assignment: method.pickup.assignment || 'all_products',
+              assignment: method.pickup.assignment || "all_products",
               categories: method.pickup.categories || [],
               products: method.pickup.products || [],
               zoneLocations: method.pickup.zoneLocations || [],
@@ -239,7 +248,7 @@ const LogisticsMethodModal = ({
               cost: method.pickup.cost || 0,
             }
           : {
-              assignment: 'all_products',
+              assignment: "all_products",
               categories: [],
               products: [],
               zoneLocations: [],
@@ -250,52 +259,56 @@ const LogisticsMethodModal = ({
     } else {
       // Reset form for new method (same as initial state)
       setFormData({
-        name: '',
-        code: '',
-        description: '',
-        type: 'flat_rate',
+        name: "",
+        code: "",
+        description: "",
+        type: "flat_rate",
         isActive: true,
         sortOrder: 0,
         flatRate: {
           defaultCost: 0,
           cost: 0,
-          assignment: 'all_products',
+          assignment: "all_products",
           categories: [],
           products: [],
           zoneRates: [],
-          freeShipping: { enabled: false, minimumOrderAmount: 0 },
-          validFrom: new Date().toISOString().split('T')[0],
-          validUntil: '',
+          freeShipping: {
+            enabled: false,
+            minimumOrderAmount: 0,
+            hideWhenBelowMinimum: false,
+          },
+          validFrom: new Date().toISOString().split("T")[0],
+          validUntil: "",
         },
         tableShipping: {
-          assignment: 'all_products',
+          assignment: "all_products",
           categories: [],
           products: [],
           zoneRates: [],
-          validFrom: new Date().toISOString().split('T')[0],
-          validUntil: '',
+          validFrom: new Date().toISOString().split("T")[0],
+          validUntil: "",
         },
         pickup: {
-          assignment: 'all_products',
+          assignment: "all_products",
           categories: [],
           products: [],
           zoneLocations: [],
           defaultLocations: [
             {
-              name: '',
-              address: '',
-              city: '',
-              state: '',
-              postalCode: '',
-              phone: '',
+              name: "",
+              address: "",
+              city: "",
+              state: "",
+              postalCode: "",
+              phone: "",
               operatingHours: {
-                monday: { open: '09:00', close: '17:00' },
-                tuesday: { open: '09:00', close: '17:00' },
-                wednesday: { open: '09:00', close: '17:00' },
-                thursday: { open: '09:00', close: '17:00' },
-                friday: { open: '09:00', close: '17:00' },
-                saturday: { open: '09:00', close: '14:00' },
-                sunday: { open: '', close: '' },
+                monday: { open: "09:00", close: "17:00" },
+                tuesday: { open: "09:00", close: "17:00" },
+                wednesday: { open: "09:00", close: "17:00" },
+                thursday: { open: "09:00", close: "17:00" },
+                friday: { open: "09:00", close: "17:00" },
+                saturday: { open: "09:00", close: "14:00" },
+                sunday: { open: "", close: "" },
               },
               isActive: true,
             },
@@ -313,7 +326,7 @@ const LogisticsMethodModal = ({
       flatRate: {
         ...prev.flatRate,
         zoneRates: prev.flatRate.zoneRates.map((rate, i) =>
-          i === index ? { ...rate, [field]: value } : rate
+          i === index ? { ...rate, [field]: value } : rate,
         ),
       },
     }));
@@ -332,23 +345,23 @@ const LogisticsMethodModal = ({
   // Pickup Zone Location Functions
   const addZoneLocationToPickup = () => {
     const newZoneLocation = {
-      zone: '',
+      zone: "",
       locations: [
         {
-          name: '',
-          address: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          phone: '',
+          name: "",
+          address: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          phone: "",
           operatingHours: {
-            monday: { open: '09:00', close: '17:00' },
-            tuesday: { open: '09:00', close: '17:00' },
-            wednesday: { open: '09:00', close: '17:00' },
-            thursday: { open: '09:00', close: '17:00' },
-            friday: { open: '09:00', close: '17:00' },
-            saturday: { open: '09:00', close: '14:00' },
-            sunday: { open: '', close: '' },
+            monday: { open: "09:00", close: "17:00" },
+            tuesday: { open: "09:00", close: "17:00" },
+            wednesday: { open: "09:00", close: "17:00" },
+            thursday: { open: "09:00", close: "17:00" },
+            friday: { open: "09:00", close: "17:00" },
+            saturday: { open: "09:00", close: "14:00" },
+            sunday: { open: "", close: "" },
           },
           isActive: true,
         },
@@ -369,11 +382,11 @@ const LogisticsMethodModal = ({
 
     // Basic validation
     if (!formData.name.trim()) {
-      newErrors.name = 'Method name is required';
+      newErrors.name = "Method name is required";
     }
 
     // Type-specific validation
-    if (formData.type === 'flat_rate') {
+    if (formData.type === "flat_rate") {
       const flatRate = formData.flatRate;
 
       if (flatRate.zoneRates && flatRate.zoneRates.length > 0) {
@@ -385,28 +398,27 @@ const LogisticsMethodModal = ({
             }`;
           }
           if (zoneRate.cost < 0) {
-            newErrors[
-              `flatRateCost${index}`
-            ] = `Cost cannot be negative for rate #${index + 1}`;
+            newErrors[`flatRateCost${index}`] =
+              `Cost cannot be negative for rate #${index + 1}`;
           }
         });
       } else {
         // Validate default cost
         if (!flatRate.defaultCost && flatRate.defaultCost !== 0) {
-          newErrors.flatRateDefaultCost = 'Default cost is required';
+          newErrors.flatRateDefaultCost = "Default cost is required";
         }
         if (flatRate.defaultCost < 0) {
-          newErrors.flatRateDefaultCost = 'Default cost cannot be negative';
+          newErrors.flatRateDefaultCost = "Default cost cannot be negative";
         }
       }
     }
 
-    if (formData.type === 'table_shipping') {
+    if (formData.type === "table_shipping") {
       const tableShipping = formData.tableShipping;
 
       if (!tableShipping.zoneRates || tableShipping.zoneRates.length === 0) {
         newErrors.tableShippingZones =
-          'At least one zone rate is required for table shipping';
+          "At least one zone rate is required for table shipping";
       } else {
         // Validate each zone rate
         tableShipping.zoneRates.forEach((zoneRate, index) => {
@@ -416,17 +428,16 @@ const LogisticsMethodModal = ({
             }`;
           }
           if (!zoneRate.weightRanges || zoneRate.weightRanges.length === 0) {
-            newErrors[
-              `tableWeightRanges${index}`
-            ] = `At least one weight range is required for zone rate #${
-              index + 1
-            }`;
+            newErrors[`tableWeightRanges${index}`] =
+              `At least one weight range is required for zone rate #${
+                index + 1
+              }`;
           }
         });
       }
     }
 
-    if (formData.type === 'pickup') {
+    if (formData.type === "pickup") {
       const pickup = formData.pickup;
 
       // Check if we have any valid locations
@@ -436,31 +447,27 @@ const LogisticsMethodModal = ({
         pickup.zoneLocations && pickup.zoneLocations.length > 0;
 
       if (!hasDefaultLocations && !hasZoneLocations) {
-        newErrors.pickupLocations = 'At least one pickup location is required';
+        newErrors.pickupLocations = "At least one pickup location is required";
       }
 
       // Validate default locations
       if (hasDefaultLocations && pickup.zoneLocations.length === 0) {
         pickup.defaultLocations.forEach((location, index) => {
           if (!location.name || !location.name.trim()) {
-            newErrors[
-              `defaultLocation${index}Name`
-            ] = `Location name is required for location #${index + 1}`;
+            newErrors[`defaultLocation${index}Name`] =
+              `Location name is required for location #${index + 1}`;
           }
           if (!location.address || !location.address.trim()) {
-            newErrors[
-              `defaultLocation${index}Address`
-            ] = `Address is required for location #${index + 1}`;
+            newErrors[`defaultLocation${index}Address`] =
+              `Address is required for location #${index + 1}`;
           }
           if (!location.city || !location.city.trim()) {
-            newErrors[
-              `defaultLocation${index}City`
-            ] = `City is required for location #${index + 1}`;
+            newErrors[`defaultLocation${index}City`] =
+              `City is required for location #${index + 1}`;
           }
           if (!location.state || !location.state.trim()) {
-            newErrors[
-              `defaultLocation${index}State`
-            ] = `State is required for location #${index + 1}`;
+            newErrors[`defaultLocation${index}State`] =
+              `State is required for location #${index + 1}`;
           }
         });
       }
@@ -469,44 +476,38 @@ const LogisticsMethodModal = ({
       if (hasZoneLocations) {
         pickup.zoneLocations.forEach((zoneLocation, zoneIndex) => {
           if (!zoneLocation.zone) {
-            newErrors[
-              `pickupZone${zoneIndex}`
-            ] = `Zone is required for zone location #${zoneIndex + 1}`;
+            newErrors[`pickupZone${zoneIndex}`] =
+              `Zone is required for zone location #${zoneIndex + 1}`;
           }
 
           if (!zoneLocation.locations || zoneLocation.locations.length === 0) {
-            newErrors[
-              `pickupZoneLocations${zoneIndex}`
-            ] = `At least one location is required for zone #${zoneIndex + 1}`;
+            newErrors[`pickupZoneLocations${zoneIndex}`] =
+              `At least one location is required for zone #${zoneIndex + 1}`;
           } else {
             zoneLocation.locations.forEach((location, locIndex) => {
               if (!location.name || !location.name.trim()) {
-                newErrors[
-                  `zoneLocation${zoneIndex}${locIndex}Name`
-                ] = `Location name is required for zone ${
-                  zoneIndex + 1
-                }, location ${locIndex + 1}`;
+                newErrors[`zoneLocation${zoneIndex}${locIndex}Name`] =
+                  `Location name is required for zone ${
+                    zoneIndex + 1
+                  }, location ${locIndex + 1}`;
               }
               if (!location.address || !location.address.trim()) {
-                newErrors[
-                  `zoneLocation${zoneIndex}${locIndex}Address`
-                ] = `Address is required for zone ${zoneIndex + 1}, location ${
-                  locIndex + 1
-                }`;
+                newErrors[`zoneLocation${zoneIndex}${locIndex}Address`] =
+                  `Address is required for zone ${zoneIndex + 1}, location ${
+                    locIndex + 1
+                  }`;
               }
               if (!location.city || !location.city.trim()) {
-                newErrors[
-                  `zoneLocation${zoneIndex}${locIndex}City`
-                ] = `City is required for zone ${zoneIndex + 1}, location ${
-                  locIndex + 1
-                }`;
+                newErrors[`zoneLocation${zoneIndex}${locIndex}City`] =
+                  `City is required for zone ${zoneIndex + 1}, location ${
+                    locIndex + 1
+                  }`;
               }
               if (!location.state || !location.state.trim()) {
-                newErrors[
-                  `zoneLocation${zoneIndex}${locIndex}State`
-                ] = `State is required for zone ${zoneIndex + 1}, location ${
-                  locIndex + 1
-                }`;
+                newErrors[`zoneLocation${zoneIndex}${locIndex}State`] =
+                  `State is required for zone ${zoneIndex + 1}, location ${
+                    locIndex + 1
+                  }`;
               }
             });
           }
@@ -522,11 +523,11 @@ const LogisticsMethodModal = ({
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
 
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -562,7 +563,7 @@ const LogisticsMethodModal = ({
       ? currentCategories.filter((id) => id !== categoryId)
       : [...currentCategories, categoryId];
 
-    handleConfigChange(configType, 'categories', updatedCategories);
+    handleConfigChange(configType, "categories", updatedCategories);
   };
 
   // Product selection handlers
@@ -574,7 +575,7 @@ const LogisticsMethodModal = ({
       ? currentProducts.filter((id) => id !== productId)
       : [...currentProducts, productId];
 
-    handleConfigChange(configType, 'products', updatedProducts);
+    handleConfigChange(configType, "products", updatedProducts);
   };
 
   // Get selected category names for display
@@ -606,18 +607,22 @@ const LogisticsMethodModal = ({
           <select
             value={config.assignment}
             onChange={(e) =>
-              handleConfigChange(configType, 'assignment', e.target.value)
+              handleConfigChange(configType, "assignment", e.target.value)
             }
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
           >
             <option value="all_products">{t("logistics2.allProducts")}</option>
-            <option value="categories">{t("logistics2.specificCategories")}</option>
-            <option value="specific_products">{t("logistics2.specificProducts")}</option>
+            <option value="categories">
+              {t("logistics2.specificCategories")}
+            </option>
+            <option value="specific_products">
+              {t("logistics2.specificProducts")}
+            </option>
           </select>
         </div>
 
         {/* Category Selection */}
-        {config.assignment === 'categories' && (
+        {config.assignment === "categories" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Categories
@@ -631,7 +636,7 @@ const LogisticsMethodModal = ({
                 <span className="truncate">
                   {config.categories.length > 0
                     ? `${config.categories.length} categories selected`
-                    : 'Select categories...'}
+                    : "Select categories..."}
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
@@ -707,7 +712,7 @@ const LogisticsMethodModal = ({
         )}
 
         {/* Product Selection */}
-        {config.assignment === 'specific_products' && (
+        {config.assignment === "specific_products" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Products
@@ -721,7 +726,7 @@ const LogisticsMethodModal = ({
                 <span className="truncate">
                   {config.products.length > 0
                     ? `${config.products.length} products selected`
-                    : 'Select products...'}
+                    : "Select products..."}
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
@@ -813,11 +818,12 @@ const LogisticsMethodModal = ({
 
   const addZoneRateToFlatRate = () => {
     const newZoneRate = {
-      zone: '',
+      zone: "",
       cost: 0,
       freeShipping: {
         enabled: false,
         minimumOrderAmount: 0,
+        hideWhenBelowMinimum: false,
       },
     };
 
@@ -836,7 +842,7 @@ const LogisticsMethodModal = ({
       pickup: {
         ...prev.pickup,
         zoneLocations: prev.pickup.zoneLocations.map((zoneLocation, i) =>
-          i === zoneIndex ? { ...zoneLocation, [field]: value } : zoneLocation
+          i === zoneIndex ? { ...zoneLocation, [field]: value } : zoneLocation,
         ),
       },
     }));
@@ -848,7 +854,7 @@ const LogisticsMethodModal = ({
       pickup: {
         ...prev.pickup,
         zoneLocations: prev.pickup.zoneLocations.filter(
-          (_, i) => i !== zoneIndex
+          (_, i) => i !== zoneIndex,
         ),
       },
     }));
@@ -856,7 +862,7 @@ const LogisticsMethodModal = ({
 
   const addZoneRate = () => {
     const newZoneRate = {
-      zone: '',
+      zone: "",
       weightRanges: [
         {
           minWeight: 0,
@@ -881,7 +887,7 @@ const LogisticsMethodModal = ({
       tableShipping: {
         ...prev.tableShipping,
         zoneRates: prev.tableShipping.zoneRates.map((rate, i) =>
-          i === index ? { ...rate, [field]: value } : rate
+          i === index ? { ...rate, [field]: value } : rate,
         ),
       },
     }));
@@ -911,7 +917,7 @@ const LogisticsMethodModal = ({
         zoneRates: prev.tableShipping.zoneRates.map((rate, i) =>
           i === zoneIndex
             ? { ...rate, weightRanges: [...rate.weightRanges, newRange] }
-            : rate
+            : rate,
         ),
       },
     }));
@@ -927,10 +933,10 @@ const LogisticsMethodModal = ({
             ? {
                 ...rate,
                 weightRanges: rate.weightRanges.filter(
-                  (_, j) => j !== rangeIndex
+                  (_, j) => j !== rangeIndex,
                 ),
               }
-            : rate
+            : rate,
         ),
       },
     }));
@@ -938,20 +944,20 @@ const LogisticsMethodModal = ({
 
   const addPickupLocation = () => {
     const newLocation = {
-      name: '',
-      address: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      phone: '',
+      name: "",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      phone: "",
       operatingHours: {
-        monday: { open: '09:00', close: '17:00' },
-        tuesday: { open: '09:00', close: '17:00' },
-        wednesday: { open: '09:00', close: '17:00' },
-        thursday: { open: '09:00', close: '17:00' },
-        friday: { open: '09:00', close: '17:00' },
-        saturday: { open: '09:00', close: '14:00' },
-        sunday: { open: '', close: '' },
+        monday: { open: "09:00", close: "17:00" },
+        tuesday: { open: "09:00", close: "17:00" },
+        wednesday: { open: "09:00", close: "17:00" },
+        thursday: { open: "09:00", close: "17:00" },
+        friday: { open: "09:00", close: "17:00" },
+        saturday: { open: "09:00", close: "14:00" },
+        sunday: { open: "", close: "" },
       },
       isActive: true,
     };
@@ -971,7 +977,7 @@ const LogisticsMethodModal = ({
       pickup: {
         ...prev.pickup,
         locations: prev.pickup.locations.map((location, i) =>
-          i === index ? { ...location, [field]: value } : location
+          i === index ? { ...location, [field]: value } : location,
         ),
       },
     }));
@@ -983,7 +989,7 @@ const LogisticsMethodModal = ({
       pickup: {
         ...prev.pickup,
         defaultLocations: prev.pickup.defaultLocations.filter(
-          (_, i) => i !== index
+          (_, i) => i !== index,
         ),
       },
     }));
@@ -993,30 +999,30 @@ const LogisticsMethodModal = ({
     e.preventDefault();
 
     if (!validateForm()) {
-      const errorElement = document.querySelector('.text-red-600');
+      const errorElement = document.querySelector(".text-red-600");
       if (errorElement) {
-        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       return;
     }
     if (validateForm()) {
       // ADD THIS DEBUGGING
-      console.log('=== FRONTEND: About to submit ===');
+      console.log("=== FRONTEND: About to submit ===");
       console.log(
-        'Has LGA in default locations?',
+        "Has LGA in default locations?",
         formData.pickup?.defaultLocations?.every(
-          (loc) => loc.lga && loc.lga.trim()
-        )
+          (loc) => loc.lga && loc.lga.trim(),
+        ),
       );
       console.log(
-        'Default locations detail:',
+        "Default locations detail:",
         formData.pickup?.defaultLocations?.map((loc) => ({
           name: loc.name,
           hasLga: !!loc.lga,
           lga: loc.lga,
           state: loc.state,
           city: loc.city,
-        }))
+        })),
       );
 
       onSubmit(formData);
@@ -1028,7 +1034,7 @@ const LogisticsMethodModal = ({
     delete cleanedFormData.code;
 
     // For pickup method, ensure proper structure
-    if (cleanedFormData.type === 'pickup' && cleanedFormData.pickup) {
+    if (cleanedFormData.type === "pickup" && cleanedFormData.pickup) {
       // Remove empty zone locations
       if (cleanedFormData.pickup.zoneLocations) {
         cleanedFormData.pickup.zoneLocations =
@@ -1038,7 +1044,7 @@ const LogisticsMethodModal = ({
               zoneLocation.locations &&
               zoneLocation.locations.length > 0 &&
               zoneLocation.locations.some(
-                (loc) => loc.name && loc.address && loc.city && loc.state
+                (loc) => loc.name && loc.address && loc.city && loc.state,
               )
             );
           });
@@ -1059,7 +1065,7 @@ const LogisticsMethodModal = ({
 
       // Ensure assignment defaults
       if (!cleanedFormData.pickup.assignment) {
-        cleanedFormData.pickup.assignment = 'all_products';
+        cleanedFormData.pickup.assignment = "all_products";
       }
 
       // Remove unused configurations
@@ -1068,16 +1074,16 @@ const LogisticsMethodModal = ({
     }
 
     // Similar cleanup for flat rate
-    if (cleanedFormData.type === 'flat_rate' && cleanedFormData.flatRate) {
+    if (cleanedFormData.type === "flat_rate" && cleanedFormData.flatRate) {
       if (!cleanedFormData.flatRate.assignment) {
-        cleanedFormData.flatRate.assignment = 'all_products';
+        cleanedFormData.flatRate.assignment = "all_products";
       }
 
       // Clean up zone rates
       if (cleanedFormData.flatRate.zoneRates) {
         cleanedFormData.flatRate.zoneRates =
           cleanedFormData.flatRate.zoneRates.filter((zoneRate) => {
-            return zoneRate.zone && zoneRate.zone.trim() !== '';
+            return zoneRate.zone && zoneRate.zone.trim() !== "";
           });
       }
 
@@ -1088,18 +1094,18 @@ const LogisticsMethodModal = ({
 
     // Similar cleanup for table shipping
     if (
-      cleanedFormData.type === 'table_shipping' &&
+      cleanedFormData.type === "table_shipping" &&
       cleanedFormData.tableShipping
     ) {
       if (!cleanedFormData.tableShipping.assignment) {
-        cleanedFormData.tableShipping.assignment = 'all_products';
+        cleanedFormData.tableShipping.assignment = "all_products";
       }
 
       // Clean up zone rates
       if (cleanedFormData.tableShipping.zoneRates) {
         cleanedFormData.tableShipping.zoneRates =
           cleanedFormData.tableShipping.zoneRates.filter((zoneRate) => {
-            return zoneRate.zone && zoneRate.zone.trim() !== '';
+            return zoneRate.zone && zoneRate.zone.trim() !== "";
           });
       }
 
@@ -1114,15 +1120,15 @@ const LogisticsMethodModal = ({
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.dropdown-container')) {
+      if (!event.target.closest(".dropdown-container")) {
         setCategoryDropdownOpen(false);
         setProductDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -1139,7 +1145,7 @@ const LogisticsMethodModal = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {method ? 'Edit Shipping Method' : 'Create Shipping Method'}
+                {method ? "Edit Shipping Method" : "Create Shipping Method"}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Configure delivery options and pricing
@@ -1168,8 +1174,8 @@ const LogisticsMethodModal = ({
                 onChange={handleInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
                   errors.name
-                    ? 'border-red-300 dark:border-red-600'
-                    : 'border-gray-300 dark:border-gray-600'
+                    ? "border-red-300 dark:border-red-600"
+                    : "border-gray-300 dark:border-gray-600"
                 }`}
                 placeholder="e.g., Standard Delivery"
               />
@@ -1187,7 +1193,7 @@ const LogisticsMethodModal = ({
               <div className="relative">
                 <input
                   type="text"
-                  value={method?.code || 'Auto-generated'}
+                  value={method?.code || "Auto-generated"}
                   disabled
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed uppercase"
                   placeholder="Auto-generated"
@@ -1211,8 +1217,8 @@ const LogisticsMethodModal = ({
               </div>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {method?.code
-                  ? 'Method code cannot be changed after creation'
-                  : 'Code will be auto-generated based on method name and type'}
+                  ? "Method code cannot be changed after creation"
+                  : "Code will be auto-generated based on method name and type"}
               </p>
             </div>
 
@@ -1256,7 +1262,7 @@ const LogisticsMethodModal = ({
           </div>
 
           {/* Method-specific configuration */}
-          {formData.type === 'flat_rate' && (
+          {formData.type === "flat_rate" && (
             <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -1303,9 +1309,9 @@ const LogisticsMethodModal = ({
                           }
                           onChange={(e) =>
                             handleConfigChange(
-                              'flatRate',
-                              'defaultCost',
-                              parseFloat(e.target.value) || 0
+                              "flatRate",
+                              "defaultCost",
+                              parseFloat(e.target.value) || 0,
                             )
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1324,10 +1330,10 @@ const LogisticsMethodModal = ({
                           checked={formData.flatRate.freeShipping.enabled}
                           onChange={(e) =>
                             handleNestedConfigChange(
-                              'flatRate',
-                              'freeShipping',
-                              'enabled',
-                              e.target.checked
+                              "flatRate",
+                              "freeShipping",
+                              "enabled",
+                              e.target.checked,
                             )
                           }
                           className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
@@ -1338,27 +1344,55 @@ const LogisticsMethodModal = ({
                       </label>
 
                       {formData.flatRate.freeShipping.enabled && (
-                        <div className="mt-2 ml-6">
-                          <input
-                            type="number"
-                            value={
-                              formData.flatRate.freeShipping.minimumOrderAmount
-                            }
-                            onChange={(e) =>
-                              handleNestedConfigChange(
-                                'flatRate',
-                                'freeShipping',
-                                'minimumOrderAmount',
-                                parseFloat(e.target.value) || 0
-                              )
-                            }
-                            className="w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            placeholder="Minimum amount"
-                            min="0"
-                          />
-                          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            ₦
-                          </span>
+                        <div className="mt-2 ml-6 space-y-2">
+                          <div>
+                            <input
+                              type="number"
+                              value={
+                                formData.flatRate.freeShipping
+                                  .minimumOrderAmount
+                              }
+                              onChange={(e) =>
+                                handleNestedConfigChange(
+                                  "flatRate",
+                                  "freeShipping",
+                                  "minimumOrderAmount",
+                                  parseFloat(e.target.value) || 0,
+                                )
+                              }
+                              className="w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                              placeholder="Minimum amount"
+                              min="0"
+                            />
+                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                              ₦
+                            </span>
+                          </div>
+
+                          <label className="flex items-start cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={
+                                formData.flatRate.freeShipping
+                                  .hideWhenBelowMinimum || false
+                              }
+                              onChange={(e) =>
+                                handleNestedConfigChange(
+                                  "flatRate",
+                                  "freeShipping",
+                                  "hideWhenBelowMinimum",
+                                  e.target.checked,
+                                )
+                              }
+                              className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
+                            />
+                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                              Hide this method at checkout for orders below the
+                              minimum, instead of charging the normal cost.
+                              Customers under the threshold will only see other
+                              shipping methods.
+                            </span>
+                          </label>
                         </div>
                       )}
                     </div>
@@ -1394,8 +1428,8 @@ const LogisticsMethodModal = ({
                           onChange={(e) =>
                             updateFlatRateZoneRate(
                               index,
-                              'zone',
-                              e.target.value
+                              "zone",
+                              e.target.value,
                             )
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1418,8 +1452,8 @@ const LogisticsMethodModal = ({
                           onChange={(e) =>
                             updateFlatRateZoneRate(
                               index,
-                              'cost',
-                              parseFloat(e.target.value) || 0
+                              "cost",
+                              parseFloat(e.target.value) || 0,
                             )
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1446,8 +1480,8 @@ const LogisticsMethodModal = ({
                             };
                             updateFlatRateZoneRate(
                               index,
-                              'freeShipping',
-                              updatedZoneRate.freeShipping
+                              "freeShipping",
+                              updatedZoneRate.freeShipping,
                             );
                           }}
                           className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
@@ -1458,34 +1492,70 @@ const LogisticsMethodModal = ({
                       </label>
 
                       {zoneRate.freeShipping?.enabled && (
-                        <div className="mt-2 ml-6">
-                          <input
-                            type="number"
-                            value={
-                              zoneRate.freeShipping?.minimumOrderAmount || 0
-                            }
-                            onChange={(e) => {
-                              const updatedZoneRate = {
-                                ...zoneRate,
-                                freeShipping: {
-                                  ...zoneRate.freeShipping,
-                                  minimumOrderAmount:
-                                    parseFloat(e.target.value) || 0,
-                                },
-                              };
-                              updateFlatRateZoneRate(
-                                index,
-                                'freeShipping',
-                                updatedZoneRate.freeShipping
-                              );
-                            }}
-                            className="w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            placeholder="Minimum amount"
-                            min="0"
-                          />
-                          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            ₦
-                          </span>
+                        <div className="mt-2 ml-6 space-y-2">
+                          <div>
+                            <input
+                              type="number"
+                              value={
+                                zoneRate.freeShipping?.minimumOrderAmount || 0
+                              }
+                              onChange={(e) => {
+                                const updatedZoneRate = {
+                                  ...zoneRate,
+                                  freeShipping: {
+                                    ...zoneRate.freeShipping,
+                                    minimumOrderAmount:
+                                      parseFloat(e.target.value) || 0,
+                                  },
+                                };
+                                updateFlatRateZoneRate(
+                                  index,
+                                  "freeShipping",
+                                  updatedZoneRate.freeShipping,
+                                );
+                              }}
+                              className="w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                              placeholder="Minimum amount"
+                              min="0"
+                            />
+                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                              ₦
+                            </span>
+                          </div>
+
+                          <label className="flex items-start cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={
+                                zoneRate.freeShipping?.hideWhenBelowMinimum ||
+                                false
+                              }
+                              onChange={(e) => {
+                                const updatedZoneRate = {
+                                  ...zoneRate,
+                                  freeShipping: {
+                                    ...zoneRate.freeShipping,
+                                    hideWhenBelowMinimum: e.target.checked,
+                                  },
+                                };
+                                updateFlatRateZoneRate(
+                                  index,
+                                  "freeShipping",
+                                  updatedZoneRate.freeShipping,
+                                );
+                              }}
+                              className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
+                            />
+                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                              Hide this method at checkout for orders below the
+                              minimum, instead of charging{" "}
+                              {zoneRate.cost != null
+                                ? `₦${zoneRate.cost}`
+                                : "the normal cost"}
+                              . Customers under the threshold will only see
+                              other shipping methods.
+                            </span>
+                          </label>
                         </div>
                       )}
                     </div>
@@ -1515,9 +1585,9 @@ const LogisticsMethodModal = ({
                     value={formData.flatRate.validFrom}
                     onChange={(e) =>
                       handleConfigChange(
-                        'flatRate',
-                        'validFrom',
-                        e.target.value
+                        "flatRate",
+                        "validFrom",
+                        e.target.value,
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1532,9 +1602,9 @@ const LogisticsMethodModal = ({
                     value={formData.flatRate.validUntil}
                     onChange={(e) =>
                       handleConfigChange(
-                        'flatRate',
-                        'validUntil',
-                        e.target.value
+                        "flatRate",
+                        "validUntil",
+                        e.target.value,
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1547,7 +1617,7 @@ const LogisticsMethodModal = ({
             </div>
           )}
 
-          {formData.type === 'table_shipping' && (
+          {formData.type === "table_shipping" && (
             <div className="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-xl border border-purple-200 dark:border-purple-800">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -1600,7 +1670,7 @@ const LogisticsMethodModal = ({
                         <select
                           value={zoneRate.zone}
                           onChange={(e) =>
-                            updateZoneRate(index, 'zone', e.target.value)
+                            updateZoneRate(index, "zone", e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         >
@@ -1651,8 +1721,8 @@ const LogisticsMethodModal = ({
                                   parseFloat(e.target.value) || 0;
                                 updateZoneRate(
                                   index,
-                                  'weightRanges',
-                                  newRanges
+                                  "weightRanges",
+                                  newRanges,
                                 );
                               }}
                               className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
@@ -1669,8 +1739,8 @@ const LogisticsMethodModal = ({
                                   parseFloat(e.target.value) || 0;
                                 updateZoneRate(
                                   index,
-                                  'weightRanges',
-                                  newRanges
+                                  "weightRanges",
+                                  newRanges,
                                 );
                               }}
                               className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
@@ -1687,8 +1757,8 @@ const LogisticsMethodModal = ({
                                   parseFloat(e.target.value) || 0;
                                 updateZoneRate(
                                   index,
-                                  'weightRanges',
-                                  newRanges
+                                  "weightRanges",
+                                  newRanges,
                                 );
                               }}
                               className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
@@ -1731,9 +1801,9 @@ const LogisticsMethodModal = ({
                     value={formData.tableShipping.validFrom}
                     onChange={(e) =>
                       handleConfigChange(
-                        'tableShipping',
-                        'validFrom',
-                        e.target.value
+                        "tableShipping",
+                        "validFrom",
+                        e.target.value,
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1748,9 +1818,9 @@ const LogisticsMethodModal = ({
                     value={formData.tableShipping.validUntil}
                     onChange={(e) =>
                       handleConfigChange(
-                        'tableShipping',
-                        'validUntil',
-                        e.target.value
+                        "tableShipping",
+                        "validUntil",
+                        e.target.value,
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1760,7 +1830,7 @@ const LogisticsMethodModal = ({
             </div>
           )}
 
-          {formData.type === 'pickup' && (
+          {formData.type === "pickup" && (
             <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl border border-green-200 dark:border-green-800">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -1824,7 +1894,7 @@ const LogisticsMethodModal = ({
                               ...prev.pickup,
                               defaultLocations:
                                 prev.pickup.defaultLocations.map((loc, i) =>
-                                  i === idx ? updatedLocation : loc
+                                  i === idx ? updatedLocation : loc,
                                 ),
                             },
                           }));
@@ -1836,7 +1906,7 @@ const LogisticsMethodModal = ({
                               ...prev.pickup,
                               defaultLocations:
                                 prev.pickup.defaultLocations.filter(
-                                  (_, i) => i !== idx
+                                  (_, i) => i !== idx,
                                 ),
                             },
                           }));
@@ -1872,12 +1942,12 @@ const LogisticsMethodModal = ({
                           Zone *
                         </label>
                         <select
-                          value={zoneLocation.zone || ''}
+                          value={zoneLocation.zone || ""}
                           onChange={(e) =>
                             updatePickupZoneLocation(
                               zoneIndex,
-                              'zone',
-                              e.target.value
+                              "zone",
+                              e.target.value,
                             )
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -1901,20 +1971,20 @@ const LogisticsMethodModal = ({
                             type="button"
                             onClick={() => {
                               const newLocation = {
-                                name: '',
-                                address: '',
-                                city: '',
-                                state: '',
-                                postalCode: '',
-                                phone: '',
+                                name: "",
+                                address: "",
+                                city: "",
+                                state: "",
+                                postalCode: "",
+                                phone: "",
                                 operatingHours: {
-                                  monday: { open: '09:00', close: '17:00' },
-                                  tuesday: { open: '09:00', close: '17:00' },
-                                  wednesday: { open: '09:00', close: '17:00' },
-                                  thursday: { open: '09:00', close: '17:00' },
-                                  friday: { open: '09:00', close: '17:00' },
-                                  saturday: { open: '09:00', close: '14:00' },
-                                  sunday: { open: '', close: '' },
+                                  monday: { open: "09:00", close: "17:00" },
+                                  tuesday: { open: "09:00", close: "17:00" },
+                                  wednesday: { open: "09:00", close: "17:00" },
+                                  thursday: { open: "09:00", close: "17:00" },
+                                  friday: { open: "09:00", close: "17:00" },
+                                  saturday: { open: "09:00", close: "14:00" },
+                                  sunday: { open: "", close: "" },
                                 },
                                 isActive: true,
                               };
@@ -1933,7 +2003,7 @@ const LogisticsMethodModal = ({
                                               newLocation,
                                             ],
                                           }
-                                        : zl
+                                        : zl,
                                   ),
                                 },
                               }));
@@ -1972,10 +2042,10 @@ const LogisticsMethodModal = ({
                                                 (loc, j) =>
                                                   j === idx
                                                     ? updatedLocation
-                                                    : loc
+                                                    : loc,
                                               ),
                                             }
-                                          : zl
+                                          : zl,
                                       ),
                                   },
                                 }));
@@ -1991,10 +2061,10 @@ const LogisticsMethodModal = ({
                                           ? {
                                               ...zl,
                                               locations: zl.locations.filter(
-                                                (_, j) => j !== idx
+                                                (_, j) => j !== idx,
                                               ),
                                             }
-                                          : zl
+                                          : zl,
                                       ),
                                   },
                                 }));
@@ -2006,7 +2076,7 @@ const LogisticsMethodModal = ({
                         )}
                       </div>
                     </div>
-                  )
+                  ),
                 )}
 
                 {/* Information message */}
@@ -2101,7 +2171,7 @@ const LogisticsMethodModal = ({
               {loading && (
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
               )}
-              {method ? 'Update Method' : 'Create Method'}
+              {method ? "Update Method" : "Create Method"}
             </button>
           </div>
         </form>

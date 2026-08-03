@@ -26,7 +26,64 @@ import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 
 const ProductManagement = () => {
   const { t } = useAdminTranslation();
-  const { isGlobalAdmin } = useAdminCountry();
+  const { isGlobalAdmin, countryScope, activeCountry, formatPrice } =
+    useAdminCountry();
+  // Product prices (btcPrice, price3weeksDelivery, price5weeksDelivery) are
+  // always stored in NGN — see PRODUCT_VISIBILITY_RULES.md. A foreign
+  // (non-Nigeria, country-scoped) admin should see them converted into their
+  // own market's currency, not relabeled ₦ amounts. Nigeria-scoped and
+  // GLOBAL admins keep seeing the raw NGN figures untouched.
+  const needsCurrencyConversion =
+    !isGlobalAdmin && countryScope && countryScope !== "NG";
+  const [ngnToLocalRate, setNgnToLocalRate] = useState(null);
+  useEffect(() => {
+    if (!needsCurrencyConversion || !activeCountry?.currency?.code) {
+      setNgnToLocalRate(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        // Public endpoint (GET /exchange-rates/get) — the only exchange-rate
+        // route foreign admins can reach; rate management itself is HQ-only.
+        const res = await fetch(
+          `${
+            import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api"
+          }/exchange-rates/get?baseCurrency=NGN&targetCurrency=${
+            activeCountry.currency.code
+          }&limit=1`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          },
+        );
+        const data = await res.json();
+        const rate = data?.data?.[0]?.rate;
+        if (!cancelled) setNgnToLocalRate(typeof rate === "number" ? rate : null);
+      } catch {
+        if (!cancelled) setNgnToLocalRate(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [needsCurrencyConversion, activeCountry?.currency?.code]);
+
+  // Renders a NGN-denominated product price, converted to the active
+  // country's currency for foreign admins. Falls back to the raw NGN value
+  // (clearly labelled) if no exchange rate has been published yet for this
+  // market, rather than hiding the price entirely.
+  const renderPrice = (ngnAmount) => {
+    if (!needsCurrencyConversion) {
+      return `₦${Number(ngnAmount).toLocaleString()}`;
+    }
+    if (ngnToLocalRate) {
+      return formatPrice(Number(ngnAmount) * ngnToLocalRate);
+    }
+    return `₦${Number(ngnAmount).toLocaleString()}`;
+  };
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -725,17 +782,21 @@ const ProductManagement = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {t("products.colDiscount")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t("products.colOnline")}
-                  </th>
+                  {isGlobalAdmin && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t("products.colOnline")}
+                    </th>
+                  )}
                   {isGlobalAdmin && (
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t("products.colOffline")}
                     </th>
                   )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t("common.status")}
-                  </th>
+                  {isGlobalAdmin && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t("common.status")}
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {t("common.actions")}
                   </th>
@@ -831,7 +892,7 @@ const ProductManagement = () => {
                     {/* BTC Price */}
                     <td className="px-4 py-4 whitespace-nowrap text-xs font-medium text-green-700 dark:text-green-400">
                       {product.btcPrice && product.btcPrice > 0 ? (
-                        `₦${Number(product.btcPrice).toLocaleString()}`
+                        renderPrice(product.btcPrice)
                       ) : (
                         <span className="text-red-400 font-normal">0</span>
                       )}
@@ -840,7 +901,7 @@ const ProductManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-xs text-orange-700 dark:text-orange-400">
                       {product.price3weeksDelivery &&
                       product.price3weeksDelivery > 0 ? (
-                        `₦${Number(product.price3weeksDelivery).toLocaleString()}`
+                        renderPrice(product.price3weeksDelivery)
                       ) : (
                         <span className="text-gray-300">—</span>
                       )}
@@ -849,7 +910,7 @@ const ProductManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-xs text-red-700 dark:text-red-400">
                       {product.price5weeksDelivery &&
                       product.price5weeksDelivery > 0 ? (
-                        `₦${Number(product.price5weeksDelivery).toLocaleString()}`
+                        renderPrice(product.price5weeksDelivery)
                       ) : (
                         <span className="text-gray-300">—</span>
                       )}
@@ -864,7 +925,8 @@ const ProductManagement = () => {
                         <span className="text-gray-300">—</span>
                       )}
                     </td>
-                    {/* Online Stock */}
+                    {/* Online Stock — HQ-only, hidden from country-scoped/foreign admins */}
+                    {isGlobalAdmin && (
                     <td className="px-4 py-4 whitespace-nowrap">
                       {(() => {
                         const online = product.partnerStock?.enabled
@@ -893,6 +955,7 @@ const ProductManagement = () => {
                         );
                       })()}
                     </td>
+                    )}
                     {/* Offline Stock — HQ-only, hidden from country-scoped/foreign admins */}
                     {isGlobalAdmin && (
                       <td className="px-4 py-4 whitespace-nowrap">
@@ -913,9 +976,11 @@ const ProductManagement = () => {
                         )}
                       </td>
                     )}
+                    {isGlobalAdmin && (
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(product.publish)}
                     </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
                         <RoleBasedButton
@@ -940,6 +1005,7 @@ const ProductManagement = () => {
                             <Edit className="h-4 w-4" />
                           </button>
                         </RoleBasedButton>
+                        {isGlobalAdmin && (
                         <RoleBasedButton
                           disabledRoles={[
                             "SALES",
@@ -963,6 +1029,7 @@ const ProductManagement = () => {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </RoleBasedButton>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -1667,7 +1667,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
               </div>
             </div>
 
-            {/* Product Settings */}
+            {/* Product Settings — HQ-only. Featured placement, limited-edition
+                carousel config, and the discontinued/available-for-sale flag
+                are storefront-wide merchandising decisions, not something a
+                single-market/foreign admin should be toggling. */}
+            {isGlobalAdmin && (
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                 {t("productForm.productSettings")}
@@ -1851,6 +1855,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 </label>
               </div>
             </div>
+            )}
 
             {/* Form Actions */}
             <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">

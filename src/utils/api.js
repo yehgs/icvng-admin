@@ -206,6 +206,9 @@ const cleanShippingMethodData = (methodData) => {
             enabled: Boolean(zoneRate.freeShipping?.enabled),
             minimumOrderAmount:
               Number(zoneRate.freeShipping?.minimumOrderAmount) || 0,
+            hideWhenBelowMinimum: Boolean(
+              zoneRate.freeShipping?.hideWhenBelowMinimum,
+            ),
           },
         }));
       console.log("Flat rate zone rates:", flatRate.zoneRates.length);
@@ -2555,6 +2558,57 @@ export const logisticsAPI = {
     });
   },
 
+  // ===== SHIPPING ZONES - CSV EXPORT/IMPORT =====
+
+  exportShippingZonesCSV: async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `${API_BASE_URL}/shipping/zones/export/csv`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `shipping_zones_${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Export shipping zones CSV error:", error);
+      throw error;
+    }
+  },
+
+  importShippingZonesCSV: async ({ csvData }) => {
+    try {
+      return await apiCall("/shipping/zones/import/csv", {
+        method: "POST",
+        body: { csvData },
+      });
+    } catch (error) {
+      console.error("Import shipping zones CSV error:", error);
+      throw error;
+    }
+  },
+
   // ===== SHIPPING METHODS =====
 
   getShippingMethods: async (params = {}) => {
@@ -2631,6 +2685,111 @@ export const logisticsAPI = {
     return apiCall(`/shipping/methods/${methodId}`, {
       method: "DELETE",
     });
+  },
+
+  // ===== SHIPPING METHODS - CSV EXPORT/IMPORT =====
+
+  exportShippingMethodsCSV: async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `${API_BASE_URL}/shipping/methods/export/csv`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `shipping_methods_${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Export shipping methods CSV error:", error);
+      throw error;
+    }
+  },
+
+  importShippingMethodsCSV: async ({ csvData }) => {
+    try {
+      return await apiCall("/shipping/methods/import/csv", {
+        method: "POST",
+        body: { csvData },
+      });
+    } catch (error) {
+      console.error("Import shipping methods CSV error:", error);
+      throw error;
+    }
+  },
+
+  // ===== SHIPPING RATES CSV EXPORT/IMPORT =====
+  // Flat, one-row-per-rate view for bulk-editing flat_rate zone costs,
+  // table_shipping weight bands, and pickup locations on methods that
+  // already exist.
+
+  exportShippingRatesCSV: async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `${API_BASE_URL}/shipping/methods/rates/export/csv`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `shipping_rates_${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Export shipping rates CSV error:", error);
+      throw error;
+    }
+  },
+
+  importShippingRatesCSV: async ({ csvData }) => {
+    try {
+      return await apiCall("/shipping/methods/rates/import/csv", {
+        method: "POST",
+        body: { csvData },
+      });
+    } catch (error) {
+      console.error("Import shipping rates CSV error:", error);
+      throw error;
+    }
   },
 
   // ===== CATEGORIES AND PRODUCTS FOR ASSIGNMENT =====

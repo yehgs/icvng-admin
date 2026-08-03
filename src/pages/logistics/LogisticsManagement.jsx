@@ -19,12 +19,15 @@ import {
   ShoppingCart,
   ChevronLeft,
   ChevronRight,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { logisticsAPI } from '../../utils/api.js';
 import LogisticsMethodModal from '../../components/logistics/LogisticsMethodModal';
 import LogisticsZoneModal from '../../components/logistics/LogisticsZoneModal';
 import DeleteConfirmModal from '../../components/common/DeleteConfirmModal';
 import ZoneDeleteModal from '../../components/logistics/ZoneDeleteModal';
+import LogisticsCsvImportModal from '../../components/logistics/LogisticsCsvImportModal';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
@@ -57,6 +60,14 @@ const LogisticsManagement = () => {
   const [selectedZone, setSelectedZone] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+
+  // CSV import/export modal states
+  const [showZoneImportModal, setShowZoneImportModal] = useState(false);
+  const [showMethodImportModal, setShowMethodImportModal] = useState(false);
+  const [showRatesImportModal, setShowRatesImportModal] = useState(false);
+  const [exportingZones, setExportingZones] = useState(false);
+  const [exportingMethods, setExportingMethods] = useState(false);
+  const [exportingRates, setExportingRates] = useState(false);
 
   useEffect(() => {
     fetchLogisticsData();
@@ -278,6 +289,45 @@ const LogisticsManagement = () => {
       toast.error(error.message || 'Failed to delete shipping method');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportZonesCSV = async () => {
+    try {
+      setExportingZones(true);
+      await logisticsAPI.exportShippingZonesCSV();
+      toast.success('Shipping zones exported');
+    } catch (error) {
+      console.error('Export zones CSV error:', error);
+      toast.error(error.message || 'Failed to export shipping zones');
+    } finally {
+      setExportingZones(false);
+    }
+  };
+
+  const handleExportMethodsCSV = async () => {
+    try {
+      setExportingMethods(true);
+      await logisticsAPI.exportShippingMethodsCSV();
+      toast.success('Shipping methods exported');
+    } catch (error) {
+      console.error('Export methods CSV error:', error);
+      toast.error(error.message || 'Failed to export shipping methods');
+    } finally {
+      setExportingMethods(false);
+    }
+  };
+
+  const handleExportRatesCSV = async () => {
+    try {
+      setExportingRates(true);
+      await logisticsAPI.exportShippingRatesCSV();
+      toast.success('Shipping rates exported');
+    } catch (error) {
+      console.error('Export rates CSV error:', error);
+      toast.error(error.message || 'Failed to export shipping rates');
+    } finally {
+      setExportingRates(false);
     }
   };
 
@@ -605,16 +655,33 @@ const LogisticsManagement = () => {
             Manage shipping zones and coverage areas ({zonesTotalCount} zones)
           </p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedZone(null);
-            setShowZoneModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Add Zone
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportZonesCSV}
+            disabled={exportingZones}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+          <button
+            onClick={() => setShowZoneImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </button>
+          <button
+            onClick={() => {
+              setSelectedZone(null);
+              setShowZoneModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Zone
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft dark:shadow-gray-900/20 border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -774,16 +841,49 @@ const LogisticsManagement = () => {
             Configure delivery options and pricing ({methodsTotalCount} methods)
           </p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedMethod(null);
-            setShowMethodModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Add Method
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportMethodsCSV}
+            disabled={exportingMethods}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+          <button
+            onClick={() => setShowMethodImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </button>
+          <button
+            onClick={handleExportRatesCSV}
+            disabled={exportingRates}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+            title="Bulk-edit flat rate zone costs, table shipping weight bands, and pickup locations"
+          >
+            <Download className="h-4 w-4" />
+            Export Rates CSV
+          </button>
+          <button
+            onClick={() => setShowRatesImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            Import Rates CSV
+          </button>
+          <button
+            onClick={() => {
+              setSelectedMethod(null);
+              setShowMethodModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Method
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft dark:shadow-gray-900/20 border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -1051,6 +1151,163 @@ const LogisticsManagement = () => {
         title="Delete Shipping Method"
         message={`Are you sure you want to delete "${selectedMethod?.name}"? This action cannot be undone.`}
         loading={loading}
+      />
+
+      {/* CSV Import - Shipping Zones */}
+      <LogisticsCsvImportModal
+        isOpen={showZoneImportModal}
+        onClose={() => setShowZoneImportModal(false)}
+        entityLabel="Shipping Zones"
+        onExport={() => logisticsAPI.exportShippingZonesCSV()}
+        onImport={(csvData) => logisticsAPI.importShippingZonesCSV({ csvData })}
+        onImportSuccess={async () => {
+          setZonesPage(1);
+          await Promise.all([fetchZones(), fetchAllZones(), fetchLogisticsData()]);
+        }}
+        formatGuide={
+          <div className="text-sm space-y-2">
+            <div className="text-gray-700 dark:text-gray-300">
+              One row per zone. Columns:
+            </div>
+            <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border break-all">
+              Zone Code, Zone Name, Description, Zone Type (urban/rural/mixed),
+              Priority (low/medium/high), Active (TRUE/FALSE), Sort Order,
+              Operational Notes, States Coverage
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 space-y-1">
+              <div>
+                • <strong>States Coverage</strong> packs every state into one
+                cell:{' '}
+                <code className="text-xs">StateName:all</code> for full state
+                coverage, or{' '}
+                <code className="text-xs">
+                  StateName:specific[LGA One|LGA Two]
+                </code>{' '}
+                for selected LGAs only. Separate multiple states with{' '}
+                <code className="text-xs">;</code>
+              </div>
+              <div>• Leave Zone Code blank on new rows - it auto-generates.</div>
+            </div>
+            <div className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
+              Example States Coverage cell:
+            </div>
+            <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border leading-5 overflow-x-auto whitespace-pre">
+              {`Lagos:all;Ogun:specific[Abeokuta North|Ijebu Ode];Oyo:all`}
+            </div>
+          </div>
+        }
+      />
+
+      {/* CSV Import - Shipping Methods */}
+      <LogisticsCsvImportModal
+        isOpen={showMethodImportModal}
+        onClose={() => setShowMethodImportModal(false)}
+        entityLabel="Shipping Methods"
+        onExport={() => logisticsAPI.exportShippingMethodsCSV()}
+        onImport={(csvData) => logisticsAPI.importShippingMethodsCSV({ csvData })}
+        onImportSuccess={async () => {
+          setMethodsPage(1);
+          await Promise.all([fetchMethods(), fetchLogisticsData()]);
+        }}
+        formatGuide={
+          <div className="text-sm space-y-2">
+            <div className="text-gray-700 dark:text-gray-300">
+              One row per method. Core columns:
+            </div>
+            <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border break-all">
+              Method Code, Method Name, Description, Type (flat_rate /
+              table_shipping / pickup), Active, Sort Order, Min Delivery Days,
+              Max Delivery Days, Assignment (all_products/categories/
+              specific_products), Categories, Products
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 space-y-1">
+              <div>
+                • <strong>Categories</strong>/<strong>Products</strong> use
+                category slug / product SKU, separated by{' '}
+                <code className="text-xs">|</code> - only needed when
+                Assignment matches.
+              </div>
+              <div>
+                • Only fill the columns for the row's <strong>Type</strong>;
+                leave the others blank.
+              </div>
+              <div>
+                • Zones are referenced by their <strong>Zone Code</strong>{' '}
+                (create zones first via the Zones tab or CSV).
+              </div>
+            </div>
+            <div className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
+              Type-specific columns & examples:
+            </div>
+            <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border leading-5 overflow-x-auto whitespace-pre">
+              {`flat_rate:
+  Flat Rate Default Cost: 1500
+  Flat Rate Zone Rates:  LAG:1500;ABJ:2000
+  Free Shipping Enabled: TRUE
+  Free Shipping Min Order: 50000
+
+table_shipping (minWeight^maxWeight^cost, "|" between ranges):
+  Table Shipping Zone Rates: LAG:[0^5^1500|5^20^2500];ABJ:[0^5^2000]
+
+pickup (name^address^city^state^lga^phone, "|" between locations):
+  Pickup Cost: 0
+  Pickup Default Locations: Ikeja Store^12 Allen Ave^Ikeja^Lagos^Ikeja^08012345678
+  Pickup Zone Locations: LAG:[Ikeja Store^12 Allen Ave^Ikeja^Lagos^Ikeja^0801...]`}
+            </div>
+          </div>
+        }
+      />
+
+      {/* CSV Import - Shipping Rates (flat_rate zone costs / table_shipping weight bands / pickup locations) */}
+      <LogisticsCsvImportModal
+        isOpen={showRatesImportModal}
+        onClose={() => setShowRatesImportModal(false)}
+        entityLabel="Shipping Rates"
+        onExport={() => logisticsAPI.exportShippingRatesCSV()}
+        onImport={(csvData) => logisticsAPI.importShippingRatesCSV({ csvData })}
+        onImportSuccess={async () => {
+          await Promise.all([fetchMethods(), fetchLogisticsData()]);
+        }}
+        formatGuide={
+          <div className="text-sm space-y-2">
+            <div className="text-gray-700 dark:text-gray-300">
+              One row per rate (no packed cells) - much easier to bulk-edit
+              in Excel/Sheets than the Methods CSV. This only updates{' '}
+              <strong>existing</strong> methods (matched by Method Code) -
+              create the method first via the Methods tab or Methods CSV.
+            </div>
+            <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border break-all">
+              Method Code, Method Name, Type, Zone Code, Zone Name, Min
+              Weight, Max Weight, Cost, Location Name, Address, City, State,
+              LGA, Phone
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 space-y-1">
+              <div>
+                • <strong>flat_rate</strong>: one row with Zone Code blank =
+                the default/base cost. One row per zone override with Zone
+                Code filled in and Cost set (Min/Max Weight, location columns
+                unused).
+              </div>
+              <div>
+                • <strong>table_shipping</strong>: one row per Zone Code +
+                Min Weight + Max Weight + Cost. Zone Code is required on
+                every row.
+              </div>
+              <div>
+                • <strong>pickup</strong>: one row per location - Zone Code
+                blank means it's a default location (available everywhere);
+                filled in means it's scoped to that zone. Cost here sets the
+                method's overall pickup cost.
+              </div>
+              <div className="text-yellow-700 dark:text-yellow-400">
+                • Important: for any Method Code present in the file, ALL of
+                its rows become the complete new rate/location table for
+                that method - rows you remove are removed from the method
+                too. Methods with no rows in the file are left untouched.
+              </div>
+            </div>
+          </div>
+        }
       />
     </div>
   );
