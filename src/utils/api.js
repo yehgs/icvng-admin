@@ -3849,9 +3849,16 @@ export const directPricingUtils = {
     window.URL.revokeObjectURL(url);
   },
 
-  // Check if user can edit direct pricing
-  canEditDirectPricing: (userRole, userSubRole) => {
-    return ["ACCOUNTANT", "DIRECTOR", "IT"].includes(userSubRole || userRole);
+  // Check if user can edit direct pricing. HQ Manager (subRole MANAGER,
+  // scope GLOBAL) can too — a country/"foreign" Manager (same subRole)
+  // cannot, so pass scope when available. Mirrors the server-side
+  // isPricingOwnerRole checks in product.controller.js /
+  // directPricing.controller.js.
+  canEditDirectPricing: (userRole, userSubRole, userScope) => {
+    const subRole = userSubRole || userRole;
+    if (["ACCOUNTANT", "DIRECTOR", "IT"].includes(subRole)) return true;
+    if (subRole === "MANAGER" && userScope !== "COUNTRY") return true;
+    return false;
   },
 
   // Check if user can delete direct pricing

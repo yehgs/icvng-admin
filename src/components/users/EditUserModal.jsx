@@ -14,6 +14,13 @@ import toast from "react-hot-toast";
 import RoleBasedButton from "../layout/RoleBasedButton";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
+// subRoles that are ALWAYS HQ (scope GLOBAL) — no "foreign"/Country Admin
+// account ever exists for these, so the Country Admin toggle is hidden
+// entirely. Mirrors server/config/roles.js#HQ_ONLY_SUBROLES.
+// LOGISTICS stays here until a country-scoped logistics system exists —
+// once it does, drop it from this list so it can be "foreign"-labelled.
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR", "LOGISTICS"];
+
 const EditUserModal = ({
   isOpen,
   onClose,
@@ -163,11 +170,11 @@ const EditUserModal = ({
         newErrors.assignedCountry = "Please select an assigned country";
       }
       if (
-        ["IT", "DIRECTOR", "LOGISTICS"].includes(formData.subRole) &&
+        HQ_ONLY_SUBROLES.includes(formData.subRole) &&
         formData.scope === "COUNTRY"
       ) {
         newErrors.scope =
-          "IT, Director and Logistics must always have global access";
+          "This role is always HQ/global — it cannot be assigned to a specific country";
       }
 
       if (!canCreateUser(formData.role, formData.subRole)) {
@@ -226,7 +233,7 @@ const EditUserModal = ({
         ? { subRole: "", userMode: "", scope: "GLOBAL", assignedCountry: "" }
         : {}),
       ...(field === "subRole" && value !== "SALES" ? { userMode: "" } : {}),
-      ...(field === "subRole" && ["IT", "DIRECTOR", "LOGISTICS"].includes(value)
+      ...(field === "subRole" && HQ_ONLY_SUBROLES.includes(value)
         ? { scope: "GLOBAL", assignedCountry: "" }
         : {}),
       ...(field === "scope" && value === "GLOBAL"
@@ -574,7 +581,7 @@ const EditUserModal = ({
 
           {/* ── Country / Foreign Admin Scope ─────────────────────────────── */}
           {formData.role === "ADMIN" &&
-            !["IT", "DIRECTOR", "LOGISTICS"].includes(formData.subRole) && (
+            !HQ_ONLY_SUBROLES.includes(formData.subRole) && (
               <div className="border border-blue-100 bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>

@@ -258,6 +258,7 @@ const DirectPricingManagement = () => {
   const canEdit = directPricingUtils.canEditDirectPricing(
     currentUser?.role,
     currentUser?.subRole,
+    currentUser?.scope,
   );
 
   return (
@@ -276,7 +277,7 @@ const DirectPricingManagement = () => {
 
         <div className="flex items-center gap-3">
           {canEdit && (
-            <RoleBasedButton disabledRoles={["MANAGER"]}>
+            <RoleBasedButton disabledRoles={["MANAGER"]} hqOverrideRoles={["MANAGER"]}>
               <button
                 onClick={() => setShowAddProductModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -304,7 +305,7 @@ const DirectPricingManagement = () => {
             <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" />
             <p className="text-yellow-800 dark:text-yellow-200">
               Direct pricing management is restricted to Accountant, Director,
-              and IT roles.
+              IT, and HQ Manager roles.
             </p>
           </div>
         </div>
@@ -472,7 +473,7 @@ const DirectPricingManagement = () => {
               No products have direct pricing set with the current filters
             </p>
             {canEdit && (
-              <RoleBasedButton disabledRoles={["MANAGER"]}>
+              <RoleBasedButton disabledRoles={["MANAGER"]} hqOverrideRoles={["MANAGER"]}>
                 <button
                   onClick={() => setShowAddProductModal(true)}
                   className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -584,7 +585,7 @@ const DirectPricingManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <RoleBasedButton disabledRoles={["MANAGER"]}>
+                          <RoleBasedButton disabledRoles={["MANAGER"]} hqOverrideRoles={["MANAGER"]}>
                             <button
                               onClick={() => handleEditPricing(item)}
                               disabled={!canEdit}

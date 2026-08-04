@@ -2,15 +2,19 @@
  * admin/src/pages/foreign-admins/ForeignAdminManagement.jsx
  *
  * Accessible to DIRECTOR and IT subRoles only.
- * Full CRUD for FOREIGN_ADMIN accounts with multi-subrole assignment.
+ * Full CRUD for foreign/country-scoped admin accounts (scope: "COUNTRY")
+ * with multi-department assignment. "Foreign Admin" isn't a distinct
+ * subRole — see server/models/user.model.js.
  *
  * MANAGER (HQ or country/"foreign" scoped) is intentionally excluded — user
  * management, foreign or normal, is not a MANAGER capability. See item #8.
  *
  * Key changes:
- *  - Multi-subrole checkboxes (foreignSubRoles)
- *  - LOGISTICS is never shown as an option
- *  - Promote existing admin to FOREIGN_ADMIN
+ *  - Multi-subrole checkboxes (foreignSubRoles) — first selection becomes
+ *    the account's real subRole
+ *  - IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, EDITOR, and LOGISTICS are never
+ *    shown as options (see HQ_ONLY_SUBROLES)
+ *  - Promote existing HQ admin to a foreign/country-scoped admin
  */
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -26,14 +30,16 @@ import { getCurrentUser } from "../../utils/api.js";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
 
-// Sub-roles that CAN be granted to FOREIGN_ADMIN (never LOGISTICS)
+// Sub-roles that CAN be granted to a foreign/country-scoped admin.
+// Mirrors server FOREIGN_EXPOSABLE_SUBROLES (models/user.model.js) — never
+// IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, EDITOR, or LOGISTICS (see
+// HQ_ONLY_SUBROLES in server/config/roles.js): there is only ever one
+// Accountant, Warehouse, and Editor, and they're always HQ (item #9).
+// LOGISTICS stays excluded until a country-scoped logistics system exists.
 const EXPOSABLE_SUBROLES = [
   { value: "SALES",        label: "Sales" },
   { value: "SALES_MANAGER",label: "Sales Manager" },
-  { value: "EDITOR",       label: "Content Editor" },
-  { value: "ACCOUNTANT",   label: "Accounting" },
   { value: "HR",           label: "Human Resources" },
-  { value: "WAREHOUSE",    label: "Warehouse" },
   { value: "MANAGER",      label: "Manager" },
 ];
 
@@ -136,6 +142,13 @@ export default function ForeignAdminManagement() {
     }
     if (!editTarget && !form.password) {
       toast.error("Password is required for new accounts");
+      return;
+    }
+    // The backend requires at least one department (it becomes the
+    // account's real subRole and drives all its permissions) — catch this
+    // client-side too instead of relying on the 400 response.
+    if (!form.foreignSubRoles || form.foreignSubRoles.length === 0) {
+      toast.error("Select at least one department role");
       return;
     }
 

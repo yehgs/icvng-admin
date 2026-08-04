@@ -2092,6 +2092,7 @@ const en = {
     pricing: "Pricing",
     pricingHint: "At least one of BTC, 2-Week, or 5-Week price is required.",
     directPricingLockedDetail: "BTC Price, 3-Week, and 5-Week Delivery prices are locked because an Accountant has set them via Direct Pricing. To change them, go to Pricing Management → Direct Pricing.",
+    directPricingSyncDetail: "This product has Direct Pricing set. You can edit BTC, 3-Week, and 5-Week Delivery prices right here — your changes will also update the linked Direct Pricing record.",
     hiddenShopWarningTitle: "⚠️ This product will be hidden from the shop",
     hiddenShopWarningWithPartner: 'It has a BTC price but no online stock, no partner stock, and no 2-week or 5-week delivery price. Customers would see "Pricing Unavailable". To make it visible, either add a 2-week or 5-week delivery price, or enable partner stock with a quantity.',
     hiddenShopWarningNoPartner: 'It has a BTC price but no online stock and no 2-week or 5-week delivery price. Customers would see "Pricing Unavailable". To make it visible, add a 2-week or 5-week delivery price.',

@@ -1619,6 +1619,7 @@ const it = {
     pricing: "Prezzi",
     pricingHint: "È richiesto almeno uno dei prezzi BTC, 2 settimane o 5 settimane.",
     directPricingLockedDetail: "I prezzi BTC, consegna a 3 settimane e 5 settimane sono bloccati perché un contabile li ha impostati tramite la Tariffazione diretta. Per modificarli, vai su Gestione prezzi → Tariffazione diretta.",
+    directPricingSyncDetail: "Questo prodotto ha una Tariffazione diretta impostata. Puoi modificare qui i prezzi BTC, consegna a 3 e 5 settimane — le modifiche aggiorneranno anche il record di Tariffazione diretta collegato.",
     hiddenShopWarningTitle: "⚠️ Questo prodotto sarà nascosto dal negozio",
     hiddenShopWarningWithPartner: 'Ha un prezzo BTC ma nessuno stock online, nessuno stock partner, e nessun prezzo di consegna a 2 o 5 settimane. I clienti vedrebbero "Prezzo non disponibile". Per renderlo visibile, aggiungi un prezzo di consegna a 2 o 5 settimane, oppure abilita lo stock partner con una quantità.',
     hiddenShopWarningNoPartner: 'Ha un prezzo BTC ma nessuno stock online e nessun prezzo di consegna a 2 o 5 settimane. I clienti vedrebbero "Prezzo non disponibile". Per renderlo visibile, aggiungi un prezzo di consegna a 2 o 5 settimane.',

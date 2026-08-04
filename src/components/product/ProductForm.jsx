@@ -112,12 +112,16 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   });
 
   // Pricing (BTB/BTC/2-week/5-week price, discount) is an Accountant
-  // function — IT/DIRECTOR keep override access — UNLESS this product is
-  // toggled as a partner/supplier product, in which case pricing is
-  // supplier-driven and any role may set it. Matches server enforcement.
+  // function — IT/DIRECTOR keep override access, and an HQ Manager
+  // (subRole MANAGER, scope GLOBAL — a country/"foreign" Manager does NOT
+  // get this) can now edit pricing too — UNLESS this product is toggled as
+  // a partner/supplier product, in which case pricing is supplier-driven
+  // and any role may set it. Matches server enforcement (isPricingOwnerRole
+  // in product.controller.js).
   const canEditPricing =
     formData.partnerStock?.enabled === true ||
-    ["ACCOUNTANT", "IT", "DIRECTOR"].includes(currentUser?.subRole);
+    ["ACCOUNTANT", "IT", "DIRECTOR"].includes(currentUser?.subRole) ||
+    (currentUser?.subRole === "MANAGER" && isGlobalAdmin);
 
   const productTypes = [
     "COFFEE",
@@ -1135,7 +1139,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {t("productForm.pricingHint")}
               </p>
 
-              {/* ── DirectPricing lock banner ──────────────────────────────── */}
+              {/* ── DirectPricing notice ──────────────────────────────────── */}
+              {/* A pricing owner (Accountant/IT/Director/HQ Manager) can now
+                  edit these prices right here — the edit also syncs into the
+                  linked Direct Pricing record so the two never drift apart.
+                  Anyone without pricing rights still sees the fields
+                  read-only (handled by canEditPricing/readOnly above). */}
               {directPricingLocked && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2 text-sm">
                   <Lock className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
@@ -1144,7 +1153,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       {t("productForm.pricesManagedByDirect")}
                     </p>
                     <p className="text-blue-700 text-xs mt-0.5">
-                      {t("productForm.directPricingLockedDetail")}
+                      {canEditPricing
+                        ? t("productForm.directPricingSyncDetail")
+                        : t("productForm.directPricingLockedDetail")}
                     </p>
                   </div>
                 </div>
@@ -1271,7 +1282,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.btcPriceHint")}
                     </span>
-                    {(directPricingLocked || !canEditPricing) && (
+                    {!canEditPricing && (
                       <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
                         <Lock className="w-3 h-3" /> {t("productForm.locked")}
                       </span>
@@ -1287,12 +1298,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       step="0.01"
                       value={formData.btcPrice || ""}
                       onChange={(e) =>
-                        !directPricingLocked &&
                         canEditPricing &&
                         handleInputChange("btcPrice", e.target.value)
                       }
-                      readOnly={directPricingLocked || !canEditPricing}
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked || !canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
+                      readOnly={!canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.btcPrice ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${!canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>
@@ -1311,7 +1321,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.twoWeekHint")}
                     </span>
-                    {(directPricingLocked || !canEditPricing) && (
+                    {!canEditPricing && (
                       <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
                         <Lock className="w-3 h-3" /> {t("productForm.locked")}
                       </span>
@@ -1327,12 +1337,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       step="0.01"
                       value={formData.price3weeksDelivery || ""}
                       onChange={(e) =>
-                        !directPricingLocked &&
                         canEditPricing &&
                         handleInputChange("price3weeksDelivery", e.target.value)
                       }
-                      readOnly={directPricingLocked || !canEditPricing}
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price3weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked || !canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
+                      readOnly={!canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price3weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${!canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>
@@ -1351,7 +1360,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.fiveWeekHint")}
                     </span>
-                    {(directPricingLocked || !canEditPricing) && (
+                    {!canEditPricing && (
                       <span className="ml-2 text-blue-500 text-xs font-medium inline-flex items-center gap-1">
                         <Lock className="w-3 h-3" /> {t("productForm.locked")}
                       </span>
@@ -1367,12 +1376,11 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       step="0.01"
                       value={formData.price5weeksDelivery || ""}
                       onChange={(e) =>
-                        !directPricingLocked &&
                         canEditPricing &&
                         handleInputChange("price5weeksDelivery", e.target.value)
                       }
-                      readOnly={directPricingLocked || !canEditPricing}
-                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price5weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${directPricingLocked || !canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
+                      readOnly={!canEditPricing}
+                      className={`w-full pl-7 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${errors.price5weeksDelivery ? "border-red-400" : "border-gray-300 dark:border-gray-600"} ${!canEditPricing ? "bg-blue-50 cursor-not-allowed opacity-75" : ""}`}
                       placeholder="0.00"
                     />
                   </div>

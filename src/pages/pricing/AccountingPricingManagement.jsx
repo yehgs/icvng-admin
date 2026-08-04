@@ -82,7 +82,10 @@ const AccountingPricingManagement = () => {
 
   useEffect(() => {
     const userRole = currentUser?.subRole || currentUser?.role;
-    setCanEdit(["ACCOUNTANT", "DIRECTOR", "IT"].includes(userRole));
+    // HQ Manager (subRole MANAGER, scope GLOBAL) can edit pricing too — a
+    // country/"foreign" Manager (same subRole) cannot.
+    const isHqManager = userRole === "MANAGER" && currentUser?.scope !== "COUNTRY";
+    setCanEdit(["ACCOUNTANT", "DIRECTOR", "IT"].includes(userRole) || isHqManager);
     initializeData();
   }, []);
 
@@ -462,7 +465,7 @@ const AccountingPricingManagement = () => {
           </button>
 
           {canEdit && (
-            <RoleBasedButton disabledRoles={["MANAGER"]}>
+            <RoleBasedButton disabledRoles={["MANAGER"]} hqOverrideRoles={["MANAGER"]}>
               <button
                 onClick={() => setShowImportModal(true)}
                 disabled={loading}
@@ -482,8 +485,8 @@ const AccountingPricingManagement = () => {
           <div className="flex items-center">
             <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" />
             <p className="text-yellow-800 dark:text-yellow-200">
-              Product pricing editing is restricted to Accountant, Director, and
-              IT roles.
+              Product pricing editing is restricted to Accountant, Director,
+              IT, and HQ Manager roles.
             </p>
           </div>
         </div>
@@ -825,7 +828,7 @@ const AccountingPricingManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {canEdit && (
-                        <RoleBasedButton disabledRoles={["MANAGER"]}>
+                        <RoleBasedButton disabledRoles={["MANAGER"]} hqOverrideRoles={["MANAGER"]}>
                           <button
                             onClick={() => handleEditPricing(product)}
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

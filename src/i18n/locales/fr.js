@@ -1619,6 +1619,7 @@ const fr = {
     pricing: "Tarification",
     pricingHint: "Au moins un des prix BTC, 2 semaines ou 5 semaines est requis.",
     directPricingLockedDetail: "Les prix BTC, livraison à 3 semaines et 5 semaines sont verrouillés car un comptable les a définis via la Tarification directe. Pour les modifier, allez dans Gestion des prix → Tarification directe.",
+    directPricingSyncDetail: "Ce produit a une tarification directe définie. Vous pouvez modifier les prix BTC, livraison à 3 semaines et 5 semaines ici — vos modifications mettront également à jour la Tarification directe liée.",
     hiddenShopWarningTitle: "⚠️ Ce produit sera masqué de la boutique",
     hiddenShopWarningWithPartner: 'Il a un prix BTC mais aucun stock en ligne, aucun stock partenaire, et aucun prix de livraison à 2 ou 5 semaines. Les clients verraient "Prix indisponible". Pour le rendre visible, ajoutez un prix de livraison à 2 ou 5 semaines, ou activez le stock partenaire avec une quantité.',
     hiddenShopWarningNoPartner: 'Il a un prix BTC mais aucun stock en ligne et aucun prix de livraison à 2 ou 5 semaines. Les clients verraient "Prix indisponible". Pour le rendre visible, ajoutez un prix de livraison à 2 ou 5 semaines.',

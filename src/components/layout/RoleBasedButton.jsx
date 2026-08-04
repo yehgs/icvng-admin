@@ -1,7 +1,13 @@
 import React from 'react';
 import { getCurrentUser } from '../../utils/api';
 
-const RoleBasedButton = ({ disabledRoles = [], children, ...props }) => {
+// hqOverrideRoles: subRoles that, despite being listed in disabledRoles,
+// should stay ENABLED when the current user is GLOBAL-scoped (HQ). Used so
+// e.g. an HQ Manager can use pricing actions that a country/"foreign"
+// Manager (same subRole) still can't — subRole alone can't tell them apart,
+// scope has to be checked too. Matches the server-side isPricingOwnerRole
+// checks in product.controller.js / directPricing.controller.js.
+const RoleBasedButton = ({ disabledRoles = [], hqOverrideRoles = [], children, ...props }) => {
   const user = getCurrentUser();
 
   // If no user, don't disable (let the button work normally)
@@ -16,7 +22,9 @@ const RoleBasedButton = ({ disabledRoles = [], children, ...props }) => {
 
   // Check if user has any of the disabled roles
   const userSubRole = user.subRole;
-  const shouldDisable = disabledRoles.includes(userSubRole);
+  const isHQ = user.scope !== "COUNTRY";
+  const hasHqOverride = hqOverrideRoles.includes(userSubRole) && isHQ;
+  const shouldDisable = disabledRoles.includes(userSubRole) && !hasHqOverride;
 
   // If not disabled, return children as-is
   if (!shouldDisable) {

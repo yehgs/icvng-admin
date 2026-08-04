@@ -11,6 +11,13 @@ import {
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
+// subRoles that are ALWAYS HQ (scope GLOBAL) — no "foreign"/Country Admin
+// account ever exists for these, so the Country Admin toggle is hidden
+// entirely. Mirrors server/config/roles.js#HQ_ONLY_SUBROLES.
+// LOGISTICS stays here until a country-scoped logistics system exists —
+// once it does, drop it from this list so it can be "foreign"-labelled.
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR", "LOGISTICS"];
+
 const CreateUserModal = ({
   isOpen,
   onClose,
@@ -110,8 +117,8 @@ const CreateUserModal = ({
     }
 
     // IT, DIRECTOR, LOGISTICS cannot be country-scoped
-    if (["IT", "DIRECTOR", "LOGISTICS"].includes(formData.subRole) && formData.scope === "COUNTRY") {
-      newErrors.scope = "IT, Director and Logistics must always have global access";
+    if (HQ_ONLY_SUBROLES.includes(formData.subRole) && formData.scope === "COUNTRY") {
+      newErrors.scope = "This role is always HQ/global — it cannot be assigned to a specific country";
     }
 
     if (!canCreateUser(formData.role, formData.subRole)) {
@@ -169,7 +176,7 @@ const CreateUserModal = ({
       // Reset subRole when role changes
       ...(field === "role" ? { subRole: "", scope: "GLOBAL", assignedCountry: "" } : {}),
       ...(field === "scope" && value === "GLOBAL" ? { assignedCountry: "" } : {}),
-      ...(field === "subRole" && ["IT", "DIRECTOR", "LOGISTICS"].includes(value) ? { scope: "GLOBAL", assignedCountry: "" } : {}),
+      ...(field === "subRole" && HQ_ONLY_SUBROLES.includes(value) ? { scope: "GLOBAL", assignedCountry: "" } : {}),
     }));
 
     setFormData((prev) => ({
@@ -386,7 +393,7 @@ const CreateUserModal = ({
 
           {/* Sales Mode */}
           {/* Country Scope — only for ADMIN users who are not IT/DIRECTOR/LOGISTICS */}
-          {formData.role === "ADMIN" && !["IT", "DIRECTOR", "LOGISTICS"].includes(formData.subRole) && formData.subRole && (
+          {formData.role === "ADMIN" && !HQ_ONLY_SUBROLES.includes(formData.subRole) && formData.subRole && (
             <div className="border border-blue-100 bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
