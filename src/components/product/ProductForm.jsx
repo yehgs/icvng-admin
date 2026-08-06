@@ -35,9 +35,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const [subCategories, setSubCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
-  // Derived: split brands into regular brands and compatible systems
+  // Derived: brands flagged as compatible systems (used for the separate
+  // "Compatible System" single-select). The main "Brands" checklist below
+  // uses the full `brands` list so compatible-tagged brands still appear there.
   const compatibleSystems = brands.filter((b) => b.compatibleSystem);
-  const regularBrands = brands.filter((b) => !b.compatibleSystem);
   const [suppliers, setSuppliers] = useState([]);
   const [errors, setErrors] = useState({});
 
@@ -328,7 +329,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
         setNewSupplierEmail("");
         setNewSupplierPhone("");
         setShowNewSupplier(false);
-        toast.success(t("productForm.supplierCreatedSelected", { name: newSupplier.name }));
+        toast.success(
+          t("productForm.supplierCreatedSelected", { name: newSupplier.name }),
+        );
       } else {
         toast.error(res.message || t("productForm.supplierCreateFailed"));
       }
@@ -589,7 +592,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {product ? t("productForm.editTitle") : t("productForm.createTitle")}
+                {product
+                  ? t("productForm.editTitle")
+                  : t("productForm.createTitle")}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {product
@@ -790,12 +795,12 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                     {t("productForm.brandsLabel")}
                   </label>
                   <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
-                    {regularBrands.length === 0 ? (
+                    {brands.length === 0 ? (
                       <p className="text-xs text-gray-400 py-1 px-1">
                         {t("productForm.noRegularBrands")}
                       </p>
                     ) : (
-                      regularBrands.map((brand) => (
+                      brands.map((brand) => (
                         <label
                           key={brand._id}
                           className="flex items-center space-x-2 py-1"
@@ -1114,7 +1119,16 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                   <InlineTranslateFields
                     entityType="product"
                     entity={product}
-                    fields={["name", "shortDescription", "description", "additionalInfo", "unit", "roastOrigin", "coffeeOrigin", "blend"]}
+                    fields={[
+                      "name",
+                      "shortDescription",
+                      "description",
+                      "additionalInfo",
+                      "unit",
+                      "roastOrigin",
+                      "coffeeOrigin",
+                      "blend",
+                    ]}
                     fieldLabels={{
                       name: "Product Name",
                       shortDescription: "Short Description",
@@ -1177,7 +1191,8 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 const w3 = parseFloat(formData.price3weeksDelivery) || 0; // "2 Weeks Delivery" in the UI
                 const w5 = parseFloat(formData.price5weeksDelivery) || 0;
                 const isPartner = formData.partnerStock?.enabled === true;
-                const partnerQty = parseFloat(formData.partnerStock?.quantity) || 0;
+                const partnerQty =
+                  parseFloat(formData.partnerStock?.quantity) || 0;
 
                 // Five-week-type if EITHER signal says so — productType
                 // alone isn't fully reliable in this data (e.g. a Tassimo
@@ -1195,10 +1210,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 // Warehouse online stock isn't editable from this form (it's
                 // managed in Warehouse Management) — read it from the
                 // currently-loaded product so the warning reflects reality.
-                const warehouseOnlineStock =
-                  product?.warehouseStock?.enabled
-                    ? parseFloat(product.warehouseStock?.onlineStock) || 0
-                    : parseFloat(product?.stock) || 0;
+                const warehouseOnlineStock = product?.warehouseStock?.enabled
+                  ? parseFloat(product.warehouseStock?.onlineStock) || 0
+                  : parseFloat(product?.stock) || 0;
 
                 const hasOnlineStock = isPartner
                   ? partnerQty > 0
@@ -1207,7 +1221,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 // Machine-type products (by type OR category): the
                 // storefront ONLY reads the 5-week price — a 2-week price
                 // doesn't count for them.
-                const hasUsableDeliveryPrice = isMachine ? w5 > 0 : w3 > 0 || w5 > 0;
+                const hasUsableDeliveryPrice = isMachine
+                  ? w5 > 0
+                  : w3 > 0 || w5 > 0;
 
                 const willBeHidden =
                   !hasUsableDeliveryPrice && !(btc > 0 && hasOnlineStock);
@@ -1227,7 +1243,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                       </p>
                       {wrongFieldForType ? (
                         <p className="text-xs mt-1 text-amber-700">
-                          {t("productForm.hiddenShopWarningWrongFieldForMachine")}
+                          {t(
+                            "productForm.hiddenShopWarningWrongFieldForMachine",
+                          )}
                         </p>
                       ) : (
                         <p className="text-xs mt-1 text-amber-700">
@@ -1278,7 +1296,8 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {/* BTC Price */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("productForm.btcPriceLabel")} <span className="text-red-500">*</span>
+                    {t("productForm.btcPriceLabel")}{" "}
+                    <span className="text-red-500">*</span>
                     <span className="text-gray-400 font-normal ml-1">
                       {t("productForm.btcPriceHint")}
                     </span>
@@ -1425,179 +1444,189 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             {/* ── Partner Stock (Editor-managed online stock) ──
                 Nigeria-scoped/global admins only — see canSeePartnerStock above. */}
             {canSeePartnerStock && (
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-                    {t("productForm.partnerOnlineStock")}
-                  </h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {t("productForm.partnerStockDescription")}
-                  </p>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t("productForm.enable")}
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={formData.partnerStock?.enabled || false}
-                    onChange={(e) =>
-                      handleInputChange("partnerStock", {
-                        ...(formData.partnerStock || {}),
-                        enabled: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 accent-blue-600"
-                  />
-                </label>
-              </div>
-
-              {formData.partnerStock?.enabled && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t("productForm.onlineStockQty")}{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                      {t("productForm.partnerOnlineStock")}
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {t("productForm.partnerStockDescription")}
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {t("productForm.enable")}
+                    </span>
                     <input
-                      type="number"
-                      min="0"
-                      value={formData.partnerStock?.quantity ?? ""}
+                      type="checkbox"
+                      checked={formData.partnerStock?.enabled || false}
                       onChange={(e) =>
                         handleInputChange("partnerStock", {
                           ...(formData.partnerStock || {}),
-                          quantity: parseInt(e.target.value) || 0,
+                          enabled: e.target.checked,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                      placeholder="0"
+                      className="w-4 h-4 accent-blue-600"
                     />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t("productForm.supplier")} <span className="text-red-500">*</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowNewSupplier((p) => !p)}
-                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <Plus className="w-3 h-3" />
-                        {showNewSupplier ? t("common.cancel") : t("productForm.createNew")}
-                      </button>
-                    </div>
+                  </label>
+                </div>
 
-                    {/* Existing partner suppliers dropdown */}
-                    {!showNewSupplier && (
-                      <select
-                        value={formData.partnerStock?.supplier || ""}
+                {formData.partnerStock?.enabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        {t("productForm.onlineStockQty")}{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.partnerStock?.quantity ?? ""}
                         onChange={(e) =>
                           handleInputChange("partnerStock", {
                             ...(formData.partnerStock || {}),
-                            supplier: e.target.value,
+                            quantity: parseInt(e.target.value) || 0,
                           })
                         }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                      >
-                        <option value="">
-                          {t("productForm.selectPartnerSupplier")}
-                        </option>
-                        {suppliers
-                          .filter(
-                            (s) =>
-                              s.supplierType === "PARTNER" || !s.supplierType,
-                          )
-                          .map((s) => (
-                            <option key={s._id} value={s._id}>
-                              {s.name}
-                              {s.phone ? ` — ${s.phone}` : ""}
-                            </option>
-                          ))}
-                        {suppliers.filter(
-                          (s) =>
-                            s.supplierType === "PARTNER" || !s.supplierType,
-                        ).length === 0 && (
-                          <option disabled value="">
-                            {t("productForm.noPartnerSuppliersYet")}
-                          </option>
-                        )}
-                      </select>
-                    )}
-
-                    {/* Quick-create partner supplier — email + phone required */}
-                    {showNewSupplier && (
-                      <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 space-y-2">
-                        <p className="text-xs font-semibold text-blue-700">
-                          {t("productForm.newPartnerSupplier")}
-                        </p>
-                        <input
-                          type="text"
-                          value={newSupplierName}
-                          onChange={(e) => setNewSupplierName(e.target.value)}
-                          placeholder={t("productForm.companyPartnerNamePlaceholder")}
-                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        />
-                        <input
-                          type="email"
-                          value={newSupplierEmail}
-                          onChange={(e) => setNewSupplierEmail(e.target.value)}
-                          placeholder={t("productForm.emailPlaceholder")}
-                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        />
-                        <input
-                          type="tel"
-                          value={newSupplierPhone}
-                          onChange={(e) => setNewSupplierPhone(e.target.value)}
-                          placeholder={t("productForm.phonePlaceholder")}
-                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        />
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {t("productForm.supplier")}{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
                         <button
                           type="button"
-                          onClick={handleCreateSupplier}
-                          disabled={
-                            creatingSupplier ||
-                            !newSupplierName.trim() ||
-                            !newSupplierEmail.trim() ||
-                            !newSupplierPhone.trim()
-                          }
-                          className="w-full py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                          onClick={() => setShowNewSupplier((p) => !p)}
+                          className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                         >
-                          {creatingSupplier ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />{" "}
-                              {t("common.create")}…
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-3 h-3" /> {t("productForm.createAndSelect")}
-                            </>
-                          )}
+                          <Plus className="w-3 h-3" />
+                          {showNewSupplier
+                            ? t("common.cancel")
+                            : t("productForm.createNew")}
                         </button>
                       </div>
-                    )}
+
+                      {/* Existing partner suppliers dropdown */}
+                      {!showNewSupplier && (
+                        <select
+                          value={formData.partnerStock?.supplier || ""}
+                          onChange={(e) =>
+                            handleInputChange("partnerStock", {
+                              ...(formData.partnerStock || {}),
+                              supplier: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        >
+                          <option value="">
+                            {t("productForm.selectPartnerSupplier")}
+                          </option>
+                          {suppliers
+                            .filter(
+                              (s) =>
+                                s.supplierType === "PARTNER" || !s.supplierType,
+                            )
+                            .map((s) => (
+                              <option key={s._id} value={s._id}>
+                                {s.name}
+                                {s.phone ? ` — ${s.phone}` : ""}
+                              </option>
+                            ))}
+                          {suppliers.filter(
+                            (s) =>
+                              s.supplierType === "PARTNER" || !s.supplierType,
+                          ).length === 0 && (
+                            <option disabled value="">
+                              {t("productForm.noPartnerSuppliersYet")}
+                            </option>
+                          )}
+                        </select>
+                      )}
+
+                      {/* Quick-create partner supplier — email + phone required */}
+                      {showNewSupplier && (
+                        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 space-y-2">
+                          <p className="text-xs font-semibold text-blue-700">
+                            {t("productForm.newPartnerSupplier")}
+                          </p>
+                          <input
+                            type="text"
+                            value={newSupplierName}
+                            onChange={(e) => setNewSupplierName(e.target.value)}
+                            placeholder={t(
+                              "productForm.companyPartnerNamePlaceholder",
+                            )}
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                          />
+                          <input
+                            type="email"
+                            value={newSupplierEmail}
+                            onChange={(e) =>
+                              setNewSupplierEmail(e.target.value)
+                            }
+                            placeholder={t("productForm.emailPlaceholder")}
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                          />
+                          <input
+                            type="tel"
+                            value={newSupplierPhone}
+                            onChange={(e) =>
+                              setNewSupplierPhone(e.target.value)
+                            }
+                            placeholder={t("productForm.phonePlaceholder")}
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateSupplier}
+                            disabled={
+                              creatingSupplier ||
+                              !newSupplierName.trim() ||
+                              !newSupplierEmail.trim() ||
+                              !newSupplierPhone.trim()
+                            }
+                            className="w-full py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            {creatingSupplier ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />{" "}
+                                {t("common.create")}…
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="w-3 h-3" />{" "}
+                                {t("productForm.createAndSelect")}
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        {t("common.notes")}
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.partnerStock?.notes || ""}
+                        onChange={(e) =>
+                          handleInputChange("partnerStock", {
+                            ...(formData.partnerStock || {}),
+                            notes: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        placeholder={t("productForm.notesPlaceholder")}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t("common.notes")}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.partnerStock?.notes || ""}
-                      onChange={(e) =>
-                        handleInputChange("partnerStock", {
-                          ...(formData.partnerStock || {}),
-                          notes: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                      placeholder={t("productForm.notesPlaceholder")}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             )}
 
             {/* SEO & Publishing */}
@@ -1680,189 +1709,196 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 are storefront-wide merchandising decisions, not something a
                 single-market/foreign admin should be toggling. */}
             {isGlobalAdmin && (
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                {t("productForm.productSettings")}
-              </h4>
-              <div className="space-y-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.featured}
-                    onChange={(e) =>
-                      handleInputChange("featured", e.target.checked)
-                    }
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Star className="ml-2 mr-1 h-4 w-4 text-yellow-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {t("productForm.featuredProduct")}
-                  </span>
-                </label>
-
-                {/* ── Limited Edition ─────────────────────────────────────── */}
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mt-1">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  {t("productForm.productSettings")}
+                </h4>
+                <div className="space-y-3">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={
-                        formData.limitedEdition?.isLimitedEdition || false
-                      }
+                      checked={formData.featured}
                       onChange={(e) =>
-                        handleLimitedEditionChange(
-                          "isLimitedEdition",
-                          e.target.checked,
-                        )
+                        handleInputChange("featured", e.target.checked)
                       }
-                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <Sparkles className="ml-2 mr-1 h-4 w-4 text-red-500" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t("productForm.limitedEditionProduct")}
+                    <Star className="ml-2 mr-1 h-4 w-4 text-yellow-400" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {t("productForm.featuredProduct")}
                     </span>
                   </label>
 
-                  {formData.limitedEdition?.isLimitedEdition && (
-                    <div className="mt-3 pl-1 space-y-3">
-                      <p className="text-xs text-gray-400">
-                        {t("productForm.limitedEditionHint")}
-                      </p>
+                  {/* ── Limited Edition ─────────────────────────────────────── */}
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mt-1">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.limitedEdition?.isLimitedEdition || false
+                        }
+                        onChange={(e) =>
+                          handleLimitedEditionChange(
+                            "isLimitedEdition",
+                            e.target.checked,
+                          )
+                        }
+                        className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                      <Sparkles className="ml-2 mr-1 h-4 w-4 text-red-500" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t("productForm.limitedEditionProduct")}
+                      </span>
+                    </label>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {/* Banner Text */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("productForm.bannerText")}
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.limitedEdition?.bannerText || ""}
-                            onChange={(e) =>
-                              handleLimitedEditionChange(
-                                "bannerText",
-                                e.target.value,
-                              )
-                            }
-                            placeholder={t("productForm.bannerTextPlaceholder")}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
-                          />
-                        </div>
+                    {formData.limitedEdition?.isLimitedEdition && (
+                      <div className="mt-3 pl-1 space-y-3">
+                        <p className="text-xs text-gray-400">
+                          {t("productForm.limitedEditionHint")}
+                        </p>
 
-                        {/* Banner Color */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("productForm.bannerColor")}
-                          </label>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="color"
-                              value={
-                                formData.limitedEdition?.bannerColor ||
-                                "#c8102e"
-                              }
-                              onChange={(e) =>
-                                handleLimitedEditionChange(
-                                  "bannerColor",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-10 h-9 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer p-0.5"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {/* Banner Text */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {t("productForm.bannerText")}
+                            </label>
                             <input
                               type="text"
-                              value={
-                                formData.limitedEdition?.bannerColor ||
-                                "#c8102e"
-                              }
+                              value={formData.limitedEdition?.bannerText || ""}
                               onChange={(e) =>
                                 handleLimitedEditionChange(
-                                  "bannerColor",
+                                  "bannerText",
                                   e.target.value,
                                 )
                               }
-                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                              placeholder={t(
+                                "productForm.bannerTextPlaceholder",
+                              )}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+
+                          {/* Banner Color */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {t("productForm.bannerColor")}
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="color"
+                                value={
+                                  formData.limitedEdition?.bannerColor ||
+                                  "#c8102e"
+                                }
+                                onChange={(e) =>
+                                  handleLimitedEditionChange(
+                                    "bannerColor",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-10 h-9 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer p-0.5"
+                              />
+                              <input
+                                type="text"
+                                value={
+                                  formData.limitedEdition?.bannerColor ||
+                                  "#c8102e"
+                                }
+                                onChange={(e) =>
+                                  handleLimitedEditionChange(
+                                    "bannerColor",
+                                    e.target.value,
+                                  )
+                                }
+                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Total Units */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {t("productForm.totalUnitsAvailable")}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={formData.limitedEdition?.totalUnits || 0}
+                              onChange={(e) =>
+                                handleLimitedEditionChange(
+                                  "totalUnits",
+                                  parseInt(e.target.value) || 0,
+                                )
+                              }
+                              placeholder="0"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+
+                          {/* Carousel Order */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {t("productForm.carouselOrder")}
+                              <span className="text-gray-400 font-normal ml-1">
+                                {t("productForm.carouselOrderHint")}
+                              </span>
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={
+                                formData.limitedEdition?.carouselOrder || 0
+                              }
+                              onChange={(e) =>
+                                handleLimitedEditionChange(
+                                  "carouselOrder",
+                                  parseInt(e.target.value) || 0,
+                                )
+                              }
+                              placeholder="0"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
                             />
                           </div>
                         </div>
 
-                        {/* Total Units */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("productForm.totalUnitsAvailable")}
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={formData.limitedEdition?.totalUnits || 0}
-                            onChange={(e) =>
-                              handleLimitedEditionChange(
-                                "totalUnits",
-                                parseInt(e.target.value) || 0,
-                              )
-                            }
-                            placeholder="0"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
-                          />
-                        </div>
-
-                        {/* Carousel Order */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("productForm.carouselOrder")}
-                            <span className="text-gray-400 font-normal ml-1">
-                              {t("productForm.carouselOrderHint")}
-                            </span>
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={formData.limitedEdition?.carouselOrder || 0}
-                            onChange={(e) =>
-                              handleLimitedEditionChange(
-                                "carouselOrder",
-                                parseInt(e.target.value) || 0,
-                              )
-                            }
-                            placeholder="0"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white"
-                          />
+                        {/* Live preview */}
+                        <div
+                          className="rounded-lg px-4 py-3 flex items-center gap-2"
+                          style={{
+                            background:
+                              formData.limitedEdition?.bannerColor || "#c8102e",
+                          }}
+                        >
+                          <Sparkles className="text-white w-4 h-4 flex-shrink-0" />
+                          <span className="text-white text-sm font-semibold">
+                            {formData.limitedEdition?.bannerText ||
+                              t("products.limitedEdition")}
+                          </span>
                         </div>
                       </div>
+                    )}
+                  </div>
+                  {/* ─────────────────────────────────────────────────────────── */}
 
-                      {/* Live preview */}
-                      <div
-                        className="rounded-lg px-4 py-3 flex items-center gap-2"
-                        style={{
-                          background:
-                            formData.limitedEdition?.bannerColor || "#c8102e",
-                        }}
-                      >
-                        <Sparkles className="text-white w-4 h-4 flex-shrink-0" />
-                        <span className="text-white text-sm font-semibold">
-                          {formData.limitedEdition?.bannerText ||
-                            t("products.limitedEdition")}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.productAvailability}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "productAvailability",
+                          e.target.checked,
+                        )
+                      }
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                      {t("productForm.productAvailableForSale")}
+                    </span>
+                  </label>
                 </div>
-                {/* ─────────────────────────────────────────────────────────── */}
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.productAvailability}
-                    onChange={(e) =>
-                      handleInputChange("productAvailability", e.target.checked)
-                    }
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    {t("productForm.productAvailableForSale")}
-                  </span>
-                </label>
               </div>
-            </div>
             )}
 
             {/* Form Actions */}
@@ -1882,12 +1918,16 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {product ? t("common.update") + "…" : t("common.create") + "…"}
+                    {product
+                      ? t("common.update") + "…"
+                      : t("common.create") + "…"}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {product ? t("productForm.updateProduct") : t("productForm.createProduct")}
+                    {product
+                      ? t("productForm.updateProduct")
+                      : t("productForm.createProduct")}
                   </>
                 )}
               </button>
