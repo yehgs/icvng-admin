@@ -12,8 +12,10 @@
  * Key changes:
  *  - Multi-subrole checkboxes (foreignSubRoles) — first selection becomes
  *    the account's real subRole
- *  - IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, EDITOR, and LOGISTICS are never
- *    shown as options (see HQ_ONLY_SUBROLES)
+ *  - IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, and EDITOR are never shown as
+ *    options (see HQ_ONLY_SUBROLES). LOGISTICS IS shown now — the
+ *    country-scoped logistics system means a foreign Logistics admin
+ *    manages only their own country's shipping zones/methods.
  *  - Promote existing HQ admin to a foreign/country-scoped admin
  */
 
@@ -32,15 +34,20 @@ const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api"
 
 // Sub-roles that CAN be granted to a foreign/country-scoped admin.
 // Mirrors server FOREIGN_EXPOSABLE_SUBROLES (models/user.model.js) — never
-// IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, EDITOR, or LOGISTICS (see
-// HQ_ONLY_SUBROLES in server/config/roles.js): there is only ever one
-// Accountant, Warehouse, and Editor, and they're always HQ (item #9).
-// LOGISTICS stays excluded until a country-scoped logistics system exists.
+// IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, or EDITOR (see HQ_ONLY_SUBROLES in
+// server/config/roles.js): there is only ever one Accountant, Warehouse,
+// and Editor, and they're always HQ (item #9).
+// LOGISTICS is included now that the country-scoped logistics system is
+// live — a foreign Logistics admin manages only their assignedCountry's
+// shipping zones and shipping methods (ShippingZone/ShippingMethod
+// countryScopedPlugin enforces this at the query level), and only IT/
+// DIRECTOR (always GLOBAL) can see/manage every country's at once.
 const EXPOSABLE_SUBROLES = [
   { value: "SALES",        label: "Sales" },
   { value: "SALES_MANAGER",label: "Sales Manager" },
   { value: "HR",           label: "Human Resources" },
   { value: "MANAGER",      label: "Manager" },
+  { value: "LOGISTICS",    label: "Logistics" },
 ];
 
 async function apiFetch(path, options = {}) {

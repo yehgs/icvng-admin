@@ -807,6 +807,32 @@ export const purchaseOrderAPI = {
   },
 };
 
+// Bank Transfer Settings API calls — country-scoped Direct Bank Transfer
+// receiving-account details, IT/DIRECTOR only (see
+// route/bankTransferSettings.route.js). GET /available is public and used
+// by the storefront checkout, not the admin panel.
+export const bankTransferSettingsAPI = {
+  // List every country's settings (configured or not) — IT/DIRECTOR only.
+  getAll: async () => {
+    return apiCall("/bank-transfer-settings");
+  },
+
+  // Add/edit/update one country's settings (upsert).
+  upsert: async (data) => {
+    return apiCall("/bank-transfer-settings", {
+      method: "POST",
+      body: data,
+    });
+  },
+
+  // Remove a country's settings entirely.
+  remove: async (countryCode) => {
+    return apiCall(`/bank-transfer-settings/${countryCode}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 // Exchange Rate API calls
 export const exchangeRateAPI = {
   // Test authentication
@@ -4329,6 +4355,7 @@ export default {
   purchaseOrderAPI,
   exchangeRateAPI,
   exchangeRateUtils,
+  bankTransferSettingsAPI,
   directPricingAPI,
   directPricingUtils,
   fileAPI,

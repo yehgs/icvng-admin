@@ -8,7 +8,7 @@ import {
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
-  Bell, LifeBuoy, Lock,
+  Bell, LifeBuoy, Lock, Landmark,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -221,8 +221,10 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     // MANAGER (HQ or country/"foreign" scoped) never sees User Management —
     // only IT / DIRECTOR (full access) and HR (people-ops function).
     { key: "users",       title: t("nav.userManagement"),     path: "/admin/users",     icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","HR"] },
+    { key: "foreign-admins", title: "Foreign Admin Management", path: "/admin/foreign-admins", icon: Globe, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "settings",    title: t("nav.settings"),           path: "/admin/settings",  icon: Settings, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    { key: "bank-transfer-settings", title: "Bank Transfer Settings", path: "/admin/settings/bank-transfer", icon: Landmark, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
   ];
 
   // Item #7: entire modules that are HQ-only regardless of subRole —

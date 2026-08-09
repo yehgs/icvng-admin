@@ -17,9 +17,10 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 // subRoles that are ALWAYS HQ (scope GLOBAL) — no "foreign"/Country Admin
 // account ever exists for these, so the Country Admin toggle is hidden
 // entirely. Mirrors server/config/roles.js#HQ_ONLY_SUBROLES.
-// LOGISTICS stays here until a country-scoped logistics system exists —
-// once it does, drop it from this list so it can be "foreign"-labelled.
-const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR", "LOGISTICS"];
+// LOGISTICS is no longer in this list — the country-scoped logistics system
+// is live, so a Logistics admin can be GLOBAL (HQ) or COUNTRY (foreign)
+// scoped, same as MANAGER/SALES.
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR"];
 
 const EditUserModal = ({
   isOpen,

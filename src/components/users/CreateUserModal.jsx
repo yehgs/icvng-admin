@@ -14,9 +14,10 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 // subRoles that are ALWAYS HQ (scope GLOBAL) — no "foreign"/Country Admin
 // account ever exists for these, so the Country Admin toggle is hidden
 // entirely. Mirrors server/config/roles.js#HQ_ONLY_SUBROLES.
-// LOGISTICS stays here until a country-scoped logistics system exists —
-// once it does, drop it from this list so it can be "foreign"-labelled.
-const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR", "LOGISTICS"];
+// LOGISTICS is no longer in this list — the country-scoped logistics system
+// is live, so a Logistics admin can be created as GLOBAL (HQ) or COUNTRY
+// (foreign) scoped, same as MANAGER/SALES.
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR"];
 
 const CreateUserModal = ({
   isOpen,
@@ -116,7 +117,7 @@ const CreateUserModal = ({
       newErrors.assignedCountry = "Please select an assigned country for country-scoped admins";
     }
 
-    // IT, DIRECTOR, LOGISTICS cannot be country-scoped
+    // IT, DIRECTOR (HQ_ONLY_SUBROLES) cannot be country-scoped
     if (HQ_ONLY_SUBROLES.includes(formData.subRole) && formData.scope === "COUNTRY") {
       newErrors.scope = "This role is always HQ/global — it cannot be assigned to a specific country";
     }
@@ -392,7 +393,7 @@ const CreateUserModal = ({
           </div>
 
           {/* Sales Mode */}
-          {/* Country Scope — only for ADMIN users who are not IT/DIRECTOR/LOGISTICS */}
+          {/* Country Scope — only for ADMIN users who are not IT/DIRECTOR (HQ_ONLY_SUBROLES) */}
           {formData.role === "ADMIN" && !HQ_ONLY_SUBROLES.includes(formData.subRole) && formData.subRole && (
             <div className="border border-blue-100 bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">

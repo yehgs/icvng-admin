@@ -71,6 +71,8 @@ import TrackingManagement from "./pages/logistics/TrackingManagement";
 // Settings & Other
 import Settings from "./pages/settings/Settings";
 import CountryManagement from "./pages/settings/CountryManagement";
+import BankTransferSettings from "./pages/settings/BankTransferSettings";
+import ForeignAdminManagement from "./pages/foreign-admins/ForeignAdminManagement";
 import NotFound from "./pages/NotFound";
 
 // Order Management
@@ -698,6 +700,23 @@ const App = () => {
                   }
                 />
 
+                {/* Foreign/country-scoped admin management — IT/DIRECTOR
+                    only (self-gated inside the controller too — see
+                    foreignAdmin.controller.js's ALLOWED_CREATORS/
+                    ALLOWED_DELETERS). Was built (page + backend
+                    controller) but never actually reachable: the route
+                    file mounting its API was never wired into
+                    server/index.js, and this page was never added to the
+                    router — both fixed. */}
+                <Route
+                  path="foreign-admins"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                      <ForeignAdminManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
                 {/* Settings — IT and Director only */}
                 <Route
                   path="settings"
@@ -714,6 +733,16 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <CountryManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Country-scoped Direct Bank Transfer settings — HQ IT/Director only */}
+                <Route
+                  path="settings/bank-transfer"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                      <BankTransferSettings />
                     </RoleProtectedRoute>
                   }
                 />
