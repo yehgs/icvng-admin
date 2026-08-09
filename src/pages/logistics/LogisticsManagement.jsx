@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Edit,
@@ -21,19 +21,20 @@ import {
   ChevronRight,
   Download,
   Upload,
-} from 'lucide-react';
-import { logisticsAPI } from '../../utils/api.js';
-import LogisticsMethodModal from '../../components/logistics/LogisticsMethodModal';
-import LogisticsZoneModal from '../../components/logistics/LogisticsZoneModal';
-import DeleteConfirmModal from '../../components/common/DeleteConfirmModal';
-import ZoneDeleteModal from '../../components/logistics/ZoneDeleteModal';
-import LogisticsCsvImportModal from '../../components/logistics/LogisticsCsvImportModal';
-import toast from 'react-hot-toast';
+} from "lucide-react";
+import { logisticsAPI } from "../../utils/api.js";
+import LogisticsMethodModal from "../../components/logistics/LogisticsMethodModal";
+import LogisticsZoneModal from "../../components/logistics/LogisticsZoneModal";
+import DeleteConfirmModal from "../../components/common/DeleteConfirmModal";
+import ZoneDeleteModal from "../../components/logistics/ZoneDeleteModal";
+import LogisticsCsvImportModal from "../../components/logistics/LogisticsCsvImportModal";
+import CountrySwitcher from "../../components/logistics/CountrySwitcher";
+import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const LogisticsManagement = () => {
   const { t } = useAdminTranslation();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [zones, setZones] = useState([]); // Paginated zones for table
   const [allZones, setAllZones] = useState([]); // ALL zones for modal dropdown
   const [methods, setMethods] = useState([]);
@@ -68,37 +69,46 @@ const LogisticsManagement = () => {
   const [exportingZones, setExportingZones] = useState(false);
   const [exportingMethods, setExportingMethods] = useState(false);
   const [exportingRates, setExportingRates] = useState(false);
+  // GLOBAL admins (IT/DIRECTOR) only — filters every fetch below to one
+  // country via ?countryCode=. "" means "All Countries" (their existing
+  // default). No-op server-side for COUNTRY-scoped admins, and
+  // CountrySwitcher renders nothing for them anyway (see its own
+  // comment) — see controllers/shipping.controller.js's
+  // applyGlobalCountryFilter.
+  const [countryFilter, setCountryFilter] = useState("");
 
   useEffect(() => {
     fetchLogisticsData();
     fetchAllZones(); // NEW: Fetch all zones for modal dropdown
-  }, []);
+  }, [countryFilter]);
 
   // Fetch zones when pagination changes
   useEffect(() => {
-    if (activeTab === 'zones') {
+    if (activeTab === "zones") {
       fetchZones();
     }
-  }, [zonesPage, zonesLimit]);
+  }, [zonesPage, zonesLimit, countryFilter]);
 
   // Fetch methods when pagination changes
   useEffect(() => {
-    if (activeTab === 'methods') {
+    if (activeTab === "methods") {
       fetchMethods();
     }
-  }, [methodsPage, methodsLimit]);
+  }, [methodsPage, methodsLimit, countryFilter]);
 
   const fetchLogisticsData = async () => {
     try {
       setLoading(true);
-      const statsRes = await logisticsAPI.getShippingDashboardStats();
+      const statsRes = await logisticsAPI.getShippingDashboardStats(
+        countryFilter ? { countryCode: countryFilter } : {},
+      );
       setStats(statsRes.data || {});
 
       // Fetch initial data for zones and methods
       await Promise.all([fetchZones(), fetchMethods()]);
     } catch (error) {
-      console.error('Error fetching logistics data:', error);
-      toast.error('Failed to load logistics data');
+      console.error("Error fetching logistics data:", error);
+      toast.error("Failed to load logistics data");
     } finally {
       setLoading(false);
     }
@@ -107,13 +117,16 @@ const LogisticsManagement = () => {
   // NEW: Fetch all zones without pagination for modal dropdown
   const fetchAllZones = async () => {
     try {
-      console.log('🔄 Fetching all zones for modal dropdown...');
-      const zonesRes = await logisticsAPI.getAllZones({ isActive: true });
+      console.log("🔄 Fetching all zones for modal dropdown...");
+      const zonesRes = await logisticsAPI.getAllZones({
+        isActive: true,
+        ...(countryFilter ? { countryCode: countryFilter } : {}),
+      });
       setAllZones(zonesRes.data || []);
-      console.log('✅ Fetched all zones for modal:', zonesRes.data?.length);
+      console.log("✅ Fetched all zones for modal:", zonesRes.data?.length);
     } catch (error) {
-      console.error('Error fetching all zones:', error);
-      toast.error('Failed to load zones for dropdown');
+      console.error("Error fetching all zones:", error);
+      toast.error("Failed to load zones for dropdown");
     }
   };
 
@@ -122,14 +135,15 @@ const LogisticsManagement = () => {
       const zonesRes = await logisticsAPI.getShippingZones({
         page: zonesPage,
         limit: zonesLimit,
+        ...(countryFilter ? { countryCode: countryFilter } : {}),
       });
 
       setZones(zonesRes.data || []);
       setZonesTotalCount(zonesRes.totalCount || 0);
       setZonesTotalPages(zonesRes.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching zones:', error);
-      toast.error('Failed to load zones');
+      console.error("Error fetching zones:", error);
+      toast.error("Failed to load zones");
     }
   };
 
@@ -138,34 +152,44 @@ const LogisticsManagement = () => {
       const methodsRes = await logisticsAPI.getShippingMethods({
         page: methodsPage,
         limit: methodsLimit,
+        ...(countryFilter ? { countryCode: countryFilter } : {}),
       });
 
       setMethods(methodsRes.data || []);
       setMethodsTotalCount(methodsRes.totalCount || 0);
       setMethodsTotalPages(methodsRes.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching methods:', error);
-      toast.error('Failed to load methods');
+      console.error("Error fetching methods:", error);
+      toast.error("Failed to load methods");
     }
   };
 
   const handleCreateZone = async (zoneData) => {
     try {
       setLoading(true);
-      const response = await logisticsAPI.createShippingZone(zoneData);
+      // For a GLOBAL admin with the country switcher set to a specific
+      // country, stamp that as the new zone's country (resolveTargetCountry
+      // on the server otherwise defaults to Nigeria for a GLOBAL admin
+      // with no explicit countryCode — see controllers/shipping.controller.js).
+      // Never overrides an explicit choice already made inside the modal.
+      const payload =
+        countryFilter && !zoneData.countryCode
+          ? { ...zoneData, countryCode: countryFilter }
+          : zoneData;
+      const response = await logisticsAPI.createShippingZone(payload);
 
       if (response.success) {
-        toast.success('Shipping zone created successfully');
+        toast.success("Shipping zone created successfully");
         setShowZoneModal(false);
         setSelectedZone(null);
         setZonesPage(1);
         await Promise.all([fetchZones(), fetchAllZones()]); // Refresh both lists
       } else {
-        toast.error(response.message || 'Failed to create shipping zone');
+        toast.error(response.message || "Failed to create shipping zone");
       }
     } catch (error) {
-      console.error('Create zone error:', error);
-      toast.error(error.message || 'Failed to create shipping zone');
+      console.error("Create zone error:", error);
+      toast.error(error.message || "Failed to create shipping zone");
     } finally {
       setLoading(false);
     }
@@ -176,20 +200,20 @@ const LogisticsManagement = () => {
       setLoading(true);
       const response = await logisticsAPI.updateShippingZone(
         selectedZone._id,
-        zoneData
+        zoneData,
       );
 
       if (response.success) {
-        toast.success('Shipping zone updated successfully');
+        toast.success("Shipping zone updated successfully");
         setShowZoneModal(false);
         setSelectedZone(null);
         await Promise.all([fetchZones(), fetchAllZones()]); // Refresh both lists
       } else {
-        toast.error(response.message || 'Failed to update shipping zone');
+        toast.error(response.message || "Failed to update shipping zone");
       }
     } catch (error) {
-      console.error('Update zone error:', error);
-      toast.error(error.message || 'Failed to update shipping zone');
+      console.error("Update zone error:", error);
+      toast.error(error.message || "Failed to update shipping zone");
     } finally {
       setLoading(false);
     }
@@ -198,20 +222,25 @@ const LogisticsManagement = () => {
   const handleCreateMethod = async (methodData) => {
     try {
       setLoading(true);
-      const response = await logisticsAPI.createShippingMethod(methodData);
+      // Same reasoning as handleCreateZone above.
+      const payload =
+        countryFilter && !methodData.countryCode
+          ? { ...methodData, countryCode: countryFilter }
+          : methodData;
+      const response = await logisticsAPI.createShippingMethod(payload);
 
       if (response.success) {
-        toast.success('Shipping method created successfully');
+        toast.success("Shipping method created successfully");
         setShowMethodModal(false);
         setSelectedMethod(null);
         setMethodsPage(1);
         await fetchMethods();
       } else {
-        toast.error(response.message || 'Failed to create shipping method');
+        toast.error(response.message || "Failed to create shipping method");
       }
     } catch (error) {
-      console.error('Create method error:', error);
-      toast.error(error.message || 'Failed to create shipping method');
+      console.error("Create method error:", error);
+      toast.error(error.message || "Failed to create shipping method");
     } finally {
       setLoading(false);
     }
@@ -222,20 +251,20 @@ const LogisticsManagement = () => {
       setLoading(true);
       const response = await logisticsAPI.updateShippingMethod(
         selectedMethod._id,
-        methodData
+        methodData,
       );
 
       if (response.success) {
-        toast.success('Shipping method updated successfully');
+        toast.success("Shipping method updated successfully");
         setShowMethodModal(false);
         setSelectedMethod(null);
         await fetchMethods();
       } else {
-        toast.error(response.message || 'Failed to update shipping method');
+        toast.error(response.message || "Failed to update shipping method");
       }
     } catch (error) {
-      console.error('Update method error:', error);
-      toast.error(error.message || 'Failed to update shipping method');
+      console.error("Update method error:", error);
+      toast.error(error.message || "Failed to update shipping method");
     } finally {
       setLoading(false);
     }
@@ -246,24 +275,24 @@ const LogisticsManagement = () => {
       setLoading(true);
       const response = await logisticsAPI.deleteShippingZone(
         zoneId,
-        cascadeDelete
+        cascadeDelete,
       );
 
       if (response.success) {
         toast.success(
           cascadeDelete
-            ? 'Zone and dependent methods deleted successfully'
-            : 'Shipping zone deleted successfully'
+            ? "Zone and dependent methods deleted successfully"
+            : "Shipping zone deleted successfully",
         );
         setShowZoneDeleteModal(false);
         setSelectedZone(null);
         await Promise.all([fetchZones(), fetchAllZones()]); // Refresh both lists
       } else {
-        toast.error(response.message || 'Failed to delete shipping zone');
+        toast.error(response.message || "Failed to delete shipping zone");
       }
     } catch (error) {
-      console.error('Delete zone error:', error);
-      toast.error(error.message || 'Failed to delete shipping zone');
+      console.error("Delete zone error:", error);
+      toast.error(error.message || "Failed to delete shipping zone");
     } finally {
       setLoading(false);
     }
@@ -273,20 +302,20 @@ const LogisticsManagement = () => {
     try {
       setLoading(true);
       const response = await logisticsAPI.deleteShippingMethod(
-        selectedMethod._id
+        selectedMethod._id,
       );
 
       if (response.success) {
-        toast.success('Shipping method deleted successfully');
+        toast.success("Shipping method deleted successfully");
         setShowMethodDeleteModal(false);
         setSelectedMethod(null);
         await fetchMethods();
       } else {
-        toast.error(response.message || 'Failed to delete shipping method');
+        toast.error(response.message || "Failed to delete shipping method");
       }
     } catch (error) {
-      console.error('Delete method error:', error);
-      toast.error(error.message || 'Failed to delete shipping method');
+      console.error("Delete method error:", error);
+      toast.error(error.message || "Failed to delete shipping method");
     } finally {
       setLoading(false);
     }
@@ -296,10 +325,10 @@ const LogisticsManagement = () => {
     try {
       setExportingZones(true);
       await logisticsAPI.exportShippingZonesCSV();
-      toast.success('Shipping zones exported');
+      toast.success("Shipping zones exported");
     } catch (error) {
-      console.error('Export zones CSV error:', error);
-      toast.error(error.message || 'Failed to export shipping zones');
+      console.error("Export zones CSV error:", error);
+      toast.error(error.message || "Failed to export shipping zones");
     } finally {
       setExportingZones(false);
     }
@@ -309,10 +338,10 @@ const LogisticsManagement = () => {
     try {
       setExportingMethods(true);
       await logisticsAPI.exportShippingMethodsCSV();
-      toast.success('Shipping methods exported');
+      toast.success("Shipping methods exported");
     } catch (error) {
-      console.error('Export methods CSV error:', error);
-      toast.error(error.message || 'Failed to export shipping methods');
+      console.error("Export methods CSV error:", error);
+      toast.error(error.message || "Failed to export shipping methods");
     } finally {
       setExportingMethods(false);
     }
@@ -322,10 +351,10 @@ const LogisticsManagement = () => {
     try {
       setExportingRates(true);
       await logisticsAPI.exportShippingRatesCSV();
-      toast.success('Shipping rates exported');
+      toast.success("Shipping rates exported");
     } catch (error) {
-      console.error('Export rates CSV error:', error);
-      toast.error(error.message || 'Failed to export shipping rates');
+      console.error("Export rates CSV error:", error);
+      toast.error(error.message || "Failed to export shipping rates");
     } finally {
       setExportingRates(false);
     }
@@ -390,8 +419,8 @@ const LogisticsManagement = () => {
                       onClick={() => onPageChange(pageNum)}
                       className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                         currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          ? "bg-blue-600 text-white"
+                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                       }`}
                     >
                       {pageNum}
@@ -429,43 +458,43 @@ const LogisticsManagement = () => {
 
   const getAssignmentDisplay = (method) => {
     const config = method[method.type];
-    if (!config) return 'All Products';
+    if (!config) return "All Products";
 
     switch (config.assignment) {
-      case 'all_products':
-        return 'All Products';
-      case 'categories':
+      case "all_products":
+        return "All Products";
+      case "categories":
         return `Categories (${config.categories?.length || 0})`;
-      case 'specific_products':
+      case "specific_products":
         return `Products (${config.products?.length || 0})`;
       default:
-        return 'All Products';
+        return "All Products";
     }
   };
 
   const getCostDisplay = (method) => {
     switch (method.type) {
-      case 'flat_rate':
+      case "flat_rate":
         if (method.flatRate?.freeShipping?.enabled) {
           return (
             <div className="text-sm">
               <div className="font-medium text-gray-900 dark:text-white">
-                ₦{method.flatRate.cost?.toLocaleString() || '0'}
+                ₦{method.flatRate.cost?.toLocaleString() || "0"}
               </div>
               <div className="text-xs text-green-600 dark:text-green-400">
                 Free above ₦
                 {method.flatRate.freeShipping.minimumOrderAmount?.toLocaleString() ||
-                  '0'}
+                  "0"}
               </div>
             </div>
           );
         }
         return (
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            ₦{method.flatRate?.cost?.toLocaleString() || '0'}
+            ₦{method.flatRate?.cost?.toLocaleString() || "0"}
           </span>
         );
-      case 'table_shipping':
+      case "table_shipping": {
         const zones = method.tableShipping?.zoneRates?.length || 0;
         return (
           <div className="text-sm">
@@ -473,11 +502,12 @@ const LogisticsManagement = () => {
               Zone-based
             </div>
             <div className="text-xs text-purple-600 dark:text-purple-400">
-              {zones} zone{zones !== 1 ? 's' : ''} configured
+              {zones} zone{zones !== 1 ? "s" : ""} configured
             </div>
           </div>
         );
-      case 'pickup':
+      }
+      case "pickup": {
         const locations =
           method.pickup?.locations?.filter((loc) => loc.isActive)?.length || 0;
         return (
@@ -486,12 +516,13 @@ const LogisticsManagement = () => {
               Free
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {locations} location{locations !== 1 ? 's' : ''}
+              {locations} location{locations !== 1 ? "s" : ""}
             </div>
           </div>
         );
+      }
       default:
-        return 'N/A';
+        return "N/A";
     }
   };
 
@@ -590,7 +621,7 @@ const LogisticsManagement = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => setActiveTab('zones')}
+            onClick={() => setActiveTab("zones")}
             className="group p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
           >
             <div className="text-center">
@@ -607,7 +638,7 @@ const LogisticsManagement = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('methods')}
+            onClick={() => setActiveTab("methods")}
             className="group p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-green-300 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200"
           >
             <div className="text-center">
@@ -624,7 +655,7 @@ const LogisticsManagement = () => {
           </button>
 
           <button
-            onClick={() => (window.location.href = '/admin/tracking')}
+            onClick={() => (window.location.href = "/admin/tracking")}
             className="group p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
           >
             <div className="text-center">
@@ -744,7 +775,7 @@ const LogisticsManagement = () => {
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {zone.states.length} state
-                      {zone.states.length !== 1 ? 's' : ''}
+                      {zone.states.length !== 1 ? "s" : ""}
                       {zone.total_lgas_covered && (
                         <span> • {zone.total_lgas_covered} LGAs</span>
                       )}
@@ -754,11 +785,11 @@ const LogisticsManagement = () => {
                     <span
                       className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                         zone.isActive
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                       }`}
                     >
-                      {zone.isActive ? 'Active' : 'Inactive'}
+                      {zone.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -933,7 +964,7 @@ const LogisticsManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      {getAssignmentDisplay(method) === 'All Products' ? (
+                      {getAssignmentDisplay(method) === "All Products" ? (
                         <div className="flex items-center gap-1">
                           <ShoppingCart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           <span className="text-sm text-gray-900 dark:text-white">
@@ -941,7 +972,7 @@ const LogisticsManagement = () => {
                           </span>
                         </div>
                       ) : getAssignmentDisplay(method).startsWith(
-                          'Categories'
+                          "Categories",
                         ) ? (
                         <div className="flex items-center gap-1">
                           <Tag className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -959,7 +990,7 @@ const LogisticsManagement = () => {
                       )}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {method.type.replace('_', ' ').toUpperCase()}
+                      {method.type.replace("_", " ").toUpperCase()}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -972,11 +1003,11 @@ const LogisticsManagement = () => {
                     <span
                       className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                         method.isActive
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                       }`}
                     >
-                      {method.isActive ? 'Active' : 'Inactive'}
+                      {method.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1071,6 +1102,9 @@ const LogisticsManagement = () => {
             Manage shipping zones, methods, and logistics configuration
           </p>
         </div>
+        {/* GLOBAL admins (IT/DIRECTOR) only — renders nothing for
+            COUNTRY-scoped admins, see CountrySwitcher's own comment. */}
+        <CountrySwitcher value={countryFilter} onChange={setCountryFilter} />
       </div>
 
       {/* Tabs */}
@@ -1078,17 +1112,17 @@ const LogisticsManagement = () => {
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-              { id: 'zones', label: 'Shipping Zones', icon: MapPin },
-              { id: 'methods', label: 'Shipping Methods', icon: Truck },
+              { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+              { id: "zones", label: "Shipping Zones", icon: MapPin },
+              { id: "methods", label: "Shipping Methods", icon: Truck },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -1100,9 +1134,9 @@ const LogisticsManagement = () => {
 
         {/* Tab Content */}
         <div className="p-6">
-          {activeTab === 'dashboard' && <DashboardTab />}
-          {activeTab === 'zones' && <ZonesTab />}
-          {activeTab === 'methods' && <MethodsTab />}
+          {activeTab === "dashboard" && <DashboardTab />}
+          {activeTab === "zones" && <ZonesTab />}
+          {activeTab === "methods" && <MethodsTab />}
         </div>
       </div>
 
@@ -1162,7 +1196,11 @@ const LogisticsManagement = () => {
         onImport={(csvData) => logisticsAPI.importShippingZonesCSV({ csvData })}
         onImportSuccess={async () => {
           setZonesPage(1);
-          await Promise.all([fetchZones(), fetchAllZones(), fetchLogisticsData()]);
+          await Promise.all([
+            fetchZones(),
+            fetchAllZones(),
+            fetchLogisticsData(),
+          ]);
         }}
         formatGuide={
           <div className="text-sm space-y-2">
@@ -1177,16 +1215,17 @@ const LogisticsManagement = () => {
             <div className="text-gray-600 dark:text-gray-400 space-y-1">
               <div>
                 • <strong>States Coverage</strong> packs every state into one
-                cell:{' '}
-                <code className="text-xs">StateName:all</code> for full state
-                coverage, or{' '}
+                cell: <code className="text-xs">StateName:all</code> for full
+                state coverage, or{" "}
                 <code className="text-xs">
                   StateName:specific[LGA One|LGA Two]
-                </code>{' '}
-                for selected LGAs only. Separate multiple states with{' '}
+                </code>{" "}
+                for selected LGAs only. Separate multiple states with{" "}
                 <code className="text-xs">;</code>
               </div>
-              <div>• Leave Zone Code blank on new rows - it auto-generates.</div>
+              <div>
+                • Leave Zone Code blank on new rows - it auto-generates.
+              </div>
             </div>
             <div className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
               Example States Coverage cell:
@@ -1204,7 +1243,9 @@ const LogisticsManagement = () => {
         onClose={() => setShowMethodImportModal(false)}
         entityLabel="Shipping Methods"
         onExport={() => logisticsAPI.exportShippingMethodsCSV()}
-        onImport={(csvData) => logisticsAPI.importShippingMethodsCSV({ csvData })}
+        onImport={(csvData) =>
+          logisticsAPI.importShippingMethodsCSV({ csvData })
+        }
         onImportSuccess={async () => {
           setMethodsPage(1);
           await Promise.all([fetchMethods(), fetchLogisticsData()]);
@@ -1223,16 +1264,16 @@ const LogisticsManagement = () => {
             <div className="text-gray-600 dark:text-gray-400 space-y-1">
               <div>
                 • <strong>Categories</strong>/<strong>Products</strong> use
-                category slug / product SKU, separated by{' '}
-                <code className="text-xs">|</code> - only needed when
-                Assignment matches.
+                category slug / product SKU, separated by{" "}
+                <code className="text-xs">|</code> - only needed when Assignment
+                matches.
               </div>
               <div>
                 • Only fill the columns for the row's <strong>Type</strong>;
                 leave the others blank.
               </div>
               <div>
-                • Zones are referenced by their <strong>Zone Code</strong>{' '}
+                • Zones are referenced by their <strong>Zone Code</strong>{" "}
                 (create zones first via the Zones tab or CSV).
               </div>
             </div>
@@ -1271,27 +1312,25 @@ pickup (name^address^city^state^lga^phone, "|" between locations):
         formatGuide={
           <div className="text-sm space-y-2">
             <div className="text-gray-700 dark:text-gray-300">
-              One row per rate (no packed cells) - much easier to bulk-edit
-              in Excel/Sheets than the Methods CSV. This only updates{' '}
+              One row per rate (no packed cells) - much easier to bulk-edit in
+              Excel/Sheets than the Methods CSV. This only updates{" "}
               <strong>existing</strong> methods (matched by Method Code) -
               create the method first via the Methods tab or Methods CSV.
             </div>
             <div className="font-mono text-xs bg-white dark:bg-gray-800 p-2 rounded border break-all">
-              Method Code, Method Name, Type, Zone Code, Zone Name, Min
-              Weight, Max Weight, Cost, Location Name, Address, City, State,
-              LGA, Phone
+              Method Code, Method Name, Type, Zone Code, Zone Name, Min Weight,
+              Max Weight, Cost, Location Name, Address, City, State, LGA, Phone
             </div>
             <div className="text-gray-600 dark:text-gray-400 space-y-1">
               <div>
-                • <strong>flat_rate</strong>: one row with Zone Code blank =
-                the default/base cost. One row per zone override with Zone
-                Code filled in and Cost set (Min/Max Weight, location columns
+                • <strong>flat_rate</strong>: one row with Zone Code blank = the
+                default/base cost. One row per zone override with Zone Code
+                filled in and Cost set (Min/Max Weight, location columns
                 unused).
               </div>
               <div>
-                • <strong>table_shipping</strong>: one row per Zone Code +
-                Min Weight + Max Weight + Cost. Zone Code is required on
-                every row.
+                • <strong>table_shipping</strong>: one row per Zone Code + Min
+                Weight + Max Weight + Cost. Zone Code is required on every row.
               </div>
               <div>
                 • <strong>pickup</strong>: one row per location - Zone Code
@@ -1300,10 +1339,10 @@ pickup (name^address^city^state^lga^phone, "|" between locations):
                 method's overall pickup cost.
               </div>
               <div className="text-yellow-700 dark:text-yellow-400">
-                • Important: for any Method Code present in the file, ALL of
-                its rows become the complete new rate/location table for
-                that method - rows you remove are removed from the method
-                too. Methods with no rows in the file are left untouched.
+                • Important: for any Method Code present in the file, ALL of its
+                rows become the complete new rate/location table for that method
+                - rows you remove are removed from the method too. Methods with
+                no rows in the file are left untouched.
               </div>
             </div>
           </div>

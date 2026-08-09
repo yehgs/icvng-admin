@@ -29,6 +29,7 @@ import { logisticsAPI } from '../../utils/api.js';
 import CreateShipmentModal from '../../components/logistics/CreateShipmentModal.jsx';
 import UpdateTrackingModal from '../../components/logistics/UpdateTrackingModal';
 import TrackingDetailsModal from '../../components/logistics/TrackingDetailsModal';
+import CountrySwitcher from '../../components/logistics/CountrySwitcher';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
@@ -53,6 +54,9 @@ const TrackingManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  // GLOBAL admins (IT/DIRECTOR) only — see CountrySwitcher's own comment
+  // and controllers/shipping.controller.js's applyGlobalCountryFilter.
+  const [countryFilter, setCountryFilter] = useState('');
 
   useEffect(() => {
     fetchTrackings();
@@ -64,6 +68,7 @@ const TrackingManagement = () => {
     priorityFilter,
     overdueFilter,
     searchTerm,
+    countryFilter,
   ]);
 
   const fetchTrackings = async () => {
@@ -77,6 +82,7 @@ const TrackingManagement = () => {
         ...(priorityFilter && { priority: priorityFilter }),
         ...(overdueFilter && { overdue: 'true' }),
         ...(searchTerm && { search: searchTerm }),
+        ...(countryFilter && { countryCode: countryFilter }),
       };
 
       const response = await logisticsAPI.getAllTrackings(params);
@@ -95,7 +101,9 @@ const TrackingManagement = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await logisticsAPI.getTrackingStats();
+      const response = await logisticsAPI.getTrackingStats(
+        countryFilter ? { countryCode: countryFilter } : {}
+      );
       if (response.success) {
         setStats(response.data);
       }
@@ -254,13 +262,17 @@ const TrackingManagement = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Create Shipment
-        </button>
+        <div className="flex items-center gap-3">
+          {/* GLOBAL admins (IT/DIRECTOR) only — see CountrySwitcher's own comment. */}
+          <CountrySwitcher value={countryFilter} onChange={setCountryFilter} />
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Create Shipment
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}

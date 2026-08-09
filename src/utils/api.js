@@ -2908,14 +2908,28 @@ export const logisticsAPI = {
     return apiCall(`/shipping/track/${trackingNumber}`);
   },
 
-  getTrackingStats: async () => {
-    return apiCall("/shipping/trackings/stats");
+  getTrackingStats: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        queryParams.append(key, value);
+      }
+    });
+    const queryString = queryParams.toString();
+    return apiCall(`/shipping/trackings/stats${queryString ? `?${queryString}` : ""}`);
   },
 
   // ===== DASHBOARD =====
 
-  getShippingDashboardStats: async () => {
-    return apiCall("/shipping/dashboard/stats");
+  getShippingDashboardStats: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        queryParams.append(key, value);
+      }
+    });
+    const queryString = queryParams.toString();
+    return apiCall(`/shipping/dashboard/stats${queryString ? `?${queryString}` : ""}`);
   },
 
   // ===== ORDERS =====
