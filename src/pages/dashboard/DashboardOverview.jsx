@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "../../utils/api";
 import AnnouncementPopup from "../../components/notifications/AnnouncementPopup";
+import FlagIcon from "../../components/FlagIcon.jsx";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import CountryScopeBanner from "../../components/country/CountryScopeBanner.jsx";
@@ -98,7 +99,7 @@ const CountryBreakdown = ({ data, formatPrice }) => {
         {data.map((row) => (
           <div key={row._id} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg">{row.flagEmoji || "🏳️"}</span>
+              <FlagIcon code={row._id} className="w-5 h-4 rounded-sm" />
               <div>
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{row.name || row._id}</p>
                 <p className="text-xs text-gray-400">

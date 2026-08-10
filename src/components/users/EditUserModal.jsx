@@ -631,10 +631,10 @@ const EditUserModal = ({
                         }`}
                       >
                         <option value="">Select country…</option>
-                        <option value="NG">🇳🇬 Nigeria</option>
-                        <option value="TG">🇹🇬 Togo</option>
-                        <option value="BJ">🇧🇯 Benin</option>
-                        <option value="IT">🇮🇹 Italy</option>
+                        <option value="NG">Nigeria</option>
+                        <option value="TG">Togo</option>
+                        <option value="BJ">Benin</option>
+                        <option value="IT">Italy</option>
                       </select>
                       {errors.assignedCountry && (
                         <p className="mt-1 text-xs text-red-600">

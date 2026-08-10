@@ -39,14 +39,20 @@ const MenuItem = React.memo(function MenuItem({
     (hasItems && item.items.some(s => currentPath === s.path && hasAccessTo(userSubRole, s.allowedSubRoles)));
 
   // Filter sub-items:
-  // Country-scoped admins never see logistics sub-items
-  // Item #7: nor warehouse/quality-management (inventory is HQ stock
-  // custody, not a per-country concern) or pricing/purchase/stock-analysis
-  // reports (those roll up HQ-wide pricing and procurement data) — a
+  // Item #7: warehouse/quality-management (inventory is HQ stock custody,
+  // not a per-country concern) and pricing/purchase/stock-analysis reports
+  // (those roll up HQ-wide pricing and procurement data) stay HQ-only — a
   // foreign admin keeps only manual/website orders and inventory+sales
   // reports scoped to their own country.
+  //
+  // /logistics and /tracking used to be in this block too ("country-scoped
+  // admins never see logistics sub-items") — stale from before the
+  // country-scoped Logistics system existed. A foreign Logistics/Manager/
+  // Sales Manager admin manages their OWN country's zones/methods/tracking
+  // now (see controllers/shipping.controller.js's countryScopedPlugin
+  // usage) — hiding the module from them entirely was blocking a feature
+  // that was actually built and working server-side.
   const COUNTRY_BLOCKED_SUB_PATHS = [
-    "/logistics", "/tracking",
     "/warehouse", "/stock",
     "/reports/pricing", "/reports/purchase", "/reports/stock-analysis",
   ];
@@ -122,8 +128,6 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
   // hasAccess — standard subRole check, no country-scope special-casing.
   const hasAccess = (roles) => hasAccessTo(userSubRole, roles);
 
-  const isLogisticsItem = (key) => ["logistics"].includes(key);
-
   const menuItems = [
     { key: "dashboard", title: t("nav.dashboard"), path: "/admin/dashboard", icon: Home, single: true, allowedSubRoles: [] },
     {
@@ -188,8 +192,10 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
       ],
     },
     {
-      // Logistics is only for HQ (IT, DIRECTOR, LOGISTICS subRole)
-      // The hasAccess function + isLogisticsItem double-guard this.
+      // Country-scoped logistics: MANAGER/SALES_MANAGER/LOGISTICS can be
+      // foreign-assigned and manage their own country's zones/methods/
+      // tracking; IT/DIRECTOR (always GLOBAL) see/manage every country's —
+      // see controllers/shipping.controller.js's countryScopedPlugin usage.
       key: "logistics", title: t("nav.logistics"), icon: Truck,
       allowedSubRoles: ["IT","DIRECTOR","LOGISTICS","SALES_MANAGER","MANAGER"],
       items: [

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { adminOrderAPI } from "../../utils/api";
 import { generateOrderPDF } from "../../utils/pdfGenerator";
+import FlagIcon from "../FlagIcon.jsx";
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -1084,7 +1085,7 @@ const WebsiteOrderDetailsModal = ({
                 const meta = allCountries?.find((c) => c.code === code);
                 return (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                    <span>{meta?.flagEmoji || (code === "NG" ? "🇳🇬" : "🌍")}</span>
+                    <FlagIcon code={code} className="w-4 h-3 rounded-sm" />
                     {meta?.name || code}
                   </span>
                 );

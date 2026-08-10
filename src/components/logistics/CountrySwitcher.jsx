@@ -15,6 +15,7 @@
 import React, { useState, useEffect } from "react";
 import { Globe, ChevronDown } from "lucide-react";
 import { getCurrentUser, countryAPI } from "../../utils/api";
+import FlagIcon from "../FlagIcon.jsx";
 
 const CountrySwitcher = ({ value, onChange }) => {
   const user = getCurrentUser();
@@ -47,8 +48,8 @@ const CountrySwitcher = ({ value, onChange }) => {
       >
         <Globe className="w-4 h-4 text-gray-500" />
         {value ? (
-          <span>
-            {current?.flagEmoji ? `${current.flagEmoji} ` : ""}
+          <span className="inline-flex items-center gap-1.5">
+            <FlagIcon code={value} className="w-4 h-3 rounded-sm" />
             {current?.name || value}
           </span>
         ) : (
@@ -71,12 +72,13 @@ const CountrySwitcher = ({ value, onChange }) => {
             {countries.map((c) => (
               <button
                 key={c.code}
-                className={`flex items-center w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${
+                className={`flex items-center gap-1.5 w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${
                   value === c.code ? "bg-green-50 text-green-900 font-medium" : "text-gray-700"
                 }`}
                 onClick={() => { onChange(c.code); setIsOpen(false); }}
               >
-                {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code})
+                <FlagIcon code={c.code} className="w-4 h-3 rounded-sm" />
+                {c.name} ({c.code})
               </button>
             ))}
           </div>

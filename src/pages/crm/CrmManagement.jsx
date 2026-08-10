@@ -30,6 +30,9 @@ import {
   ShieldAlert,
   MessageSquare,
   UserCircle,
+  FileDown,
+  Upload,
+  FileUp,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getCurrentUser } from "../../utils/api";
@@ -49,6 +52,29 @@ async function apiFetch(path, options = {}) {
     },
   });
   return res.json();
+}
+
+// For CSV endpoints (template/export) — these return a raw file, not JSON,
+// so apiFetch's res.json() would break on them. Same blob-download pattern
+// already used for shipping CSV exports (admin/src/utils/api.js).
+async function downloadFile(path, filenameFallback) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Download failed");
+
+  const blob = await res.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = filenameFallback;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  }, 100);
 }
 
 const STAGE_COLORS = {
@@ -314,12 +340,114 @@ function ReviewDeleteModal({ lead, onClose, onReview }) {
   );
 }
 
+// ── Import Leads CSV Modal ───────────────────────────────────────────────────
+// File picker → read as text → send to bulkImportLeadsCsvController →
+// show per-row results (created/failed with reasons). Country-scoped
+// automatically server-side (see that controller's own comment) — a
+// COUNTRY-scoped admin's import always lands in their own country
+// regardless of anything in the file.
+function ImportLeadsModal({ onClose, onDownloadTemplate, onImport }) {
+  const [file, setFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleFileChange = (e) => {
+    setResult(null);
+    setFile(e.target.files?.[0] || null);
+  };
+
+  const handleSubmit = async () => {
+    if (!file) return;
+    setImporting(true);
+    setResult(null);
+    try {
+      const csvData = await file.text();
+      const res = await onImport(csvData);
+      setResult(res);
+    } catch (err) {
+      setResult({ success: false, message: err.message || "Import failed" });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Import Leads from CSV</h2>
+          <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-300">
+            New here? Download the template first — it has every column,
+            an example row, and the exact Stage/Source values that are
+            accepted.
+          </div>
+          <button
+            onClick={onDownloadTemplate}
+            className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            <FileDown className="h-4 w-4" /> Download CSV template
+          </button>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              CSV file
+            </label>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleFileChange}
+              className="w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          {result && (
+            <div className={`rounded-lg p-3 text-sm ${result.success ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300" : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300"}`}>
+              <p className="font-medium">{result.message}</p>
+              {result.data?.failed?.length > 0 && (
+                <ul className="mt-2 space-y-0.5 max-h-32 overflow-y-auto text-xs">
+                  {result.data.failed.map((f, i) => (
+                    <li key={i}>Row {f.row}: {f.reason}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200 dark:border-gray-700">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+            Close
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!file || importing}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+          >
+            {importing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            Import
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function CrmManagement() {
   const { t } = useAdminTranslation();
   const currentUser = getCurrentUser();
   const canHardDelete = SUPER_DELETE_ROLES.includes(currentUser?.subRole);
   const canSeeMetrics = METRICS_ROLES.includes(currentUser?.subRole);
+  // "IT and the Manager... exposed to all countries' CRM but manager and
+  // other roles are country-scoped" — matches getCurrentUser().scope, same
+  // signal used throughout the admin app (AdminCountryContext.isGlobalAdmin)
+  // for exactly this GLOBAL-vs-COUNTRY distinction. Used here only for the
+  // Export button's tooltip — the actual scoping is enforced server-side
+  // (buildCountryFilter in crm-lead.controller.js), this is just accurate
+  // UI copy, not a security boundary.
+  const isGlobalAdminForCrm = currentUser?.scope !== "COUNTRY";
 
   const [meta, setMeta] = useState({
     CRM_STAGES: [],
@@ -345,6 +473,8 @@ export default function CrmManagement() {
   const [editLead, setEditLead] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const [selectedLead, setSelectedLead] = useState(null);
   const [activityInput, setActivityInput] = useState("");
@@ -389,6 +519,48 @@ export default function CrmManagement() {
     const d = await apiFetch("/admin/crm/stats");
     if (d.success) setStats(d.data);
   }, []);
+
+  const handleDownloadTemplate = useCallback(async () => {
+    try {
+      await downloadFile("/admin/crm/leads/template/csv", "crm_leads_import_template.csv");
+    } catch (err) {
+      toast.error(err.message || "Failed to download template");
+    }
+  }, []);
+
+  const handleExportCsv = useCallback(async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterStage) params.set("stage", filterStage);
+      if (filterSource) params.set("source", filterSource);
+      if (search) params.set("search", search);
+      const qs = params.toString();
+      await downloadFile(
+        `/admin/crm/leads/export/csv${qs ? `?${qs}` : ""}`,
+        `crm_leads_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+    } catch (err) {
+      toast.error(err.message || "Failed to export leads");
+    } finally {
+      setExporting(false);
+    }
+  }, [filterStage, filterSource, search]);
+
+  const handleImportCsv = useCallback(async (csvData) => {
+    const d = await apiFetch("/admin/crm/leads/import/csv", {
+      method: "POST",
+      body: JSON.stringify({ csvData }),
+    });
+    if (d.success) {
+      toast.success(d.message || "Import complete");
+      fetchLeads();
+      fetchStats();
+    } else {
+      toast.error(d.message || "Import failed");
+    }
+    return d;
+  }, [fetchLeads, fetchStats]);
 
   const fetchPendingDeletes = useCallback(async () => {
     if (!canHardDelete) return;
@@ -987,6 +1159,27 @@ export default function CrmManagement() {
             ))}
           </div>
           <button
+            onClick={handleDownloadTemplate}
+            className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+            title="Download CSV template"
+          >
+            <FileDown className="h-4 w-4" /> Template
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            <Upload className="h-4 w-4" /> Import CSV
+          </button>
+          <button
+            onClick={handleExportCsv}
+            disabled={exporting}
+            className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 disabled:opacity-50"
+            title={isGlobalAdminForCrm ? "Exports every country" : "Exports your country only"}
+          >
+            {exporting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />} Export CSV
+          </button>
+          <button
             onClick={() => {
               setEditLead(null);
               setForm(EMPTY_FORM);
@@ -1564,6 +1757,15 @@ export default function CrmManagement() {
           lead={reviewTarget}
           onClose={() => setReviewTarget(null)}
           onReview={handleReviewDeleteRequest}
+        />
+      )}
+
+      {/* ── Import Leads CSV Modal ── */}
+      {showImportModal && (
+        <ImportLeadsModal
+          onClose={() => setShowImportModal(false)}
+          onDownloadTemplate={handleDownloadTemplate}
+          onImport={handleImportCsv}
         />
       )}
     </div>

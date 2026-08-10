@@ -1,6 +1,7 @@
 // icvng-admin/src/pages/order/WebsiteOrderManagement.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { adminOrderAPI, getCurrentUser } from "../../utils/api";
+import FlagIcon from "../../components/FlagIcon.jsx";
 import {
   Package,
   RefreshCw,
@@ -906,7 +907,7 @@ const WebsiteOrderManagement = () => {
                             const cm = countryMeta(main.countryCode);
                             return (
                               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300">
-                                <span>{cm.flagEmoji}</span>
+                                <FlagIcon code={main.countryCode || "NG"} className="w-4 h-3 rounded-sm" />
                                 <span>{main.countryCode || "NG"}</span>
                               </span>
                             );

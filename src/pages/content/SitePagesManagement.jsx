@@ -22,6 +22,7 @@ import {
 import toast from "react-hot-toast";
 import { apiCall, handleApiError } from "../../utils/api";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import FlagIcon from "../../components/FlagIcon.jsx";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 // ── Known pages (slug -> label). New pages can be added by typing a new
@@ -475,7 +476,7 @@ export default function SitePagesManagement() {
           >
             {countryOptions.map((c) => (
               <option key={c.code} value={c.code}>
-                {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name}{c.code !== "GLOBAL" ? ` (${c.code})` : ""}
+                {c.name}{c.code !== "GLOBAL" ? ` (${c.code})` : ""}
               </option>
             ))}
           </select>
@@ -537,7 +538,7 @@ export default function SitePagesManagement() {
                     activeLangTab === l.code ? "bg-amber-600 text-white border-amber-600" : "border-gray-300 text-gray-600 dark:text-gray-300"
                   }`}
                 >
-                  {l.flag} {l.label}
+                  <FlagIcon code={l.code} className="w-4 h-3 rounded-sm" /> {l.label}
                   {isMissing && <AlertCircle className="w-3 h-3 text-red-400" />}
                   {isManual && <PenLine className="w-3 h-3 text-green-400" />}
                   {!isMissing && !isManual && <Bot className="w-3 h-3 text-amber-300" />}

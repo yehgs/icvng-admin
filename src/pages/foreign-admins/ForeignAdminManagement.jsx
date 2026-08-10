@@ -29,6 +29,7 @@ import toast from "react-hot-toast";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { getCurrentUser } from "../../utils/api.js";
+import FlagIcon from "../../components/FlagIcon.jsx";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
 
@@ -59,7 +60,12 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-const LANG_FLAGS = { en: "🇬🇧", fr: "🇫🇷", it: "🇮🇹" };
+// Native <select><option> elements can only render plain text — no SVG/
+// FlagIcon possible there (unlike the <span>-based flag usages elsewhere
+// in this file, already fixed to use FlagIcon). Flag emoji in an
+// <option> label never rendered reliably even before (Windows Chrome/
+// Edge show blank/raw text for flag emoji everywhere, not just here), so
+// these are just plain text now instead.
 const STATUS_COLORS = {
   Active: "bg-green-100 text-green-700",
   Inactive: "bg-gray-100 text-gray-700",
@@ -255,7 +261,7 @@ export default function ForeignAdminManagement() {
         <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)}
           className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
           <option value="">All Countries</option>
-          {allCountries.map(c => <option key={c.code} value={c.code}>{c.flagEmoji} {c.name}</option>)}
+          {allCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
         </select>
       </div>
 
@@ -296,7 +302,7 @@ export default function ForeignAdminManagement() {
                     <td className="px-6 py-4">
                       {country ? (
                         <span className="flex items-center gap-1.5">
-                          <span>{country.flagEmoji}</span>
+                          <FlagIcon code={country.code} className="w-5 h-4 rounded-sm" />
                           <span className="text-gray-700 dark:text-gray-300 text-sm">{country.name}</span>
                         </span>
                       ) : (
@@ -315,7 +321,10 @@ export default function ForeignAdminManagement() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm">{LANG_FLAGS[admin.preferredLanguage] || "🌐"} {admin.preferredLanguage?.toUpperCase()}</span>
+                      <span className="text-sm inline-flex items-center gap-1">
+                        <FlagIcon code={admin.preferredLanguage} className="w-4 h-3 rounded-sm" />
+                        {admin.preferredLanguage?.toUpperCase()}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[admin.status] || STATUS_COLORS.Active}`}>
@@ -403,7 +412,7 @@ export default function ForeignAdminManagement() {
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required>
                   <option value="">— Select country —</option>
-                  {allCountries.map(c => <option key={c.code} value={c.code}>{c.flagEmoji} {c.name}</option>)}
+                  {allCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                 </select>
               </div>
 
@@ -413,9 +422,9 @@ export default function ForeignAdminManagement() {
                 <select value={form.preferredLanguage}
                   onChange={e => setForm(p => ({ ...p, preferredLanguage: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                  <option value="en">🇬🇧 English</option>
-                  <option value="fr">🇫🇷 Français</option>
-                  <option value="it">🇮🇹 Italiano</option>
+                  <option value="en">English</option>
+                  <option value="fr">Français</option>
+                  <option value="it">Italiano</option>
                 </select>
               </div>
 

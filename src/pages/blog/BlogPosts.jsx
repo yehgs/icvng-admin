@@ -1265,7 +1265,7 @@ const BlogPosts = () => {
               >
                 {allCountries.map((c) => (
                   <option key={c.code} value={c.code}>
-                    {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code})
+                    {c.name} ({c.code})
                   </option>
                 ))}
               </select>

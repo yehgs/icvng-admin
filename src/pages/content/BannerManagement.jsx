@@ -115,7 +115,7 @@ const BannerManagement = () => {
             >
               <option value="ALL">{t('content.allMarkets')}</option>
               {allCountries.map((c) => (
-                <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name}</option>
+                <option key={c.code} value={c.code}>{c.name}</option>
               ))}
             </select>
           ) : (
@@ -232,7 +232,7 @@ const BannerManagement = () => {
                   <select value={form.countryCode} onChange={(e) => setForm((p) => ({ ...p, countryCode: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
                     {allCountries.map((c) => (
-                      <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.name} ({c.code})</option>
+                      <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
                     ))}
                   </select>
                 ) : (

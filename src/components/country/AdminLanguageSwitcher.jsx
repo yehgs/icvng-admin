@@ -9,8 +9,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import { ChevronDown } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
-
-const LANG_FLAGS = { en: "🇬🇧", fr: "🇫🇷", it: "🇮🇹" };
+import FlagIcon from "../FlagIcon.jsx";
 
 export default function AdminLanguageSwitcher({ className = "" }) {
   const { t } = useAdminTranslation();
@@ -41,7 +40,7 @@ export default function AdminLanguageSwitcher({ className = "" }) {
                    rounded-lg transition-colors"
         title={t("common.language")}
       >
-        <span>{LANG_FLAGS[language] || "🌐"}</span>
+        <FlagIcon code={language} className="w-5 h-4 rounded-sm" />
         <span className="uppercase text-xs">{language}</span>
         <ChevronDown
           className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
@@ -61,7 +60,7 @@ export default function AdminLanguageSwitcher({ className = "" }) {
                            hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors
                            ${lang === language ? "bg-amber-50 dark:bg-amber-900/30 font-semibold text-amber-800 dark:text-amber-300" : "text-gray-700 dark:text-gray-300"}`}
               >
-                <span>{LANG_FLAGS[lang] || "🌐"}</span>
+                <FlagIcon code={lang} className="w-5 h-4 rounded-sm" />
                 <span>{languageNames[lang]}</span>
                 {lang === language && (
                   <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-600" />

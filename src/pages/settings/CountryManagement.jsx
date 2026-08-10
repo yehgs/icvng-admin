@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from "react";
 import { countryAPI } from "../../utils/api";
+import FlagIcon from "../../components/FlagIcon.jsx";
 import { useCapabilities, Can } from "../../contexts/CapabilitiesContext";
 
 const EMPTY = {
@@ -168,7 +169,10 @@ export default function CountryManagement() {
               countries.map((c) => (
                 <tr key={c.code} className="border-t border-gray-100">
                   <td className="px-4 py-3 font-medium">
-                    {c.flagEmoji} {c.name}
+                    <span className="inline-flex items-center gap-1.5">
+                      <FlagIcon code={c.code} className="w-5 h-4 rounded-sm" />
+                      {c.name}
+                    </span>
                     {c.isHQ && (
                       <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                         HQ
@@ -238,7 +242,7 @@ export default function CountryManagement() {
             <Field label="Name (e.g. Ghana)">
               <input className="input" value={form.name} onChange={(e) => set("name", e.target.value)} />
             </Field>
-            <Field label="Flag emoji">
+            <Field label="Flag emoji (fallback only — most of the UI now renders an actual flag icon instead; this value isn't required to look right)">
               <input className="input" value={form.flagEmoji} onChange={(e) => set("flagEmoji", e.target.value)} />
             </Field>
             <Field label="Domain (e.g. i-coffee.gh)">

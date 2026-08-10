@@ -28,12 +28,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Languages, RefreshCw, PenLine, Bot, Check, X, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import FlagIcon from "../FlagIcon.jsx";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
 
 const ALL_NON_EN = [
-  { code: "fr", label: "Français", flag: "🇫🇷" },
-  { code: "it", label: "Italiano", flag: "🇮🇹" },
+  { code: "fr", label: "Français" },
+  { code: "it", label: "Italiano" },
 ];
 
 async function apiFetch(path, options = {}) {
@@ -171,7 +172,7 @@ export default function InlineTranslateFields({ entityType, entity, fields, fiel
           return (
             <div key={lang.code} className="flex items-center justify-between gap-2 text-sm">
               <span className="flex items-center gap-1.5 w-24 shrink-0">
-                <span>{lang.flag}</span>
+                <FlagIcon code={lang.code} className="w-4 h-3 rounded-sm" />
                 <span className="text-gray-700 dark:text-gray-200">{lang.label}</span>
               </span>
 
