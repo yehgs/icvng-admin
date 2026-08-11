@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, User, Building2 } from 'lucide-react';
 import { customerAPI } from '../../utils/api';
+import { getCurrentUser } from '../../utils/api';
 import toast from 'react-hot-toast';
 import ImageUploader from '../common/ImageUploader';
 import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas';
@@ -9,6 +10,12 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
 const CustomerModal = ({ isOpen, onClose, onSuccess, customer }) => {
   const { t } = useAdminTranslation();
+  // GRAPHICS holds customers.manage for photo updates only — server
+  // strips everything except image (see updateCustomerController). The
+  // rest of the form is wrapped in a disabled <fieldset> below instead of
+  // hiding it, so a Graphics account can still see who the photo belongs
+  // to without the fields looking falsely editable.
+  const isGraphicsOnly = getCurrentUser()?.subRole === "GRAPHICS";
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -230,6 +237,19 @@ const handleImageChange = (images) => {
     </p>
   )}
 </div>
+
+          {isGraphicsOnly && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300">
+              Graphics/Designer accounts can update the customer photo only.
+              The fields below are shown for reference and are not editable.
+            </div>
+          )}
+
+          {/* Every field below is disabled at once via this <fieldset> for
+              GRAPHICS — server strips everything except image regardless
+              (updateCustomerController), this just keeps the UI honest
+              about that instead of looking fully editable. */}
+          <fieldset disabled={isGraphicsOnly} className={isGraphicsOnly ? "opacity-60" : ""}>
 
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -458,6 +478,8 @@ const handleImageChange = (images) => {
             />
           </div>
 
+          </fieldset>
+
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
@@ -474,7 +496,7 @@ const handleImageChange = (images) => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {customer ? 'Update Customer' : 'Create Customer'}
+              {isGraphicsOnly ? 'Save Photo' : (customer ? 'Update Customer' : 'Create Customer')}
             </button>
           </div>
         </form>

@@ -135,9 +135,9 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
       items: [
         { title: t("nav.products"),           path: "/admin/products",             icon: Package,          allowedSubRoles: [] },
         { title: t("nav.productRequests"),    path: "/admin/product-requests",     icon: Inbox,            allowedSubRoles: ["SALES","SALES_MANAGER","IT","DIRECTOR"] },
-        { title: t("nav.categories"),         path: "/admin/categories",           icon: Layers,           allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
-        { title: t("nav.subCategories"),      path: "/admin/sub-categories",       icon: ListTree,         allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
-        { title: t("nav.brands"),             path: "/admin/brands",               icon: Coffee,           allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
+        { title: t("nav.categories"),         path: "/admin/categories",           icon: Layers,           allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.subCategories"),      path: "/admin/sub-categories",       icon: ListTree,         allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.brands"),             path: "/admin/brands",               icon: Coffee,           allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.colors"),             path: "/admin/colors",               icon: Palette,          allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
         { title: t("nav.tags"),               path: "/admin/tags",                 icon: Tag,              allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
         { title: t("nav.attributes"),         path: "/admin/attributes",           icon: SlidersHorizontal,allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
@@ -223,7 +223,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
         { title: t("nav.stockAnalysis"),    path: "/admin/reports/stock-analysis",icon: BarChart3,allowedSubRoles: ["IT","DIRECTOR","WAREHOUSE","MANAGER"] },
       ],
     },
-    { key: "customers",   title: t("nav.customerManagement"), path: "/admin/customers", icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","SALES","SALES_MANAGER","MANAGER"] },
+    { key: "customers",   title: t("nav.customerManagement"), path: "/admin/customers", icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","SALES","SALES_MANAGER","MANAGER","GRAPHICS"] },
     // MANAGER (HQ or country/"foreign" scoped) never sees User Management —
     // only IT / DIRECTOR (full access) and HR (people-ops function).
     { key: "users",       title: t("nav.userManagement"),     path: "/admin/users",     icon: Users,    single: true, allowedSubRoles: ["IT","DIRECTOR","HR"] },

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import ImageUploader from '../../components/common/ImageUploader';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
+import { getCurrentUser } from "../../utils/api";
 
 const EmptyState = ({ icon: Icon, message, sub }) => (
   <div className="text-center py-16">
@@ -69,10 +70,12 @@ const TableRow = ({ brand, onEdit, onDelete }) => {
           className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors" title={t("common.edit")}>
           <Edit className="w-4 h-4" />
         </button>
+        {getCurrentUser()?.subRole !== "GRAPHICS" && (
         <button onClick={() => onDelete(brand._id, brand.name)}
           className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title={t("common.delete")}>
           <Trash2 className="w-4 h-4" />
         </button>
+        )}
       </div>
     </td>
   </tr>
@@ -111,10 +114,12 @@ const GridCard = ({ brand, onEdit, onDelete }) => {
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
         <Edit className="w-3 h-3" /> {t("common.edit")}
       </button>
+      {getCurrentUser()?.subRole !== "GRAPHICS" && (
       <button onClick={() => onDelete(brand._id, brand.name)}
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
         <Trash2 className="w-3 h-3" /> {t("common.delete")}
       </button>
+      )}
     </div>
   </div>
   );
@@ -132,6 +137,11 @@ const BrandManagement = () => {
   const [activeTab, setActiveTab] = useState('brands');
   const [sort, setSort] = useState({ field: 'name', dir: 'asc' });
   const [formData, setFormData] = useState({ name: '', image: '', compatibleSystem: false });
+  // GRAPHICS holds catalog.manage for image-only updates — server strips
+  // everything except image (see updateBrandController). Disable the
+  // other fields here so the UI is honest about that instead of looking
+  // fully editable and silently discarding non-image changes.
+  const isGraphicsOnly = getCurrentUser()?.subRole === "GRAPHICS";
   const [errors, setErrors] = useState({});
 
   useEffect(() => { fetchBrands(); }, []);
@@ -238,12 +248,14 @@ const BrandManagement = () => {
             {t("brands.subtitle", { total: brands.length, regular: regularCount, compatible: compatibleCount })}
           </p>
         </div>
+        {!isGraphicsOnly && (
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> {t("brands.addBrand")}
         </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -359,7 +371,8 @@ const BrandManagement = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                  readOnly={isGraphicsOnly}
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'} ${isGraphicsOnly ? 'bg-gray-50 dark:bg-gray-900 cursor-not-allowed' : ''}`}
                   placeholder={t("brands.brandNamePlaceholder")}
                 />
                 {errors.name && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
@@ -382,7 +395,12 @@ const BrandManagement = () => {
                 />
                 {errors.image && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.image}</p>}
               </div>
-              <div className={`rounded-lg p-4 border transition-colors ${formData.compatibleSystem ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-600'}`}>
+              {isGraphicsOnly && (
+                <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
+                  Graphics/Designer accounts can update the brand image only.
+                </div>
+              )}
+              <div className={`rounded-lg p-4 border transition-colors ${formData.compatibleSystem ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-600'} ${isGraphicsOnly ? 'hidden' : ''}`}>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"

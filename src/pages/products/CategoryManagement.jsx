@@ -9,6 +9,7 @@ import { getCategories, clearCategoryCache } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
+import { getCurrentUser } from "../../utils/api";
 
 const EmptyState = ({ message, sub }) => (
   <div className="text-center py-16">
@@ -68,10 +69,12 @@ const TableRow = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) =>
             className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors" title={t("common.edit")}>
             <Edit className="w-4 h-4" />
           </button>
+          {getCurrentUser()?.subRole !== "GRAPHICS" && (
           <button onClick={() => onDelete(category._id, category.name)}
             className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title={t("common.delete")}>
             <Trash2 className="w-4 h-4" />
           </button>
+          )}
           <button onClick={() => onToggleExpand(category._id)}
             className={`p-1.5 rounded transition-colors ${isExpanded ? 'text-amber-700 bg-amber-50 dark:bg-amber-900/30' : 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'}`}
             title={t("categories.translate")}>
@@ -117,10 +120,12 @@ const GridCard = ({ category, onEdit, onDelete, isExpanded, onToggleExpand }) =>
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
         <Edit className="w-3 h-3" /> {t("common.edit")}
       </button>
+      {getCurrentUser()?.subRole !== "GRAPHICS" && (
       <button onClick={() => onDelete(category._id, category.name)}
         className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
         <Trash2 className="w-3 h-3" /> {t("common.delete")}
       </button>
+      )}
       <button onClick={() => onToggleExpand(category._id)}
         className={`flex items-center justify-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors ${isExpanded ? 'bg-amber-100 text-amber-800' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
         title={t("categories.translate")}>
@@ -150,6 +155,8 @@ const CategoryManagement = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sort, setSort] = useState({ field: 'name', dir: 'asc' });
   const [formData, setFormData] = useState({ name: '', image: '' });
+  // GRAPHICS: image-only — see updateCategoryController.
+  const isGraphicsOnly = getCurrentUser()?.subRole === "GRAPHICS";
   const [errors, setErrors] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id));
@@ -252,12 +259,14 @@ const CategoryManagement = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("categories.title")}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{t("categories.categoryCount", { count: categories.length })}</p>
         </div>
+        {!isGraphicsOnly && (
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> {t("categories.addCategory")}
         </button>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -339,13 +348,19 @@ const CategoryManagement = () => {
               </button>
             </div>
             <div className="p-5 space-y-4">
+              {isGraphicsOnly && (
+                <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
+                  Graphics/Designer accounts can update the category image only.
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("categories.categoryName")} *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                  readOnly={isGraphicsOnly}
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'} ${isGraphicsOnly ? 'bg-gray-50 dark:bg-gray-900 cursor-not-allowed' : ''}`}
                   placeholder={t("categories.categoryNamePlaceholder")}
                 />
                 {errors.name && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}

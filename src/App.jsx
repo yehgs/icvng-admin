@@ -237,7 +237,7 @@ const App = () => {
                   path="categories"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <CategoryManagement />
                     </RoleProtectedRoute>
@@ -247,7 +247,7 @@ const App = () => {
                   path="brands"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <BrandManagement />
                     </RoleProtectedRoute>
@@ -301,7 +301,7 @@ const App = () => {
                   path="sub-categories"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <SubCategoryManagement />
                     </RoleProtectedRoute>
@@ -457,6 +457,7 @@ const App = () => {
                         "SALES",
                         "SALES_MANAGER",
                         "MANAGER",
+                        "GRAPHICS",
                       ]}
                     >
                       <CustomerManagement />
