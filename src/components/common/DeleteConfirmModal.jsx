@@ -15,12 +15,12 @@ const DeleteConfirmModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md dark:bg-gray-800">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-400"
           >
             <X className="w-6 h-6" />
           </button>
@@ -29,20 +29,20 @@ const DeleteConfirmModal = ({
         <div className="p-6">
           <div className="flex items-center mb-4">
             <div className="flex-shrink-0">
-              <AlertTriangle className="w-12 h-12 text-red-600" />
+              <AlertTriangle className="w-12 h-12 text-red-600 dark:text-red-400" />
             </div>
             <div className="ml-4">
-              <p className="text-gray-700">{message}</p>
+              <p className="text-gray-700 dark:text-gray-300">{message}</p>
             </div>
           </div>
 
-          <p className="text-sm text-gray-500">{t("deleteModal.cannotUndo")}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t("deleteModal.cannotUndo")}</p>
         </div>
 
-        <div className="flex justify-end gap-4 p-6 border-t bg-gray-50">
+        <div className="flex justify-end gap-4 p-6 border-t bg-gray-50 dark:bg-gray-900">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:hover:bg-gray-900 dark:text-gray-300 dark:border-gray-600"
             disabled={loading}
           >
             Cancel

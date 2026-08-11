@@ -126,8 +126,8 @@ export default function CountryManagement() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Countries</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Countries</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Onboard and manage markets. Nigeria is Headquarters.
           </p>
         </div>
@@ -146,9 +146,9 @@ export default function CountryManagement() {
       )}
 
       {/* Country list */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8 dark:bg-gray-800 dark:border-gray-700">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+          <thead className="bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
             <tr>
               <th className="text-left px-4 py-3">Country</th>
               <th className="text-left px-4 py-3">Code</th>
@@ -161,27 +161,27 @@ export default function CountryManagement() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
                   Loading…
                 </td>
               </tr>
             ) : (
               countries.map((c) => (
-                <tr key={c.code} className="border-t border-gray-100">
+                <tr key={c.code} className="border-t border-gray-100 dark:border-gray-700">
                   <td className="px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1.5">
                       <FlagIcon code={c.code} className="w-5 h-4 rounded-sm" />
                       {c.name}
                     </span>
                     {c.isHQ && (
-                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
                         HQ
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3">{c.code}</td>
                   <td className="px-4 py-3">{c.currency?.code}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.domain}</td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{c.domain}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
@@ -195,7 +195,7 @@ export default function CountryManagement() {
                     <Can permission="countries.manage">
                       <button
                         onClick={() => editCountry(c)}
-                        className="text-blue-600 hover:underline mr-3"
+                        className="text-blue-600 hover:underline mr-3 dark:text-blue-400"
                       >
                         Edit
                       </button>
@@ -203,14 +203,14 @@ export default function CountryManagement() {
                         (c.status === "ACTIVE" ? (
                           <button
                             onClick={() => changeStatus(c.code, "INACTIVE")}
-                            className="text-gray-500 hover:underline"
+                            className="text-gray-500 hover:underline dark:text-gray-400"
                           >
                             Deactivate
                           </button>
                         ) : (
                           <button
                             onClick={() => changeStatus(c.code, "ACTIVE")}
-                            className="text-green-600 hover:underline"
+                            className="text-green-600 hover:underline dark:text-green-400"
                           >
                             Activate
                           </button>
@@ -226,46 +226,46 @@ export default function CountryManagement() {
 
       {/* Create / edit form */}
       {canManage ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-4">
             {editingCode ? `Edit ${editingCode}` : "Add a country"}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Code (e.g. GH)">
               <input
-                className="input"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 value={form.code}
                 disabled={!!editingCode}
                 onChange={(e) => set("code", e.target.value.toUpperCase())}
               />
             </Field>
             <Field label="Name (e.g. Ghana)">
-              <input className="input" value={form.name} onChange={(e) => set("name", e.target.value)} />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.name} onChange={(e) => set("name", e.target.value)} />
             </Field>
             <Field label="Flag emoji (fallback only — most of the UI now renders an actual flag icon instead; this value isn't required to look right)">
-              <input className="input" value={form.flagEmoji} onChange={(e) => set("flagEmoji", e.target.value)} />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.flagEmoji} onChange={(e) => set("flagEmoji", e.target.value)} />
             </Field>
             <Field label="Domain (e.g. i-coffee.gh)">
-              <input className="input" value={form.domain} onChange={(e) => set("domain", e.target.value)} />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.domain} onChange={(e) => set("domain", e.target.value)} />
             </Field>
             <Field label="Currency code (e.g. GHS)">
-              <input className="input" value={form.currency.code} onChange={(e) => set("currency.code", e.target.value.toUpperCase())} />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.currency.code} onChange={(e) => set("currency.code", e.target.value.toUpperCase())} />
             </Field>
             <Field label="Currency symbol">
-              <input className="input" value={form.currency.symbol} onChange={(e) => set("currency.symbol", e.target.value)} />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.currency.symbol} onChange={(e) => set("currency.symbol", e.target.value)} />
             </Field>
             <Field label="Default language">
-              <select className="input" value={form.language.default} onChange={(e) => set("language.default", e.target.value)}>
+              <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.language.default} onChange={(e) => set("language.default", e.target.value)}>
                 {languages.map((l) => (
                   <option key={l} value={l}>{l}</option>
                 ))}
               </select>
             </Field>
             <Field label="Timezone">
-              <input className="input" value={form.timezone} onChange={(e) => set("timezone", e.target.value)} placeholder="Africa/Accra" />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.timezone} onChange={(e) => set("timezone", e.target.value)} placeholder="Africa/Accra" />
             </Field>
             <Field label="Phone prefix">
-              <input className="input" value={form.phonePrefix} onChange={(e) => set("phonePrefix", e.target.value)} placeholder="+233" />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.phonePrefix} onChange={(e) => set("phonePrefix", e.target.value)} placeholder="+233" />
             </Field>
           </div>
 
@@ -285,14 +285,14 @@ export default function CountryManagement() {
               and reflect on this country's domain as soon as they're saved.
               Non-English wording for these fields is edited in
               Translations → Countries. */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
               Storefront content
             </h3>
             <div className="grid grid-cols-1 gap-4">
               <Field label="Header preheader message (e.g. free-shipping banner)">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.content.preheaderMessage}
                   onChange={(e) => set("content.preheaderMessage", e.target.value)}
                   placeholder="Free shipping on orders over ₦100,000 within Lagos!"
@@ -302,7 +302,7 @@ export default function CountryManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <Field label="Contact address (footer)">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.contacts.address}
                   onChange={(e) => set("contacts.address", e.target.value)}
                   placeholder="3 Kaffi Street, Alausa, Ikeja, Lagos, Nigeria"
@@ -310,7 +310,7 @@ export default function CountryManagement() {
               </Field>
               <Field label="Contact phone">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.contacts.phone}
                   onChange={(e) => set("contacts.phone", e.target.value)}
                   placeholder="+234 805 242 3935"
@@ -318,7 +318,7 @@ export default function CountryManagement() {
               </Field>
               <Field label="Contact email">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.contacts.email}
                   onChange={(e) => set("contacts.email", e.target.value)}
                   placeholder="customercare@i-coffee.ng"
@@ -326,7 +326,7 @@ export default function CountryManagement() {
               </Field>
               <Field label="WhatsApp number">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.contacts.whatsapp}
                   onChange={(e) => set("contacts.whatsapp", e.target.value)}
                   placeholder="+234 805 242 3935"
@@ -338,14 +338,14 @@ export default function CountryManagement() {
           {/* Tawk.to — each country can run its own agent queue instead of
               sharing one hardcoded widget across every domain. Leave blank to
               fall back to the default (Nigeria) widget. */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
               Tawk.to live chat
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Property ID">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.tawk.propertyId}
                   onChange={(e) => set("tawk.propertyId", e.target.value)}
                   placeholder="69319adcb76a89198199fe66"
@@ -353,7 +353,7 @@ export default function CountryManagement() {
               </Field>
               <Field label="Widget ID">
                 <input
-                  className="input"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={form.tawk.widgetId}
                   onChange={(e) => set("tawk.widgetId", e.target.value)}
                   placeholder="1jbks9rel"
@@ -367,17 +367,17 @@ export default function CountryManagement() {
               {editingCode ? "Save changes" : "Create country"}
             </button>
             {editingCode && (
-              <button onClick={resetForm} className="px-5 py-2 rounded-lg text-sm border border-gray-300">
+              <button onClick={resetForm} className="px-5 py-2 rounded-lg text-sm border border-gray-300 dark:border-gray-600">
                 Cancel
               </button>
             )}
           </div>
-          <p className="text-xs text-gray-400 mt-3">
+          <p className="text-xs text-gray-400 mt-3 dark:text-gray-500">
             New countries start as “Coming Soon”. Configure everything, then Activate to go live — no deployment needed.
           </p>
         </div>
       ) : (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 dark:text-gray-500">
           You don’t have permission to manage countries.
         </p>
       )}
@@ -388,7 +388,7 @@ export default function CountryManagement() {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-gray-600 mb-1 dark:text-gray-400">{label}</label>
       {children}
     </div>
   );

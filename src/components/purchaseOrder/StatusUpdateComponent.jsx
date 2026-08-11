@@ -185,7 +185,7 @@ const StatusUpdateComponent = ({
   const currentStatusConfig = statusConfig[currentStatus] || statusConfig.DRAFT;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-white rounded-lg shadow-sm border p-6 dark:bg-gray-800">
       {/* Current Status Display */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
@@ -195,7 +195,7 @@ const StatusUpdateComponent = ({
             {currentStatusConfig.icon}
             <span className="ml-2">{currentStatusConfig.label}</span>
           </div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             {currentStatusConfig.description}
           </div>
         </div>
@@ -203,7 +203,7 @@ const StatusUpdateComponent = ({
         <div className="flex space-x-2">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
+            className="text-sm text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300"
           >
             {showHistory ? 'Hide History' : 'View History'}
           </button>
@@ -226,13 +226,13 @@ const StatusUpdateComponent = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                 New Status
               </label>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600"
               >
                 <option value="">Select new status...</option>
                 {allowedStatuses.map((status) => (
@@ -244,10 +244,10 @@ const StatusUpdateComponent = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                 Your Role
               </label>
-              <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
+              <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600 dark:bg-gray-900 dark:text-gray-400">
                 <User className="w-4 h-4 inline mr-2" />
                 {getRoleDisplayName(userRole)}
               </div>
@@ -256,13 +256,13 @@ const StatusUpdateComponent = ({
 
           {selectedStatus === 'CANCELLED' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                 Cancellation Reason *
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600"
               >
                 <option value="">{t("purchaseOrder.selectReason")}</option>
                 <option value="Supplier unavailable">
@@ -282,14 +282,14 @@ const StatusUpdateComponent = ({
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Notes (Optional)
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600"
               placeholder="Add any additional notes about this status change..."
             />
           </div>
@@ -328,13 +328,13 @@ const StatusUpdateComponent = ({
           <h3 className="text-lg font-medium mb-4">{t("purchaseOrder.statusHistory")}</h3>
 
           {statusHistory.length === 0 ? (
-            <p className="text-gray-500 text-sm">No status changes yet.</p>
+            <p className="text-gray-500 text-sm dark:text-gray-400">No status changes yet.</p>
           ) : (
             <div className="space-y-4">
               {statusHistory.map((entry, index) => (
                 <div
                   key={index}
-                  className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md"
+                  className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md dark:bg-gray-900"
                 >
                   <div
                     className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
@@ -353,18 +353,18 @@ const StatusUpdateComponent = ({
                       <span className="font-medium">
                         {entry.changedBy?.name || 'Unknown User'}
                       </span>
-                      <span className="text-gray-500">
+                      <span className="text-gray-500 dark:text-gray-400">
                         ({getRoleDisplayName(entry.userRole)})
                       </span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-gray-500">
+                      <span className="text-gray-400 dark:text-gray-500">•</span>
+                      <span className="text-gray-500 dark:text-gray-400">
                         <Calendar className="w-3 h-3 inline mr-1" />
                         {formatDate(entry.changedAt)}
                       </span>
                     </div>
 
                     {entry.previousStatus && (
-                      <div className="text-xs text-gray-600 mt-1">
+                      <div className="text-xs text-gray-600 mt-1 dark:text-gray-400">
                         Changed from{' '}
                         {statusConfig[entry.previousStatus]?.label ||
                           entry.previousStatus}
@@ -372,7 +372,7 @@ const StatusUpdateComponent = ({
                     )}
 
                     {(entry.notes || entry.reason) && (
-                      <div className="text-xs text-gray-700 mt-2 bg-white p-2 rounded border-l-2 border-blue-200">
+                      <div className="text-xs text-gray-700 mt-2 bg-white p-2 rounded border-l-2 border-blue-200 dark:bg-gray-800 dark:text-gray-300">
                         <MessageSquare className="w-3 h-3 inline mr-1" />
                         {entry.reason || entry.notes}
                       </div>

@@ -44,22 +44,22 @@ const CountrySwitcher = ({ value, onChange }) => {
       <button
         type="button"
         onClick={() => setIsOpen((p) => !p)}
-        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-900 dark:text-gray-300 dark:border-gray-600"
       >
-        <Globe className="w-4 h-4 text-gray-500" />
+        <Globe className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         {value ? (
           <span className="inline-flex items-center gap-1.5">
             <FlagIcon code={value} className="w-4 h-3 rounded-sm" />
             {current?.name || value}
           </span>
         ) : (
-          <span className="text-gray-600">All Countries</span>
+          <span className="text-gray-600 dark:text-gray-400">All Countries</span>
         )}
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 z-50 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="absolute left-0 z-50 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:border-gray-700">
           <div className="py-1 max-h-72 overflow-y-auto">
             <button
               className={`flex items-center w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 ${

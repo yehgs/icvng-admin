@@ -106,11 +106,11 @@ const BankTransferSettings = () => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2 dark:text-white">
             <Landmark className="w-6 h-6" />
             Direct Bank Transfer Settings
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
             Country-scoped receiving-account details. A country with no
             active setting here only offers Stripe at checkout.
           </p>
@@ -118,13 +118,13 @@ const BankTransferSettings = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-gray-400">
+        <div className="flex items-center justify-center py-16 text-gray-400 dark:text-gray-500">
           <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading…
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-left">
+            <thead className="bg-gray-50 text-gray-500 text-left dark:bg-gray-900 dark:text-gray-400">
               <tr>
                 <th className="px-4 py-3 font-medium">Country</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -136,36 +136,36 @@ const BankTransferSettings = () => {
             <tbody className="divide-y divide-gray-100">
               {rows.map((row) => (
                 <tr key={row.countryCode}>
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                     {row.countryName} ({row.countryCode})
                   </td>
                   <td className="px-4 py-3">
                     {row.configured && row.setting?.isActive ? (
-                      <span className="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-0.5 rounded-full text-xs">
+                      <span className="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-0.5 rounded-full text-xs dark:bg-green-900/20">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Active — Bank Transfer offered
                       </span>
                     ) : row.configured ? (
-                      <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full text-xs">
+                      <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full text-xs dark:bg-amber-900/20">
                         <XCircle className="w-3.5 h-3.5" /> Disabled — Stripe only
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full text-xs">
+                      <span className="inline-flex items-center gap-1 text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full text-xs dark:bg-gray-700 dark:text-gray-400">
                         <XCircle className="w-3.5 h-3.5" /> Not set — Stripe only
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                     {row.setting
                       ? `${row.setting.bankName} — ${row.setting.accountName} (${row.setting.accountNumber})`
                       : "—"}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                     {row.setting?.currencyCode || row.currencyCode}
                   </td>
                   <td className="px-4 py-3 text-right space-x-2">
                     <button
                       onClick={() => openEdit(row)}
-                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       {row.configured ? <Edit className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                       {row.configured ? "Edit" : "Add"}
@@ -173,7 +173,7 @@ const BankTransferSettings = () => {
                     {row.configured && (
                       <button
                         onClick={() => handleRemove(row.countryCode)}
-                        className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 text-xs font-medium"
+                        className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 text-xs font-medium dark:text-red-400"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
@@ -188,14 +188,14 @@ const BankTransferSettings = () => {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md dark:bg-gray-800">
             <form onSubmit={handleSave}>
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 className="font-semibold text-gray-900">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                <h2 className="font-semibold text-gray-900 dark:text-white">
                   Bank Transfer — {form.countryCode}
                 </h2>
                 <button type="button" onClick={() => setShowModal(false)}>
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                 </button>
               </div>
               <div className="p-5 space-y-4">
@@ -209,27 +209,27 @@ const BankTransferSettings = () => {
                 </label>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Bank Name *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Bank Name *</label>
                   <input
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     value={form.bankName}
                     onChange={(e) => setForm({ ...form, bankName: e.target.value })}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Name *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Account Name *</label>
                   <input
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     value={form.accountName}
                     onChange={(e) => setForm({ ...form, accountName: e.target.value })}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Number / IBAN *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Account Number / IBAN *</label>
                   <input
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     value={form.accountNumber}
                     onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
                     required
@@ -237,17 +237,17 @@ const BankTransferSettings = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Sort Code (optional)</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Sort Code (optional)</label>
                     <input
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       value={form.sortCode}
                       onChange={(e) => setForm({ ...form, sortCode: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Currency *</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Currency *</label>
                     <input
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       value={form.currencyCode}
                       onChange={(e) => setForm({ ...form, currencyCode: e.target.value.toUpperCase() })}
                       required
@@ -255,20 +255,20 @@ const BankTransferSettings = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Instructions shown to customer (optional)</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Instructions shown to customer (optional)</label>
                   <textarea
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     rows={3}
                     value={form.instructions}
                     onChange={(e) => setForm({ ...form, instructions: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-100">
+              <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 dark:hover:text-white dark:text-gray-400"
                 >
                   Cancel
                 </button>
