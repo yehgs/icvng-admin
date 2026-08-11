@@ -22,7 +22,7 @@ import {
   Download,
   Upload,
 } from 'lucide-react';
-import { logisticsAPI } from '../../utils/api.js';
+import { logisticsAPI, getCurrentUser } from '../../utils/api.js';
 import LogisticsMethodModal from '../../components/logistics/LogisticsMethodModal';
 import LogisticsZoneModal from '../../components/logistics/LogisticsZoneModal';
 import DeleteConfirmModal from '../../components/common/DeleteConfirmModal';
@@ -76,6 +76,14 @@ const LogisticsManagement = () => {
   // comment) — see controllers/shipping.controller.js's
   // applyGlobalCountryFilter.
   const [countryFilter, setCountryFilter] = useState('');
+
+  // What country a NEW zone/method should default to: the GLOBAL admin's
+  // switcher selection if set, else a COUNTRY-scoped admin's own
+  // assignedCountry, else Nigeria. Passed into the zone modal so its
+  // dynamic states/LGA picker (see LogisticsZoneModal.jsx) fetches the
+  // right country's data instead of always Nigeria's.
+  const currentUser = getCurrentUser();
+  const newItemCountryCode = countryFilter || currentUser?.assignedCountry || 'NG';
 
   useEffect(() => {
     fetchLogisticsData();
@@ -374,14 +382,14 @@ const LogisticsManagement = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-700 dark:text-gray-300">
-            Showing {startItem} to {endItem} of {totalCount} results
+            {t('logistics.pagination.showing', { start: startItem, end: endItem, total: totalCount })}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-700 dark:text-gray-300">
-              Per page:
+              {t('logistics.pagination.perPage')}
             </label>
             <select
               value={itemsPerPage}
@@ -456,17 +464,17 @@ const LogisticsManagement = () => {
 
   const getAssignmentDisplay = (method) => {
     const config = method[method.type];
-    if (!config) return 'All Products';
+    if (!config) return t('logistics.methods.allProducts');
 
     switch (config.assignment) {
       case 'all_products':
-        return 'All Products';
+        return t('logistics.methods.allProducts');
       case 'categories':
-        return `Categories (${config.categories?.length || 0})`;
+        return t('logistics.methods.categoriesCount', { count: config.categories?.length || 0 });
       case 'specific_products':
-        return `Products (${config.products?.length || 0})`;
+        return t('logistics.methods.productsCount', { count: config.products?.length || 0 });
       default:
-        return 'All Products';
+        return t('logistics.methods.allProducts');
     }
   };
 
@@ -480,9 +488,9 @@ const LogisticsManagement = () => {
                 ₦{method.flatRate.cost?.toLocaleString() || '0'}
               </div>
               <div className="text-xs text-green-600 dark:text-green-400">
-                Free above ₦
-                {method.flatRate.freeShipping.minimumOrderAmount?.toLocaleString() ||
-                  '0'}
+                {t('logistics.methods.freeAbove', {
+                  amount: method.flatRate.freeShipping.minimumOrderAmount?.toLocaleString() || '0',
+                })}
               </div>
             </div>
           );
@@ -497,10 +505,10 @@ const LogisticsManagement = () => {
         return (
           <div className="text-sm">
             <div className="font-medium text-gray-900 dark:text-white">
-              Zone-based
+              {t('logistics.methods.zoneBased')}
             </div>
             <div className="text-xs text-purple-600 dark:text-purple-400">
-              {zones} zone{zones !== 1 ? 's' : ''} configured
+              {t('logistics.methods.zonesConfigured', { count: zones })}
             </div>
           </div>
         );
@@ -511,10 +519,10 @@ const LogisticsManagement = () => {
         return (
           <div className="text-sm">
             <div className="font-medium text-green-600 dark:text-green-400">
-              Free
+              {t('logistics.methods.free')}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {locations} location{locations !== 1 ? 's' : ''}
+              {t('logistics.methods.locationsCount', { count: locations })}
             </div>
           </div>
         );
@@ -532,13 +540,13 @@ const LogisticsManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Active Zones
+                {t('logistics.dashboard.activeZones')}
               </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.activeZones || 0}
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                {stats.totalZones || 0} total
+                {t('logistics.dashboard.totalZones', { count: stats.totalZones || 0 })}
               </p>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
@@ -551,13 +559,13 @@ const LogisticsManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Shipping Methods
+                {t('logistics.dashboard.shippingMethods')}
               </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.activeMethods || 0}
               </p>
               <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">
-                {stats.totalMethods || 0} configured
+                {t('logistics.dashboard.methodsConfigured', { count: stats.totalMethods || 0 })}
               </p>
             </div>
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
@@ -570,7 +578,7 @@ const LogisticsManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                In Transit
+                {t('logistics.dashboard.inTransit')}
               </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.inTransit || 0}
@@ -578,7 +586,7 @@ const LogisticsManagement = () => {
               <div className="flex items-center mt-1">
                 <TrendingUp className="h-3 w-3 text-yellow-600 dark:text-yellow-400 mr-1" />
                 <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
-                  Processing
+                  {t('logistics.dashboard.processing')}
                 </p>
               </div>
             </div>
@@ -592,7 +600,7 @@ const LogisticsManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Delivered Today
+                {t('logistics.dashboard.deliveredToday')}
               </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.todayDeliveries || 0}
@@ -600,7 +608,7 @@ const LogisticsManagement = () => {
               <div className="flex items-center mt-1">
                 <Activity className="h-3 w-3 text-purple-600 dark:text-purple-400 mr-1" />
                 <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
-                  Completed
+                  {t('logistics.dashboard.completed')}
                 </p>
               </div>
             </div>
@@ -615,7 +623,7 @@ const LogisticsManagement = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft dark:shadow-gray-900/20 p-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
           <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-          Quick Actions
+          {t('logistics.dashboard.quickActions')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
@@ -627,10 +635,10 @@ const LogisticsManagement = () => {
                 <MapPin className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
               <p className="font-semibold text-gray-900 dark:text-white mb-1">
-                Manage Zones
+                {t('logistics.dashboard.manageZones')}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Configure shipping zones and coverage areas
+                {t('logistics.dashboard.manageZonesDesc')}
               </p>
             </div>
           </button>
@@ -644,10 +652,10 @@ const LogisticsManagement = () => {
                 <Truck className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
               <p className="font-semibold text-gray-900 dark:text-white mb-1">
-                Shipping Methods
+                {t('logistics.dashboard.shippingMethodsAction')}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Setup delivery options and pricing
+                {t('logistics.dashboard.shippingMethodsDesc')}
               </p>
             </div>
           </button>
@@ -661,10 +669,10 @@ const LogisticsManagement = () => {
                 <Package className="h-8 w-8 text-purple-600 dark:text-purple-400" />
               </div>
               <p className="font-semibold text-gray-900 dark:text-white mb-1">
-                Track Orders
+                {t('logistics.dashboard.trackOrders')}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Monitor shipments and deliveries
+                {t('logistics.dashboard.trackOrdersDesc')}
               </p>
             </div>
           </button>
@@ -678,10 +686,10 @@ const LogisticsManagement = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Shipping Zones
+            {t('logistics.zones.title')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage shipping zones and coverage areas ({zonesTotalCount} zones)
+            {t('logistics.zones.subtitleCount', { count: zonesTotalCount })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -691,14 +699,14 @@ const LogisticsManagement = () => {
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Export CSV
+            {t('logistics.zones.exportCsv')}
           </button>
           <button
             onClick={() => setShowZoneImportModal(true)}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Upload className="h-4 w-4" />
-            Import CSV
+            {t('logistics.zones.importCsv')}
           </button>
           <button
             onClick={() => {
@@ -708,7 +716,7 @@ const LogisticsManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Add Zone
+            {t('logistics.zones.addZone')}
           </button>
         </div>
       </div>
@@ -719,16 +727,16 @@ const LogisticsManagement = () => {
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Zone Information
+                  {t('logistics.zones.colZoneInfo')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Coverage
+                  {t('logistics.zones.colCoverage')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Status
+                  {t('logistics.zones.colStatus')}
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Actions
+                  {t('logistics.zones.colActions')}
                 </th>
               </tr>
             </thead>
@@ -750,7 +758,7 @@ const LogisticsManagement = () => {
                           {zone.name}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Code: {zone.code}
+                          {t('logistics.zones.code')} {zone.code}
                         </div>
                       </div>
                     </div>
@@ -767,15 +775,14 @@ const LogisticsManagement = () => {
                       ))}
                       {zone.states.length > 3 && (
                         <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                          +{zone.states.length - 3} more
+                          {t('logistics.zones.moreStates', { count: zone.states.length - 3 })}
                         </span>
                       )}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {zone.states.length} state
-                      {zone.states.length !== 1 ? 's' : ''}
+                      {t('logistics.zones.state', { count: zone.states.length })}
                       {zone.total_lgas_covered && (
-                        <span> • {zone.total_lgas_covered} LGAs</span>
+                        <span> • {t('logistics.zones.lgasCovered', { count: zone.total_lgas_covered })}</span>
                       )}
                     </div>
                   </td>
@@ -787,7 +794,7 @@ const LogisticsManagement = () => {
                           : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                       }`}
                     >
-                      {zone.isActive ? 'Active' : 'Inactive'}
+                      {zone.isActive ? t('logistics.zones.active') : t('logistics.zones.inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -798,7 +805,7 @@ const LogisticsManagement = () => {
                           setShowZoneModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                        title="Edit zone"
+                        title={t('logistics.edit')}
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -808,7 +815,7 @@ const LogisticsManagement = () => {
                           setShowZoneDeleteModal(true);
                         }}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                        title="Delete zone"
+                        title={t('logistics.delete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -824,10 +831,10 @@ const LogisticsManagement = () => {
           <div className="text-center py-12">
             <MapPin className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No shipping zones
+              {t('logistics.zones.empty')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Get started by creating your first shipping zone.
+              {t('logistics.zones.emptyDesc')}
             </p>
             <button
               onClick={() => {
@@ -837,7 +844,7 @@ const LogisticsManagement = () => {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
-              Create Zone
+              {t('logistics.zones.createZone')}
             </button>
           </div>
         )}
@@ -864,10 +871,10 @@ const LogisticsManagement = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Shipping Methods
+            {t('logistics.methods.title')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Configure delivery options and pricing ({methodsTotalCount} methods)
+            {t('logistics.methods.subtitleCount', { count: methodsTotalCount })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -877,14 +884,14 @@ const LogisticsManagement = () => {
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Export CSV
+            {t('logistics.methods.exportCsv')}
           </button>
           <button
             onClick={() => setShowMethodImportModal(true)}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Upload className="h-4 w-4" />
-            Import CSV
+            {t('logistics.methods.importCsv')}
           </button>
           <button
             onClick={handleExportRatesCSV}
@@ -893,14 +900,14 @@ const LogisticsManagement = () => {
             title="Bulk-edit flat rate zone costs, table shipping weight bands, and pickup locations"
           >
             <Download className="h-4 w-4" />
-            Export Rates CSV
+            {t('logistics.methods.exportRatesCsv')}
           </button>
           <button
             onClick={() => setShowRatesImportModal(true)}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Upload className="h-4 w-4" />
-            Import Rates CSV
+            {t('logistics.methods.importRatesCsv')}
           </button>
           <button
             onClick={() => {
@@ -910,7 +917,7 @@ const LogisticsManagement = () => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Add Method
+            {t('logistics.methods.addMethod')}
           </button>
         </div>
       </div>
@@ -921,19 +928,19 @@ const LogisticsManagement = () => {
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Method
+                  {t('logistics.methods.colMethod')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Assignment
+                  {t('logistics.methods.colAssignment')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Costing
+                  {t('logistics.methods.colCosting')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Status
+                  {t('logistics.methods.colStatus')}
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Actions
+                  {t('logistics.methods.colActions')}
                 </th>
               </tr>
             </thead>
@@ -962,30 +969,42 @@ const LogisticsManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      {getAssignmentDisplay(method) === 'All Products' ? (
-                        <div className="flex items-center gap-1">
-                          <ShoppingCart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            All Products
-                          </span>
-                        </div>
-                      ) : getAssignmentDisplay(method).startsWith(
-                          'Categories'
-                        ) ? (
-                        <div className="flex items-center gap-1">
-                          <Tag className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            {getAssignmentDisplay(method)}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <Package className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            {getAssignmentDisplay(method)}
-                          </span>
-                        </div>
-                      )}
+                      {(() => {
+                        // Was comparing against getAssignmentDisplay(method)'s
+                        // translated string ('All Products'/'Categories...') —
+                        // broke as soon as that started returning French/
+                        // Italian text. Compare the raw assignment value
+                        // instead; only the label shown is translated.
+                        const assignment = method[method.type]?.assignment;
+                        if (!assignment || assignment === 'all_products') {
+                          return (
+                            <div className="flex items-center gap-1">
+                              <ShoppingCart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              <span className="text-sm text-gray-900 dark:text-white">
+                                {t('logistics.methods.allProducts')}
+                              </span>
+                            </div>
+                          );
+                        }
+                        if (assignment === 'categories') {
+                          return (
+                            <div className="flex items-center gap-1">
+                              <Tag className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                              <span className="text-sm text-gray-900 dark:text-white">
+                                {getAssignmentDisplay(method)}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex items-center gap-1">
+                            <Package className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                            <span className="text-sm text-gray-900 dark:text-white">
+                              {getAssignmentDisplay(method)}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {method.type.replace('_', ' ').toUpperCase()}
@@ -1005,7 +1024,7 @@ const LogisticsManagement = () => {
                           : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                       }`}
                     >
-                      {method.isActive ? 'Active' : 'Inactive'}
+                      {method.isActive ? t('logistics.methods.active') : t('logistics.methods.inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1016,7 +1035,7 @@ const LogisticsManagement = () => {
                           setShowMethodModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                        title="Edit method"
+                        title={t('logistics.edit')}
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -1026,7 +1045,7 @@ const LogisticsManagement = () => {
                           setShowMethodDeleteModal(true);
                         }}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                        title="Delete method"
+                        title={t('logistics.delete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1042,10 +1061,10 @@ const LogisticsManagement = () => {
           <div className="text-center py-12">
             <Truck className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No shipping methods
+              {t('logistics.methods.empty')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Create shipping methods to offer delivery options to customers.
+              {t('logistics.methods.emptyDesc')}
             </p>
             <button
               onClick={() => {
@@ -1055,7 +1074,7 @@ const LogisticsManagement = () => {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
-              Create Method
+              {t('logistics.methods.createMethod')}
             </button>
           </div>
         )}
@@ -1094,10 +1113,10 @@ const LogisticsManagement = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Logistics Management
+            {t('logistics.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage shipping zones, methods, and logistics configuration
+            {t('logistics.subtitle')}
           </p>
         </div>
         {/* GLOBAL admins (IT/DIRECTOR) only — renders nothing for
@@ -1110,9 +1129,9 @@ const LogisticsManagement = () => {
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-              { id: 'zones', label: 'Shipping Zones', icon: MapPin },
-              { id: 'methods', label: 'Shipping Methods', icon: Truck },
+              { id: 'dashboard', label: t('logistics.tabs.dashboard'), icon: BarChart3 },
+              { id: 'zones', label: t('logistics.tabs.zones'), icon: MapPin },
+              { id: 'methods', label: t('logistics.tabs.methods'), icon: Truck },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1147,6 +1166,7 @@ const LogisticsManagement = () => {
         }}
         onSubmit={selectedZone ? handleUpdateZone : handleCreateZone}
         zone={selectedZone}
+        countryCode={selectedZone?.countryCode || newItemCountryCode}
         loading={loading}
       />
 

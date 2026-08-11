@@ -1,10 +1,18 @@
 // admin/src/components/logistics/LogisticsZoneModal.jsx - FIXED
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
-import { nigeriaStatesLgas } from '../../data/nigeria-states-lgas.js';
+import { logisticsAPI } from '../../utils/api.js';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 
-const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
+// countryCode: which country's states/LGAs this zone belongs to (edit:
+// zone.countryCode; create: the parent page's country switcher / the
+// admin's own assignedCountry — see LogisticsManagement.jsx). Used to
+// fetch the right divisions instead of always showing Nigeria's — that
+// was the actual bug: this modal used to import a hardcoded
+// nigeria-states-lgas.js + a hardcoded Nigeria geopolitical-zone grouping
+// directly, so creating a Togo (or any non-Nigeria) zone still showed
+// Nigerian states like "North East (6 states)".
+const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading, countryCode = 'NG' }) => {
   const { t } = useAdminTranslation();
   const [formData, setFormData] = useState({
     name: '',
@@ -22,36 +30,46 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
   const [stateLgaCoverage, setStateLgaCoverage] = useState({});
   const [expandedStates, setExpandedStates] = useState({});
 
-  const geopoliticalZones = {
-    'North Central': [
-      'Benue',
-      'FCT',
-      'Kogi',
-      'Kwara',
-      'Nasarawa',
-      'Niger',
-      'Plateau',
-    ],
-    'North East': ['Adamawa', 'Bauchi', 'Borno', 'Gombe', 'Taraba', 'Yobe'],
-    'North West': [
-      'Jigawa',
-      'Kaduna',
-      'Kano',
-      'Katsina',
-      'Kebbi',
-      'Sokoto',
-      'Zamfara',
-    ],
-    'South East': ['Abia', 'Anambra', 'Ebonyi', 'Enugu', 'Imo'],
-    'South South': [
-      'Akwa Ibom',
-      'Bayelsa',
-      'Cross River',
-      'Delta',
-      'Edo',
-      'Rivers',
-    ],
-    'South West': ['Ekiti', 'Lagos', 'Ogun', 'Ondo', 'Osun', 'Oyo'],
+  // Fetched dynamically per country — replaces the old hardcoded
+  // nigeriaStatesLgas import + geopoliticalZones map. Each entry is
+  // { state, capital, region, lga: [...] } (see
+  // server/utils/countryGeoData.js) — grouped below by `region` instead
+  // of a Nigeria-specific geopolitical-zone lookup table.
+  const [divisions, setDivisions] = useState([]);
+  const [divisionsLoading, setDivisionsLoading] = useState(false);
+  const targetCountry = zone?.countryCode || countryCode || 'NG';
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setDivisionsLoading(true);
+    logisticsAPI
+      .getGeoDivisions(targetCountry)
+      .then((res) => {
+        if (!cancelled && res.success) setDivisions(res.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setDivisions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setDivisionsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [isOpen, targetCountry]);
+
+  // Group the fetched divisions by their `region` field (e.g. Nigeria's
+  // "North East"/"South West" geopolitical zones, Benin's "North"/"South",
+  // Italy's "Northwest Italy"/"Central Italy" — whatever grouping each
+  // country's own data uses; Togo's regions are their own top-level
+  // divisions so each forms a single-item group, which is expected).
+  const groupDivisionsByRegion = () => {
+    const grouped = {};
+    divisions.forEach((division) => {
+      const groupKey = division.region || division.state;
+      if (!grouped[groupKey]) grouped[groupKey] = [];
+      grouped[groupKey].push(division);
+    });
+    return grouped;
   };
 
   useEffect(() => {
@@ -108,11 +126,11 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Zone name is required';
+      newErrors.name = t('logistics.zoneModal.nameRequired');
     }
 
     if (selectedStates.length === 0) {
-      newErrors.states = 'At least one state must be selected';
+      newErrors.states = t('logistics.zoneModal.statesRequired');
     }
 
     // Validate specific LGA coverage
@@ -122,7 +140,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
         coverage?.coverage_type === 'specific' &&
         (!coverage.covered_lgas || coverage.covered_lgas.length === 0)
       ) {
-        newErrors.states = `Please select LGAs for ${stateName} or change coverage to 'All LGAs'`;
+        newErrors.states = t('logistics.zoneModal.lgasRequired', { state: stateName });
       }
     });
 
@@ -212,20 +230,11 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
   };
 
   const getStateLgas = (stateName) => {
-    const stateData = nigeriaStatesLgas.find((s) => s.state === stateName);
+    const stateData = divisions.find((s) => s.state === stateName);
     return stateData?.lga || [];
   };
 
-  const groupStatesByZone = () => {
-    const grouped = {};
-    Object.entries(geopoliticalZones).forEach(([zone, states]) => {
-      grouped[zone] = states.map((stateName) => {
-        const stateData = nigeriaStatesLgas.find((s) => s.state === stateName);
-        return stateData || { state: stateName, lga: [] };
-      });
-    });
-    return grouped;
-  };
+  const groupStatesByZone = () => groupDivisionsByRegion();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -238,7 +247,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
     const submitData = {
       ...formData,
       states: selectedStates.map((stateName) => {
-        const stateData = nigeriaStatesLgas.find((s) => s.state === stateName);
+        const stateData = divisions.find((s) => s.state === stateName);
         const coverage = stateLgaCoverage[stateName] || {
           coverage_type: 'all',
           covered_lgas: [],
@@ -257,6 +266,12 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
       }),
     };
 
+    // countryCode travels with the submission so the server (which also
+    // independently validates/stamps it — see resolveTargetCountry in
+    // shipping.controller.js) creates/updates this zone under the right
+    // country rather than defaulting to Nigeria for a GLOBAL admin.
+    submitData.countryCode = targetCountry;
+
     console.log('Submitting zone data:', JSON.stringify(submitData, null, 2));
     onSubmit(submitData);
   };
@@ -274,10 +289,10 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {zone ? 'Edit Shipping Zone' : 'Create Shipping Zone'}
+                {zone ? t('logistics.zoneModal.editTitle') : t('logistics.zoneModal.createTitle')}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Configure coverage areas with LGA-level precision
+                {t('logistics.zoneModal.subtitle')}
               </p>
             </div>
           </div>
@@ -303,7 +318,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Zone Name *
+                {t('logistics.zoneModal.nameLabel')}
               </label>
               <input
                 type="text"
@@ -315,7 +330,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                     ? 'border-red-300 dark:border-red-600'
                     : 'border-gray-300 dark:border-gray-600'
                 }`}
-                placeholder="e.g., Lagos Metro Zone"
+                placeholder={t('logistics.zoneModal.namePlaceholder')}
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
@@ -327,7 +342,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Zone Type
+                {t('logistics.zoneModal.typeLabel')}
               </label>
               <select
                 name="zone_type"
@@ -343,7 +358,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Priority Level
+                {t('logistics.zoneModal.priorityLabel')}
               </label>
               <select
                 name="priority"
@@ -351,16 +366,16 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               >
-                <option value="low">Low</option>
+                <option value="low">{t('logistics.zoneModal.low')}</option>
                 <option value="medium">{t("notificationsExt.medium")}</option>
-                <option value="high">High</option>
+                <option value="high">{t('logistics.zoneModal.high')}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
+              {t('logistics.zoneModal.descriptionLabel')}
             </label>
             <textarea
               name="description"
@@ -368,7 +383,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
               onChange={handleInputChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors resize-none"
-              placeholder="Describe the zone coverage and special characteristics..."
+              placeholder={t('logistics.zoneModal.descPlaceholder')}
             />
           </div>
 
@@ -376,11 +391,21 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
           <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Select States & Configure LGA Coverage *
+              {t('logistics.zoneModal.selectStatesTitle')}
             </h3>
 
             <div className="space-y-4">
-              {Object.entries(groupStatesByZone()).map(([zoneName, states]) => (
+              {divisionsLoading ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  {t('logistics.zoneModal.loadingStates', { country: targetCountry })}
+                </div>
+              ) : divisions.length === 0 ? (
+                <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                  {t('logistics.zoneModal.noGeoData', { country: targetCountry })}
+                </div>
+              ) : (
+              Object.entries(groupStatesByZone()).map(([zoneName, states]) => (
                 <div
                   key={zoneName}
                   className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600"
@@ -388,7 +413,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                   <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                     {zoneName}
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      ({states.length} states)
+                      ({t('logistics.zones.state', { count: states.length })})
                     </span>
                   </h4>
                   <div className="space-y-3">
@@ -416,7 +441,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                               onClick={() => toggleStateExpansion(state.state)}
                               className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                             >
-                              Configure LGAs
+                              {t('logistics.zoneModal.configureLgas')}
                               <ChevronDown
                                 className={`h-4 w-4 transition-transform ${
                                   expandedStates[state.state]
@@ -434,7 +459,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                             <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600">
                               <div className="mb-3">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                  Coverage Type for {state.state}
+                                  {t('logistics.zoneModal.coverageTypeFor', { state: state.state })}
                                 </label>
                                 <select
                                   value={
@@ -450,10 +475,10 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
                                 >
                                   <option value="all">
-                                    All LGAs (Complete State Coverage)
+                                    {t('logistics.zoneModal.allLgasOption')}
                                   </option>
                                   <option value="specific">
-                                    Specific LGAs Only
+                                    {t('logistics.zoneModal.specificLgasOption')}
                                   </option>
                                 </select>
                               </div>
@@ -462,10 +487,9 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                                 'specific' && (
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Select LGAs to Cover (
-                                    {stateLgaCoverage[state.state]?.covered_lgas
-                                      ?.length || 0}{' '}
-                                    selected)
+                                    {t('logistics.zoneModal.selectLgasToCover', {
+                                      count: stateLgaCoverage[state.state]?.covered_lgas?.length || 0,
+                                    })}
                                   </label>
                                   <div className="max-h-32 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-800">
                                     <div className="grid grid-cols-2 gap-2">
@@ -506,15 +530,14 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                               <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                 {stateLgaCoverage[state.state]
                                   ?.coverage_type === 'all'
-                                  ? `Covers all ${
-                                      getStateLgas(state.state).length
-                                    } LGAs in ${state.state}`
-                                  : `Covers ${
-                                      stateLgaCoverage[state.state]
-                                        ?.covered_lgas?.length || 0
-                                    } of ${
-                                      getStateLgas(state.state).length
-                                    } LGAs`}
+                                  ? t('logistics.zoneModal.coversAllLgas', {
+                                      count: getStateLgas(state.state).length,
+                                      state: state.state,
+                                    })
+                                  : t('logistics.zoneModal.coversSomeLgas', {
+                                      covered: stateLgaCoverage[state.state]?.covered_lgas?.length || 0,
+                                      total: getStateLgas(state.state).length,
+                                    })}
                               </div>
                             </div>
                           )}
@@ -522,7 +545,8 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                     ))}
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
 
             {errors.states && (
@@ -535,15 +559,15 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
             {selectedStates.length > 0 && (
               <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-sm text-green-800 dark:text-green-300 mb-2">
-                  Selected States ({selectedStates.length}):
+                  {t('logistics.zoneModal.selectedStatesCount', { count: selectedStates.length })}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {selectedStates.map((stateName) => {
                     const coverage = stateLgaCoverage[stateName];
                     const coverageText =
                       coverage?.coverage_type === 'all'
-                        ? 'All LGAs'
-                        : `${coverage?.covered_lgas?.length || 0} LGAs`;
+                        ? t('logistics.zoneModal.allLgasShort')
+                        : t('logistics.zoneModal.lgasCountShort', { count: coverage?.covered_lgas?.length || 0 });
 
                     return (
                       <span
@@ -570,7 +594,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Sort Order
+                {t('logistics.zoneModal.sortOrderLabel')}
               </label>
               <input
                 type="number"
@@ -592,7 +616,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
                   className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 transition-colors"
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Active Zone
+                  {t('logistics.zoneModal.activeZoneLabel')}
                 </span>
               </label>
             </div>
@@ -601,7 +625,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
           {/* Operational Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Operational Notes
+              {t('logistics.zoneModal.operationalNotesLabel')}
             </label>
             <textarea
               name="operational_notes"
@@ -609,7 +633,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
               onChange={handleInputChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors resize-none"
-              placeholder="Any special instructions or notes for this zone..."
+              placeholder={t('logistics.zoneModal.notesPlaceholder')}
             />
           </div>
 
@@ -621,7 +645,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
               disabled={loading}
               className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -629,7 +653,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading }) => {
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {zone ? 'Update Zone' : 'Create Zone'}
+              {zone ? t('logistics.zoneModal.updateZone') : t('logistics.zoneModal.createZoneBtn')}
             </button>
           </div>
         </form>

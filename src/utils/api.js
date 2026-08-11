@@ -2404,6 +2404,13 @@ export const coffeeRoastAreaAPI = {
 export const logisticsAPI = {
   // ===== SHIPPING ZONES =====
 
+  // Divisions (state/region + LGA/prefecture/commune) for one country —
+  // powers the zone modal's dynamic state/LGA picker instead of the old
+  // hardcoded Nigeria-only list.
+  getGeoDivisions: async (countryCode) => {
+    return apiCall(`/shipping/geo-divisions?countryCode=${encodeURIComponent(countryCode || "NG")}`);
+  },
+
   getShippingZones: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
