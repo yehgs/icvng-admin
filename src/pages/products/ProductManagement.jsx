@@ -571,7 +571,7 @@ const ProductManagement = () => {
             <Download className="w-4 h-4" />
             {t("common.export")} {totalProducts > 0 ? `(${totalProducts})` : ""}
           </button>
-          <RoleBasedButton disabledRoles={["MANAGER"]}>
+          <RoleBasedButton disabledRoles={["MANAGER", "GRAPHICS"]}>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -989,7 +989,6 @@ const ProductManagement = () => {
                             "HR",
                             "SALES-MANAGER",
                             "ACCOUNTANT",
-                            "GRAPHICS",
                             "LOGISTICS",
                             "WAREHOUSE",
                           ]}

@@ -449,6 +449,13 @@ export default function CrmManagement() {
   // UI copy, not a security boundary.
   const isGlobalAdminForCrm = currentUser?.scope !== "COUNTRY";
 
+  // "Make HQ Manager not able to export leads in the CRM" — matches the
+  // server-side block in exportLeadsCSV (crm-lead.controller.js): a
+  // GLOBAL-scope Manager loses export specifically; IT/DIRECTOR and a
+  // COUNTRY-scoped ("foreign") Manager are unaffected.
+  const isHqManager = currentUser?.subRole === "MANAGER" && isGlobalAdminForCrm;
+  const canExportCrm = !isHqManager;
+
   const [meta, setMeta] = useState({
     CRM_STAGES: [],
     LEAD_SOURCES: [],
@@ -1171,6 +1178,7 @@ export default function CrmManagement() {
           >
             <Upload className="h-4 w-4" /> Import CSV
           </button>
+          {canExportCrm && (
           <button
             onClick={handleExportCsv}
             disabled={exporting}
@@ -1179,6 +1187,7 @@ export default function CrmManagement() {
           >
             {exporting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />} Export CSV
           </button>
+          )}
           <button
             onClick={() => {
               setEditLead(null);

@@ -43,7 +43,7 @@ const ALL_ROLES = [
   "EDITOR",
   "ACCOUNTANT",
   "MANAGER",
-  "DESIGNER",
+  "GRAPHICS",
 ];
 
 const STATUS_COLORS = {

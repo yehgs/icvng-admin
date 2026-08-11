@@ -980,6 +980,7 @@ const en = {
     published: "Published",
     unpublishedFallsBack: "Unpublished (falls back to HQ)",
     addField: "Add field",
+    pageSiteIndex: "Site Default (index.html)",
     pageAboutUs: "About Us",
     pageOurStory: "Our Story",
     pagePartnerWithUs: "Partner With Us",

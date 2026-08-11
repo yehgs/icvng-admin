@@ -638,6 +638,7 @@ const it = {
     published: "Pubblicato",
     unpublishedFallsBack: "Non pubblicato (ricade su HQ)",
     addField: "Aggiungi campo",
+    pageSiteIndex: "Predefinito del sito (index.html)",
     pageAboutUs: "Chi siamo",
     pageOurStory: "La nostra storia",
     pagePartnerWithUs: "Diventa partner",

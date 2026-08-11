@@ -28,6 +28,11 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 // ── Known pages (slug -> label). New pages can be added by typing a new
 // slug in the "custom slug" box below — nothing here is a hard limit. ─────
 const KNOWN_PAGES = [
+  // The whole site's default <title>/meta description/keywords/og:image —
+  // what index.html used to hardcode statically (always Nigeria's copy,
+  // regardless of domain). See client/src/components/SiteMeta.jsx, which
+  // fetches this slug and applies it to <head> per-country on every load.
+  { slug: "site-index", key: "pageSiteIndex" },
   { slug: "about-us", key: "pageAboutUs" },
   { slug: "our-story", key: "pageOurStory" },
   { slug: "partner-with-us", key: "pagePartnerWithUs" },
@@ -570,6 +575,26 @@ export default function SitePagesManagement() {
                       value={seo.description || ""}
                       placeholder={globalSeo.description}
                       onChange={(e) => setSeo({ ...seo, description: e.target.value })}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Meta keywords</label>
+                    <input
+                      className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
+                      value={seo.keywords || ""}
+                      placeholder={globalSeo.keywords}
+                      onChange={(e) => setSeo({ ...seo, keywords: e.target.value })}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Social share image (og:image) URL</label>
+                    <input
+                      className="w-full border rounded-md px-2 py-1.5 text-sm dark:bg-gray-800 dark:border-gray-600"
+                      value={seo.ogImage || ""}
+                      placeholder={globalSeo.ogImage}
+                      onChange={(e) => setSeo({ ...seo, ogImage: e.target.value })}
                       disabled={readOnly}
                     />
                   </div>

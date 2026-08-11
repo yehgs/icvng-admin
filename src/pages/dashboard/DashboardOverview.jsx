@@ -56,7 +56,7 @@ const BANNERS = {
   ACCOUNTANT: "from-teal-600 to-green-600",
   LOGISTICS: "from-cyan-600 to-blue-600",
   EDITOR: "from-violet-600 to-purple-600",
-  DESIGNER: "from-rose-500 to-pink-600",
+  GRAPHICS: "from-rose-500 to-pink-600",
 };
 
 const Stat = ({ title, value, icon: Icon, color = "text-blue-600", bg = "bg-blue-50", sub, loading }) => (
@@ -293,8 +293,8 @@ export default function DashboardOverview() {
       r.totalBlogs = blogs.pagination?.total ?? "—";
     }
 
-    // ── DESIGNER ─────────────────────────────────────────────────────────────
-    else if (role === "DESIGNER") {
+    // ── GRAPHICS ─────────────────────────────────────────────────────────────
+    else if (role === "GRAPHICS") {
       const prods = await apiFetch("/product/get?page=1&limit=1");
       r.totalProducts = prods.totalNoPage ?? "—";
     }
@@ -477,7 +477,7 @@ MANAGER: {
       ],
     },
 
-    DESIGNER: {
+    GRAPHICS: {
       title: banner("title"), subtitle: banner("subtitle"),
       stats: [
         { title: t('dashboard.lbl.totalProducts'), value: fmt(d.totalProducts), icon: Package,  color: "text-blue-600",   bg: "bg-blue-50",   sub: t('dashboard.sub.inCatalog') },

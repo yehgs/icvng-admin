@@ -51,7 +51,7 @@ const ROLE_COLORS = {
   ACCOUNTANT: "bg-emerald-100 text-emerald-700 border-emerald-200",
   WAREHOUSE: "bg-orange-100 text-orange-700 border-orange-200",
   LOGISTICS: "bg-cyan-100 text-cyan-700 border-cyan-200",
-  DESIGNER: "bg-rose-100 text-rose-700 border-rose-200",
+  GRAPHICS: "bg-rose-100 text-rose-700 border-rose-200",
 };
 
 function PasswordStrength({ password }) {

@@ -148,15 +148,15 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     { key: "contact-messages", title: t("nav.contactMessages"), path: "/admin/dashboard/contact-messages", icon: Inbox, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
     { key: "scraper",       title: t("nav.webScraper"),    path: "/admin/dashboard/scraper",        icon: Zap,     single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
     { key: "notifications", title: t("nav.notifications"), path: "/admin/dashboard/notifications",  icon: Bell,    single: true, allowedSubRoles: [] },
-    { key: "support-tickets",title: t("nav.supportTickets"),path: "/admin/dashboard/support-tickets",icon: LifeBuoy,single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","HR","SALES","WAREHOUSE","ACCOUNTANT","LOGISTICS","EDITOR","DESIGNER"] },
+    { key: "support-tickets",title: t("nav.supportTickets"),path: "/admin/dashboard/support-tickets",icon: LifeBuoy,single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","HR","SALES","WAREHOUSE","ACCOUNTANT","LOGISTICS","EDITOR","GRAPHICS"] },
     { key: "password-vault",title: t("nav.passwordVault"), path: "/admin/dashboard/password-vault", icon: Lock,    single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     {
-      key: "content", title: t("nav.contentManagement"), icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","DESIGNER"],
+      key: "content", title: t("nav.contentManagement"), icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"],
       items: [
-        { title: t("nav.sliderManagement"), path: "/admin/sliders", icon: Image,  allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","DESIGNER"] },
-        { title: t("nav.bannerManagement"), path: "/admin/banners", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","DESIGNER"] },
-        { title: t("nav.siteContent"), path: "/admin/home-content", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","DESIGNER"] },
-        { title: t("nav.sitePages"), path: "/admin/site-pages", icon: FileText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","DESIGNER"] },
+        { title: t("nav.sliderManagement"), path: "/admin/sliders", icon: Image,  allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.bannerManagement"), path: "/admin/banners", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.siteContent"), path: "/admin/home-content", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.sitePages"), path: "/admin/site-pages", icon: FileText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.fomoWidget"),       path: "/admin/fomo",    icon: Zap,    allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
       ],
     },
@@ -231,6 +231,12 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "settings",    title: t("nav.settings"),           path: "/admin/settings",  icon: Settings, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     { key: "bank-transfer-settings", title: "Bank Transfer Settings", path: "/admin/settings/bank-transfer", icon: Landmark, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    // CountryManagement.jsx (Tawk.to, SEO, contacts, feature flags per
+    // country) was built with zero nav link anywhere — reachable only by
+    // typing /admin/countries directly. That's the actual reason "Settings
+    // → Countries → Tawk.to" couldn't be found; the page and its Tawk.to
+    // fields were already fully working.
+    { key: "countries",   title: "Countries",                 path: "/admin/countries", icon: Globe, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
   ];
 
   // Item #7: entire modules that are HQ-only regardless of subRole —

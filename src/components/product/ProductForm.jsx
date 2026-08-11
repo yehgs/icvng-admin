@@ -29,6 +29,15 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   // can see or manage it. A foreign-country admin has no such partners.
   const canSeePartnerStock = isGlobalAdmin || countryScope === "NG";
   const currentUser = getCurrentUser();
+  // GRAPHICS can only ever save the `image` field (server strips
+  // everything else — see the GRAPHICS block in
+  // updateProductDetails/product.controller.js). Showing them the full
+  // form with every field looking editable would repeat the exact
+  // misleading-UI bug already fixed for MANAGER earlier (fields that
+  // LOOK saveable but silently aren't) — so GRAPHICS gets an honest,
+  // minimal form instead: product name (read-only, for identification)
+  // + the image uploader + save, nothing else.
+  const isGraphicsOnly = currentUser?.subRole === "GRAPHICS";
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -617,6 +626,69 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
             <span className="ml-2 text-gray-600 dark:text-gray-400">
               {t("productForm.loadingFormData")}
             </span>
+          </div>
+        ) : isGraphicsOnly ? (
+          <div className="p-6 space-y-6">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300">
+              Graphics/Designer accounts can update product images only.
+              Contact IT, Director, or a Manager for any other changes.
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("products.productName")}
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 dark:text-white cursor-not-allowed"
+              />
+            </div>
+
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                {t("productForm.productImages")} *
+              </h4>
+              <ImageUploader
+                images={formData.image}
+                onImagesChange={(images) => handleInputChange("image", images)}
+                multiple={true}
+                maxImages={5}
+              />
+              {errors.image && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.image}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={onClose}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("common.update")}…
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {t("productForm.updateProduct")}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="p-6 space-y-6">

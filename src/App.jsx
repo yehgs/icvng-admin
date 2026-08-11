@@ -752,7 +752,7 @@ const App = () => {
                   path="sliders"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <SliderManagement />
                     </RoleProtectedRoute>
@@ -762,7 +762,7 @@ const App = () => {
                   path="banners"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <BannerManagement />
                     </RoleProtectedRoute>
@@ -772,7 +772,7 @@ const App = () => {
                   path="home-content"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <HomeContentManagement />
                     </RoleProtectedRoute>
@@ -782,7 +782,7 @@ const App = () => {
                   path="site-pages"
                   element={
                     <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "DESIGNER"]}
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <SitePagesManagement />
                     </RoleProtectedRoute>
