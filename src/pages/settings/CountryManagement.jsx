@@ -15,13 +15,31 @@ const EMPTY = {
   name: "",
   status: "COMING_SOON",
   domain: "",
+  // Additional domains that should also resolve to this country (besides
+  // the primary `domain` above) — e.g. a legacy/alias domain.
+  domains: [],
+  // The admin-panel login domain for this market (app.i-coffee.XX) — used
+  // by admin_auth.controller.js's domain-restricted login check and shown
+  // in its error message when someone tries to log in from the wrong
+  // country's portal. Previously not editable here at all.
+  adminDomain: "",
   currency: { code: "", symbol: "", name: "", decimals: 2 },
-  language: { default: "en", supported: ["en"] },
+  language: { default: "en", supported: ["en"], locale: "" },
   timezone: "",
   phonePrefix: "",
   flagEmoji: "",
   payments: { paystack: false, stripe: false },
-  tax: { enabled: false, rate: 0, label: "VAT" },
+  // Was already in this default object but had no form fields at all —
+  // silently unreachable from the UI.
+  tax: { enabled: false, rate: 0, label: "VAT", inclusive: false },
+  // The following were entirely missing from both this default object and
+  // the form below, even though the backend (countryManagement.controller.js)
+  // already accepts them generically via req.body spread.
+  shipping: { freeThreshold: "", defaultFee: 0 },
+  branding: { logo: "", primaryColor: "" },
+  seo: { siteName: "", tld: "" },
+  invoiceSeries: { prefix: "INV", nextNumber: 1 },
+  featureFlags: {},
   // Content management (header preheader + footer contact details) — reflects
   // on the storefront for this country's domain as soon as it's saved here.
   contacts: { email: "", phone: "", whatsapp: "", address: "" },
@@ -43,6 +61,8 @@ export default function CountryManagement() {
   const [form, setForm] = useState(EMPTY);
   const [editingCode, setEditingCode] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [featureFlagsText, setFeatureFlagsText] = useState("{}");
+  const [featureFlagsError, setFeatureFlagsError] = useState(null);
 
   const canManage = can("countries.manage");
 
@@ -70,10 +90,16 @@ export default function CountryManagement() {
   function resetForm() {
     setForm(EMPTY);
     setEditingCode(null);
+    setFeatureFlagsText("{}");
+    setFeatureFlagsError(null);
   }
 
   async function save() {
     setMsg(null);
+    if (featureFlagsError) {
+      setMsg({ type: "error", text: "Fix the Feature flags JSON before saving." });
+      return;
+    }
     try {
       if (editingCode) {
         const res = await countryAPI.update(editingCode, form);
@@ -106,10 +132,21 @@ export default function CountryManagement() {
     setForm({
       ...EMPTY,
       ...c,
+      currency: { ...EMPTY.currency, ...(c.currency || {}) },
+      language: { ...EMPTY.language, ...(c.language || {}) },
+      payments: { ...EMPTY.payments, ...(c.payments || {}) },
+      tax: { ...EMPTY.tax, ...(c.tax || {}) },
+      shipping: { ...EMPTY.shipping, ...(c.shipping || {}) },
+      branding: { ...EMPTY.branding, ...(c.branding || {}) },
+      seo: { ...EMPTY.seo, ...(c.seo || {}) },
+      invoiceSeries: { ...EMPTY.invoiceSeries, ...(c.invoiceSeries || {}) },
+      featureFlags: { ...(c.featureFlags || {}) },
       contacts: { ...EMPTY.contacts, ...(c.contacts || {}) },
       content: { ...EMPTY.content, ...(c.content || {}) },
       tawk: { ...EMPTY.tawk, ...(c.tawk || {}) },
     });
+    setFeatureFlagsText(JSON.stringify(c.featureFlags || {}, null, 2));
+    setFeatureFlagsError(null);
   }
 
   const set = (path, value) => {
@@ -120,6 +157,26 @@ export default function CountryManagement() {
       else next[parts[0]] = { ...next[parts[0]], [parts[1]]: value };
       return next;
     });
+  };
+
+  // Comma-separated text <-> string array, for `domains` and
+  // `language.supported`.
+  const listToText = (arr) => (Array.isArray(arr) ? arr.join(", ") : "");
+  const textToList = (text) =>
+    text
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+  const onFeatureFlagsChange = (text) => {
+    setFeatureFlagsText(text);
+    try {
+      const parsed = text.trim() === "" ? {} : JSON.parse(text);
+      setForm((f) => ({ ...f, featureFlags: parsed }));
+      setFeatureFlagsError(null);
+    } catch {
+      setFeatureFlagsError("Invalid JSON");
+    }
   };
 
   return (
@@ -248,11 +305,23 @@ export default function CountryManagement() {
             <Field label="Domain (e.g. i-coffee.gh)">
               <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.domain} onChange={(e) => set("domain", e.target.value)} />
             </Field>
+            <Field label="Additional domains (comma-separated aliases)">
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={listToText(form.domains)} onChange={(e) => set("domains", textToList(e.target.value))} placeholder="www.i-coffee.gh" />
+            </Field>
+            <Field label="Admin login domain (app.i-coffee.gh)">
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.adminDomain} onChange={(e) => set("adminDomain", e.target.value)} placeholder="app.i-coffee.gh" />
+            </Field>
             <Field label="Currency code (e.g. GHS)">
               <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.currency.code} onChange={(e) => set("currency.code", e.target.value.toUpperCase())} />
             </Field>
             <Field label="Currency symbol">
               <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.currency.symbol} onChange={(e) => set("currency.symbol", e.target.value)} />
+            </Field>
+            <Field label="Currency name (e.g. Ghanaian Cedi)">
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.currency.name} onChange={(e) => set("currency.name", e.target.value)} />
+            </Field>
+            <Field label="Currency decimal places">
+              <input type="number" min="0" max="4" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.currency.decimals} onChange={(e) => set("currency.decimals", Number(e.target.value))} />
             </Field>
             <Field label="Default language">
               <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.language.default} onChange={(e) => set("language.default", e.target.value)}>
@@ -260,6 +329,12 @@ export default function CountryManagement() {
                   <option key={l} value={l}>{l}</option>
                 ))}
               </select>
+            </Field>
+            <Field label="Supported languages (comma-separated codes)">
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={listToText(form.language.supported)} onChange={(e) => set("language.supported", textToList(e.target.value))} placeholder="en, fr" />
+            </Field>
+            <Field label="Locale (e.g. en-GH)">
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.language.locale} onChange={(e) => set("language.locale", e.target.value)} placeholder="en-GH" />
             </Field>
             <Field label="Timezone">
               <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.timezone} onChange={(e) => set("timezone", e.target.value)} placeholder="Africa/Accra" />
@@ -278,6 +353,113 @@ export default function CountryManagement() {
               <input type="checkbox" checked={form.payments.stripe} onChange={(e) => set("payments.stripe", e.target.checked)} />
               Stripe
             </label>
+          </div>
+
+          {/* Tax — was already in this file's default form object but had no
+              UI to edit it at all; the fields existed on the model
+              (country.model.js) and were completely unreachable. */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
+              Tax
+            </h3>
+            <div className="flex items-center gap-6 mb-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.tax.enabled} onChange={(e) => set("tax.enabled", e.target.checked)} />
+                Tax enabled
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.tax.inclusive} onChange={(e) => set("tax.inclusive", e.target.checked)} />
+                Prices are tax-inclusive
+              </label>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Field label="Tax rate (%)">
+                <input type="number" min="0" max="100" step="0.1" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.tax.rate} onChange={(e) => set("tax.rate", Number(e.target.value))} />
+              </Field>
+              <Field label="Tax label (e.g. VAT, GST)">
+                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.tax.label} onChange={(e) => set("tax.label", e.target.value)} />
+              </Field>
+            </div>
+          </div>
+
+          {/* Shipping defaults — model field existed, no form UI. */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
+              Shipping defaults
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Free-shipping threshold (blank = disabled)">
+                <input type="number" min="0" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.shipping.freeThreshold ?? ""} onChange={(e) => set("shipping.freeThreshold", e.target.value === "" ? null : Number(e.target.value))} />
+              </Field>
+              <Field label="Default shipping fee">
+                <input type="number" min="0" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.shipping.defaultFee} onChange={(e) => set("shipping.defaultFee", Number(e.target.value))} />
+              </Field>
+            </div>
+          </div>
+
+          {/* Branding — model field existed, no form UI. */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
+              Branding
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Logo URL (blank falls back to HQ logo)">
+                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.branding.logo} onChange={(e) => set("branding.logo", e.target.value)} />
+              </Field>
+              <Field label="Primary color (hex, e.g. #6F4E37)">
+                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.branding.primaryColor} onChange={(e) => set("branding.primaryColor", e.target.value)} placeholder="#6F4E37" />
+              </Field>
+            </div>
+          </div>
+
+          {/* SEO — model field existed, no form UI. */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
+              SEO
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Site name (used in page titles)">
+                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.seo.siteName} onChange={(e) => set("seo.siteName", e.target.value)} />
+              </Field>
+              <Field label="TLD (e.g. .gh)">
+                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.seo.tld} onChange={(e) => set("seo.tld", e.target.value)} placeholder=".gh" />
+              </Field>
+            </div>
+          </div>
+
+          {/* Invoice numbering — model field existed, no form UI. */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
+              Invoice numbering
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Invoice prefix">
+                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.invoiceSeries.prefix} onChange={(e) => set("invoiceSeries.prefix", e.target.value)} />
+              </Field>
+              <Field label="Next invoice number">
+                <input type="number" min="1" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" value={form.invoiceSeries.nextNumber} onChange={(e) => set("invoiceSeries.nextNumber", Number(e.target.value))} />
+              </Field>
+            </div>
+          </div>
+
+          {/* Feature flags — Mixed/JSON on the model, no form UI at all. */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
+              Feature flags (JSON)
+            </h3>
+            <textarea
+              className={`w-full px-3 py-2 border rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${featureFlagsError ? "border-red-400" : "border-gray-300 dark:border-gray-600"}`}
+              rows={4}
+              value={featureFlagsText}
+              onChange={(e) => onFeatureFlagsChange(e.target.value)}
+              placeholder={`{\n  "enableWishlist": true\n}`}
+            />
+            {featureFlagsError && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{featureFlagsError}</p>
+            )}
+            <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">
+              Per-country feature flags — enable/disable modules for this market without a code deploy.
+            </p>
           </div>
 
           {/* Content management — preheader promo + storefront contact details.

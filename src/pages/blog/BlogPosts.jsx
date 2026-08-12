@@ -1198,6 +1198,7 @@ const BlogPosts = () => {
                     seoKeywords: "SEO Keywords",
                     socialTitle: "Social Title",
                   }}
+                  richTextFields={["content"]}
                 />
               </div>
             )}

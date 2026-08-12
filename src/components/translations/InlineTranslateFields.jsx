@@ -19,14 +19,28 @@
  *     fieldLabels={{ title: "Title", subtitle: "Subtitle", linkText: "Button text" }}
  *   />
  *
+ *   // For a field whose source value is actual HTML from a WYSIWYG editor
+ *   // (e.g. a blog post's "content"), list it in richTextFields so it's
+ *   // edited visually instead of as raw markup in a plain textarea:
+ *   <InlineTranslateFields
+ *     entityType="blog"
+ *     entity={postDoc}
+ *     fields={["title", "excerpt", "content"]}
+ *     fieldLabels={{ title: "Title", excerpt: "Excerpt", content: "Content" }}
+ *     richTextFields={["content"]}
+ *   />
+ *
  * Renders nothing (returns null) until `entity._id` exists — i.e. while
  * creating a brand-new item, save it first, then translations become
  * available on the next edit.
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Languages, RefreshCw, PenLine, Bot, Check, X, AlertCircle } from "lucide-react";
+import { Languages, RefreshCw, PenLine, Bot, Check, X, AlertCircle, Bold, Italic, List, ListOrdered, Link as LinkIcon, RemoveFormatting } from "lucide-react";
 import toast from "react-hot-toast";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import TiptapLink from "@tiptap/extension-link";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import FlagIcon from "../FlagIcon.jsx";
 
@@ -46,7 +60,91 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-export default function InlineTranslateFields({ entityType, entity, fields, fieldLabels = {} }) {
+// ─── Lightweight rich-text editor for translated HTML fields ───────────────
+// A minimal Tiptap instance (no image upload — translations reuse whatever
+// images the English source already has) for fields whose source content is
+// actual HTML from a WYSIWYG editor (e.g. blog post "content"). Rendering
+// those fields as a plain <textarea> — as this component previously did for
+// every field — meant admins edited raw markup like
+// "<ul><li><p>Try a new drink</p></li>..." directly, which is both hard to
+// read and easy to corrupt. This gives the same kind of visual editing
+// experience as the main content editor, just without its full toolbar.
+const RichFieldToolbarBtn = ({ onClick, active, title, children }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={title}
+    className={`p-1 rounded text-xs ${
+      active
+        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+    }`}
+  >
+    {children}
+  </button>
+);
+
+function RichTextField({ value, onChange }) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TiptapLink.configure({ openOnClick: false, HTMLAttributes: { class: "text-blue-600 underline" } }),
+    ],
+    content: value || "",
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-sm dark:prose-invert max-w-none min-h-[220px] p-3 focus:outline-none text-gray-800 dark:text-gray-200",
+      },
+    },
+  });
+
+  // Sync when switching which language is being edited.
+  useEffect(() => {
+    if (!editor) return;
+    if (value !== editor.getHTML()) editor.commands.setContent(value || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, value]);
+
+  if (!editor) return null;
+
+  return (
+    <div className="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900">
+      <div className="flex items-center gap-0.5 px-1.5 py-1 border-b border-gray-200 dark:border-gray-700">
+        <RichFieldToolbarBtn title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
+          <Bold className="w-3.5 h-3.5" />
+        </RichFieldToolbarBtn>
+        <RichFieldToolbarBtn title="Italic" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
+          <Italic className="w-3.5 h-3.5" />
+        </RichFieldToolbarBtn>
+        <RichFieldToolbarBtn title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+          <List className="w-3.5 h-3.5" />
+        </RichFieldToolbarBtn>
+        <RichFieldToolbarBtn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+          <ListOrdered className="w-3.5 h-3.5" />
+        </RichFieldToolbarBtn>
+        <RichFieldToolbarBtn
+          title="Link"
+          active={editor.isActive("link")}
+          onClick={() => {
+            const url = window.prompt("URL");
+            if (url) editor.chain().focus().setLink({ href: url }).run();
+            else editor.chain().focus().unsetLink().run();
+          }}
+        >
+          <LinkIcon className="w-3.5 h-3.5" />
+        </RichFieldToolbarBtn>
+        <RichFieldToolbarBtn title="Clear formatting" onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}>
+          <RemoveFormatting className="w-3.5 h-3.5" />
+        </RichFieldToolbarBtn>
+      </div>
+      <EditorContent editor={editor} />
+    </div>
+  );
+}
+
+export default function InlineTranslateFields({ entityType, entity, fields, fieldLabels = {}, richTextFields = [] }) {
   const { isGlobalAdmin, countryScope, allCountries } = useAdminCountry();
 
   const manageableLanguages = React.useMemo(() => {
@@ -111,11 +209,17 @@ export default function InlineTranslateFields({ entityType, entity, fields, fiel
       // The backend now awaits the actual OpenAI call and reports real
       // per-language results instead of always saying "queued" — reflect
       // that here instead of blindly showing success and polling after a
-      // fixed delay.
+      // fixed delay. Judge success from THIS language's own result, not
+      // the request's overall `success` flag — a single trigger call
+      // translates every target language at once, so the other language
+      // failing shouldn't make this one look like it failed too.
       const langResult = res?.results?.[langCode];
-      if (res.success && langResult?.status !== "error") {
+      if (langResult?.status === "ok") {
         toast.success("Translation complete");
         await load();
+      } else if (langResult?.status === "partial") {
+        toast.error(langResult?.error || "Some fields failed to translate — check server logs");
+        await load(); // reload anyway — whatever did succeed is saved
       } else {
         toast.error(langResult?.error || res.message || "Translation failed");
       }
@@ -227,12 +331,19 @@ export default function InlineTranslateFields({ entityType, entity, fields, fiel
               <label className="text-xs text-gray-500 block mb-0.5">
                 {fieldLabels[f] || f}
               </label>
-              <textarea
-                rows={f.toLowerCase().includes("description") || f.toLowerCase().includes("message") ? 2 : 1}
-                value={draftFields[f] || ""}
-                onChange={(e) => setDraftFields((p) => ({ ...p, [f]: e.target.value }))}
-                className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-900"
-              />
+              {richTextFields.includes(f) ? (
+                <RichTextField
+                  value={draftFields[f] || ""}
+                  onChange={(html) => setDraftFields((p) => ({ ...p, [f]: html }))}
+                />
+              ) : (
+                <textarea
+                  rows={f.toLowerCase().includes("description") || f.toLowerCase().includes("message") ? 3 : 1}
+                  value={draftFields[f] || ""}
+                  onChange={(e) => setDraftFields((p) => ({ ...p, [f]: e.target.value }))}
+                  className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-900 resize-y"
+                />
+              )}
             </div>
           ))}
           <div className="flex items-center gap-2 pt-1">

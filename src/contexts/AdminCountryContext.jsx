@@ -7,6 +7,20 @@
  *   user.scope === "GLOBAL"  → isGlobalAdmin = true, countryScope = null
  *   user.scope === "COUNTRY" → isGlobalAdmin = false, countryScope = user.assignedCountry
  *
+ * ...with one correction layered on top: HQ_ONLY_SUBROLES (IT, DIRECTOR,
+ * ACCOUNTANT, WAREHOUSE, EDITOR) are ALWAYS global, regardless of what
+ * `user.scope` says. The backend already treats them this way everywhere
+ * that matters (countryScope middleware, /me/capabilities), self-healing on
+ * every request even if the stored record is stale — but `user` here comes
+ * from the cached object saved to localStorage at login. If a session was
+ * established before that self-heal was deployed (or before this account
+ * was corrected), the cached copy can still say `scope: "COUNTRY"` (or be
+ * missing scope entirely) until the next login, which made Site Pages,
+ * Country Management, and anything else gated on `isGlobalAdmin` show as
+ * read-only for an IT/DIRECTOR account that should have full access.
+ * Mirroring the same HQ-only list here closes that gap immediately,
+ * without needing a re-login.
+ *
  * Permissions (which pages/routes the user can visit) are still determined
  * entirely by user.subRole — same as before, unchanged.
  */
@@ -27,6 +41,11 @@ import {
   LANGUAGE_NAMES,
 } from "../i18n/index.js";
 import { getCurrentUser } from "../utils/api.js";
+
+// Mirrors HQ_ONLY_SUBROLES in server/config/roles.js — keep in sync. These
+// subRoles are never country-scoped; an account with one of these always
+// behaves as a GLOBAL admin no matter what's cached for user.scope.
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR"];
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -101,15 +120,20 @@ export function AdminCountryProvider({ children }) {
   const user = getCurrentUser();
 
   // ── Derived state from user.scope ─────────────────────────────────────────
-  // isGlobalAdmin: user sees all countries (scope === "GLOBAL")
+  // isGlobalAdmin: user sees all countries (scope === "GLOBAL", or an
+  // HQ-only subRole overriding a stale cached scope — see file header).
   // countryScope:  null for global, country code for country-scoped
-  const isGlobalAdmin = !!(user && user.scope === "GLOBAL");
+  const isGlobalAdmin = !!(
+    user &&
+    (user.scope === "GLOBAL" || HQ_ONLY_SUBROLES.includes(user.subRole))
+  );
   const countryScope = useMemo(() => {
     if (!user) return null;
+    if (HQ_ONLY_SUBROLES.includes(user.subRole)) return null; // always global
     if (user.scope === "COUNTRY" && user.assignedCountry)
       return user.assignedCountry;
     return null;
-  }, [user?.scope, user?.assignedCountry]);
+  }, [user?.scope, user?.assignedCountry, user?.subRole]);
 
   // ── Bootstrap: fetch country list, set active country ────────────────────
   useEffect(() => {
