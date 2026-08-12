@@ -9,12 +9,29 @@
 import en from "./locales/en.js";
 import fr from "./locales/fr.js";
 import it from "./locales/it.js";
+import es from "./locales/es.js";
+import pt from "./locales/pt.js";
+import nl from "./locales/nl.js";
+import ar from "./locales/ar.js";
+import hi from "./locales/hi.js";
+import zh from "./locales/zh.js";
 
-const LOCALES = { en, fr, it };
+const LOCALES = { en, fr, it, es, pt, nl, ar, hi, zh };
 const LS_KEY = "icvng_admin_language";
 
-export const SUPPORTED_LANGUAGES = ["en", "fr", "it"];
-export const LANGUAGE_NAMES = { en: "English", fr: "Français", it: "Italiano" };
+export const SUPPORTED_LANGUAGES = ["en", "fr", "it", "es", "pt", "nl", "ar", "hi", "zh"];
+export const LANGUAGE_NAMES = {
+  en: "English",
+  fr: "Français",
+  it: "Italiano",
+  es: "Español",
+  pt: "Português",
+  nl: "Nederlands",
+  ar: "العربية",
+  hi: "हिन्दी",
+  zh: "中文",
+};
+export const RTL_LANGUAGES = ["ar"];
 
 // Deep merge: override on top of base
 function deepMerge(base, override) {

@@ -39,6 +39,7 @@ import {
   saveLanguage,
   SUPPORTED_LANGUAGES,
   LANGUAGE_NAMES,
+  RTL_LANGUAGES,
 } from "../i18n/index.js";
 import { getCurrentUser } from "../utils/api.js";
 
@@ -177,6 +178,7 @@ export function AdminCountryProvider({ children }) {
       : detectLanguage(activeCountry?.language?.default || "en");
     setLanguageState(lang);
     document.documentElement.lang = lang;
+    document.documentElement.dir = RTL_LANGUAGES.includes(lang) ? "rtl" : "ltr";
   }, [user?.preferredLanguage, activeCountry, loading]);
 
   const setLanguage = useCallback((lang) => {
@@ -184,6 +186,7 @@ export function AdminCountryProvider({ children }) {
     setLanguageState(lang);
     saveLanguage(lang);
     document.documentElement.lang = lang;
+    document.documentElement.dir = RTL_LANGUAGES.includes(lang) ? "rtl" : "ltr";
   }, []);
 
   const t = useCallback(
