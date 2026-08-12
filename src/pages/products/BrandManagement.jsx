@@ -7,7 +7,6 @@ import { brandAPI } from '../../utils/manageApi';
 import toast from 'react-hot-toast';
 import ImageUploader from '../../components/common/ImageUploader';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
-import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
 import { getCurrentUser } from "../../utils/api";
 
 const EmptyState = ({ icon: Icon, message, sub }) => (
@@ -377,14 +376,9 @@ const BrandManagement = () => {
                 />
                 {errors.name && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
               </div>
-              {editingBrand && (
-                <InlineTranslateFields
-                  entityType="brand"
-                  entity={editingBrand}
-                  fields={["name"]}
-                  fieldLabels={{ name: "Brand Name" }}
-                />
-              )}
+              {/* No InlineTranslateFields here on purpose — brand names are
+                  proper nouns (Nescafé, Lavazza, etc.) and should never be
+                  translated. */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("brands.brandImage")} *</label>
                 <ImageUploader

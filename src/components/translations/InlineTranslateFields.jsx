@@ -108,11 +108,16 @@ export default function InlineTranslateFields({ entityType, entity, fields, fiel
         method: "POST",
         body: JSON.stringify({ entityType, entityId, document: entity }),
       });
-      if (res.success) {
-        toast.success("Translation queued");
-        setTimeout(load, 2500);
+      // The backend now awaits the actual OpenAI call and reports real
+      // per-language results instead of always saying "queued" — reflect
+      // that here instead of blindly showing success and polling after a
+      // fixed delay.
+      const langResult = res?.results?.[langCode];
+      if (res.success && langResult?.status !== "error") {
+        toast.success("Translation complete");
+        await load();
       } else {
-        toast.error("Translation failed");
+        toast.error(langResult?.error || res.message || "Translation failed");
       }
     } catch {
       toast.error("Translation failed");
