@@ -26,7 +26,9 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const { isGlobalAdmin, countryScope } = useAdminCountry();
   // Partner stock ("online BTC-type stock expected from our partners") is a
   // Nigeria-specific arrangement — only Nigeria-scoped or global/HQ admins
-  // can see or manage it. A foreign-country admin has no such partners.
+  // can see or manage it (this already covers EDITOR, since EDITOR is
+  // always isGlobalAdmin — see AdminCountryContext's HQ_ONLY_SUBROLES). A
+  // foreign-country admin has no such partners.
   const canSeePartnerStock = isGlobalAdmin || countryScope === "NG";
   const currentUser = getCurrentUser();
   // GRAPHICS can only ever save the `image` field (server strips
@@ -258,11 +260,16 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // getSuppliersForSelection (not getSuppliers) — the full list requires
+      // suppliers.manage, which EDITOR/WAREHOUSE/HQ-Manager don't hold and
+      // don't need; the selection endpoint is view-gated and returns just
+      // what this form's dropdown needs (name/email/phone/supplierType),
+      // without exposing bank/tax details those roles shouldn't see anyway.
       const [cats, brandsRes, colorsRes, suppliersRes] = await Promise.all([
         getCategories(),
         brandAPI.getBrands(),
         colorAPI.getColors(),
-        supplierAPI.getSuppliers({ status: "ACTIVE", limit: 200 }),
+        supplierAPI.getSuppliersForSelection(),
       ]);
       setCategories(cats);
       if (brandsRes.success) setBrands(brandsRes.data);
@@ -293,7 +300,7 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
         /* ignore */
       }
       try {
-        const r = await supplierAPI.getSuppliers({ status: "ACTIVE" });
+        const r = await supplierAPI.getSuppliersForSelection();
         if (r.success) setSuppliers(r.data || []);
       } catch (_) {
         /* ignore */
@@ -500,13 +507,17 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
       newErrors.shortDescription = t("productForm.shortDescRequired");
     }
 
-    // At least one of BTC, 3-week, or 5-week price must be set
-    const btc = parseFloat(formData.btcPrice) || 0;
-    const w3 = parseFloat(formData.price3weeksDelivery) || 0;
-    const w5 = parseFloat(formData.price5weeksDelivery) || 0;
-    if (btc === 0 && w3 === 0 && w5 === 0) {
-      newErrors.prices = t("productForm.priceRequiredError");
-    }
+    // Missing BTC/2-week/5-week pricing is NOT a blocking error — the
+    // server already force-saves a product with no way for a customer to
+    // buy it as DRAFT (see isProductPurchasable/effectivePublish in
+    // product.controller.js), regardless of what `publish` was submitted.
+    // Blocking submission here duplicated that safeguard as a hard stop,
+    // which prevented saving progress on a product mid-setup (e.g. an
+    // Editor filling in everything except pricing, which Accounting adds
+    // later). The amber "will be hidden from shop" warning further down
+    // already tells the admin what's missing and what the consequence is
+    // — that's sufficient, submission should proceed to DRAFT instead of
+    // being refused outright.
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -1238,14 +1249,6 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
                 </div>
               )}
               {/* ─────────────────────────────────────────────────────────── */}
-
-              {/* Price required warning */}
-              {errors.prices && (
-                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {errors.prices}
-                </div>
-              )}
 
               {/* Live visibility warning — mirrors the server's canonical
                   purchasability rule exactly (see PRODUCT_VISIBILITY_RULES.md) */}

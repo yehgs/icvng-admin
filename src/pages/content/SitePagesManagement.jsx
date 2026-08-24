@@ -24,6 +24,7 @@ import { apiCall, handleApiError } from "../../utils/api";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import FlagIcon from "../../components/FlagIcon.jsx";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from "../../i18n/index.js";
 
 // ── Known pages (slug -> label). New pages can be added by typing a new
 // slug in the "custom slug" box below — nothing here is a hard limit. ─────

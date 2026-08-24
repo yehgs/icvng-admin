@@ -643,6 +643,14 @@ export const supplierAPI = {
     return apiCall(`/suppliers${queryString ? `?${queryString}` : ""}`);
   },
 
+  // Lightweight, view-gated list (name/email/phone/supplierType only) — for
+  // dropdown/selection use (e.g. ProductForm.jsx's Partner Stock supplier
+  // picker). Unlike getSuppliers() above, this doesn't require
+  // suppliers.manage, so EDITOR/WAREHOUSE/HQ-Manager can use it too.
+  getSuppliersForSelection: async () => {
+    return apiCall("/suppliers/selection");
+  },
+
   getSupplier: async (supplierId) => {
     return apiCall(`/suppliers/${supplierId}`);
   },
@@ -1267,6 +1275,20 @@ export const countryAPI = {
       body: { status },
     }),
   languages: async () => apiCall("/country/admin/meta/languages"),
+};
+
+// Language "lib" CRUD — see server/models/language.model.js. Metadata for
+// every language the platform offers (display name, native name, flag,
+// RTL, active/inactive), independent of the static i18n locale files.
+export const languageAPI = {
+  list: async () => apiCall("/languages"), // admin: includes inactive
+  listActive: async () => apiCall("/languages/active"), // public: switchers
+  create: async (data) =>
+    apiCall("/languages", { method: "POST", body: data }),
+  update: async (languageId, data) =>
+    apiCall(`/languages/${languageId}`, { method: "PUT", body: data }),
+  delete: async (languageId) =>
+    apiCall(`/languages/${languageId}`, { method: "DELETE" }),
 };
 
 export const brandAPI = {

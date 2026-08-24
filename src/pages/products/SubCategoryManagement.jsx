@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import ImageUploader from '../../components/common/ImageUploader.jsx';
 import { subCategoryAPI } from '../../utils/manageApi.js';
-import { getCategories } from '../../utils/categoryService';
+import { getCategories, clearCategoryCache } from '../../utils/categoryService';
 import toast from 'react-hot-toast';
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
@@ -219,6 +219,12 @@ const SubCategoryManagement = () => {
       if (response.success) {
         setShowModal(false);
         resetForm();
+        // categoryService.js caches the flat subcategory list for
+        // ProductForm/other dropdown consumers for up to 5 minutes. Without
+        // invalidating it here, a subcategory created/edited on this page
+        // silently doesn't show up when creating a product right after —
+        // matches the pattern already used in CategoryManagement.jsx.
+        clearCategoryCache();
         fetchSubCategories();
         toast.success(editingSubCategory ? t("subCategories.subCategoryUpdated") : t("subCategories.subCategoryCreated"));
       } else {
@@ -244,6 +250,7 @@ const SubCategoryManagement = () => {
       setLoading(true);
       const response = await subCategoryAPI.deleteSubCategory(subCategoryId);
       if (response.success) {
+        clearCategoryCache();
         fetchSubCategories();
         toast.success(t("subCategories.subCategoryDeleted"));
       } else {

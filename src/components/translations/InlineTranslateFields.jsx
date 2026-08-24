@@ -43,13 +43,22 @@ import StarterKit from "@tiptap/starter-kit";
 import TiptapLink from "@tiptap/extension-link";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import FlagIcon from "../FlagIcon.jsx";
+import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from "../../i18n/index.js";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
 
-const ALL_NON_EN = [
-  { code: "fr", label: "Français" },
-  { code: "it", label: "Italiano" },
-];
+// Every non-English language in the platform's language lib (see
+// admin/src/i18n/index.js, kept in sync with client/src/i18n/index.js and
+// the server's ALL_SUPPORTED_LANGUAGES/GLOBAL_EXTRA_LANGUAGES —
+// config/countries/index.js). This used to be hardcoded to just
+// French/Italian here, which meant the content-translation pipeline could
+// already generate/store es/pt/nl/ar/hi/zh translations (the backend has
+// supported all 9 for a while) but no admin screen ever exposed them —
+// every "Translations" panel silently only offered fr/it regardless of
+// what languages the platform actually supports.
+const ALL_NON_EN = SUPPORTED_LANGUAGES.filter((code) => code !== "en").map(
+  (code) => ({ code, label: LANGUAGE_NAMES[code] || code }),
+);
 
 async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("accessToken");

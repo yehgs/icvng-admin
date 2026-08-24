@@ -58,6 +58,7 @@ import ImageUploader from "../../components/common/ImageUploader";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import InlineTranslateFields from "../../components/translations/InlineTranslateFields";
+import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from "../../i18n/index.js";
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
@@ -420,10 +421,15 @@ const emptyForm = {
   countryCode: "NG",
 };
 
-const ALL_NON_EN_LANGUAGES = [
-  { code: "fr", label: "Français", flag: "🇫🇷" },
-  { code: "it", label: "Italiano", flag: "🇮🇹" },
-];
+// Every non-English language in the platform's language lib (see
+// admin/src/i18n/index.js) — was hardcoded to just fr/it here, silently
+// hiding the other 6 languages the translation pipeline already supports
+// (see InlineTranslateFields.jsx, which drives the same list — kept in
+// sync). `.flag` was unused in this file's own rendering; dropped rather
+// than hand-maintaining a second flag-emoji map here.
+const ALL_NON_EN_LANGUAGES = SUPPORTED_LANGUAGES.filter(
+  (code) => code !== "en",
+).map((code) => ({ code, label: LANGUAGE_NAMES[code] || code }));
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 const BlogPosts = () => {

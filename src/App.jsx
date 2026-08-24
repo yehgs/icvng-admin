@@ -71,6 +71,7 @@ import TrackingManagement from "./pages/logistics/TrackingManagement";
 // Settings & Other
 import Settings from "./pages/settings/Settings";
 import CountryManagement from "./pages/settings/CountryManagement";
+import LanguageManagement from "./pages/settings/LanguageManagement";
 import BankTransferSettings from "./pages/settings/BankTransferSettings";
 import ForeignAdminManagement from "./pages/foreign-admins/ForeignAdminManagement";
 import NotFound from "./pages/NotFound";
@@ -734,6 +735,19 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <CountryManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Language lib — the platform's supported-language list
+                    (translations.manage/.view holders: IT/DIRECTOR/MANAGER/
+                    EDITOR — same audience as the rest of the content
+                    translation system). hqOnly on the backend guard. */}
+                <Route
+                  path="languages"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}>
+                      <LanguageManagement />
                     </RoleProtectedRoute>
                   }
                 />

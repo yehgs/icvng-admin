@@ -8,7 +8,7 @@ import {
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
-  Bell, LifeBuoy, Lock, Landmark,
+  Bell, LifeBuoy, Lock, Landmark, Languages,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -237,6 +237,14 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     // → Countries → Tawk.to" couldn't be found; the page and its Tawk.to
     // fields were already fully working.
     { key: "countries",   title: "Countries",                 path: "/admin/countries", icon: Globe, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    // Language lib (server/models/language.model.js) — same audience as the
+    // rest of the content-translation system (translations.view/.manage),
+    // but scoped to the subRoles that are ALWAYS HQ (IT/DIRECTOR/EDITOR) —
+    // unlike "countries" above, MANAGER can be country-scoped, and this is
+    // a platform-wide (hqOnly) setting, so a foreign Manager isn't shown a
+    // link that would just 403. They can still reach it directly if their
+    // account is ever HQ-scoped; the backend guard is the real boundary.
+    { key: "languages",   title: "Languages",                 path: "/admin/languages", icon: Languages, single: true, allowedSubRoles: ["IT","DIRECTOR","EDITOR"] },
   ];
 
   // Item #7: entire modules that are HQ-only regardless of subRole —
