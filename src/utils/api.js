@@ -1291,6 +1291,32 @@ export const languageAPI = {
     apiCall(`/languages/${languageId}`, { method: "DELETE" }),
 };
 
+// UI-copy CRUD — see server/models/uiTranslation.model.js. This is the
+// hardcoded locale-file content (nav labels, buttons, empty states — NOT
+// database content like products/blog, which is the separate
+// translationAPI/InlineTranslateFields system) made editable without a
+// code deploy. `app` is "admin" or "client".
+export const uiTranslationAPI = {
+  list: async ({ app, language, search = "", namespace = "", page = 1, limit = 50 }) => {
+    const params = new URLSearchParams({
+      app,
+      language,
+      search,
+      namespace,
+      page: String(page),
+      limit: String(limit),
+    });
+    return apiCall(`/ui-translations?${params.toString()}`);
+  },
+  namespaces: async (app) =>
+    apiCall(`/ui-translations/namespaces?app=${encodeURIComponent(app)}`),
+  save: async ({ app, key, language, value }) =>
+    apiCall("/ui-translations", {
+      method: "PUT",
+      body: { app, key, language, value },
+    }),
+};
+
 export const brandAPI = {
   getBrands: async () => {
     return apiCall("/brand/get");

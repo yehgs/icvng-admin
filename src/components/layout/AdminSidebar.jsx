@@ -245,6 +245,9 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     // link that would just 403. They can still reach it directly if their
     // account is ever HQ-scoped; the backend guard is the real boundary.
     { key: "languages",   title: "Languages",                 path: "/admin/languages", icon: Languages, single: true, allowedSubRoles: ["IT","DIRECTOR","EDITOR"] },
+    // UI-copy (locale-file) translations — same audience/reasoning as
+    // "languages" above.
+    { key: "ui-translations", title: "UI Copy Translations",   path: "/admin/ui-translations", icon: Languages, single: true, allowedSubRoles: ["IT","DIRECTOR","EDITOR"] },
   ];
 
   // Item #7: entire modules that are HQ-only regardless of subRole —

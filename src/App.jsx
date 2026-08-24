@@ -72,6 +72,7 @@ import TrackingManagement from "./pages/logistics/TrackingManagement";
 import Settings from "./pages/settings/Settings";
 import CountryManagement from "./pages/settings/CountryManagement";
 import LanguageManagement from "./pages/settings/LanguageManagement";
+import UiTranslationsManagement from "./pages/settings/UiTranslationsManagement";
 import BankTransferSettings from "./pages/settings/BankTransferSettings";
 import ForeignAdminManagement from "./pages/foreign-admins/ForeignAdminManagement";
 import NotFound from "./pages/NotFound";
@@ -748,6 +749,18 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}>
                       <LanguageManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* UI-copy translations — hardcoded locale-file content
+                    (nav/button/empty-state text), made DB-editable. Same
+                    audience as Languages above. */}
+                <Route
+                  path="ui-translations"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}>
+                      <UiTranslationsManagement />
                     </RoleProtectedRoute>
                   }
                 />

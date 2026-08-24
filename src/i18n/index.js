@@ -53,6 +53,86 @@ const MERGED = Object.fromEntries(
   ])
 );
 
+// ── DB overrides overlay ────────────────────────────────────────────────
+//
+// EFFECTIVE starts as a clone of the bundled static MERGED locales (always
+// available synchronously — no flash of untranslated content, works
+// offline/if the API is unreachable) and gets overlaid with whatever
+// GET /api/ui-translations/merged?app=admin&language=<lang> returns, via
+// applyDbOverrides() below. That endpoint is populated by
+// scripts/seedUiTranslations.js and edited live from
+// admin/src/pages/settings/UiTranslationsManagement.jsx — see PRD §8a.
+// Static files remain the source of truth for what keys EXIST (structure);
+// the DB is the source of truth for what a given key currently SAYS, once
+// it's been fetched.
+const EFFECTIVE = Object.fromEntries(
+  Object.entries(MERGED).map(([code, locale]) => [code, locale]),
+);
+
+let revision = 0;
+const revisionListeners = new Set();
+
+function notifyRevision() {
+  revision += 1;
+  revisionListeners.forEach((cb) => {
+    try {
+      cb(revision);
+    } catch {
+      /* a listener throwing shouldn't break the others */
+    }
+  });
+}
+
+/** Subscribe to "the effective locale for some language changed" (i.e. DB
+ * overrides finished loading/were re-applied). Returns an unsubscribe fn.
+ * Consumed by AdminCountryContext.jsx to force a re-render of `t()` output
+ * once overrides for the active language arrive. */
+export function subscribeI18nRevision(cb) {
+  revisionListeners.add(cb);
+  return () => revisionListeners.delete(cb);
+}
+
+function setPath(target, keyPath, value) {
+  const parts = keyPath.split(".");
+  let node = target;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!node[parts[i]] || typeof node[parts[i]] !== "object") node[parts[i]] = {};
+    node = node[parts[i]];
+  }
+  node[parts[parts.length - 1]] = value;
+}
+
+/** Apply a flat { "common.save": "Enregistrer", ... } map (as returned by
+ * GET /api/ui-translations/merged) on top of the bundled locale for `lang`.
+ * Always rebuilt fresh from the static MERGED[lang] base rather than
+ * patched incrementally, so a key removed from the DB (reverted) falls
+ * back to the bundled value rather than staying stuck on a stale override. */
+export function applyDbOverrides(lang, flatOverrides) {
+  if (!MERGED[lang] && lang !== "en") return; // unknown language code, nothing to overlay onto
+  const base = MERGED[lang] || MERGED.en;
+  const clone = JSON.parse(JSON.stringify(base));
+  for (const [key, value] of Object.entries(flatOverrides || {})) {
+    if (value) setPath(clone, key, value);
+  }
+  EFFECTIVE[lang] = clone;
+  notifyRevision();
+}
+
+/** Fetches DB overrides for one language and applies them. Safe to call
+ * repeatedly (e.g. on every language switch) — failures are swallowed so a
+ * network hiccup just means "keep showing the bundled static strings"
+ * rather than breaking the UI. */
+export async function loadUiTranslationOverrides(lang, apiBase) {
+  try {
+    const base = apiBase || import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";
+    const res = await fetch(`${base}/ui-translations/merged?app=admin&language=${encodeURIComponent(lang)}`);
+    const json = await res.json();
+    if (json?.success) applyDbOverrides(lang, json.data || {});
+  } catch (e) {
+    console.warn(`[admin i18n] Failed to load DB overrides for '${lang}' — using bundled strings.`, e);
+  }
+}
+
 function interpolate(str, params = {}) {
   if (!params || Object.keys(params).length === 0) return str;
   return str.replace(/\{\{(\w+)\}\}/g, (_, k) =>
@@ -80,11 +160,11 @@ function resolve(locale, keyPath, params) {
 }
 
 export function translate(lang, key, params) {
-  const locale = MERGED[lang] || MERGED.en;
+  const locale = EFFECTIVE[lang] || EFFECTIVE.en;
   const result = resolve(locale, key, params);
   if (result !== null) return result;
   if (lang !== "en") {
-    const en = resolve(MERGED.en, key, params);
+    const en = resolve(EFFECTIVE.en, key, params);
     if (en !== null) return en;
   }
   console.warn(`[admin i18n] Missing: ${key} (${lang})`);

@@ -40,6 +40,8 @@ import {
   SUPPORTED_LANGUAGES,
   LANGUAGE_NAMES,
   RTL_LANGUAGES,
+  loadUiTranslationOverrides,
+  subscribeI18nRevision,
 } from "../i18n/index.js";
 import { getCurrentUser } from "../utils/api.js";
 
@@ -189,9 +191,24 @@ export function AdminCountryProvider({ children }) {
     document.documentElement.dir = RTL_LANGUAGES.includes(lang) ? "rtl" : "ltr";
   }, []);
 
+  // DB-backed UI-copy overrides (see i18n/index.js's applyDbOverrides /
+  // EFFECTIVE) — fetched per language, since each is a separate GET. Fires
+  // on mount and on every language switch. `i18nRevision` is bumped by
+  // applyDbOverrides() (via subscribeI18nRevision) once the fetch resolves
+  // and merges in, which is what makes `t` below re-render already-visible
+  // strings with the override applied instead of only affecting strings
+  // rendered after the fetch completes.
+  const [i18nRevision, setI18nRevision] = useState(0);
+  useEffect(() => {
+    if (!language) return;
+    loadUiTranslationOverrides(language);
+  }, [language]);
+  useEffect(() => subscribeI18nRevision(setI18nRevision), []);
+
   const t = useCallback(
     (key, params) => translate(language, key, params),
-    [language],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [language, i18nRevision],
   );
 
   // ── Currency formatter ────────────────────────────────────────────────────
