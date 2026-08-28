@@ -2,54 +2,24 @@
 import React, { useState, useEffect } from "react";
 import { X, Search, Loader2, Package, Truck } from "lucide-react";
 import { productAPI, handleApiError } from "../../utils/api";
-import toast from "react-hot-toast";
+import {
+  evaluateProductForManualOrder,
+  getBtcPriceOptions,
+} from "../../config/manualOrderRules.js";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import toast from "react-hot-toast";
 
 // ===== PRODUCT VALIDATION LOGIC =====
-const isProductValidForOrderType = (product, orderType) => {
-  if (orderType === "BTB") {
-    // BTB: Must have btbPrice > 0 AND warehouse offline stock > 0
-    const hasBtbPrice = product.btbPrice && product.btbPrice > 0;
-    const hasOfflineStock = product.warehouseStock?.enabled
-      ? (product.warehouseStock.offlineStock || 0) > 0
-      : (product.stock || 0) > 0;
+/**
+ * NOTE (2026-08-28): the hand-rolled `isProductValidForOrderType` that used
+ * to live here has been replaced by the shared helper in
+ * config/manualOrderRules.js, which mirrors the server's canonical rule.
+ * The old copy ignored partnerStock and ignored the five-week-type
+ * distinction — see that file's header for why both mattered. BTB branches
+ * are gone: manual orders are BTC-only.
+ */
 
-    return {
-      isValid: hasBtbPrice && hasOfflineStock,
-      reason: !hasBtbPrice
-        ? "No BTB price set"
-        : !hasOfflineStock
-          ? "No warehouse stock available"
-          : "",
-    };
-  } else {
-    // BTC: Must have (btcPrice > 0 AND onlineStock > 0) OR (has dropship prices)
-    const hasBtcPrice = product.btcPrice && product.btcPrice > 0;
-    const hasOnlineStock = product.warehouseStock?.enabled
-      ? (product.warehouseStock.onlineStock || 0) > 0
-      : (product.stock || 0) > 0;
-
-    const hasDropshipPrices =
-      (product.price3weeksDelivery && product.price3weeksDelivery > 0) ||
-      (product.price5weeksDelivery && product.price5weeksDelivery > 0);
-
-    // Valid if: (has btc price AND stock) OR has dropship prices
-    const isValidRegular = hasBtcPrice && hasOnlineStock;
-    const isValidDropship = hasDropshipPrices;
-
-    return {
-      isValid: isValidRegular || isValidDropship,
-      reason:
-        !hasBtcPrice && !hasDropshipPrices
-          ? "No BTC or dropship price set"
-          : !hasOnlineStock && !hasDropshipPrices
-            ? "No online stock and no dropship options"
-            : "",
-    };
-  }
-};
-
-const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
+const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
   const { t } = useAdminTranslation();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,6 +42,11 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
         page,
         limit: 10,
         productAvailability: true,
+        // Country-scope the catalogue. For SALES/MANAGER the server pins
+        // this to their own scope regardless; for IT/DIRECTOR it reflects
+        // the country selected on the order being created, so a director
+        // raising a Togo order searches the Togo catalogue.
+        ...(countryCode && { countryCode }),
       });
 
       if (response.success) {
@@ -91,45 +66,19 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
     setPage(1);
   };
 
-  const getPriceOptions = (product) => {
-    const prices = {};
+  // BTC-only price options, sourced from the shared rule so the five-week /
+  // two-week distinction is respected rather than offering both blindly.
+  const getPriceOptions = (product) => getBtcPriceOptions(product);
 
-    if (orderType === "BTB") {
-      prices.btb = product.btbPrice || product.price || 0;
-    } else {
-      prices.regular = product.btcPrice || product.price || 0;
+  // Effective ONLINE stock, honouring partnerStock — the pool the storefront
+  // and the server's manual-order validator both read.
+  const getProductStock = (product) =>
+    evaluateProductForManualOrder(product).availableStock;
 
-      if (product.price3weeksDelivery) {
-        prices.threeWeeks = product.price3weeksDelivery;
-      }
-
-      if (product.price5weeksDelivery) {
-        prices.fiveWeeks = product.price5weeksDelivery;
-      }
-    }
-
-    return prices;
-  };
-
-  const getProductStock = (product) => {
-    if (orderType === "BTB") {
-      // BTB uses offline stock
-      if (product.warehouseStock?.enabled) {
-        return product.warehouseStock.offlineStock || 0;
-      }
-      return product.stock || 0;
-    } else {
-      // BTC uses online stock
-      if (product.warehouseStock?.enabled) {
-        return product.warehouseStock.onlineStock || 0;
-      }
-      return product.stock || 0;
-    }
-  };
-
-  const hasDropshipOptions = (product) => {
-    return !!(product.price3weeksDelivery || product.price5weeksDelivery);
-  };
+  // "Dropship" here means a valid SPECIAL-ORDER price for THIS product type
+  // — not merely that some delivery price field is populated.
+  const hasDropshipOptions = (product) =>
+    evaluateProductForManualOrder(product).viaDelivery;
 
   if (!isOpen) return null;
 
@@ -139,7 +88,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Search Products - {orderType} Orders
+            {t("manualOrders.searchProducts")}
           </h3>
           <button
             onClick={onClose}
@@ -166,17 +115,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
           {/* Info banner about filtering */}
           <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              {orderType === "BTB" ? (
-                <>
-                  <strong>BTB Orders:</strong> Only showing products with BTB
-                  pricing and warehouse stock available.
-                </>
-              ) : (
-                <>
-                  <strong>BTC Orders:</strong> Showing products with BTC pricing
-                  + online stock, or dropship options (2/5 weeks delivery).
-                </>
-              )}
+              {t("manualOrders.btcSearchHint")}
             </p>
           </div>
         </div>
@@ -207,12 +146,9 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
                 const hasStock = stock > 0;
                 const hasDropship = hasDropshipOptions(product);
 
-                // ===== VALIDATION LOGIC =====
-                const validation = isProductValidForOrderType(
-                  product,
-                  orderType,
-                );
-                const isDisabled = !validation.isValid;
+                // ===== VALIDATION (shared canonical rule) =====
+                const validation = evaluateProductForManualOrder(product);
+                const isDisabled = !validation.valid;
 
                 return (
                   <button
@@ -268,7 +204,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
                           {hasStock ? (
                             <>
                               {stock} in{" "}
-                              {orderType === "BTB" ? "warehouse" : "online"}{" "}
+                              {t("manualOrders.onlineStockLabel")}{" "}
                               stock
                             </>
                           ) : (
@@ -277,7 +213,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
                         </span>
 
                         {/* Dropship Available Badge */}
-                        {orderType === "BTC" && hasDropship && (
+                        {hasDropship && (
                           <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 flex items-center gap-1">
                             <Truck className="w-3 h-3" />
                             Dropship Available
@@ -309,23 +245,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
 
                     {/* Pricing Options */}
                     <div className="text-right flex-shrink-0">
-                      {orderType === "BTB" ? (
-                        // ===== BTB PRICING =====
-                        <>
-                          <div
-                            className={`font-semibold ${
-                              isDisabled
-                                ? "text-gray-400"
-                                : "text-gray-900 dark:text-white"
-                            }`}
-                          >
-                            ₦{priceOptions.btb.toLocaleString()}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            BTB Price
-                          </div>
-                        </>
-                      ) : (
+                      {(
                         // ===== BTC PRICING WITH OPTIONS =====
                         <div className="space-y-2">
                           {/* Regular BTC Price */}
@@ -403,18 +323,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, orderType }) => {
         {/* Info Footer */}
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800">
           <p className="text-xs text-blue-800 dark:text-blue-300">
-            {orderType === "BTB" ? (
-              <>
-                <strong>💡 Tip:</strong> BTB orders use warehouse offline stock
-                and require BTB pricing to be set.
-              </>
-            ) : (
-              <>
-                <strong>💡 Tip:</strong> Products with dropship pricing options
-                don't require online stock. You can select the delivery
-                timeframe when adding the item to the order.
-              </>
-            )}
+            {t("manualOrders.dropshipTip")}
           </p>
         </div>
       </div>

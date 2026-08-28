@@ -657,6 +657,22 @@ const en = {
 
   // ── Orders ───────────────────────────────────────────────────────────────────
   orders: {
+    countryFilter: {
+      label: "Country",
+      all: "All countries",
+      allDomains: "All domains",
+      showingAll: "Showing orders from every country",
+      showingOne: "Showing {country} orders only",
+      globalBadge: "Global view",
+      domain: "Domain",
+      noOrdersForCountry: "No orders found for this country"
+    },
+    breakdown: {
+      title: "Orders by country",
+      total: "Total",
+      ordersCount: "{count} orders",
+      empty: "No orders in the current filter"
+    },
     title: "Orders",
     websiteOrders: "Website Orders",
     manualOrders: "Manual Orders",
@@ -2538,6 +2554,47 @@ const en = {
     noBatchesExpiring: "No batches expiring within {{days}} days.",
     colBatchNum: "Batch #",
     expiredBadge: "EXPIRED",
+  },
+  manualOrders: {
+    title: "Manual Online/Offline Orders",
+    subtitle: "All manual/sales orders ({count} total)",
+    createOrder: "Create Order",
+    createFirstOrder: "Create Your First Order",
+    createHint: "You can create new orders using the \"Create Order\" button above.",
+    noOrdersFound: "No offline orders found",
+    noOrdersYet: "You haven't created any orders yet",
+    noOrdersMatchingFilters: "No orders found matching your filters",
+    viewDetails: "View details",
+    generateInvoice: "Generate invoice",
+    sendNotification: "Send notification to customer",
+    refresh: "Refresh",
+    searchProducts: "Search Products",
+    btcSearchHint: "Showing products that are purchasable on the storefront: a regular price with available stock, or a valid special-order delivery price.",
+    onlineStockLabel: "online",
+    dropshipTip: "Tip: products with a special-order delivery price don't need stock on hand. Pick the delivery timeframe when you add the item.",
+    notPurchasable: "Not purchasable",
+    availableStock: "Available stock",
+    priceOptions: {
+      regular: "Regular price",
+      twoWeeks: "2 weeks delivery",
+      fiveWeeks: "5 weeks delivery"
+    },
+    selectCustomer: "Select customer",
+    createCustomer: "Create new customer",
+    customerCountry: "Customer country",
+    customerCountryHint: "Customers are country-scoped. You are seeing customers for the selected country only.",
+    noCustomersInCountry: "No customers found in this country",
+    orderCountry: "Order country",
+    orderCountryHint: "Select which country this order belongs to. Pricing, currency, invoice and customer emails all follow this.",
+    salesAgent: "Sales agent",
+    createdByAgent: "Created by {name}",
+    errors: {
+      timeout: "Request timed out. The server is not responding — check that the backend is running and connected to the database.",
+      serverDown: "Server is not responding. Please check if the database is connected and the backend is running.",
+      btbRetired: "Manual orders are BTC-only. BTB ordering has been retired — create the customer as BTC.",
+      customerCountryMismatch: "This customer belongs to a different country than the order.",
+      productNotInCountry: "This product is not available in the selected country."
+    }
   },
 };
 

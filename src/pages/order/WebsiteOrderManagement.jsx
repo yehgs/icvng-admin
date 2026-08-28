@@ -26,6 +26,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import WebsiteOrderDetailsModal from "../../components/order/WebsiteOrderDetailsModal";
+// Cross-country order controls — renders only for IT / DIRECTOR.
+import OrderCountryFilter from "../../components/order/OrderCountryFilter.jsx";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 
@@ -320,6 +322,13 @@ const WebsiteOrderManagement = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // Cross-country filter. Empty string = every country. Only ever set by
+  // IT/DIRECTOR — the server ignores this param for any other role, so a
+  // stale value can't widen anyone's visibility.
+  const [filterCountry, setFilterCountry] = useState("");
+  // Per-country counts over the whole filtered result set (not just the
+  // current page); supplied by the list endpoint for global viewers only.
+  const [countryBreakdown, setCountryBreakdown] = useState(null);
 
   // ── Modal ──────────────────────────────────────────────────
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -362,6 +371,9 @@ const WebsiteOrderManagement = () => {
           ...(filterPaymentMethod && { paymentMethod: filterPaymentMethod }),
           ...(startDate && { startDate }),
           ...(endDate && { endDate }),
+          // Server-side validated against ALL_COUNTRY_CODES and ignored
+          // entirely for non-global roles.
+          ...(filterCountry && { countryCode: filterCountry }),
         };
 
         const res = await adminOrderAPI.getOrders(params);
@@ -371,6 +383,7 @@ const WebsiteOrderManagement = () => {
           const grouped = groupOrdersByGroupId(docs);
           setOrderGroups(grouped);
           setTotalOrders(res.data.totalDocs || 0);
+          setCountryBreakdown(res.data.countryBreakdown || null);
 
           // Derive quick stats from the raw doc list
           setStats({
@@ -399,6 +412,7 @@ const WebsiteOrderManagement = () => {
       filterPaymentMethod,
       startDate,
       endDate,
+      filterCountry,
     ],
   );
 
@@ -415,6 +429,7 @@ const WebsiteOrderManagement = () => {
     filterPaymentMethod,
     startDate,
     endDate,
+    filterCountry,
   ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced search — resets to page 1 then fetches
@@ -455,6 +470,7 @@ const WebsiteOrderManagement = () => {
   );
 
   const clearAllFilters = () => {
+    setFilterCountry("");
     setSearchTerm("");
     setFilterType("");
     setFilterStatus("");
@@ -645,6 +661,19 @@ const WebsiteOrderManagement = () => {
               ))}
             </select>
           </div>
+
+          {/* Cross-country controls. Self-hides for every role except
+              IT/DIRECTOR, so no extra conditional is needed here. */}
+          <OrderCountryFilter
+            value={filterCountry}
+            onChange={(code) => {
+              setFilterCountry(code);
+              setCurrentPage(1);
+            }}
+            breakdown={countryBreakdown}
+            canSeeAllCountries={canSeeAllCountries}
+            className="pt-3 border-t border-gray-100 dark:border-gray-700"
+          />
 
           {/* Row 2 – advanced (toggle) */}
           {showAdvanced && (
@@ -906,9 +935,19 @@ const WebsiteOrderManagement = () => {
                           {(() => {
                             const cm = countryMeta(main.countryCode);
                             return (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300">
+                              <span
+                                title={cm.domain || cm.name}
+                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300"
+                              >
                                 <FlagIcon code={main.countryCode || "NG"} className="w-4 h-3 rounded-sm" />
-                                <span>{main.countryCode || "NG"}</span>
+                                {/* Show the DOMAIN, not just the ISO code: a
+                                    director scanning a mixed-country list needs
+                                    to see that an order came in on i-coffee.ng
+                                    vs i-coffee.it. Falls back to the code when
+                                    the country meta hasn't loaded yet. */}
+                                <span className="whitespace-nowrap">
+                                  {cm.domain || main.countryCode || "NG"}
+                                </span>
                               </span>
                             );
                           })()}

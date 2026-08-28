@@ -2,6 +2,8 @@
 // FIXED: Added timeout protection to prevent infinite loader
 import React, { useState, useEffect, useCallback } from 'react';
 import { adminOrderAPI, getCurrentUser } from '../../utils/api';
+// Cross-country controls — self-hides for every role except IT / DIRECTOR.
+import OrderCountryFilter from '../../components/order/OrderCountryFilter.jsx';
 import toast from 'react-hot-toast';
 import {
   Package,
@@ -50,6 +52,13 @@ const OfflineOrderManagement = () => {
   const [sortOrder, setSortOrder] = useState('desc');
 
   const currentUser = getCurrentUser();
+
+  // Only IT and DIRECTOR manage manual orders across every country. MANAGER
+  // and SALES are country-scoped — the server enforces this regardless, this
+  // flag only decides whether the cross-country UI is offered.
+  const canSeeAllCountries = ['IT', 'DIRECTOR'].includes(currentUser?.subRole);
+  const [filterCountry, setFilterCountry] = useState('');
+  const [countryBreakdown, setCountryBreakdown] = useState(null);
 
   // Helper functions
   const formatCurrency = (amount) => {
@@ -148,6 +157,9 @@ const OfflineOrderManagement = () => {
         ...(filterMode && { orderMode: filterMode }),
         ...(filterStatus && { orderStatus: filterStatus }),
         ...(filterPaymentStatus && { paymentStatus: filterPaymentStatus }),
+        // Ignored server-side for non-global roles, so a stale value can
+        // never widen a country-scoped user's visibility.
+        ...(filterCountry && { countryCode: filterCountry }),
       };
 
       // Role-based filtering
@@ -166,7 +178,7 @@ const OfflineOrderManagement = () => {
           () =>
             reject(
               new Error(
-                'Request timeout. Server is not responding. Please check if MongoDB is connected.'
+                t('manualOrders.errors.timeout')
               )
             ),
           30000
@@ -179,6 +191,7 @@ const OfflineOrderManagement = () => {
       if (response.success) {
         setOrders(response.data.docs || []);
         setTotalOrders(response.data.totalDocs || 0);
+        setCountryBreakdown(response.data.countryBreakdown || null);
       } else {
         throw new Error(response.message || 'Failed to fetch orders');
       }
@@ -193,7 +206,7 @@ const OfflineOrderManagement = () => {
         error.message.includes('not responding')
       ) {
         errorMessage =
-          'Server is not responding. Please check if MongoDB is connected and backend is running.';
+          t('manualOrders.errors.serverDown');
       } else if (
         error.message.includes('Network error') ||
         error.message.includes('fetch')
@@ -224,6 +237,7 @@ const OfflineOrderManagement = () => {
     filterMode,
     filterStatus,
     filterPaymentStatus,
+    filterCountry,
     // 🔥 FIX: Removed currentUser from dependencies to prevent infinite loop
   ]);
 
@@ -363,7 +377,7 @@ const OfflineOrderManagement = () => {
               </p>
               <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
                 As a {getUserRoleInfo()}, you can only see orders you created.
-                You can create new orders using the "Create Order" button above.
+                {t('manualOrders.createHint')}
               </p>
             </div>
           </div>
@@ -455,11 +469,23 @@ const OfflineOrderManagement = () => {
           >
             <option value="">{t("order.paymentStatus")}</option>
             <option value="PENDING">{t("orders.statuses.Pending")}</option>
-            <option value="PAID">Paid</option>
+            <option value="PAID">{t("orders.statuses.PAID")}</option>
             <option value="FAILED">{t("orders.statuses.FAILED")}</option>
             <option value="REFUNDED">{t("orders.statuses.Refunded")}</option>
           </select>
         </div>
+
+        {/* Cross-country controls (IT / DIRECTOR only — self-hiding) */}
+        <OrderCountryFilter
+          value={filterCountry}
+          onChange={(code) => {
+            setFilterCountry(code);
+            setCurrentPage(1);
+          }}
+          breakdown={countryBreakdown}
+          canSeeAllCountries={canSeeAllCountries}
+          className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"
+        />
 
         {/* Active Filters Display */}
         {hasActiveFilters && (
@@ -585,7 +611,7 @@ const OfflineOrderManagement = () => {
                           ? 'No orders found matching your filters'
                           : hasFullAccess()
                           ? 'No offline orders found'
-                          : "You haven't created any orders yet"}
+                          : t('manualOrders.noOrdersYet')}
                       </p>
                       {canCreateOrder() && !hasActiveFilters && (
                         <button
@@ -712,7 +738,7 @@ const OfflineOrderManagement = () => {
                         <button
                           onClick={() => handleViewOrder(order)}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="View details"
+                          title={t('manualOrders.viewDetails')}
                         >
                           <Eye className="w-5 h-5" />
                         </button>
@@ -721,7 +747,7 @@ const OfflineOrderManagement = () => {
                           <button
                             onClick={() => handleGenerateInvoice(order._id)}
                             className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                            title="Generate invoice"
+                            title={t('manualOrders.generateInvoice')}
                           >
                             <FileText className="w-5 h-5" />
                           </button>

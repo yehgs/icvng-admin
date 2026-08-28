@@ -755,6 +755,22 @@ export default {
     "deleteProduct": "Supprimer le produit"
   },
   "orders": {
+    "countryFilter": {
+      "label": "Pays",
+      "all": "Tous les pays",
+      "allDomains": "Tous les domaines",
+      "showingAll": "Affichage des commandes de tous les pays",
+      "showingOne": "Affichage des commandes {country} uniquement",
+      "globalBadge": "Vue globale",
+      "domain": "Domaine",
+      "noOrdersForCountry": "Aucune commande trouvée pour ce pays"
+    },
+    "breakdown": {
+      "title": "Commandes par pays",
+      "total": "Total",
+      "ordersCount": "{count} commandes",
+      "empty": "Aucune commande dans le filtre actuel"
+    },
     "title": "Commandes",
     "websiteOrders": "Commandes en ligne",
     "manualOrders": "Commandes manuelles",
@@ -2592,5 +2608,46 @@ export default {
     "noBatchesExpiring": "Aucun lot n'expire dans les {{days}} jours.",
     "colBatchNum": "N° de lot",
     "expiredBadge": "EXPIRÉ"
-  }
+  },
+  "manualOrders": {
+    "title": "Commandes manuelles en ligne / hors ligne",
+    "subtitle": "Toutes les commandes manuelles ({count} au total)",
+    "createOrder": "Créer une commande",
+    "createFirstOrder": "Créer votre première commande",
+    "createHint": "Vous pouvez créer de nouvelles commandes avec le bouton « Créer une commande » ci-dessus.",
+    "noOrdersFound": "Aucune commande hors ligne trouvée",
+    "noOrdersYet": "Vous n'avez encore créé aucune commande",
+    "noOrdersMatchingFilters": "Aucune commande ne correspond à vos filtres",
+    "viewDetails": "Voir les détails",
+    "generateInvoice": "Générer la facture",
+    "sendNotification": "Envoyer une notification au client",
+    "refresh": "Actualiser",
+    "searchProducts": "Rechercher des produits",
+    "btcSearchHint": "Affichage des produits vendables sur la boutique : un prix régulier avec stock disponible, ou un prix de commande spéciale valide.",
+    "onlineStockLabel": "en ligne",
+    "dropshipTip": "Astuce : les produits avec un prix de commande spéciale n'exigent pas de stock. Choisissez le délai de livraison en ajoutant l'article.",
+    "notPurchasable": "Non vendable",
+    "availableStock": "Stock disponible",
+    "priceOptions": {
+      "regular": "Prix régulier",
+      "twoWeeks": "Livraison 2 semaines",
+      "fiveWeeks": "Livraison 5 semaines"
+    },
+    "selectCustomer": "Sélectionner un client",
+    "createCustomer": "Créer un nouveau client",
+    "customerCountry": "Pays du client",
+    "customerCountryHint": "Les clients sont limités par pays. Vous ne voyez que les clients du pays sélectionné.",
+    "noCustomersInCountry": "Aucun client trouvé dans ce pays",
+    "orderCountry": "Pays de la commande",
+    "orderCountryHint": "Sélectionnez le pays auquel appartient cette commande. Les prix, la devise, la facture et les e-mails client en dépendent.",
+    "salesAgent": "Agent commercial",
+    "createdByAgent": "Créée par {name}",
+    "errors": {
+      "timeout": "Délai dépassé. Le serveur ne répond pas — vérifiez que le backend fonctionne et est connecté à la base de données.",
+      "serverDown": "Le serveur ne répond pas. Vérifiez que la base de données est connectée et que le backend fonctionne.",
+      "btbRetired": "Les commandes manuelles sont uniquement BTC. Le BTB a été retiré — créez le client en BTC.",
+      "customerCountryMismatch": "Ce client appartient à un pays différent de celui de la commande.",
+      "productNotInCountry": "Ce produit n'est pas disponible dans le pays sélectionné."
+    }
+  },
 };

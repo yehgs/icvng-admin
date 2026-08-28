@@ -755,6 +755,22 @@ export default {
     "deleteProduct": "Elimina prodotto"
   },
   "orders": {
+    "countryFilter": {
+      "label": "Paese",
+      "all": "Tutti i paesi",
+      "allDomains": "Tutti i domini",
+      "showingAll": "Visualizzazione degli ordini di tutti i paesi",
+      "showingOne": "Visualizzazione dei soli ordini {country}",
+      "globalBadge": "Vista globale",
+      "domain": "Dominio",
+      "noOrdersForCountry": "Nessun ordine trovato per questo paese"
+    },
+    "breakdown": {
+      "title": "Ordini per paese",
+      "total": "Totale",
+      "ordersCount": "{count} ordini",
+      "empty": "Nessun ordine nel filtro corrente"
+    },
     "title": "Ordini",
     "websiteOrders": "Ordini online",
     "manualOrders": "Ordini manuali",
@@ -2592,5 +2608,46 @@ export default {
     "noBatchesExpiring": "Nessun lotto in scadenza entro {{days}} giorni.",
     "colBatchNum": "N. lotto",
     "expiredBadge": "SCADUTO"
-  }
+  },
+  "manualOrders": {
+    "title": "Ordini manuali online/offline",
+    "subtitle": "Tutti gli ordini manuali ({count} in totale)",
+    "createOrder": "Crea ordine",
+    "createFirstOrder": "Crea il tuo primo ordine",
+    "createHint": "Puoi creare nuovi ordini con il pulsante \"Crea ordine\" qui sopra.",
+    "noOrdersFound": "Nessun ordine offline trovato",
+    "noOrdersYet": "Non hai ancora creato nessun ordine",
+    "noOrdersMatchingFilters": "Nessun ordine corrisponde ai tuoi filtri",
+    "viewDetails": "Vedi dettagli",
+    "generateInvoice": "Genera fattura",
+    "sendNotification": "Invia notifica al cliente",
+    "refresh": "Aggiorna",
+    "searchProducts": "Cerca prodotti",
+    "btcSearchHint": "Vengono mostrati i prodotti acquistabili sullo store: un prezzo regolare con stock disponibile, oppure un prezzo di ordine speciale valido.",
+    "onlineStockLabel": "online",
+    "dropshipTip": "Suggerimento: i prodotti con prezzo di ordine speciale non richiedono stock. Scegli i tempi di consegna quando aggiungi l'articolo.",
+    "notPurchasable": "Non acquistabile",
+    "availableStock": "Stock disponibile",
+    "priceOptions": {
+      "regular": "Prezzo regolare",
+      "twoWeeks": "Consegna 2 settimane",
+      "fiveWeeks": "Consegna 5 settimane"
+    },
+    "selectCustomer": "Seleziona cliente",
+    "createCustomer": "Crea nuovo cliente",
+    "customerCountry": "Paese del cliente",
+    "customerCountryHint": "I clienti sono limitati per paese. Vedi solo i clienti del paese selezionato.",
+    "noCustomersInCountry": "Nessun cliente trovato in questo paese",
+    "orderCountry": "Paese dell'ordine",
+    "orderCountryHint": "Seleziona a quale paese appartiene questo ordine. Prezzi, valuta, fattura ed email al cliente seguono questa scelta.",
+    "salesAgent": "Agente di vendita",
+    "createdByAgent": "Creato da {name}",
+    "errors": {
+      "timeout": "Richiesta scaduta. Il server non risponde — verifica che il backend sia attivo e connesso al database.",
+      "serverDown": "Il server non risponde. Verifica che il database sia connesso e il backend sia attivo.",
+      "btbRetired": "Gli ordini manuali sono solo BTC. Il BTB è stato ritirato — crea il cliente come BTC.",
+      "customerCountryMismatch": "Questo cliente appartiene a un paese diverso da quello dell'ordine.",
+      "productNotInCountry": "Questo prodotto non è disponibile nel paese selezionato."
+    }
+  },
 };
