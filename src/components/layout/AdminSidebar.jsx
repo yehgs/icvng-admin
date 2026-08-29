@@ -8,7 +8,7 @@ import {
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
-  Bell, LifeBuoy, Lock, Landmark, Languages,
+  Bell, LifeBuoy, Lock, Landmark, Languages, Mail,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -231,6 +231,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "settings",    title: t("nav.settings"),           path: "/admin/settings",  icon: Settings, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     { key: "bank-transfer-settings", title: "Bank Transfer Settings", path: "/admin/settings/bank-transfer", icon: Landmark, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    { key: "email-provider-settings", title: "Email Provider", path: "/admin/settings/email-provider", icon: Mail, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     // CountryManagement.jsx (Tawk.to, SEO, contacts, feature flags per
     // country) was built with zero nav link anywhere — reachable only by
     // typing /admin/countries directly. That's the actual reason "Settings

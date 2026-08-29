@@ -2596,6 +2596,43 @@ const en = {
       productNotInCountry: "This product is not available in the selected country."
     }
   },
+  emailSettings: {
+    title: "Email Provider",
+    subtitle: "System-wide mail provider. The provider is global; sender identity is per country.",
+    restricted: "Only IT and Director can manage email provider settings.",
+    loadFailed: "Could not load email provider settings",
+    saved: "Email provider settings saved",
+    saveFailed: "Could not save email provider settings",
+    activeProvider: "Active provider",
+    providerHint: "All system email is sent through this provider. Sender addresses stay country-specific.",
+    recommended: "Recommended",
+    resendBlurb: "API-based sending with per-domain verification, delivery logs and webhooks.",
+    smtpBlurb: "Fallback. Uses the mailbox credentials in your environment variables.",
+    resendConfig: "Resend configuration",
+    apiKey: "API key",
+    leaveBlankToKeep: "leave blank to keep",
+    keyFromEnv: "Key is currently read from the RESEND_API_KEY environment variable.",
+    keyFromDb: "Key is stored in the database and overrides the environment variable.",
+    keyMissing: "No API key set. Resend cannot send until one is provided.",
+    defaultFromEmail: "Default from address",
+    verifiedDomainHint: "Must be on a domain verified in Resend, or sends will be rejected.",
+    countrySenders: "Sender identity per country",
+    countrySendersHint: "Each market keeps its own from-address, name and reply-to, whichever provider is carrying the mail.",
+    replyToPlaceholder: "Reply-to (optional)",
+    sendingEnabled: "Email sending enabled",
+    sendingEnabledHint: "Turn off to suppress all outgoing email and log it instead. Use when restoring production data into staging.",
+    testSend: "Send a test email",
+    testSendHint: "Sends through the provider you pick, with fallback disabled — so the result tells you about that provider specifically. Test before switching.",
+    recipient: "Recipient",
+    asCountry: "Send as country",
+    testVia: "Test via {provider}",
+    testSent: "Test email sent via {provider} in {ms}ms",
+    testFailed: "Test send failed",
+    testEmailRequired: "Enter a recipient address first",
+    lastVerified: "Last successful send: {provider} at {when}",
+    neverVerified: "No successful send recorded yet.",
+    lastError: "Last send failed"
+  },
 };
 
 export default en;

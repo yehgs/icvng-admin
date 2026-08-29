@@ -74,6 +74,7 @@ import CountryManagement from "./pages/settings/CountryManagement";
 import LanguageManagement from "./pages/settings/LanguageManagement";
 import UiTranslationsManagement from "./pages/settings/UiTranslationsManagement";
 import BankTransferSettings from "./pages/settings/BankTransferSettings";
+import EmailProviderSettings from "./pages/settings/EmailProviderSettings";
 import ForeignAdminManagement from "./pages/foreign-admins/ForeignAdminManagement";
 import NotFound from "./pages/NotFound";
 
@@ -771,6 +772,17 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <BankTransferSettings />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* System-wide email provider (Resend / SMTP) — HQ IT/Director
+                    only. The provider is global; sender identity is per-country. */}
+                <Route
+                  path="settings/email-provider"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                      <EmailProviderSettings />
                     </RoleProtectedRoute>
                   }
                 />

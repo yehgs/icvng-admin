@@ -841,6 +841,36 @@ export const bankTransferSettingsAPI = {
   },
 };
 
+// Email Provider Settings API — system-wide mail provider (Resend / SMTP).
+// HQ IT/DIRECTOR only; there is no public surface (see
+// route/emailProviderSettings.route.js).
+export const emailProviderSettingsAPI = {
+  // Current configuration. API keys come back MASKED, never in full.
+  get: async () => {
+    return apiCall("/email-settings");
+  },
+
+  // Partial update — omit a field to leave it untouched. Sending an empty
+  // apiKey keeps the stored key rather than clearing it, so re-saving the
+  // form after an unrelated edit can't take all email down.
+  update: async (data) => {
+    return apiCall("/email-settings", {
+      method: "PUT",
+      body: data,
+    });
+  },
+
+  // Send a real test email through a named provider. Pass `provider` to test
+  // one specifically — that disables the automatic fallback, so the result
+  // tells you about the provider you actually asked about.
+  test: async ({ sendTo, countryCode, provider }) => {
+    return apiCall("/email-settings/test", {
+      method: "POST",
+      body: { sendTo, countryCode, provider },
+    });
+  },
+};
+
 // Exchange Rate API calls
 export const exchangeRateAPI = {
   // Test authentication
@@ -4425,6 +4455,7 @@ export default {
   exchangeRateAPI,
   exchangeRateUtils,
   bankTransferSettingsAPI,
+  emailProviderSettingsAPI,
   directPricingAPI,
   directPricingUtils,
   fileAPI,
