@@ -16,9 +16,14 @@ import {
   customerAPI,
   handleApiError,
   logisticsAPI,
+  getCurrentUser,
 } from "../../utils/api";
 import toast from "react-hot-toast";
 import ProductSearchModal from "./ProductSearchModal";
+import {
+  resolveOrderMode,
+  orderTypeForMode,
+} from "../../config/manualOrderModes.js";
 import InvoicePreviewModal from "./InvoicePreviewModal";
 import { nigeriaStatesLgas } from "../../data/nigeria-states-lgas.js";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
@@ -39,6 +44,34 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
   const [calculatingShipping, setCalculatingShipping] = useState(false);
   const [shippingCalculated, setShippingCalculated] = useState(false);
 
+  // ── MODE LOCK ───────────────────────────────────────────────────────────
+  // A SALES agent's mode is a property of their ACCOUNT (userMode), not a
+  // choice: an online agent sells BTC from storefront stock, an offline
+  // agent sells BTB from the warehouse counter. IT/DIRECTOR/MANAGER work in
+  // both and may switch.
+  //
+  // The server derives the mode the same way and ignores whatever the client
+  // sends, so this lock is purely so the agent sees what they can create
+  // instead of picking something that will 403.
+  const actingUser = getCurrentUser();
+  const modeLock = resolveOrderMode(
+    { subRole: actingUser?.subRole, userMode: actingUser?.userMode },
+    undefined,
+  );
+  const modeIsLocked = modeLock.locked;
+
+  // Push the resolved mode into form state whenever the modal opens, so a
+  // locked SALES agent never submits the seeded default.
+  useEffect(() => {
+    if (!isOpen || !modeLock.mode) return;
+    setFormData((d) => ({
+      ...d,
+      orderMode: modeLock.mode,
+      orderType: orderTypeForMode(modeLock.mode),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, modeLock.mode]);
+
   const [formData, setFormData] = useState({
     customerId: "",
     items: [
@@ -49,8 +82,10 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
         priceOption: "regular",
       },
     ],
+    // Both are DERIVED from the acting user's sales mode below — never
+    // free-typed. Seeded here only so the first render has a value.
     orderType: "BTC",
-    orderMode: "OFFLINE",
+    orderMode: "ONLINE",
     paymentMethod: "CASH",
     deliveryAddress: {
       street: "",
@@ -93,7 +128,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
   const fetchCustomers = async () => {
     try {
       setLoadingCustomers(true);
-      const response = await customerAPI.getCustomersForOrder();
+      const response = await customerAPI.getCustomersForOrder(formData.orderMode);
       if (response.success) {
         setCustomers(response.data);
         setFilteredCustomers(response.data);
@@ -515,11 +550,12 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                 <select
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   value={formData.orderType}
-                  onChange={(e) => {
-                    setFormData({ ...formData, orderType: e.target.value });
-                    setShippingCalculated(false);
-                  }}
+                  disabled
+                  title={t("manualOrders.typeDerivedHint")}
                 >
+                  {/* Always derived from the mode — an ONLINE order is BTC
+                      and an OFFLINE order is BTB, so letting these disagree
+                      would only produce a request the server rejects. */}
                   <option value="BTC">Business to Customer (BTC)</option>
                   <option value="BTB">Business to Business (BTB)</option>
                 </select>
@@ -532,9 +568,18 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                 <select
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   value={formData.orderMode}
-                  onChange={(e) =>
-                    setFormData({ ...formData, orderMode: e.target.value })
-                  }
+                  disabled={modeIsLocked}
+                  title={modeIsLocked ? t("manualOrders.modeLockedHint") : undefined}
+                  onChange={(e) => {
+                    const mode = e.target.value;
+                    // Type follows mode, always.
+                    setFormData((d) => ({
+                      ...d,
+                      orderMode: mode,
+                      orderType: orderTypeForMode(mode),
+                    }));
+                    setShippingCalculated(false);
+                  }}
                 >
                   <option value="OFFLINE">{t("customer.offline")}</option>
                   <option value="ONLINE">{t("customer.online")}</option>
@@ -557,6 +602,13 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                     {t("order.bankTransfer")}
                   </option>
                   <option value="CARD">Card</option>
+                  {/* Paystack is Nigeria-only (COUNTRY_CONFIG.payments), so
+                      it is offered only when the order's country is NG —
+                      showing it elsewhere would produce a payment the
+                      gateway guard rejects. */}
+                  {(formData.countryCode || "NG") === "NG" && (
+                    <option value="PAYSTACK">Paystack</option>
+                  )}
                 </select>
               </div>
             </div>
@@ -1131,7 +1183,8 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
             setCurrentItemIndex(null);
           }}
           onSelect={handleProductSelect}
-          orderType={formData.orderType}
+          mode={formData.orderMode}
+          countryCode={formData.countryCode}
         />
       )}
 

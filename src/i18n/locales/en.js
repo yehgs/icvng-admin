@@ -2556,6 +2556,13 @@ const en = {
     expiredBadge: "EXPIRED",
   },
   manualOrders: {
+    btbSearchHint: "Showing products with a BTB price and physical offline warehouse stock. Special-order delivery pricing is not available for offline sales.",
+    offlineStockLabel: "offline",
+    typeDerivedHint: "Order type follows the order mode: online orders are BTC, offline orders are BTB.",
+    modeLockedHint: "Your account sales mode determines this. Ask IT or a Director to change it.",
+    noSalesMode: "Your account has no sales mode set. Ask IT or a Director to set it to Online or Offline.",
+    onlineModeLabel: "Online (BTC)",
+    offlineModeLabel: "Offline (BTB)",
     title: "Manual Online/Offline Orders",
     subtitle: "All manual/sales orders ({count} total)",
     createOrder: "Create Order",
@@ -2575,6 +2582,7 @@ const en = {
     notPurchasable: "Not purchasable",
     availableStock: "Available stock",
     priceOptions: {
+      btb: "BTB price",
       regular: "Regular price",
       twoWeeks: "2 weeks delivery",
       fiveWeeks: "5 weeks delivery"

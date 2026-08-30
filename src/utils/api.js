@@ -4232,8 +4232,14 @@ export const customerAPI = {
   },
 
   // Get customers for order dropdown
-  getCustomersForOrder: async () => {
-    return apiCall("/admin/customers/for-order");
+  // Mode-scoped: ONLINE returns BTC/ONLINE customers (including storefront
+  // registrations mirrored into the Customer collection), OFFLINE returns
+  // BTB/OFFLINE ones. For a SALES account the server applies their own
+  // userMode regardless of what is asked for, so the picker can never show
+  // someone the order endpoint would then reject.
+  getCustomersForOrder: async (mode) => {
+    const qs = mode ? `?mode=${encodeURIComponent(mode)}` : "";
+    return apiCall(`/admin/customers/for-order${qs}`);
   },
 
   // Assign customer to users (DIRECTOR, IT, MANAGER only)

@@ -39,11 +39,29 @@ export function getEffectiveOnlineStock(product) {
   return product?.stock || 0;
 }
 
-/** First category slug we can find, for the five-week-type signal. */
+/**
+ * First category slug we can find, for the five-week-type signal.
+ *
+ * CRASH FIX (2026-08-29): this did `for (const c of product?.category || [])`,
+ * which throws `TypeError: cats is not iterable` whenever `category` is
+ * present but NOT an array. The admin product-search endpoint returns
+ * `category` as a single populated OBJECT for some products and as a bare
+ * ObjectId string for others, so the modal blew up mid-render on the first
+ * such product in the results — taking the whole ProductSearchModal down
+ * with it (see the React error boundary warning in the console).
+ *
+ * Never assume a populated field's arity. Normalise, then read.
+ */
+function categoryList(product) {
+  const raw = product?.category;
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  return [raw]; // single object or single id
+}
+
 function firstCategorySlug(product) {
-  const cats = product?.category || [];
-  for (const c of cats) {
-    if (typeof c === "object" && c?.slug) return c.slug;
+  for (const c of categoryList(product)) {
+    if (c && typeof c === "object" && c.slug) return c.slug;
   }
   return null;
 }
@@ -145,4 +163,71 @@ export function getBtcPriceOptions(product) {
 /** Special-order lines are supplier-sourced and hold no local stock. */
 export function priceOptionConsumesStock(priceOption) {
   return !["3weeks", "2weeks", "5weeks"].includes(priceOption);
+}
+
+
+// ── MODE-AWARE HELPERS ──────────────────────────────────────────────────────
+// Mirrors icvng-server/utils/manualOrderValidation.js. ONLINE uses the
+// storefront rule (so the modal shows exactly what the website would sell);
+// OFFLINE uses the warehouse rule — BTB price + physical offline stock, and
+// no special-order delivery escape hatch, because you cannot hand a walk-in
+// customer something that arrives from a supplier in five weeks.
+
+export function getEffectiveOfflineStock(product) {
+  if (product?.warehouseStock?.enabled) {
+    return product.warehouseStock.offlineStock || 0;
+  }
+  return product?.stock || 0;
+}
+
+export function getStockForMode(product, mode) {
+  return mode === "OFFLINE"
+    ? getEffectiveOfflineStock(product)
+    : getEffectiveOnlineStock(product);
+}
+
+/** OFFLINE (BTB) sellability: BTB price + physical offline stock. */
+export function evaluateProductForOfflineOrder(product) {
+  const availableStock = getEffectiveOfflineStock(product);
+  if (product?.productAvailability === false) {
+    return { valid: false, reason: "Marked not available for sale", availableStock,
+             viaStock: false, viaDelivery: false, fiveWeek: false };
+  }
+  if (!(Number(product?.btbPrice) > 0)) {
+    return { valid: false, reason: "No BTB price set", availableStock,
+             viaStock: false, viaDelivery: false, fiveWeek: false };
+  }
+  if (availableStock <= 0) {
+    return { valid: false, reason: "No offline warehouse stock", availableStock,
+             viaStock: false, viaDelivery: false, fiveWeek: false };
+  }
+  return { valid: true, reason: null, availableStock,
+           viaStock: true, viaDelivery: false, fiveWeek: false };
+}
+
+/** Single entry point the modal should call. */
+export function evaluateProductForMode(product, mode) {
+  return mode === "OFFLINE"
+    ? evaluateProductForOfflineOrder(product)
+    : evaluateProductForManualOrder(product);
+}
+
+/**
+ * Price options for a mode. OFFLINE has exactly one — the BTB price. There
+ * is no delivery option offline, so offering one would let an agent pick a
+ * price the server then refuses.
+ */
+export function getPriceOptionsForMode(product, mode) {
+  if (mode === "OFFLINE") {
+    if (!(Number(product?.btbPrice) > 0)) return [];
+    return [
+      {
+        key: "regular",
+        price: product.btbPrice,
+        labelKey: "manualOrders.priceOptions.btb",
+        consumesStock: true,
+      },
+    ];
+  }
+  return getBtcPriceOptions(product);
 }

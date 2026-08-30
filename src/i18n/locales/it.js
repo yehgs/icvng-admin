@@ -2610,6 +2610,13 @@ export default {
     "expiredBadge": "SCADUTO"
   },
   "manualOrders": {
+    "btbSearchHint": "Vengono mostrati i prodotti con prezzo BTB e stock fisico nel magazzino offline. I prezzi di ordine speciale non sono disponibili per le vendite offline.",
+    "offlineStockLabel": "offline",
+    "typeDerivedHint": "Il tipo di ordine deriva dalla modalità: gli ordini online sono BTC, quelli offline sono BTB.",
+    "modeLockedHint": "La modalità di vendita del tuo account determina questa scelta. Chiedi a IT o a un Direttore di modificarla.",
+    "noSalesMode": "Il tuo account non ha una modalità di vendita impostata. Chiedi a IT o a un Direttore di impostarla su Online o Offline.",
+    "onlineModeLabel": "Online (BTC)",
+    "offlineModeLabel": "Offline (BTB)",
     "title": "Ordini manuali online/offline",
     "subtitle": "Tutti gli ordini manuali ({count} in totale)",
     "createOrder": "Crea ordine",
@@ -2629,6 +2636,7 @@ export default {
     "notPurchasable": "Non acquistabile",
     "availableStock": "Stock disponibile",
     "priceOptions": {
+      "btb": "Prezzo BTB",
       "regular": "Prezzo regolare",
       "twoWeeks": "Consegna 2 settimane",
       "fiveWeeks": "Consegna 5 settimane"

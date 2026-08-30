@@ -2610,6 +2610,13 @@ export default {
     "expiredBadge": "EXPIRÉ"
   },
   "manualOrders": {
+    "btbSearchHint": "Affichage des produits ayant un prix BTB et du stock physique en entrepôt hors ligne. Les prix de commande spéciale ne sont pas disponibles pour les ventes hors ligne.",
+    "offlineStockLabel": "hors ligne",
+    "typeDerivedHint": "Le type de commande découle du mode : les commandes en ligne sont BTC, les commandes hors ligne sont BTB.",
+    "modeLockedHint": "Le mode de vente de votre compte détermine ce choix. Demandez à IT ou à un Directeur de le modifier.",
+    "noSalesMode": "Aucun mode de vente n’est défini sur votre compte. Demandez à IT ou à un Directeur de le régler sur En ligne ou Hors ligne.",
+    "onlineModeLabel": "En ligne (BTC)",
+    "offlineModeLabel": "Hors ligne (BTB)",
     "title": "Commandes manuelles en ligne / hors ligne",
     "subtitle": "Toutes les commandes manuelles ({count} au total)",
     "createOrder": "Créer une commande",
@@ -2629,6 +2636,7 @@ export default {
     "notPurchasable": "Non vendable",
     "availableStock": "Stock disponible",
     "priceOptions": {
+      "btb": "Prix BTB",
       "regular": "Prix régulier",
       "twoWeeks": "Livraison 2 semaines",
       "fiveWeeks": "Livraison 5 semaines"

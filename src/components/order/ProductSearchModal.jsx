@@ -3,8 +3,9 @@ import React, { useState, useEffect } from "react";
 import { X, Search, Loader2, Package, Truck } from "lucide-react";
 import { productAPI, handleApiError } from "../../utils/api";
 import {
-  evaluateProductForManualOrder,
-  getBtcPriceOptions,
+  evaluateProductForMode,
+  getPriceOptionsForMode,
+  getStockForMode,
 } from "../../config/manualOrderRules.js";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import toast from "react-hot-toast";
@@ -19,7 +20,15 @@ import toast from "react-hot-toast";
  * are gone: manual orders are BTC-only.
  */
 
-const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
+const ProductSearchModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  countryCode,
+  // ONLINE → BTC price + storefront stock rules.
+  // OFFLINE → BTB price + warehouse offline stock, no delivery options.
+  mode = "ONLINE",
+}) => {
   const { t } = useAdminTranslation();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +56,8 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
         // the country selected on the order being created, so a director
         // raising a Togo order searches the Togo catalogue.
         ...(countryCode && { countryCode }),
+        // Lets the server scope the catalogue to the mode's stock pool.
+        mode,
       });
 
       if (response.success) {
@@ -68,17 +79,17 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
 
   // BTC-only price options, sourced from the shared rule so the five-week /
   // two-week distinction is respected rather than offering both blindly.
-  const getPriceOptions = (product) => getBtcPriceOptions(product);
+  const getPriceOptions = (product) => getPriceOptionsForMode(product, mode);
 
   // Effective ONLINE stock, honouring partnerStock — the pool the storefront
   // and the server's manual-order validator both read.
-  const getProductStock = (product) =>
-    evaluateProductForManualOrder(product).availableStock;
+  const getProductStock = (product) => getStockForMode(product, mode);
 
   // "Dropship" here means a valid SPECIAL-ORDER price for THIS product type
   // — not merely that some delivery price field is populated.
+  // Offline never has delivery options — see getPriceOptionsForMode.
   const hasDropshipOptions = (product) =>
-    evaluateProductForManualOrder(product).viaDelivery;
+    evaluateProductForMode(product, mode).viaDelivery;
 
   if (!isOpen) return null;
 
@@ -115,7 +126,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
           {/* Info banner about filtering */}
           <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              {t("manualOrders.btcSearchHint")}
+              {mode === "OFFLINE" ? t("manualOrders.btbSearchHint") : t("manualOrders.btcSearchHint")}
             </p>
           </div>
         </div>
@@ -147,7 +158,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
                 const hasDropship = hasDropshipOptions(product);
 
                 // ===== VALIDATION (shared canonical rule) =====
-                const validation = evaluateProductForManualOrder(product);
+                const validation = evaluateProductForMode(product, mode);
                 const isDisabled = !validation.valid;
 
                 return (
@@ -204,7 +215,7 @@ const ProductSearchModal = ({ isOpen, onClose, onSelect, countryCode }) => {
                           {hasStock ? (
                             <>
                               {stock} in{" "}
-                              {t("manualOrders.onlineStockLabel")}{" "}
+                              {mode === "OFFLINE" ? t("manualOrders.offlineStockLabel") : t("manualOrders.onlineStockLabel")}{" "}
                               stock
                             </>
                           ) : (
