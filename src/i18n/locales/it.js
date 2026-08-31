@@ -2659,6 +2659,7 @@ export default {
     }
   },
   "emailSettings": {
+    "errorAt": "Registrato il {when}",
     "title": "Provider email",
     "subtitle": "Provider di posta per l’intero sistema. Il provider è globale; l’identità del mittente è per paese.",
     "restricted": "Solo IT e Direttore possono gestire le impostazioni del provider email.",

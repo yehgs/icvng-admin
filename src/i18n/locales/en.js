@@ -2605,6 +2605,7 @@ const en = {
     }
   },
   emailSettings: {
+    errorAt: "Recorded at {when}",
     title: "Email Provider",
     subtitle: "System-wide mail provider. The provider is global; sender identity is per country.",
     restricted: "Only IT and Director can manage email provider settings.",

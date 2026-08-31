@@ -2659,6 +2659,7 @@ export default {
     }
   },
   "emailSettings": {
+    "errorAt": "Enregistré le {when}",
     "title": "Fournisseur d’e-mail",
     "subtitle": "Fournisseur de messagerie pour tout le système. Le fournisseur est global ; l’identité d’expéditeur est par pays.",
     "restricted": "Seuls IT et Directeur peuvent gérer les paramètres du fournisseur d’e-mail.",

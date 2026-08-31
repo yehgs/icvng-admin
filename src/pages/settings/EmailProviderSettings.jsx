@@ -134,6 +134,11 @@ const EmailProviderSettings = () => {
     }
     try {
       setTesting(provider);
+      // The test endpoint reads SAVED settings from the database, not this
+      // form. Typing a from-address and hitting Test without saving first
+      // therefore tests the OLD configuration — which looks like the fix
+      // didn't work. Save first so the button always tests what is on screen.
+      await handleSave();
       const res = await emailProviderSettingsAPI.test({
         sendTo: testEmail,
         countryCode: testCountry,
@@ -209,6 +214,16 @@ const EmailProviderSettings = () => {
               <p className="text-red-700 dark:text-red-400 mt-1 font-mono text-xs break-all">
                 {health.lastError}
               </p>
+              {/* This message only clears after a SUCCESSFUL send, so without
+                  a timestamp an hour-old failure reads as current — which is
+                  exactly how a stale banner sent us chasing a fixed bug. */}
+              {health.lastErrorAt && (
+                <p className="text-red-600/70 dark:text-red-400/70 mt-1.5 text-xs">
+                  {t("emailSettings.errorAt", {
+                    when: new Date(health.lastErrorAt).toLocaleString(),
+                  })}
+                </p>
+              )}
             </>
           ) : (
             <p className="text-green-800 dark:text-green-300">
