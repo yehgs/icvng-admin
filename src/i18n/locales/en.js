@@ -2556,6 +2556,7 @@ const en = {
     expiredBadge: "EXPIRED",
   },
   manualOrders: {
+    noPrice: "No price set",
     btbSearchHint: "Showing products with a BTB price and physical offline warehouse stock. Special-order delivery pricing is not available for offline sales.",
     offlineStockLabel: "offline",
     typeDerivedHint: "Order type follows the order mode: online orders are BTC, offline orders are BTB.",

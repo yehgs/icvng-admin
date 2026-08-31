@@ -2610,6 +2610,7 @@ export default {
     "expiredBadge": "SCADUTO"
   },
   "manualOrders": {
+    "noPrice": "Nessun prezzo impostato",
     "btbSearchHint": "Vengono mostrati i prodotti con prezzo BTB e stock fisico nel magazzino offline. I prezzi di ordine speciale non sono disponibili per le vendite offline.",
     "offlineStockLabel": "offline",
     "typeDerivedHint": "Il tipo di ordine deriva dalla modalità: gli ordini online sono BTC, quelli offline sono BTB.",

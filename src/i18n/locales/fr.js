@@ -2610,6 +2610,7 @@ export default {
     "expiredBadge": "EXPIRÉ"
   },
   "manualOrders": {
+    "noPrice": "Aucun prix défini",
     "btbSearchHint": "Affichage des produits ayant un prix BTB et du stock physique en entrepôt hors ligne. Les prix de commande spéciale ne sont pas disponibles pour les ventes hors ligne.",
     "offlineStockLabel": "hors ligne",
     "typeDerivedHint": "Le type de commande découle du mode : les commandes en ligne sont BTC, les commandes hors ligne sont BTB.",

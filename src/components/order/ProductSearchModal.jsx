@@ -8,6 +8,7 @@ import {
   getStockForMode,
 } from "../../config/manualOrderRules.js";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import toast from "react-hot-toast";
 
 // ===== PRODUCT VALIDATION LOGIC =====
@@ -30,6 +31,11 @@ const ProductSearchModal = ({
   mode = "ONLINE",
 }) => {
   const { t } = useAdminTranslation();
+  const { formatPrice, allCountries } = useAdminCountry();
+  // Prices belong to the ORDER's country, not the admin's active country —
+  // a Director raising a Togo order must see XOF, not NGN.
+  const priceCountry =
+    (allCountries || []).find((c) => c.code === countryCode) || undefined;
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
@@ -256,50 +262,61 @@ const ProductSearchModal = ({
 
                     {/* Pricing Options */}
                     <div className="text-right flex-shrink-0">
-                      {(
-                        // ===== BTC PRICING WITH OPTIONS =====
-                        <div className="space-y-2">
-                          {/* Regular BTC Price */}
-                          <div>
-                            <div
-                              className={`font-semibold ${
-                                isDisabled && !hasDropship
-                                  ? "text-gray-400"
-                                  : "text-gray-900 dark:text-white"
-                              }`}
-                            >
-                              ₦{priceOptions.regular.toLocaleString()}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Regular BTC
-                            </div>
+                      {/* Price options.
+                          BUGFIX (2026-08-31): this block read `priceOptions`
+                          as an OBJECT (.regular / .threeWeeks / .fiveWeeks),
+                          but getPriceOptionsForMode returns an ARRAY of
+                          { key, price, labelKey }. So `.regular` was
+                          undefined and `.toLocaleString()` threw, taking the
+                          modal down on every render. The shape changed when
+                          the mode-aware helper replaced the inline rule and
+                          this render was not updated with it.
+
+                          Also: the amount is now formatted in the ORDER's
+                          currency rather than a hardcoded ₦, and the labels
+                          come from the locale files, so a Togo order shows
+                          XOF and an Italian one EUR. */}
+                      <div className="space-y-2">
+                        {priceOptions.length === 0 ? (
+                          <div className="text-xs text-gray-400">
+                            {t("manualOrders.noPrice")}
                           </div>
-
-                          {/* 2-Week Delivery Price */}
-                          {priceOptions.threeWeeks && (
-                            <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
-                              <div className="font-medium text-purple-600 dark:text-purple-400">
-                                ₦{priceOptions.threeWeeks.toLocaleString()}
+                        ) : (
+                          priceOptions.map((opt, i) => (
+                            <div
+                              key={opt.key}
+                              className={
+                                i > 0
+                                  ? "pt-2 border-t border-gray-200 dark:border-gray-600"
+                                  : undefined
+                              }
+                            >
+                              <div
+                                className={
+                                  opt.key === "regular"
+                                    ? `font-semibold ${
+                                        isDisabled && !hasDropship
+                                          ? "text-gray-400"
+                                          : "text-gray-900 dark:text-white"
+                                      }`
+                                    : "font-medium text-purple-600 dark:text-purple-400"
+                                }
+                              >
+                                {formatPrice(opt.price, priceCountry)}
                               </div>
-                              <div className="text-xs text-purple-600 dark:text-purple-400">
-                                2 Weeks Delivery
+                              <div
+                                className={`text-xs ${
+                                  opt.key === "regular"
+                                    ? "text-gray-500 dark:text-gray-400"
+                                    : "text-purple-600 dark:text-purple-400"
+                                }`}
+                              >
+                                {t(opt.labelKey)}
                               </div>
                             </div>
-                          )}
-
-                          {/* 5-Week Delivery Price */}
-                          {priceOptions.fiveWeeks && (
-                            <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
-                              <div className="font-medium text-purple-600 dark:text-purple-400">
-                                ₦{priceOptions.fiveWeeks.toLocaleString()}
-                              </div>
-                              <div className="text-xs text-purple-600 dark:text-purple-400">
-                                5 Weeks Delivery
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                          ))
+                        )}
+                      </div>
                     </div>
                   </button>
                 );
