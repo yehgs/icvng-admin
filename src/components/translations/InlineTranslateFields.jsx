@@ -208,6 +208,20 @@ export default function InlineTranslateFields({ entityType, entity, fields, fiel
 
   if (manageableLanguages.length === 0) return null;
 
+  // errorCode → toast icon. "quota_exceeded" (and the other permanent
+  // causes — auth/bad_model) get a warning triangle instead of the default
+  // red ✕ toast.error() icon: an ✕ reads as "this action was cancelled",
+  // which is misleading here — nothing was cancelled, the OpenAI account
+  // is out of credit (or misconfigured) and every retry will fail exactly
+  // the same way until someone fixes that server-side. A transient
+  // rate-limit/network/server hiccup keeps the default icon since "try
+  // again" is genuinely the right next step for those.
+  const ERROR_ICON = {
+    quota_exceeded: "⚠️",
+    auth: "⚠️",
+    bad_model: "⚠️",
+  };
+
   const triggerAutoTranslate = async (langCode) => {
     setTranslatingLang(langCode);
     try {
@@ -223,14 +237,21 @@ export default function InlineTranslateFields({ entityType, entity, fields, fiel
       // translates every target language at once, so the other language
       // failing shouldn't make this one look like it failed too.
       const langResult = res?.results?.[langCode];
+      const icon = ERROR_ICON[langResult?.errorCode];
       if (langResult?.status === "ok") {
         toast.success("Translation complete");
         await load();
       } else if (langResult?.status === "partial") {
-        toast.error(langResult?.error || "Some fields failed to translate — check server logs");
+        toast.error(
+          langResult?.error || "Some fields failed to translate — check server logs",
+          icon ? { icon } : undefined,
+        );
         await load(); // reload anyway — whatever did succeed is saved
       } else {
-        toast.error(langResult?.error || res.message || "Translation failed");
+        toast.error(
+          langResult?.error || res.message || "Translation failed",
+          icon ? { icon, duration: 8000 } : undefined,
+        );
       }
     } catch {
       toast.error("Translation failed");

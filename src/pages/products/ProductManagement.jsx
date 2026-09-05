@@ -23,11 +23,24 @@ import RoleBasedButton from "../../components/layout/RoleBasedButton";
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import { getCurrentUser } from "../../utils/api";
 
 const ProductManagement = () => {
   const { t } = useAdminTranslation();
   const { isGlobalAdmin, countryScope, activeCountry, formatPrice } =
     useAdminCountry();
+
+  // Partnership-vs-normal-stock % stat (see catalogSubtitle area below) is
+  // only meaningful to roles that can see stock/ops data across the whole
+  // catalog: IT and DIRECTOR always (they're inherently HQ-only roles), and
+  // MANAGER/EDITOR only when they're the HQ (GLOBAL-scoped) variant — a
+  // country/"foreign" Manager or Editor has the same subRole but shouldn't
+  // see it, same distinction RoleBasedButton's hqOverrideRoles makes.
+  const currentUser = getCurrentUser();
+  const canSeePartnerStats =
+    !!currentUser &&
+    (["IT", "DIRECTOR"].includes(currentUser.subRole) ||
+      (["MANAGER", "EDITOR"].includes(currentUser.subRole) && isGlobalAdmin));
   // Product prices (btcPrice, price3weeksDelivery, price5weeksDelivery) are
   // always stored in NGN — see PRODUCT_VISIBILITY_RULES.md. A foreign
   // (non-Nigeria, country-scoped) admin should see them converted into their
@@ -95,6 +108,7 @@ const ProductManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [partnerStockCount, setPartnerStockCount] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -164,6 +178,7 @@ const ProductManagement = () => {
         setProducts(response.data);
         setTotalPages(response.totalNoPage || 1);
         setTotalProducts(response.totalCount || 0);
+        setPartnerStockCount(response.partnerStockCount || 0);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -561,6 +576,21 @@ const ProductManagement = () => {
           <p className="text-gray-600 dark:text-gray-400">
             {t("products.catalogSubtitle", { count: totalProducts })}
           </p>
+          {canSeePartnerStats && totalProducts > 0 && (
+            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800">
+              <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+                {t("products.partnerStatLabel", {
+                  percent: ((partnerStockCount / totalProducts) * 100).toFixed(1),
+                })}
+              </span>
+              <span className="text-[11px] text-purple-500 dark:text-purple-400">
+                {t("products.partnerStatDetail", {
+                  partner: partnerStockCount,
+                  normal: totalProducts - partnerStockCount,
+                })}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex gap-3">
           <button
@@ -750,7 +780,7 @@ const ProductManagement = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="sticky left-0 z-20 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
                     {t("products.colProduct")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -806,10 +836,10 @@ const ProductManagement = () => {
                 {products.map((product) => (
                   <tr
                     key={product._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    className="group hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                     onClick={() => handleEdit(product)}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="sticky left-0 z-10 px-6 py-4 whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-12 w-12">
                           {product.image && product.image[0] ? (

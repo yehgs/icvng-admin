@@ -8,7 +8,7 @@ import {
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
-  Bell, LifeBuoy, Lock, Landmark, Languages, Mail,
+  Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -155,6 +155,8 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
       items: [
         { title: t("nav.sliderManagement"), path: "/admin/sliders", icon: Image,  allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.bannerManagement"), path: "/admin/banners", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.popupManagement"), path: "/admin/popups", icon: MessageSquareText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.giftCardManagement"), path: "/admin/gift-cards", icon: Gift, allowedSubRoles: ["IT","DIRECTOR","MANAGER","ACCOUNTANT"] },
         { title: t("nav.siteContent"), path: "/admin/home-content", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.sitePages"), path: "/admin/site-pages", icon: FileText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.fomoWidget"),       path: "/admin/fomo",    icon: Zap,    allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
