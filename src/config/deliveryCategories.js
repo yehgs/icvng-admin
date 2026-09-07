@@ -1,35 +1,17 @@
 // admin/src/config/deliveryCategories.js
 //
-// MUST stay in sync with icvng-client/src/config/deliveryCategories.js and
-// icvng-server/controllers/product.controller.js (FIVE_WEEK_DELIVERY_SLUGS
-// / buildPurchasableOr).
+// Thin re-export shim — the rule now lives in @yehgs/icvng-core (shared
+// with client and the mobile app). This file used to be a hand-maintained
+// copy that had already drifted in comments from client's version; both
+// now point at the one canonical implementation.
 //
-// Controls which products the storefront reads a 5-week delivery price for
-// vs a 2-week ("3-week" in the DB/admin — same field, price3weeksDelivery)
-// delivery price. A product counts as "five-week type" if EITHER:
-//   - productType === "MACHINE", OR
-//   - its category slug is one of FIVE_WEEK_DELIVERY_SLUGS
-//
-// Both signals are checked (not just productType alone) because productType
-// data isn't fully reliable on its own — e.g. a Tassimo coffee machine
-// filed under category "Coffee Maker" but left with productType "COFFEE".
-// Trusting productType alone let that exact product pass this admin form's
-// warning check (looked fine — "has a delivery price") while the actual
-// storefront (which also checks category) correctly refused to show it.
-//
-// This file exists so the admin Product Form's live "will be hidden from
-// the shop" warning can catch that exact mismatch before you even save.
-
-export const FIVE_WEEK_DELIVERY_SLUGS = ["capsule-machine", "coffee-maker"];
-
-/**
- * Returns true if the product should be priced via the 5-week delivery
- * field instead of the 2-week ("3-week") delivery field.
- *
- * @param {string|null|undefined} productType e.g. "MACHINE", "COFFEE", ...
- * @param {string|null|undefined} [categorySlug] the selected category's slug
- * @returns {boolean}
- */
-export const isFiveWeekDeliveryCategory = (productType, categorySlug = null) =>
-  productType === "MACHINE" ||
-  (!!categorySlug && FIVE_WEEK_DELIVERY_SLUGS.includes(categorySlug));
+// NOTE: core's isFiveWeekDeliveryCategory accepts a plain slug string OR a
+// category object/array-with-slug — both call sites in this app
+// (ProductForm.jsx, manualOrderRules.js) already pass a plain slug string,
+// which core handles explicitly (added specifically so this swap wouldn't
+// silently regress to productType-only detection — see core's own comment
+// in src/pricing/deliveryCategories.js for why that matters here).
+export {
+  FIVE_WEEK_DELIVERY_SLUGS,
+  isFiveWeekDeliveryCategory,
+} from "@yehgs/icvng-core/pricing";
