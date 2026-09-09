@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@yehgs/icvng-core": "file:./calstins-icvng-core-0.9.1.tgz",
+    "@yehgs/icvng-core": "file:./calstins-icvng-core-0.9.3.tgz",
     "@tanstack/react-query": "^5.80.7",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-code-block-lowlight": "^3.21.0",

@@ -42,6 +42,7 @@ export default function ContactMessages() {
   const [loading, setLoading] = useState(true);
   const [formTypeFilter, setFormTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
 
   const fetchMessages = useCallback(async () => {
     setLoading(true);
@@ -49,6 +50,7 @@ export default function ContactMessages() {
       const params = new URLSearchParams();
       if (formTypeFilter) params.set("formType", formTypeFilter);
       if (statusFilter) params.set("status", statusFilter);
+      if (sourceFilter) params.set("source", sourceFilter);
       const res = await apiFetch(`/admin/contact-messages?${params.toString()}`);
       if (res.success) setMessages(res.data || []);
       else toast.error(res.message || "Failed to load messages");
@@ -57,7 +59,7 @@ export default function ContactMessages() {
     } finally {
       setLoading(false);
     }
-  }, [formTypeFilter, statusFilter]);
+  }, [formTypeFilter, statusFilter, sourceFilter]);
 
   const fetchSubscribers = useCallback(async () => {
     setLoading(true);
@@ -160,6 +162,15 @@ export default function ContactMessages() {
                 <option key={s} value={s}>{s.replace("_", " ")}</option>
               ))}
             </select>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white"
+            >
+              <option value="">All sources</option>
+              <option value="web">Web</option>
+              <option value="mobile-app">Mobile App</option>
+            </select>
           </div>
 
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -171,6 +182,7 @@ export default function ContactMessages() {
                     <th className="px-4 py-3 font-medium">Email / Phone</th>
                     <th className="px-4 py-3 font-medium">Type</th>
                     {isGlobalAdmin && <th className="px-4 py-3 font-medium">Country</th>}
+                    <th className="px-4 py-3 font-medium">Source</th>
                     <th className="px-4 py-3 font-medium">Subject / Message</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Received</th>
@@ -178,7 +190,7 @@ export default function ContactMessages() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {messages.length === 0 && !loading && (
-                    <tr><td colSpan={isGlobalAdmin ? 7 : 6} className="px-4 py-8 text-center text-gray-400">No messages yet.</td></tr>
+                    <tr><td colSpan={isGlobalAdmin ? 8 : 7} className="px-4 py-8 text-center text-gray-400">No messages yet.</td></tr>
                   )}
                   {messages.map((m) => (
                     <tr key={m._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
@@ -192,6 +204,17 @@ export default function ContactMessages() {
                       </td>
                       <td className="px-4 py-3 capitalize text-gray-600 dark:text-gray-300">{m.formType}</td>
                       {isGlobalAdmin && <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{m.countryCode}</td>}
+                      <td className="px-4 py-3">
+                        {m.source === 'mobile-app' ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            Mobile App
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                            Web
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
                         {m.subject && <div className="font-medium text-gray-800 dark:text-gray-200">{m.subject}</div>}
                         <div className="truncate">{m.message}</div>
