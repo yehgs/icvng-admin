@@ -841,6 +841,39 @@ export const bankTransferSettingsAPI = {
   },
 };
 
+// Payment Gateway Settings API — country-scoped indigenous gateway
+// (CinetPay for Togo/Benin today). Unlike bankTransferSettingsAPI, this one
+// is NOT IT/DIRECTOR-only: a country-scoped MANAGER holding
+// payments.manageCountry can call the same endpoints and the server
+// (route/paymentGateway.route.js) confines them to their own
+// assignedCountry automatically — the admin UI never needs to know which
+// kind of admin is calling.
+export const paymentGatewayAPI = {
+  // List CinetPay settings — every country for IT/DIRECTOR, just their own
+  // for a country-scoped MANAGER (server-side scoping, not a client filter).
+  getAllCinetPay: async () => {
+    return apiCall("/payment-gateway/cinetpay");
+  },
+
+  // Add/edit one country's CinetPay settings (upsert). apiKey/siteId are
+  // only required the first time a country is configured — omit them on a
+  // later edit that only flips isActive/mode to keep the existing
+  // (encrypted) credentials untouched.
+  upsertCinetPay: async (data) => {
+    return apiCall("/payment-gateway/cinetpay", {
+      method: "POST",
+      body: data,
+    });
+  },
+
+  // Remove a country's CinetPay settings entirely.
+  removeCinetPay: async (countryCode) => {
+    return apiCall(`/payment-gateway/cinetpay/${countryCode}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 // Email Provider Settings API — system-wide mail provider (Resend / SMTP).
 // HQ IT/DIRECTOR only; there is no public surface (see
 // route/emailProviderSettings.route.js).

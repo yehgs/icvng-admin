@@ -74,6 +74,7 @@ import CountryManagement from "./pages/settings/CountryManagement";
 import LanguageManagement from "./pages/settings/LanguageManagement";
 import UiTranslationsManagement from "./pages/settings/UiTranslationsManagement";
 import BankTransferSettings from "./pages/settings/BankTransferSettings";
+import PaymentGatewaySettings from "./pages/settings/PaymentGatewaySettings";
 import EmailProviderSettings from "./pages/settings/EmailProviderSettings";
 import ForeignAdminManagement from "./pages/foreign-admins/ForeignAdminManagement";
 import NotFound from "./pages/NotFound";
@@ -774,6 +775,21 @@ const App = () => {
                   element={
                     <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
                       <BankTransferSettings />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Country-scoped indigenous payment gateway (CinetPay for
+                    Togo/Benin) — unlike Bank Transfer above, a
+                    country-scoped MANAGER can reach this too; the server
+                    confines them to their own country's row
+                    (route/paymentGateway.route.js), this route only needs
+                    to let them past the subRole gate. */}
+                <Route
+                  path="settings/payment-gateway"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR", "MANAGER"]}>
+                      <PaymentGatewaySettings />
                     </RoleProtectedRoute>
                   }
                 />

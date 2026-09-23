@@ -609,6 +609,18 @@ const CreateOrderModal = ({ isOpen, onClose, onSuccess }) => {
                   {(formData.countryCode || "NG") === "NG" && (
                     <option value="PAYSTACK">Paystack</option>
                   )}
+                  {/* CinetPay is Togo/Benin's indigenous gateway — offered
+                      for those two countries the same way Paystack is
+                      offered for NG above. Unlike Paystack this doesn't
+                      check whether that country's admin has actually
+                      activated CinetPay yet (that's a DB lookup, not a
+                      static list) — same shallow, country-code-only check
+                      this dropdown already used for Paystack, so pick CASH
+                      or BANK_TRANSFER instead if CinetPay isn't live for
+                      this country yet. */}
+                  {["TG", "BJ"].includes(formData.countryCode) && (
+                    <option value="CINETPAY">CinetPay</option>
+                  )}
                 </select>
               </div>
             </div>

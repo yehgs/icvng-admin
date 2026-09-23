@@ -233,6 +233,12 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "settings",    title: t("nav.settings"),           path: "/admin/settings",  icon: Settings, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     { key: "bank-transfer-settings", title: "Bank Transfer Settings", path: "/admin/settings/bank-transfer", icon: Landmark, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    // Country-scoped indigenous payment gateway (CinetPay for Togo/Benin
+    // today) — unlike bank transfer above, a country-scoped MANAGER can
+    // see and use this too (their own country's data only — enforced
+    // server-side, see route/paymentGateway.route.js). IT/DIRECTOR manage
+    // every country's from the same page.
+    { key: "payment-gateway-settings", title: "Payment Gateway", path: "/admin/settings/payment-gateway", icon: CreditCard, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "email-provider-settings", title: "Email Provider", path: "/admin/settings/email-provider", icon: Mail, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     // CountryManagement.jsx (Tawk.to, SEO, contacts, feature flags per
     // country) was built with zero nav link anywhere — reachable only by
@@ -250,7 +256,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     { key: "languages",   title: "Languages",                 path: "/admin/languages", icon: Languages, single: true, allowedSubRoles: ["IT","DIRECTOR","EDITOR"] },
     // UI-copy (locale-file) translations — same audience/reasoning as
     // "languages" above.
-    { key: "ui-translations", title: "UI Copy Translations",   path: "/admin/ui-translations", icon: Languages, single: true, allowedSubRoles: ["IT","DIRECTOR","EDITOR"] },
+    { key: "ui-translations", title: "UI Copy Translations",   path: "/admin/ui-translations", icon: Languages, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
   ];
 
   // Item #7: entire modules that are HQ-only regardless of subRole —

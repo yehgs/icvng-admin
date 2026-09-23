@@ -113,6 +113,10 @@ const PAYMENT_METHOD_CONFIG = {
     label: "Paystack",
     color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   },
+  CINETPAY: {
+    label: "CinetPay",
+    color: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
+  },
   STRIPE: {
     label: "Stripe",
     color:
