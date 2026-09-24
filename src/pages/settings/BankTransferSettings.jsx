@@ -1,9 +1,12 @@
 // pages/settings/BankTransferSettings.jsx
 //
-// IT/DIRECTOR-only settings page: add/edit/update the Direct Bank Transfer
-// receiving-account details for each country. If a country has no active
-// setting here, that country's storefront checkout only offers Stripe
-// (see controllers/bankTransferSettings.controller.js#getAvailablePaymentMethods
+// Country-scoped receiving-account details for Direct Bank Transfer. IT/
+// DIRECTOR manage any country's; a country-scoped MANAGER manages only
+// their own — same payments.view/payments.manageCountry permissions and
+// server-side scoping as PaymentGatewaySettings.jsx (CinetPay), see
+// route/bankTransferSettings.route.js. If a country has no active setting
+// here, that country's storefront checkout only offers Stripe (see
+// controllers/bankTransferSettings.controller.js#getAvailablePaymentMethods
 // and DirectBankTransferOrderController on the server).
 import React, { useState, useEffect } from "react";
 import {
@@ -20,6 +23,7 @@ import {
 import { bankTransferSettingsAPI } from "../../utils/api";
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 
 const emptyForm = {
   countryCode: "",
@@ -34,6 +38,7 @@ const emptyForm = {
 
 const BankTransferSettings = () => {
   const { t } = useAdminTranslation();
+  const { countryScope, isGlobalAdmin } = useAdminCountry();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -111,8 +116,9 @@ const BankTransferSettings = () => {
             Direct Bank Transfer Settings
           </h1>
           <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-            Country-scoped receiving-account details. A country with no
-            active setting here only offers Stripe at checkout.
+            {isGlobalAdmin
+              ? "Country-scoped receiving-account details. A country with no active setting here only offers Stripe at checkout."
+              : `Your receiving bank account for ${countryScope}. A country with no active setting here only offers Stripe at checkout.`}
           </p>
         </div>
       </div>

@@ -232,7 +232,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     { key: "foreign-admins", title: "Foreign Admin Management", path: "/admin/foreign-admins", icon: Globe, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     { key: "activity-log",title: t("nav.activityLog"),        path: "/admin/activity",  icon: Activity, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "settings",    title: t("nav.settings"),           path: "/admin/settings",  icon: Settings, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
-    { key: "bank-transfer-settings", title: "Bank Transfer Settings", path: "/admin/settings/bank-transfer", icon: Landmark, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
+    { key: "bank-transfer-settings", title: "Bank Transfer Settings", path: "/admin/settings/bank-transfer", icon: Landmark, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     // Country-scoped indigenous payment gateway (CinetPay for Togo/Benin
     // today) — unlike bank transfer above, a country-scoped MANAGER can
     // see and use this too (their own country's data only — enforced

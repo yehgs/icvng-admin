@@ -769,11 +769,14 @@ const App = () => {
                   }
                 />
 
-                {/* Country-scoped Direct Bank Transfer settings — HQ IT/Director only */}
+                {/* Country-scoped Direct Bank Transfer settings — IT/
+                    DIRECTOR any country, a country-scoped MANAGER their
+                    own country only (server-enforced — see
+                    route/bankTransferSettings.route.js). */}
                 <Route
                   path="settings/bank-transfer"
                   element={
-                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR"]}>
+                    <RoleProtectedRoute allowedSubRoles={["IT", "DIRECTOR", "MANAGER"]}>
                       <BankTransferSettings />
                     </RoleProtectedRoute>
                   }

@@ -16,9 +16,10 @@
 // files (i18n/index.js's applyDbOverrides/EFFECTIVE in both admin and
 // client) — changes here take effect on next language load, no deploy.
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { uiTranslationAPI } from "../../utils/api";
 import { useCapabilities, Can } from "../../contexts/CapabilitiesContext";
+import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from "../../i18n/index.js";
 
 const NON_EN_LANGUAGES = SUPPORTED_LANGUAGES.filter((c) => c !== "en");
@@ -27,9 +28,27 @@ const PAGE_SIZE = 25;
 export default function UiTranslationsManagement() {
   const { can } = useCapabilities();
   const canManage = can("translations.manage");
+  const { countryScope, allCountries } = useAdminCountry();
+
+  // A country-scoped admin (a Togo/Benin MANAGER, say) may only browse/edit
+  // their own country's PRIMARY language — mirrors
+  // getAllowedLanguagesForRequest in controllers/uiTranslation.controller.js
+  // exactly (server-enforced regardless of what this UI shows; this is
+  // just so the dropdown doesn't offer a choice that would 403). null for
+  // a global admin (IT/DIRECTOR, or an HQ-scoped MANAGER/EDITOR) — no
+  // restriction, every language shown.
+  const allowedLanguages = useMemo(() => {
+    if (!countryScope) return null;
+    const country = allCountries.find((c) => c.code === countryScope);
+    return country?.language?.default ? [country.language.default] : null;
+  }, [countryScope, allCountries]);
+
+  const languageOptions = allowedLanguages
+    ? NON_EN_LANGUAGES.filter((c) => allowedLanguages.includes(c))
+    : NON_EN_LANGUAGES;
 
   const [app, setApp] = useState("admin");
-  const [language, setLanguage] = useState(NON_EN_LANGUAGES[0] || "fr");
+  const [language, setLanguage] = useState(languageOptions[0] || NON_EN_LANGUAGES[0] || "fr");
   const [namespaces, setNamespaces] = useState([]);
   const [namespace, setNamespace] = useState("");
   const [search, setSearch] = useState("");
@@ -43,6 +62,10 @@ export default function UiTranslationsManagement() {
   const [msg, setMsg] = useState(null);
 
   const load = useCallback(async () => {
+    // Nothing to fetch for a country whose language IS English — see the
+    // empty-state branch in the render below. Avoids a guaranteed-403
+    // round-trip against a "language" value the server will reject anyway.
+    if (allowedLanguages && languageOptions.length === 0) return;
     setLoading(true);
     try {
       const res = await uiTranslationAPI.list({ app, language, search, namespace, page, limit: PAGE_SIZE });
@@ -58,7 +81,7 @@ export default function UiTranslationsManagement() {
     } finally {
       setLoading(false);
     }
-  }, [app, language, search, namespace, page]);
+  }, [app, language, search, namespace, page, allowedLanguages]);
 
   useEffect(() => {
     load();
@@ -78,6 +101,17 @@ export default function UiTranslationsManagement() {
   useEffect(() => {
     setPage(1);
   }, [language, search, namespace]);
+
+  // Once allCountries loads (or on switching between country-scoped
+  // sessions), snap language onto the allowed set if the current value
+  // has fallen outside it — covers the brief window before allCountries
+  // arrives, when languageOptions still equals the unrestricted default.
+  useEffect(() => {
+    if (languageOptions.length && !languageOptions.includes(language)) {
+      setLanguage(languageOptions[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languageOptions.join(",")]);
 
   useEffect(() => {
     setDrafts({});
@@ -119,6 +153,18 @@ export default function UiTranslationsManagement() {
         </p>
       </div>
 
+      {allowedLanguages && languageOptions.length === 0 ? (
+        // A country-scoped manager whose own country's language IS
+        // English (Nigeria today) has nothing to do on this page — English
+        // rows are the base copy, edited in the repo, not here (see
+        // upsertUiTranslationController's own refusal of "en" edits).
+        <div className="bg-white rounded-xl border border-gray-200 p-6 text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+          Your country's storefront language is English, which is the base copy edited
+          directly in the codebase (see <code>en.js</code> locale files) — there's
+          nothing to translate here for your country.
+        </div>
+      ) : (
+        <>
       {msg && (
         <div
           className={`mb-4 px-4 py-3 rounded-lg text-sm ${
@@ -142,16 +188,22 @@ export default function UiTranslationsManagement() {
         </Field>
         <Field label="Language">
           <select
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white disabled:opacity-60"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
+            disabled={languageOptions.length <= 1}
           >
-            {NON_EN_LANGUAGES.map((code) => (
+            {languageOptions.map((code) => (
               <option key={code} value={code}>
                 {LANGUAGE_NAMES[code] || code}
               </option>
             ))}
           </select>
+          {allowedLanguages && (
+            <p className="text-[11px] text-gray-400 mt-1 dark:text-gray-500">
+              Restricted to your country's language
+            </p>
+          )}
         </Field>
         <Field label="Section">
           <select
@@ -276,6 +328,8 @@ export default function UiTranslationsManagement() {
             Next
           </button>
         </div>
+      )}
+        </>
       )}
     </div>
   );
