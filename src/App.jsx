@@ -106,6 +106,8 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { CapabilitiesProvider } from "./contexts/CapabilitiesContext";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import SupportTicketManagement from "./pages/support/SupportTicketManagement";
+import ProductCatalogue from "./pages/catalogue/ProductCatalogue";
+import ChatConsole from "./pages/chat/ChatConsole";
 import PasswordVaultManagement from "./pages/passwords/PasswordVaultManagement";
 import FinanceManagement from "./pages/finance/FinanceManagement.jsx";
 import AnnouncementPopup from "./components/notifications/AnnouncementPopup";
@@ -215,6 +217,22 @@ const App = () => {
                   element={<NotificationManagement />}
                 />
                 <Route path="dashboard/profile" element={<ProfilePage />} />
+                <Route
+                  path="dashboard/chat"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["SALES", "SALES_MANAGER", "MANAGER", "IT", "DIRECTOR"]}>
+                      <ChatConsole />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="dashboard/catalogue"
+                  element={
+                    <RoleProtectedRoute allowedSubRoles={["SALES", "SALES_MANAGER", "MANAGER", "IT", "DIRECTOR"]}>
+                      <ProductCatalogue />
+                    </RoleProtectedRoute>
+                  }
+                />
                 <Route
                   path="dashboard/support-tickets"
                   element={<SupportTicketManagement />}

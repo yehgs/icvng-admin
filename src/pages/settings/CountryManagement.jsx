@@ -44,7 +44,6 @@ const EMPTY = {
   // on the storefront for this country's domain as soon as it's saved here.
   contacts: { email: "", phone: "", whatsapp: "", address: "" },
   content: { preheaderMessage: "" },
-  tawk: { propertyId: "", widgetId: "" },
 };
 
 const STATUS_COLORS = {
@@ -143,7 +142,6 @@ export default function CountryManagement() {
       featureFlags: { ...(c.featureFlags || {}) },
       contacts: { ...EMPTY.contacts, ...(c.contacts || {}) },
       content: { ...EMPTY.content, ...(c.content || {}) },
-      tawk: { ...EMPTY.tawk, ...(c.tawk || {}) },
     });
     setFeatureFlagsText(JSON.stringify(c.featureFlags || {}, null, 2));
     setFeatureFlagsError(null);
@@ -512,33 +510,6 @@ export default function CountryManagement() {
                   value={form.contacts.whatsapp}
                   onChange={(e) => set("contacts.whatsapp", e.target.value)}
                   placeholder="+234 805 242 3935"
-                />
-              </Field>
-            </div>
-          </div>
-
-          {/* Tawk.to — each country can run its own agent queue instead of
-              sharing one hardcoded widget across every domain. Leave blank to
-              fall back to the default (Nigeria) widget. */}
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 dark:text-gray-300">
-              Tawk.to live chat
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Property ID">
-                <input
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  value={form.tawk.propertyId}
-                  onChange={(e) => set("tawk.propertyId", e.target.value)}
-                  placeholder="69319adcb76a89198199fe66"
-                />
-              </Field>
-              <Field label="Widget ID">
-                <input
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  value={form.tawk.widgetId}
-                  onChange={(e) => set("tawk.widgetId", e.target.value)}
-                  placeholder="1jbks9rel"
                 />
               </Field>
             </div>

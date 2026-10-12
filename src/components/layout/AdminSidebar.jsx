@@ -144,6 +144,8 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
         { title: t("nav.coffeeRoastedAreas"), path: "/admin/coffee-roasted-areas", icon: Map,              allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
       ],
     },
+    { key: "chat", title: t("nav.chat"), path: "/admin/dashboard/chat", icon: MessageSquareText, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
+    { key: "catalogue", title: t("nav.catalogue"), path: "/admin/dashboard/catalogue", icon: FileText, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
     { key: "crm",           title: t("nav.crmPipeline"),   path: "/admin/dashboard/crm",           icon: Users,   single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
     { key: "contact-messages", title: t("nav.contactMessages"), path: "/admin/dashboard/contact-messages", icon: Inbox, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
     { key: "scraper",       title: t("nav.webScraper"),    path: "/admin/dashboard/scraper",        icon: Zap,     single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
@@ -240,11 +242,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
     // every country's from the same page.
     { key: "payment-gateway-settings", title: "Payment Gateway", path: "/admin/settings/payment-gateway", icon: CreditCard, single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER"] },
     { key: "email-provider-settings", title: "Email Provider", path: "/admin/settings/email-provider", icon: Mail, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
-    // CountryManagement.jsx (Tawk.to, SEO, contacts, feature flags per
-    // country) was built with zero nav link anywhere — reachable only by
-    // typing /admin/countries directly. That's the actual reason "Settings
-    // → Countries → Tawk.to" couldn't be found; the page and its Tawk.to
-    // fields were already fully working.
+    // CountryManagement.jsx (SEO, contacts, feature flags per country).
     { key: "countries",   title: "Countries",                 path: "/admin/countries", icon: Globe, single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     // Language lib (server/models/language.model.js) — same audience as the
     // rest of the content-translation system (translations.view/.manage),
