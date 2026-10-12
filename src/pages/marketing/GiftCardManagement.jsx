@@ -286,7 +286,7 @@ const GiftCardManagement = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("giftCards.currency")}</label>
                   <select value={issueForm.currency} onChange={(e) => setIssueForm((p) => ({ ...p, currency: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
-                    {["NGN", "USD", "EUR", "GBP"].map((c) => <option key={c} value={c}>{c}</option>)}
+                    {["NGN", "XOF", "XAF", "EUR", "USD", "GBP"].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
