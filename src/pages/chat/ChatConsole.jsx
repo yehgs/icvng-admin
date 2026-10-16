@@ -216,7 +216,7 @@ export default function ChatConsole() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button onClick={() => { alarm.unlock(); alarm.toggle(); askNotif(); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm dark:text-gray-200">
             {alarm.enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />} {alarm.enabled ? t("chat.alarmOn") : t("chat.alarmOff")}
           </button>
@@ -413,7 +413,7 @@ function SettingsModal({ t, onClose }) {
         {[["enabled", "chat.setEnabled"], ["aiEnabled", "chat.setAi"], ["requireContactForEscalation", "chat.setRequireContact"]].map(([k, l]) => (
           <Row key={k}><label className="flex items-center gap-2 text-sm dark:text-gray-200"><input type="checkbox" checked={!!s[k]} onChange={(e) => setS({ ...s, [k]: e.target.checked })} /> {t(l)}</label></Row>
         ))}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Row><label className="text-xs text-gray-600 dark:text-gray-300">{t("chat.setSla")}</label><input type="number" className={INPUT} value={s.slaSeconds} onChange={(e) => setS({ ...s, slaSeconds: e.target.value })} /></Row>
           <Row><label className="text-xs text-gray-600 dark:text-gray-300">{t("chat.setRepeat")}</label><input type="number" className={INPUT} value={s.alarmRepeatSeconds} onChange={(e) => setS({ ...s, alarmRepeatSeconds: e.target.value })} /></Row>
         </div>

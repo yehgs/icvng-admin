@@ -564,7 +564,8 @@ export default function SalesReports() {
                 {t('reports2.topCustomersBySpend')}
               </h3>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   {[
@@ -633,6 +634,7 @@ export default function SalesReports() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Customer registration trend */}

@@ -734,7 +734,8 @@ export default function PricingReports() {
               <p>{t('reports2.noExchangeRates')}</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   {[
@@ -780,6 +781,7 @@ export default function PricingReports() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}

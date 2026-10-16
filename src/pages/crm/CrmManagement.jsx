@@ -1557,7 +1557,7 @@ export default function CrmManagement() {
               </button>
             </div>
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   ["companyName", t('crm.colCompanyName')],
                   ["contactName", t('crm.colContactName')],
@@ -1580,7 +1580,7 @@ export default function CrmManagement() {
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('crm.colStage')}
@@ -1630,7 +1630,7 @@ export default function CrmManagement() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('crm.dealValueLabel')}
@@ -1663,7 +1663,7 @@ export default function CrmManagement() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   ["linkedinUrl", "LinkedIn"],
                   ["facebookUrl", "Facebook"],
@@ -1682,7 +1682,7 @@ export default function CrmManagement() {
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   ["nextFollowUpDate", t('crm.nextFollowUp')],
                   ["expectedCloseDate", t('crm.expectedClose')],

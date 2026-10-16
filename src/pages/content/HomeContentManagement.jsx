@@ -157,7 +157,7 @@ const HomeContentManagement = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Heart className="w-6 h-6 text-rose-600" />
@@ -193,7 +193,7 @@ const HomeContentManagement = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
         {TABS.map((tb) => (
           <button key={tb.id} onClick={() => setTab(tb.id)}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === tb.id ? "border-rose-600 text-rose-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
@@ -250,7 +250,7 @@ const HomeContentManagement = () => {
                       placeholder="3 Kaffi Street, Alausa, Ikeja, Lagos, Nigeria"
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.phone')}</label>
                       <input type="text" value={singletonForm.contactPhone}
@@ -436,7 +436,7 @@ const HomeContentManagement = () => {
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.customerNameLabel')} <span className="text-red-500">*</span></label>
                       <input type="text" value={form.customerName} onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
@@ -453,7 +453,7 @@ const HomeContentManagement = () => {
                     <textarea rows={3} value={form.quote} onChange={(e) => setForm((p) => ({ ...p, quote: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white resize-none" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content.badgeLabelField')}</label>
                       <input type="text" value={form.badge} onChange={(e) => setForm((p) => ({ ...p, badge: e.target.value }))}

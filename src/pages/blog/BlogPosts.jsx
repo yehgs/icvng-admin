@@ -664,7 +664,7 @@ const BlogPosts = () => {
     return (
       <div className="p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {t("blog.title")}
@@ -673,7 +673,7 @@ const BlogPosts = () => {
               {t("blogPostsMgt.subtitle")}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={exportCSV}
               className="btn-outline flex items-center gap-2"
@@ -738,7 +738,8 @@ const BlogPosts = () => {
 
         {/* Table */}
         <div className="table-container">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px]">
             <thead>
               <tr className="table-header">
                 <th className="px-6 py-3 text-left">{t("blog.postTitle")}</th>
@@ -890,6 +891,7 @@ const BlogPosts = () => {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Pagination */}
@@ -1001,7 +1003,7 @@ const BlogPosts = () => {
 
           {/* Tabs */}
           <div className="card overflow-hidden">
-            <div className="flex border-b border-gray-200 dark:border-gray-700">
+            <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
               {[
                 "content",
                 "seo",

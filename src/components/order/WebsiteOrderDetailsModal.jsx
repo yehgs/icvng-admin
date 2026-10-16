@@ -1728,7 +1728,7 @@ const WebsiteOrderDetailsModal = ({
                                     </div>
 
                                     {isSel && (
-                                      <div className="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                         <div>
                                           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Order Status

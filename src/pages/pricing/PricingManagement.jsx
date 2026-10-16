@@ -548,7 +548,7 @@ const PricingManagement = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={exportToCsv}
             disabled={productPricing.length === 0}
@@ -754,7 +754,7 @@ const PricingManagement = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[720px]">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th

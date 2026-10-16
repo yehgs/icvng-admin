@@ -103,7 +103,7 @@ const SliderManagement = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Image className="w-6 h-6 text-purple-600" />
@@ -113,7 +113,7 @@ const SliderManagement = () => {
             {t('content.slidersSubtitle')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isGlobalAdmin ? (
             <select
               value={countryFilter}
@@ -155,9 +155,9 @@ const SliderManagement = () => {
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((s) => (
-              <div key={s._id} className={`bg-white dark:bg-gray-800 rounded-xl border overflow-hidden flex items-stretch gap-0 ${s.isActive ? 'border-gray-200 dark:border-gray-700' : 'border-dashed border-gray-300 dark:border-gray-600 opacity-60'}`}>
+              <div key={s._id} className={`bg-white dark:bg-gray-800 rounded-xl border overflow-hidden flex flex-col sm:flex-row items-stretch gap-0 ${s.isActive ? 'border-gray-200 dark:border-gray-700' : 'border-dashed border-gray-300 dark:border-gray-600 opacity-60'}`}>
                 {/* Preview image */}
-                <div className="w-40 flex-shrink-0 bg-gray-100 dark:bg-gray-700 relative">
+                <div className="w-full h-36 sm:h-auto sm:w-40 flex-shrink-0 bg-gray-100 dark:bg-gray-700 relative">
                   {s.imageUrl ? (
                     <img src={s.imageUrl} alt={s.title} className="w-full h-full object-cover" />
                   ) : (

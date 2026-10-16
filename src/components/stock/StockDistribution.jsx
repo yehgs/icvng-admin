@@ -368,7 +368,7 @@ const StockDistribution = ({ batches, loading, onRefresh, currentUser }) => {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                         <div>
                           <label className="flex items-center text-sm text-blue-600 dark:text-blue-400 mb-1">
                             <Globe className="h-4 w-4 mr-1" />

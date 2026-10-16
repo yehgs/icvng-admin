@@ -233,7 +233,7 @@ export default function ForeignAdminManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Globe className="h-6 w-6 text-sky-600" /> Country Admin Management
@@ -243,7 +243,7 @@ export default function ForeignAdminManagement() {
             <span className="text-red-500 font-medium"> Logistics access is never permitted for country admins.</span>
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button onClick={load} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
             <RefreshCw className="h-4 w-4" />
           </button>
@@ -277,7 +277,8 @@ export default function ForeignAdminManagement() {
             <p>No country admins found. Click "Add Country Admin" to create one.</p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
                 {["Name", "Email", "Country", "Extra Roles", "Lang", "Status", "Actions"].map(h => (
@@ -352,6 +353,7 @@ export default function ForeignAdminManagement() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -464,7 +466,7 @@ export default function ForeignAdminManagement() {
                       Grant additional module access to this country admin. They will only see data for their assigned country in all these sections.
                       <strong className="text-red-500"> Logistics is permanently blocked.</strong>
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {EXPOSABLE_SUBROLES.map(sr => (
                         <label key={sr.value}
                           className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors ${form.foreignSubRoles.includes(sr.value) ? "border-blue-300 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-600" : "border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}>

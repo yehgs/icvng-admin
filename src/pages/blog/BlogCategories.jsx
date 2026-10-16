@@ -265,7 +265,7 @@ const BlogCategories = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
             <Folder className="w-8 h-8 mr-3 text-amber-600" />
@@ -275,7 +275,7 @@ const BlogCategories = () => {
             {t("blogCategoriesMgt.subtitle")}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={exportToCSV}
             className="btn-outline flex items-center gap-2"
@@ -573,7 +573,8 @@ const BlogCategories = () => {
 
       {/* Categories Table */}
       <div className="table-container">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
           <thead>
             <tr className="table-header">
               <th className="px-6 py-3 text-left">{t("common.category")}</th>
@@ -711,6 +712,7 @@ const BlogCategories = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}

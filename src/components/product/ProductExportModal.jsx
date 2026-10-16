@@ -484,7 +484,7 @@ export default function ProductExportModal({
 
             {/* Custom inputs */}
             {config.scope === "custom" && (
-              <div className="mt-3 grid grid-cols-2 gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                     Products per export
@@ -608,7 +608,7 @@ export default function ProductExportModal({
 
                     {/* Group columns */}
                     {isExpanded && (
-                      <div className="grid grid-cols-2 gap-0 px-4 py-2 bg-white dark:bg-gray-800">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 px-4 py-2 bg-white dark:bg-gray-800">
                         {groupCols.map((col) => (
                           <label
                             key={col.key}

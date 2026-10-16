@@ -501,7 +501,7 @@ const PriceCalculation = () => {
             </h3>
 
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[720px]">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-600">
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">

@@ -41,9 +41,9 @@ export default function AdminLanguageSwitcher({ className = "" }) {
         title={t("common.language")}
       >
         <FlagIcon code={language} className="w-5 h-4 rounded-sm" />
-        <span className="uppercase text-xs">{language}</span>
+        <span className="hidden sm:inline uppercase text-xs">{language}</span>
         <ChevronDown
-          className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`hidden sm:block w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
 

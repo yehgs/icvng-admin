@@ -74,7 +74,7 @@ export default function CountryInventoryReport() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Package className="w-6 h-6" /> {t("nav.inventoryReports") || "Inventory Report"}
@@ -123,7 +123,7 @@ export default function CountryInventoryReport() {
       {/* Table */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[720px]">
             <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400">
               <tr>
                 <th className="px-4 py-3 font-medium">Product</th>

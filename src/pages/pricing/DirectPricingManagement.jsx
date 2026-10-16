@@ -264,7 +264,7 @@ const DirectPricingManagement = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
             <DollarSign className="h-6 w-6 mr-2" />
@@ -275,7 +275,7 @@ const DirectPricingManagement = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {canEdit && (
             <RoleBasedButton disabledRoles={["MANAGER"]} hqOverrideRoles={["MANAGER"]}>
               <button

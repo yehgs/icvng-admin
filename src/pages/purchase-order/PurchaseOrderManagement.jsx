@@ -441,7 +441,7 @@ const PurchaseOrderManagement = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Purchase Orders
@@ -450,7 +450,7 @@ const PurchaseOrderManagement = () => {
             Manage supplier purchase orders and procurement with status tracking
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={() => fetchPurchaseOrders()}
             className="btn-outline flex items-center gap-2"
@@ -609,7 +609,8 @@ const PurchaseOrderManagement = () => {
 
       {/* Purchase Orders Table */}
       <div className="table-container">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px]">
           <thead>
             <tr className="table-header">
               <th className="px-6 py-3 text-left">{t("order.orderDetails")}</th>
@@ -756,6 +757,7 @@ const PurchaseOrderManagement = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}

@@ -154,7 +154,7 @@ export default function PurchaseReports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Inbox className="h-6 w-6 text-indigo-600" /> {t('reports.purchaseReport')}
@@ -163,7 +163,7 @@ export default function PurchaseReports() {
             {t('reports2.purchaseSubtitle')}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={fetch}
             className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -429,7 +429,8 @@ export default function PurchaseReports() {
               (a, b) => b.total - a.total,
             );
             return (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
                     {[
@@ -499,6 +500,7 @@ export default function PurchaseReports() {
                   )}
                 </tbody>
               </table>
+              </div>
             );
           })()}
         </div>

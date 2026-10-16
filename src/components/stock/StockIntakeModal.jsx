@@ -478,7 +478,7 @@ const StockIntakeModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                   Zone
@@ -826,7 +826,7 @@ const StockIntakeModal = ({ isOpen, onClose, onSuccess }) => {
                     location
                   </p>
 
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
                       <label className="block text-xs text-orange-700 dark:text-orange-300 mb-1">
                         Zone

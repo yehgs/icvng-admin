@@ -492,7 +492,7 @@ const LogisticsZoneModal = ({ isOpen, onClose, onSubmit, zone, loading, countryC
                                     })}
                                   </label>
                                   <div className="max-h-32 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-800">
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {getStateLgas(state.state).map(
                                         (lgaName) => (
                                           <label

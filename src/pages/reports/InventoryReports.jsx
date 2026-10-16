@@ -549,7 +549,7 @@ export default function InventoryReports() {
             </span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[720px]">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -699,7 +699,8 @@ export default function InventoryReports() {
               <p>{t("stock.allGoodStock")}</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
               <thead className="bg-orange-50 dark:bg-orange-900/10">
                 <tr>
                   {[
@@ -773,6 +774,7 @@ export default function InventoryReports() {
                   })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -803,7 +805,8 @@ export default function InventoryReports() {
                 <p>{t('reports2.noItemsExpiring', { days: expiryDays })}</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
                 <thead className="bg-red-50 dark:bg-red-900/10">
                   <tr>
                     {[
@@ -866,6 +869,7 @@ export default function InventoryReports() {
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>

@@ -155,7 +155,7 @@ export default function NotificationManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Bell className="h-6 w-6 text-blue-600" />
@@ -167,7 +167,7 @@ export default function NotificationManagement() {
               : t('notifications.allCaughtUp')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
@@ -318,7 +318,7 @@ export default function NotificationManagement() {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('common.type')}

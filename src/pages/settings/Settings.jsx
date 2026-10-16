@@ -150,14 +150,14 @@ export default function Settings() {
         </p>
       </div>
 
-      <div className="flex gap-6">
-        {/* Sidebar tabs */}
-        <div className="w-48 flex-shrink-0 space-y-1">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {/* Sidebar tabs — horizontal scroll strip on phones, vertical column from md up */}
+        <div className="flex md:block gap-2 md:gap-0 overflow-x-auto md:overflow-visible pb-1 md:pb-0 md:w-48 flex-shrink-0 md:space-y-1">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
+              className={`md:w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
                 tab === id
                   ? "bg-blue-600 text-white"
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -176,7 +176,7 @@ export default function Settings() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 General Settings
               </h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   ["Site Name", "siteName", "text", "I-COFFEE.NG"],
                   ["Admin Email", "siteEmail", "email", "admin@i-coffee.ng"],
@@ -326,7 +326,7 @@ export default function Settings() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Security Configuration
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Session Timeout (hours)
@@ -433,7 +433,7 @@ export default function Settings() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Appearance
               </h2>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Primary Colour

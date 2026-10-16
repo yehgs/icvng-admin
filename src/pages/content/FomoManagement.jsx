@@ -371,7 +371,7 @@ const FomoManagement = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Zap className="w-6 h-6 text-orange-500" />
@@ -382,7 +382,7 @@ const FomoManagement = () => {
             website
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Master toggle */}
           {settings && (
             <button
@@ -453,7 +453,7 @@ const FomoManagement = () => {
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
         {[
           { id: "settings", label: "Animation & Display", icon: Settings },
           { id: "users", label: "Dummy Users", icon: Users },
@@ -656,7 +656,8 @@ const FomoManagement = () => {
                 </div>
               ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                         {[
@@ -765,6 +766,7 @@ const FomoManagement = () => {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -971,7 +973,7 @@ const FomoManagement = () => {
               {/* ─────────────────────────────────────────────────────────── */}
 
               {/* Quantity + Purchase time */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Quantity

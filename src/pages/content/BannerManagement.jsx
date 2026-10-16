@@ -98,7 +98,7 @@ const BannerManagement = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Layout className="w-6 h-6 text-indigo-600" />
@@ -106,7 +106,7 @@ const BannerManagement = () => {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('content.bannersSubtitle')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isGlobalAdmin ? (
             <select
               value={countryFilter}
@@ -257,7 +257,7 @@ const BannerManagement = () => {
                   placeholder={t('content.optionalSubheading')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("content.linkUrl")}</label>
                   <input type="url" value={form.link} onChange={(e) => setForm((p) => ({ ...p, link: e.target.value }))}

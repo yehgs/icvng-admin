@@ -161,7 +161,7 @@ const GiftCardManagement = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Gift className="w-6 h-6 text-indigo-600" />
@@ -169,7 +169,7 @@ const GiftCardManagement = () => {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("giftCards.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button onClick={fetchCards} className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50">
             <RefreshCw className="w-4 h-4 text-gray-500" />
           </button>
@@ -278,7 +278,7 @@ const GiftCardManagement = () => {
               <button onClick={() => setShowIssue(false)}><X className="w-5 h-5 text-gray-400" /></button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("giftCards.amount")}</label>
                   <input type="number" min={0} value={issueForm.amount} onChange={(e) => setIssueForm((p) => ({ ...p, amount: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
@@ -306,7 +306,7 @@ const GiftCardManagement = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("giftCards.internalNote")} <span className="text-gray-400 font-normal">({t("common.optional")})</span></label>
                 <input type="text" placeholder={t("giftCards.internalNoteHint")} value={issueForm.adminNote} onChange={(e) => setIssueForm((p) => ({ ...p, adminNote: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("giftCards.expiryDate")} <span className="text-gray-400 font-normal">({t("common.optional")})</span></label>
                   <input type="date" value={issueForm.expiryDate} onChange={(e) => setIssueForm((p) => ({ ...p, expiryDate: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />

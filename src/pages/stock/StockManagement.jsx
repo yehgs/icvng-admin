@@ -287,7 +287,7 @@ const StockManagement = () => {
       {/* Navigation Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8 px-6">
+          <nav className="-mb-px flex space-x-6 sm:space-x-8 px-3 sm:px-6 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

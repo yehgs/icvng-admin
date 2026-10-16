@@ -3,12 +3,13 @@ import React, { useState } from "react";
 import {
   ChevronDown, ChevronRight, Package, Globe, ShoppingCart,
   Warehouse, DollarSign, Users, Settings, Palette, Truck,
-  BarChart3, FileText, Tag, Menu, Folder, X, TrendingUp,
+  BarChart3, FileText, Tag, Folder, X, TrendingUp,
   Boxes, Home, Layers, ListTree, SlidersHorizontal, Map,
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
   Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift,
+  ChevronsLeft, ChevronsRight,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -74,9 +75,9 @@ const MenuItem = React.memo(function MenuItem({
     return (
       <div className="mb-1">
         <button onClick={() => onNavigate(item.path)}
-          className={`w-full flex items-center px-4 py-3 text-left text-sm font-medium rounded-lg transition-all duration-200 ${isActive ? activeClass : inactiveClass}`}
+          className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "px-4"} py-3 text-left text-sm font-medium rounded-lg transition-all duration-200 ${isActive ? activeClass : inactiveClass}`}
           title={isCollapsed ? item.title : ""}>
-          <Icon className={`w-5 h-5 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
+          <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
           {!isCollapsed && <span className="flex-1">{item.title}</span>}
         </button>
       </div>
@@ -86,10 +87,10 @@ const MenuItem = React.memo(function MenuItem({
   return (
     <div className="mb-1">
       <button onClick={() => toggleMenu(item.key)}
-        className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 ${isActive ? "bg-gray-50 dark:bg-gray-800" : ""}`}
+        className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "justify-between px-4"} py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 ${isActive ? "bg-gray-50 dark:bg-gray-800" : ""}`}
         title={isCollapsed ? item.title : ""}>
         <div className="flex items-center">
-          <Icon className={`w-5 h-5 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
+          <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? "mx-auto" : "mr-3"} ${isActive ? iconActive : iconInactive}`} />
           {!isCollapsed && <span className="flex-1">{item.title}</span>}
         </div>
         {!isCollapsed && (isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />)}
@@ -109,7 +110,10 @@ const MenuItem = React.memo(function MenuItem({
   );
 });
 
-const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollapsed, onToggle }) => {
+const AdminSidebar = ({
+  userRole, userSubRole, currentPath, onNavigate, isCollapsed, onToggle,
+  isMobile = false, isMobileOpen = false, onCloseMobile,
+}) => {
   const { t } = useAdminTranslation();
   const { isGlobalAdmin, countryScope, activeCountry } = useAdminCountry();
 
@@ -274,10 +278,17 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
   });
 
   return (
-    <div className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-30 ${isCollapsed ? "w-16" : "w-64"}`}>
+    <aside
+      aria-label="Admin navigation"
+      aria-hidden={isMobile && !isMobileOpen ? "true" : undefined}
+      className={`fixed inset-y-0 left-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300
+        z-[60] w-72 max-w-[85vw]
+        ${isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}
+        lg:translate-x-0 lg:z-30 lg:max-w-none lg:shadow-none ${isCollapsed ? "lg:w-16" : "lg:w-64"}`}
+    >
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className={`border-b border-gray-200 dark:border-gray-700 ${isCollapsed ? "p-2 py-4" : "p-4"}`}>
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <div>
@@ -285,9 +296,15 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
                 <p className="text-xs text-gray-500 dark:text-gray-400">{brandLine}</p>
               </div>
             )}
-            <button onClick={onToggle}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-              {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
+            <button
+              onClick={isMobile ? onCloseMobile : onToggle}
+              aria-label={isMobile ? "Close menu" : isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ${isCollapsed ? "mx-auto" : ""}`}>
+              {isMobile
+                ? <X className="w-5 h-5" />
+                : isCollapsed
+                  ? <ChevronsRight className="w-5 h-5" />
+                  : <ChevronsLeft className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -312,8 +329,8 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
         )}
 
         {/* Nav */}
-        <div className="flex-1 overflow-y-auto">
-          <nav className="p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <nav className={`${isCollapsed ? "p-2" : "p-4"} space-y-2 pb-8`}>
             {filteredMenuItems.map(item => (
               <MenuItem
                 key={item.key}
@@ -339,7 +356,7 @@ const AdminSidebar = ({ userRole, userSubRole, currentPath, onNavigate, isCollap
           </div>
         )}
       </div>
-    </div>
+    </aside>
   );
 };
 

@@ -924,7 +924,7 @@ const LogisticsManagement = () => {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft dark:shadow-gray-900/20 border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[720px]">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -1127,7 +1127,7 @@ const LogisticsManagement = () => {
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft dark:shadow-gray-900/20 border border-gray-200 dark:border-gray-700">
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex space-x-6 sm:space-x-8 px-3 sm:px-6 overflow-x-auto">
             {[
               { id: 'dashboard', label: t('logistics.tabs.dashboard'), icon: BarChart3 },
               { id: 'zones', label: t('logistics.tabs.zones'), icon: MapPin },

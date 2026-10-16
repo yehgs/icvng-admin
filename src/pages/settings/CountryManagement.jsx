@@ -179,7 +179,7 @@ export default function CountryManagement() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Countries</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -202,7 +202,8 @@ export default function CountryManagement() {
 
       {/* Country list */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8 dark:bg-gray-800 dark:border-gray-700">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[720px]">
           <thead className="bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
             <tr>
               <th className="text-left px-4 py-3">Country</th>
@@ -277,6 +278,7 @@ export default function CountryManagement() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create / edit form */}

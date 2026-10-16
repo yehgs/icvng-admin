@@ -170,7 +170,7 @@ const PopupManagement = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <MessageSquareText className="w-6 h-6 text-indigo-600" />
@@ -178,7 +178,7 @@ const PopupManagement = () => {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("popups.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isGlobalAdmin ? (
             <select
               value={countryFilter}
@@ -318,7 +318,7 @@ const PopupManagement = () => {
               </div>
 
               {/* CTA — optional */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("popups.ctaText")} <span className="text-gray-400 font-normal">({t("common.optional")})</span>
@@ -372,7 +372,7 @@ const PopupManagement = () => {
               </div>
 
               {/* Duration / delay */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("popups.displaySeconds")}
@@ -401,7 +401,7 @@ const PopupManagement = () => {
               </div>
 
               {/* Schedule */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("popups.startDate")} <span className="text-gray-400 font-normal">({t("common.optional")})</span>

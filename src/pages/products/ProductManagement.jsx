@@ -474,13 +474,15 @@ const ProductManagement = () => {
     </style></head><body>
     <h1>Product Catalog Export</h1>
     <p class="meta">Generated: ${dateStr} · ${data.length} products · ${selectedColumns.length} columns</p>
-    <table>
+    <div className="overflow-x-auto">
+      <table>
       <thead><tr>
         <th style="width:18px"></th>
         ${selectedColumns.map((k) => `<th>${COL_LABELS[k] || k}</th>`).join("")}
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    </div>
     <div class="legend">
       <span><span class="dot" style="background:#22c55e"></span>In Stock</span>
       <span><span class="dot" style="background:#f59e0b"></span>Low Stock</span>
@@ -568,7 +570,7 @@ const ProductManagement = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {t("products.managementTitle")}
@@ -592,7 +594,7 @@ const ProductManagement = () => {
             </div>
           )}
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={() => setShowExportModal(true)}
             disabled={loading || products.length === 0}

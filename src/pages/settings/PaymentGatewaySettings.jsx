@@ -113,7 +113,7 @@ const PaymentGatewaySettings = () => {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2 dark:text-white">
             <CreditCard className="w-6 h-6" />
@@ -133,7 +133,8 @@ const PaymentGatewaySettings = () => {
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[720px]">
             <thead className="bg-gray-50 text-gray-500 text-left dark:bg-gray-900 dark:text-gray-400">
               <tr>
                 <th className="px-4 py-3 font-medium">Country</th>
@@ -207,6 +208,7 @@ const PaymentGatewaySettings = () => {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

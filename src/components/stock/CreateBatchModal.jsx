@@ -297,7 +297,7 @@ const CreateBatchModal = ({ isOpen, onClose, onSuccess }) => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Warehouse Location
               </label>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                     Zone

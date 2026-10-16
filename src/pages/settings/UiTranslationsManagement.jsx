@@ -233,7 +233,8 @@ export default function UiTranslationsManagement() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
             <tr>
               <th className="text-left px-4 py-3 w-1/4">Key</th>
@@ -306,6 +307,7 @@ export default function UiTranslationsManagement() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {totalPages > 1 && (

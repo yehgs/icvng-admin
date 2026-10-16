@@ -14,6 +14,9 @@ import {
   CheckCheck,
   Trash2,
   ExternalLink,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { clearAuthData } from "../../utils/api";
 import { useNotifications } from "../../contexts/NotificationContext";
@@ -62,7 +65,14 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
-const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
+const Header = ({
+  currentUser,
+  darkMode,
+  onToggleDarkMode,
+  onToggleSidebar,
+  sidebarCollapsed = false,
+  mobileOpen = false,
+}) => {
   const { t } = useAdminTranslation();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -124,9 +134,37 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-40">
-      <div className="flex items-center justify-end gap-6">
-        <div className="flex items-center gap-4">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-2.5 sm:py-4 sticky top-0 z-40">
+      <div className="flex items-center justify-between gap-2 sm:gap-6">
+        {/* Left: sidebar toggle (hamburger on mobile, collapse on desktop) */}
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={onToggleSidebar}
+            aria-label="Open menu"
+            aria-expanded={mobileOpen}
+            className="lg:hidden p-2 -ml-1 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <button
+            onClick={onToggleSidebar}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden lg:inline-flex p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </button>
+          <span className="lg:hidden font-semibold text-gray-900 dark:text-white truncate">
+            {t("common.adminPanel")}
+          </span>
+        </div>
+
+        {/* Right: actions */}
+        <div className="flex items-center gap-0.5 sm:gap-4 flex-shrink-0">
           {/* Phase 3: Language switcher */}
           <AdminLanguageSwitcher />
 
@@ -162,7 +200,7 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+              <div className="fixed inset-x-2 top-14 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
                 {/* Header */}
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                   <div>
@@ -208,7 +246,7 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
                 </div>
 
                 {/* Notification list */}
-                <div className="max-h-80 overflow-y-auto">
+                <div className="max-h-[60vh] sm:max-h-80 overflow-y-auto">
                   {loading && notifications.length === 0 ? (
                     <div className="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
                       Loading...
@@ -222,7 +260,7 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
                       <div
                         key={n._id}
                         onClick={() => handleNotificationClick(n)}
-                        className={`p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                        className={`group p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
                           !n.isRead ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
                         }`}
                       >
@@ -243,7 +281,7 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
                                   e.stopPropagation();
                                   deleteNotification(n._id);
                                 }}
-                                className="flex-shrink-0 opacity-0 group-hover:opacity-100 hover:text-red-500 text-gray-400"
+                                className="flex-shrink-0 p-1 -m-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500 text-gray-400"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
@@ -304,12 +342,12 @@ const Header = ({ currentUser, darkMode, onToggleDarkMode }) => {
               <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
             {showProfileDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
                 <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                   <p className="font-medium text-gray-900 dark:text-white">
                     {currentUser?.name}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 break-all">
                     {currentUser?.email}
                   </p>
                   <span className="inline-block px-2 py-1 mt-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full">

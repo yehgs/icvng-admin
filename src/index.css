@@ -527,3 +527,90 @@
     @apply border-2 border-current;
   }
 }
+
+/* ==========================================================================
+   Mobile / responsive safety net
+   Global rules that make the existing pages and modals behave on small
+   screens without editing every component.
+   ========================================================================== */
+
+/* Never let a stray wide element create sideways page scroll. `clip` (not
+   `hidden`) so body doesn't become a scroll container, which would break the
+   sticky header. */
+body {
+  overflow-x: clip;
+}
+
+/* Respect the iOS home-indicator / notch area */
+@supports (padding: max(0px)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (max-width: 639px) {
+  /* iOS Safari zooms the page when a focused field is < 16px. Stop that. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Modals: every overlay in the app is "fixed inset-0 flex items-center
+     justify-center". On a short phone screen a tall dialog gets clipped at
+     the top/bottom with no way to scroll. Make the overlay scrollable and use
+     auto margins on the dialog (safe-centering: centred when it fits, flows
+     from the top and scrolls when it doesn't). */
+  .fixed.inset-0.flex.items-center.justify-center {
+    align-items: flex-start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.5rem;
+  }
+  .fixed.inset-0.flex.items-center.justify-center > * {
+    margin-top: auto;
+    margin-bottom: auto;
+    max-width: 100%;
+  }
+  .fixed.inset-0.grid.place-items-center {
+    overflow-y: auto;
+    align-items: start;
+  }
+
+  /* Tighten the heavy desktop padding inside dialogs */
+  .fixed.inset-0 .p-6 {
+    padding: 1rem;
+  }
+
+  /* Page titles: stop 2xl headings forcing wrap/overflow next to buttons */
+  main h1.text-2xl,
+  main h1.text-3xl {
+    font-size: 1.375rem;
+    line-height: 1.75rem;
+  }
+
+  /* Tables sit in scroll wrappers; keep cells compact and tappable */
+  .overflow-x-auto > table th,
+  .overflow-x-auto > table td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Toasts shouldn't touch the screen edge */
+  [role="status"] {
+    max-width: calc(100vw - 1.5rem);
+  }
+}
+
+/* Smooth momentum scrolling inside horizontally-scrollable wrappers */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tab strips that scroll sideways: keep each tab on one line, full size */
+.overflow-x-auto > button,
+nav.overflow-x-auto > button,
+nav.overflow-x-auto > a {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
