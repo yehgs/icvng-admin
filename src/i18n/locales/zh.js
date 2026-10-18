@@ -127,6 +127,7 @@ export default {
     "coffeeRoastedAreas": "咖啡烘焙地区",
     "crmPipeline": "CRM 管道",
     "contactMessages": "联系人 & 订阅者",
+    "bookingRequests": "预约请求",
     "webScraper": "网页抓取器",
     "countryAdmins": "国家管理员",
     "translations": "翻译",

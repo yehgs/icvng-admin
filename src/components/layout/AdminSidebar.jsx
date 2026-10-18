@@ -8,7 +8,7 @@ import {
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
-  Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift,
+  Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift, CalendarCheck,
   ChevronsLeft, ChevronsRight,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
@@ -152,6 +152,8 @@ const AdminSidebar = ({
     { key: "catalogue", title: t("nav.catalogue"), path: "/admin/dashboard/catalogue", icon: FileText, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
     { key: "crm",           title: t("nav.crmPipeline"),   path: "/admin/dashboard/crm",           icon: Users,   single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
     { key: "contact-messages", title: t("nav.contactMessages"), path: "/admin/dashboard/contact-messages", icon: Inbox, single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
+    // Barista training / machine rental requests — Nigeria team only (see filter below + server nigeriaOnly guard).
+    { key: "booking-requests", title: t("nav.bookingRequests"), path: "/admin/dashboard/booking-requests", icon: CalendarCheck, single: true, nigeriaOnly: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","DIRECTOR"] },
     { key: "scraper",       title: t("nav.webScraper"),    path: "/admin/dashboard/scraper",        icon: Zap,     single: true, allowedSubRoles: ["SALES","SALES_MANAGER","MANAGER","IT","EDITOR","DIRECTOR"] },
     { key: "notifications", title: t("nav.notifications"), path: "/admin/dashboard/notifications",  icon: Bell,    single: true, allowedSubRoles: [] },
     { key: "support-tickets",title: t("nav.supportTickets"),path: "/admin/dashboard/support-tickets",icon: LifeBuoy,single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","HR","SALES","WAREHOUSE","ACCOUNTANT","LOGISTICS","EDITOR","GRAPHICS"] },
@@ -274,6 +276,8 @@ const AdminSidebar = ({
   // 2. Country-scoped admins cannot see HQ-only sections
   const filteredMenuItems = menuItems.filter(item => {
     if (!isGlobalAdmin && COUNTRY_BLOCKED_TOP_LEVEL.includes(item.key)) return false;
+    // Nigeria-only modules: hidden for foreign (non-NG) country-scoped admins.
+    if (item.nigeriaOnly && !isGlobalAdmin && countryScope !== "NG") return false;
     return hasAccess(item.allowedSubRoles);
   });
 

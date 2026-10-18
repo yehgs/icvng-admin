@@ -122,6 +122,7 @@ const en = {
     coffeeRoastedAreas: "Coffee Roasted Areas",
     crmPipeline: "CRM Pipeline",
     contactMessages: "Contact & Subscribers",
+    bookingRequests: "Booking Requests",
     webScraper: "Web Scraper",
     countryAdmins: "Country Admins",
     translations: "Translations",

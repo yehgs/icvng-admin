@@ -127,6 +127,7 @@ export default {
     "coffeeRoastedAreas": "Koffiebrandgebieden",
     "crmPipeline": "CRM-pipeline",
     "contactMessages": "Contacten & Abonnees",
+    "bookingRequests": "Reserveringsaanvragen",
     "webScraper": "Webscraper",
     "countryAdmins": "Landbeheerders",
     "translations": "Vertalingen",

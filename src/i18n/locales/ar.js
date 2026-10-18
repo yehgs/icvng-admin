@@ -127,6 +127,7 @@ export default {
     "coffeeRoastedAreas": "مناطق تحميص القهوة",
     "crmPipeline": "سير عمل CRM",
     "contactMessages": "جهات الاتصال والمشتركين",
+    "bookingRequests": "طلبات الحجز",
     "webScraper": "كاشط الويب",
     "countryAdmins": "مشرفو الدول",
     "translations": "الترجمات",

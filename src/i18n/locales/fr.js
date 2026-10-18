@@ -128,6 +128,7 @@ export default {
     "crmPipeline": "Pipeline CRM",
     "webScraper": "Extracteur web",
     "contactMessages": "Contact et abonnés",
+    "bookingRequests": "Demandes de réservation",
     "countryAdmins": "Admins par pays",
     "translations": "Traductions",
     "notifications": "Notifications",

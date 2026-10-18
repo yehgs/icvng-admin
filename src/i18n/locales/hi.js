@@ -127,6 +127,7 @@ export default {
     "coffeeRoastedAreas": "कॉफी रोस्टेड क्षेत्र",
     "crmPipeline": "CRM पाइपलाइन",
     "contactMessages": "संपर्क & सब्सक्राइबर्स",
+    "bookingRequests": "बुकिंग अनुरोध",
     "webScraper": "वेब स्क्रेपर",
     "countryAdmins": "देश प्रशासक",
     "translations": "अनुवाद",

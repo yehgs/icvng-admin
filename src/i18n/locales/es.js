@@ -127,6 +127,7 @@ export default {
     "coffeeRoastedAreas": "Áreas de tostado de café",
     "crmPipeline": "Canalización CRM",
     "contactMessages": "Contactos & Suscriptores",
+    "bookingRequests": "Solicitudes de reserva",
     "webScraper": "Raspador web",
     "countryAdmins": "Administradores de país",
     "translations": "Traducciones",

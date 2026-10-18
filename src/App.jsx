@@ -100,6 +100,7 @@ import ProductRequestManagement from "./pages/products/ProductRequestManagement.
 
 import CrmManagement from "./pages/crm/CrmManagement";
 import ContactMessages from "./pages/contact/ContactMessages";
+import BookingRequests from "./pages/bookings/BookingRequests";
 import ProfilePage from "./pages/profile/ProfilePage";
 import ScraperTool from "./pages/scraper/ScraperTool";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -950,6 +951,27 @@ const App = () => {
                       ]}
                     >
                       <ContactMessages />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Booking Requests — barista training + coffee machine rental
+                    requests from the storefront. Nigeria only: the backend
+                    (nigeriaOnly + bookings.view) refuses foreign country
+                    admins; the page also shows a notice for them. */}
+                <Route
+                  path="dashboard/booking-requests"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={[
+                        "SALES",
+                        "SALES_MANAGER",
+                        "MANAGER",
+                        "IT",
+                        "DIRECTOR",
+                      ]}
+                    >
+                      <BookingRequests />
                     </RoleProtectedRoute>
                   }
                 />
