@@ -161,6 +161,10 @@ const ProductForm = ({ isOpen, onClose, product = null, onSuccess }) => {
     "8/10",
     "9/10",
     "10/10",
+    "10/13",
+    "11/13",
+    "12/13",
+    "13/13",
   ];
 
   const publishStates = ["PUBLISHED", "PENDING", "DRAFT"];
