@@ -26,6 +26,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import WebsiteOrderDetailsModal from "../../components/order/WebsiteOrderDetailsModal";
+import { resolveGroupTotals } from "../../utils/orderGroupTotals";
 // Cross-country order controls — renders only for IT / DIRECTOR.
 import OrderCountryFilter from "../../components/order/OrderCountryFilter.jsx";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
@@ -184,13 +185,8 @@ const groupOrdersByGroupId = (ordersList) => {
           order_status: order.order_status,
           payment_status: order.payment_status,
           payment_method: order.payment_method,
-          totals: order.groupTotals || {
-            subTotal: order.subTotalAmt || 0,
-            totalShipping: order.shipping_cost || 0,
-            totalDiscount: order.discount_amount || 0,
-            totalTax: order.tax_amount || 0,
-            grandTotal: order.totalAmt || 0,
-          },
+          // Filled in after grouping — see resolveGroupTotals()
+          totals: null,
         },
       });
     }
@@ -204,9 +200,11 @@ const groupOrdersByGroupId = (ordersList) => {
     }
   });
 
-  // Re-derive childOrders so parentOrder is never duplicated in the list
+  // Re-derive childOrders so parentOrder is never duplicated in the list,
+  // and compute totals from the PARENT (child rows carry zeroed groupTotals).
   map.forEach((g) => {
     g.childOrders = g.allOrders.filter((o) => o._id !== g.parentOrder?._id);
+    g.summary.totals = resolveGroupTotals(g);
   });
 
   return Array.from(map.values());

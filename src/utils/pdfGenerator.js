@@ -2,6 +2,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import companyLogoPNG from "../assets/web-logo.png";
+import { resolveGroupTotals } from "./orderGroupTotals";
 
 /**
  * Generate PDF invoice for website orders
@@ -250,7 +251,7 @@ export const generateOrderPDF = async (orderGroup) => {
     // ===== TOTALS SECTION =====
     checkPageBreak(50);
 
-    const totals = summary.totals;
+    const totals = resolveGroupTotals(orderGroup);
     const totalsSectionX = pageWidth - 75;
 
     doc.setFontSize(9);
