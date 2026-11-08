@@ -8,7 +8,7 @@ import {
   ArrowUpDown, RefreshCw, Building2, Activity, Coffee,
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
-  Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift, CalendarCheck,
+  Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift, Snowflake, CalendarCheck,
   ChevronsLeft, ChevronsRight,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
@@ -159,11 +159,12 @@ const AdminSidebar = ({
     { key: "support-tickets",title: t("nav.supportTickets"),path: "/admin/dashboard/support-tickets",icon: LifeBuoy,single: true, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","HR","SALES","WAREHOUSE","ACCOUNTANT","LOGISTICS","EDITOR","GRAPHICS"] },
     { key: "password-vault",title: t("nav.passwordVault"), path: "/admin/dashboard/password-vault", icon: Lock,    single: true, allowedSubRoles: ["IT","DIRECTOR"] },
     {
-      key: "content", title: t("nav.contentManagement"), icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"],
+      key: "content", title: t("nav.contentManagement"), icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS","SALES_MANAGER","SALES","ACCOUNTANT"],
       items: [
         { title: t("nav.sliderManagement"), path: "/admin/sliders", icon: Image,  allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.bannerManagement"), path: "/admin/banners", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.popupManagement"), path: "/admin/popups", icon: MessageSquareText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
+        { title: t("nav.seasonalCampaigns"), path: "/admin/campaigns", icon: Snowflake, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","SALES","ACCOUNTANT","EDITOR"] },
         { title: t("nav.giftCardManagement"), path: "/admin/gift-cards", icon: Gift, allowedSubRoles: ["IT","DIRECTOR","MANAGER","ACCOUNTANT"] },
         { title: t("nav.siteContent"), path: "/admin/home-content", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.sitePages"), path: "/admin/site-pages", icon: FileText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },

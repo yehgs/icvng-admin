@@ -91,6 +91,7 @@ import SliderManagement from "./pages/content/SliderManagement.jsx";
 import BannerManagement from "./pages/content/BannerManagement.jsx";
 import PopupManagement from "./pages/content/PopupManagement.jsx";
 import GiftCardManagement from "./pages/marketing/GiftCardManagement.jsx";
+import CampaignManagement from "./pages/marketing/CampaignManagement.jsx";
 import HomeContentManagement from "./pages/content/HomeContentManagement.jsx";
 import SitePagesManagement from "./pages/content/SitePagesManagement.jsx";
 import FomoManagement from "./pages/content/FomoManagement.jsx";
@@ -845,6 +846,16 @@ const App = () => {
                       allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR", "GRAPHICS"]}
                     >
                       <BannerManagement />
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="campaigns"
+                  element={
+                    <RoleProtectedRoute
+                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "SALES_MANAGER", "SALES", "ACCOUNTANT", "EDITOR"]}
+                    >
+                      <CampaignManagement />
                     </RoleProtectedRoute>
                   }
                 />
