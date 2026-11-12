@@ -24,7 +24,7 @@ const isoPlus = (days) => new Date(Date.now() + days * 86400000).toISOString();
 export default function CampaignEditor({ campaignId, meta, onClose, onChanged }) {
   const { t, language } = useAdminTranslation();
   const isNew = !campaignId;
-  const [tab, setTab] = useState("general");
+  const [tab, setTab] = useState(!meta.permissions?.manage && meta.permissions?.discounts ? "rules" : "general");
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState([]);
@@ -80,6 +80,10 @@ export default function CampaignEditor({ campaignId, meta, onClose, onChanged })
   // Non-publishers may only edit drafts; nobody edits an archived campaign.
   const canEditContent = canManage && publishState !== "ARCHIVED" && (canPublish || publishState === "DRAFT" || isNew);
   const readOnly = !canEditContent;
+  // Accountant: campaigns.discounts only — sees the Discounts tab and nothing else (country-bound by the server).
+  const discountsOnly = !canManage && !!meta.permissions?.discounts;
+  const canEditRules = (canEditContent || discountsOnly) && publishState !== "ARCHIVED";
+  const visibleTabs = discountsOnly ? ["rules"] : TABS;
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const setTheme = (patch) => setForm((f) => ({ ...f, theme: { ...f.theme, ...patch } }));
@@ -170,13 +174,16 @@ export default function CampaignEditor({ campaignId, meta, onClose, onChanged })
         </div>
       </div>
 
-      {!isNew && !canPublish && publishState !== "DRAFT" && (
+      {discountsOnly && (
+        <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">{t("campaigns.discountsOnlyNotice")}</p>
+      )}
+      {!isNew && !canPublish && !discountsOnly && publishState !== "DRAFT" && (
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">{t("campaigns.draftOnlyNotice")}</p>
       )}
       {errors.length > 0 && <ul className="list-disc rounded-lg bg-red-50 p-3 pl-6 text-sm text-red-700" role="alert">{errors.map((e) => <li key={e}>{e}</li>)}</ul>}
 
       <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-gray-200 dark:border-gray-700">
-        {TABS.map((id) => (
+        {visibleTabs.map((id) => (
           <button key={id} role="tab" aria-selected={tab === id} type="button" disabled={tabDisabled(id)} onClick={() => setTab(id)}
             className={`whitespace-nowrap px-4 py-2 text-sm font-medium disabled:opacity-40 ${tab === id ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600 hover:text-gray-900 dark:text-gray-300"}`}>
             {t(`campaigns.tabs.${id}`)}
@@ -278,7 +285,7 @@ export default function CampaignEditor({ campaignId, meta, onClose, onChanged })
       )}
 
       {tab === "content" && campaign && <CampaignBlocksPanel campaign={campaign} blocks={data.blocks} canEdit={canEditContent} reload={load} />}
-      {tab === "rules" && campaign && <CampaignRulesPanel campaign={campaign} rules={data.rules} canEdit={canEditContent} reload={load} />}
+      {tab === "rules" && campaign && <CampaignRulesPanel campaign={campaign} rules={data.rules} canEdit={canEditRules} reload={load} />}
 
       {tab === "publish" && campaign && (
         <div className="grid gap-4 lg:grid-cols-2">

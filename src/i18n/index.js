@@ -15,6 +15,12 @@ import nl from "./locales/nl.js";
 import ar from "./locales/ar.js";
 import hi from "./locales/hi.js";
 import zh from "./locales/zh.js";
+import modEn from "./modules/en.js";
+import modFr from "./modules/fr.js";
+import modIt from "./modules/it.js";
+
+// Email Marketing / HR / access strings live in ./modules so the big locale files stay untouched.
+const MODULES = { en: modEn, fr: modFr, it: modIt };
 
 const LOCALES = { en, fr, it, es, pt, nl, ar, hi, zh };
 const LS_KEY = "icvng_admin_language";
@@ -49,7 +55,9 @@ function deepMerge(base, override) {
 const MERGED = Object.fromEntries(
   Object.entries(LOCALES).map(([code, locale]) => [
     code,
-    code === "en" ? locale : deepMerge(en, locale),
+    code === "en"
+      ? deepMerge(locale, modEn)
+      : deepMerge(deepMerge(en, modEn), deepMerge(locale, MODULES[code] || {})),
   ])
 );
 

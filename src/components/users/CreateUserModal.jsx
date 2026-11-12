@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
+import { useCapabilities } from "../../contexts/CapabilitiesContext.jsx";
+import StaffForm, { emptyStaff, formToPayload } from "../hr/StaffForm.jsx";
 
 // subRoles that are ALWAYS HQ (scope GLOBAL) — no "foreign"/Country Admin
 // account ever exists for these, so the Country Admin toggle is hidden
@@ -17,7 +19,7 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 // LOGISTICS is no longer in this list — the country-scoped logistics system
 // is live, so a Logistics admin can be created as GLOBAL (HQ) or COUNTRY
 // (foreign) scoped, same as MANAGER/SALES.
-const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR"];
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "WAREHOUSE"];
 
 const CreateUserModal = ({
   isOpen,
@@ -28,6 +30,10 @@ const CreateUserModal = ({
   actorSubRole,
 }) => {
   const { t } = useAdminTranslation();
+  const { can } = useCapabilities();
+  const canAddHr = can("hr.manage");
+  const [withHr, setWithHr] = useState(false);
+  const [staff, setStaff] = useState(() => emptyStaff());
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -141,7 +147,10 @@ const CreateUserModal = ({
     setSubmitting(true);
 
     try {
-      const result = await onSubmit(formData);
+      const wantsHr = withHr && canAddHr && formData.role === "ADMIN";
+      const result = await onSubmit(
+        wantsHr ? { ...formData, staffProfile: formToPayload({ ...staff, fullName: staff.fullName || formData.name }, { isNew: true }) } : formData,
+      );
 
       if (result.success) {
         // Reset form and close modal
@@ -155,6 +164,8 @@ const CreateUserModal = ({
           address: "",
         });
         setErrors({});
+        setWithHr(false);
+        setStaff(emptyStaff());
         onClose();
 
         // Show success message
@@ -477,6 +488,20 @@ const CreateUserModal = ({
                   {errors.userMode}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* HR details (HR module) — optional, only for admins holding hr.manage */}
+          {canAddHr && formData.role === "ADMIN" && (
+            <div className="border border-emerald-100 bg-emerald-50 dark:bg-emerald-900/10 rounded-lg p-4 space-y-3">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span>
+                  <span className="block text-sm font-medium text-gray-800 dark:text-gray-200">{t("hr.staff.addWithAccount")}</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">{t("hr.staff.addWithAccountHint")}</span>
+                </span>
+                <input type="checkbox" className="h-4 w-4" checked={withHr} onChange={(e) => setWithHr(e.target.checked)} />
+              </label>
+              {withHr && <StaffForm compact value={staff} onChange={setStaff} defaultCurrency="" />}
             </div>
           )}
 

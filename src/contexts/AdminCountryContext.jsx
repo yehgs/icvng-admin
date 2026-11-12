@@ -48,7 +48,7 @@ import { getCurrentUser } from "../utils/api.js";
 // Mirrors HQ_ONLY_SUBROLES in server/config/roles.js — keep in sync. These
 // subRoles are never country-scoped; an account with one of these always
 // behaves as a GLOBAL admin no matter what's cached for user.scope.
-const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR"];
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "WAREHOUSE"];
 
 const API_BASE =
   import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api";

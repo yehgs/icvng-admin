@@ -35,9 +35,8 @@ const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:8080/api"
 
 // Sub-roles that CAN be granted to a foreign/country-scoped admin.
 // Mirrors server FOREIGN_EXPOSABLE_SUBROLES (models/user.model.js) — never
-// IT, DIRECTOR, ACCOUNTANT, WAREHOUSE, or EDITOR (see HQ_ONLY_SUBROLES in
-// server/config/roles.js): there is only ever one Accountant, Warehouse,
-// and Editor, and they're always HQ (item #9).
+// IT, DIRECTOR or WAREHOUSE (see HQ_ONLY_SUBROLES in server/config/roles.js).
+// ACCOUNTANT and EDITOR are country-assignable (seasonal campaigns, discounts).
 // LOGISTICS is included now that the country-scoped logistics system is
 // live — a foreign Logistics admin manages only their assignedCountry's
 // shipping zones and shipping methods (ShippingZone/ShippingMethod
@@ -47,6 +46,8 @@ const EXPOSABLE_SUBROLES = [
   { value: "SALES",        label: "Sales" },
   { value: "SALES_MANAGER",label: "Sales Manager" },
   { value: "HR",           label: "Human Resources" },
+  { value: "ACCOUNTANT",   label: "Accountant" },
+  { value: "EDITOR",       label: "Editor" },
   { value: "MANAGER",      label: "Manager" },
   { value: "LOGISTICS",    label: "Logistics" },
 ];

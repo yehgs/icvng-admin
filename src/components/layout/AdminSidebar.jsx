@@ -9,10 +9,11 @@ import {
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
   Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift, Snowflake, CalendarCheck,
-  ChevronsLeft, ChevronsRight,
+  ChevronsLeft, ChevronsRight, Send, Briefcase, Clock,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
+import { useCapabilities } from "../../contexts/CapabilitiesContext.jsx";
 
 // hasAccess — standard subRole check, no country-scope special-casing.
 // Hoisted to module scope so it's not recreated (and doesn't force MenuItem
@@ -116,6 +117,7 @@ const AdminSidebar = ({
 }) => {
   const { t } = useAdminTranslation();
   const { isGlobalAdmin, countryScope, activeCountry } = useAdminCountry();
+  const { can, capabilities } = useCapabilities();
 
   // Item #3: reflect the logged-in admin's actual country instead of a
   // hardcoded "I-COFFEE.NG" everywhere in the shell.
@@ -134,6 +136,17 @@ const AdminSidebar = ({
 
   const menuItems = [
     { key: "dashboard", title: t("nav.dashboard"), path: "/admin/dashboard", icon: Home, single: true, allowedSubRoles: [] },
+    // Top-level and ALWAYS visible to whoever holds the permission — these used to be buried in the
+    // collapsed "Content" group (so a Manager never saw Seasonal Campaigns). `permission` (from
+    // /admin/profile/me/capabilities) decides; allowedSubRoles is only the fallback while it loads.
+    { key: "seasonal-campaigns", title: t("nav.seasonalCampaigns"), path: "/admin/campaigns", icon: Snowflake, single: true,
+      permission: ["campaigns.view", "campaigns.manage", "campaigns.discounts"], allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","SALES","ACCOUNTANT","EDITOR"] },
+    { key: "email-marketing", title: t("nav.emailMarketing"), path: "/admin/email-marketing", icon: Send, single: true,
+      permission: ["marketing.view"], allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES","EDITOR"] },
+    { key: "hr", title: t("nav.hr"), path: "/admin/hr", icon: Briefcase, single: true,
+      permission: ["hr.view"], allowedSubRoles: ["IT","DIRECTOR","HR"] },
+    // Self-service: any admin with an HR record marks attendance here (geolocation prompt).
+    { key: "my-attendance", title: t("nav.myAttendance"), path: "/admin/my-attendance", icon: Clock, single: true, allowedSubRoles: [] },
     {
       key: "products", title: t("nav.productManagement"), icon: Boxes, allowedSubRoles: [],
       items: [
@@ -164,7 +177,6 @@ const AdminSidebar = ({
         { title: t("nav.sliderManagement"), path: "/admin/sliders", icon: Image,  allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.bannerManagement"), path: "/admin/banners", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.popupManagement"), path: "/admin/popups", icon: MessageSquareText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
-        { title: t("nav.seasonalCampaigns"), path: "/admin/campaigns", icon: Snowflake, allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","SALES","ACCOUNTANT","EDITOR"] },
         { title: t("nav.giftCardManagement"), path: "/admin/gift-cards", icon: Gift, allowedSubRoles: ["IT","DIRECTOR","MANAGER","ACCOUNTANT"] },
         { title: t("nav.siteContent"), path: "/admin/home-content", icon: Layout, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
         { title: t("nav.sitePages"), path: "/admin/site-pages", icon: FileText, allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR","GRAPHICS"] },
@@ -279,6 +291,8 @@ const AdminSidebar = ({
     if (!isGlobalAdmin && COUNTRY_BLOCKED_TOP_LEVEL.includes(item.key)) return false;
     // Nigeria-only modules: hidden for foreign (non-NG) country-scoped admins.
     if (item.nigeriaOnly && !isGlobalAdmin && countryScope !== "NG") return false;
+    // Permission-aware items: trust the server's effective permissions once loaded.
+    if (item.permission) return capabilities ? can(item.permission) : hasAccess(item.allowedSubRoles);
     return hasAccess(item.allowedSubRoles);
   });
 

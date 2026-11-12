@@ -92,6 +92,10 @@ import BannerManagement from "./pages/content/BannerManagement.jsx";
 import PopupManagement from "./pages/content/PopupManagement.jsx";
 import GiftCardManagement from "./pages/marketing/GiftCardManagement.jsx";
 import CampaignManagement from "./pages/marketing/CampaignManagement.jsx";
+import EmailMarketing from "./pages/marketing/EmailMarketing.jsx";
+import HrModule from "./pages/hr/HrModule.jsx";
+import MyAttendance from "./pages/hr/MyAttendance.jsx";
+import PermissionRoute from "./components/auth/PermissionRoute";
 import HomeContentManagement from "./pages/content/HomeContentManagement.jsx";
 import SitePagesManagement from "./pages/content/SitePagesManagement.jsx";
 import FomoManagement from "./pages/content/FomoManagement.jsx";
@@ -852,13 +856,31 @@ const App = () => {
                 <Route
                   path="campaigns"
                   element={
-                    <RoleProtectedRoute
-                      allowedSubRoles={["IT", "DIRECTOR", "MANAGER", "SALES_MANAGER", "SALES", "ACCOUNTANT", "EDITOR"]}
+                    <PermissionRoute
+                      permission={["campaigns.view", "campaigns.manage", "campaigns.discounts"]}
+                      fallbackSubRoles={["IT", "DIRECTOR", "MANAGER", "SALES_MANAGER", "SALES", "ACCOUNTANT", "EDITOR"]}
                     >
                       <CampaignManagement />
-                    </RoleProtectedRoute>
+                    </PermissionRoute>
                   }
                 />
+                <Route
+                  path="email-marketing"
+                  element={
+                    <PermissionRoute permission="marketing.view" fallbackSubRoles={["IT", "DIRECTOR", "MANAGER", "SALES", "EDITOR"]}>
+                      <EmailMarketing />
+                    </PermissionRoute>
+                  }
+                />
+                <Route
+                  path="hr"
+                  element={
+                    <PermissionRoute permission="hr.view" fallbackSubRoles={["IT", "DIRECTOR", "HR"]}>
+                      <HrModule />
+                    </PermissionRoute>
+                  }
+                />
+                <Route path="my-attendance" element={<RoleProtectedRoute><MyAttendance /></RoleProtectedRoute>} />
                 <Route
                   path="gift-cards"
                   element={

@@ -92,7 +92,11 @@ const UserManagement = () => {
       if (response.success) {
         setShowCreateUser(false);
         fetchUsers(); // Refresh users list
-        return { success: true, message: 'User created successfully!' };
+        if (response.staffError) {
+          // Account exists but the HR record could not be created — tell the creator where to finish it.
+          return { success: true, message: `User created, but the HR record was not saved: ${response.staffError}. Add it from the HR module.` };
+        }
+        return { success: true, message: response.staff ? `User created with HR record ${response.staff.employeeId}.` : 'User created successfully!' };
       }
     } catch (error) {
       console.error('Error creating user:', error);

@@ -20,7 +20,7 @@ import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 // LOGISTICS is no longer in this list — the country-scoped logistics system
 // is live, so a Logistics admin can be GLOBAL (HQ) or COUNTRY (foreign)
 // scoped, same as MANAGER/SALES.
-const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "ACCOUNTANT", "WAREHOUSE", "EDITOR"];
+const HQ_ONLY_SUBROLES = ["IT", "DIRECTOR", "WAREHOUSE"];
 
 const EditUserModal = ({
   isOpen,
