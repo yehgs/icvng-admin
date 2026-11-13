@@ -68,7 +68,7 @@ export default function HrStaff() {
           </Card>)}
         {!edit.id && (
           <Card title={t("hr.staff.linkAccount")}>
-            <Field label={t("hr.staff.linkHint")}><select className={inputCls} value={edit.linkUser} onChange={(e) => { const u = candidates.find((c) => c._id === e.target.value); setEdit({ ...edit, linkUser: e.target.value, form: { ...edit.form, fullName: edit.form.fullName || u?.name || "" } }); }}><option value="">{t("hr.staff.noAccount")}</option>{candidates.map((u) => <option key={u._id} value={u._id}>{u.name} — {u.subRole} ({u.email})</option>)}</select></Field>
+            <Field label={t("hr.staff.linkHint")}><select className={inputCls} value={edit.linkUser} onChange={(e) => { const u = candidates.find((c) => c._id === e.target.value); const f = edit.form; setEdit({ ...edit, linkUser: e.target.value, form: u ? { ...f, fullName: f.fullName || u.name || "", photoUrl: f.photoUrl || (/^https:\/\//i.test(u.avatar || "") ? u.avatar : ""), phone: f.phone || (u.mobile ? String(u.mobile) : "") } : f }); }}><option value="">{t("hr.staff.noAccount")}</option>{candidates.map((u) => <option key={u._id} value={u._id}>{u.name} — {u.subRole} ({u.email})</option>)}</select></Field>
           </Card>)}
         <StaffForm value={edit.form} onChange={(form) => setEdit({ ...edit, form })} offices={offices} masked={edit.masked} defaultCurrency={cur?.currency} />
         <ConfirmDialog open={confirm} danger title={t("hr.staff.terminateTitle")} body={t("hr.staff.terminateBody")} confirmLabel={t("hr.staff.terminate")} cancelLabel={t("common.cancel")} onConfirm={terminate} onCancel={() => setConfirm(false)} />

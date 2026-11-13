@@ -93,6 +93,7 @@ import PopupManagement from "./pages/content/PopupManagement.jsx";
 import GiftCardManagement from "./pages/marketing/GiftCardManagement.jsx";
 import CampaignManagement from "./pages/marketing/CampaignManagement.jsx";
 import EmailMarketing from "./pages/marketing/EmailMarketing.jsx";
+import SocialPages from "./pages/social/SocialPages.jsx";
 import HrModule from "./pages/hr/HrModule.jsx";
 import MyAttendance from "./pages/hr/MyAttendance.jsx";
 import PermissionRoute from "./components/auth/PermissionRoute";
@@ -869,6 +870,14 @@ const App = () => {
                   element={
                     <PermissionRoute permission="marketing.view" fallbackSubRoles={["IT", "DIRECTOR", "MANAGER", "SALES", "EDITOR"]}>
                       <EmailMarketing />
+                    </PermissionRoute>
+                  }
+                />
+                <Route
+                  path="social-pages"
+                  element={
+                    <PermissionRoute permission="social.view" fallbackSubRoles={["IT", "DIRECTOR", "MANAGER", "EDITOR"]}>
+                      <SocialPages />
                     </PermissionRoute>
                   }
                 />

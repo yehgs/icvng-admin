@@ -1,5 +1,5 @@
 // admin/src/components/campaign/CampaignRulesPanel.jsx — discount rules CRUD for one campaign.
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Plus, Pause, Play, Trash2, Pencil, X, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import { apiCall, handleApiError } from "../../utils/api";
@@ -19,43 +19,79 @@ export function TargetPicker({ kind, countryCode, selected, onChange, disabled }
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
   const [names, setNames] = useState({});
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef(null);
+
+  // Search only while the box is open (focused). The list is hidden again on outside click / Escape.
   useEffect(() => {
-    if (disabled) return undefined;
+    if (disabled || !open) return undefined;
     const id = setTimeout(async () => {
       try {
         const res = await apiCall(`/campaign/admin/selector/${kind}?q=${encodeURIComponent(q)}&countryCode=${countryCode}`);
-        if (res.success) setResults(res.data || []);
+        if (res.success) {
+          setResults(res.data || []);
+          setNames((n) => ({ ...n, ...Object.fromEntries((res.data || []).map((r) => [r._id, r.name])) }));
+        }
       } catch { setResults([]); }
     }, 250);
     return () => clearTimeout(id);
-  }, [q, kind, countryCode, disabled]);
+  }, [q, kind, countryCode, disabled, open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", away);
+    document.addEventListener("touchstart", away);
+    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("touchstart", away); };
+  }, [open]);
+
+  // Already-saved selections arrive as bare ids: look their names up so chips are readable.
+  const missing = selected.filter((id) => !names[id]);
+  const missingKey = missing.join(",");
+  useEffect(() => {
+    if (!missingKey) return undefined;
+    let cancelled = false;
+    apiCall(`/campaign/admin/selector/${kind}?ids=${missingKey}&countryCode=${countryCode}`)
+      .then((res) => { if (!cancelled && res.success) setNames((n) => ({ ...n, ...Object.fromEntries((res.data || []).map((r) => [r._id, r.name])) })); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [missingKey, kind, countryCode]);
 
   const add = (item) => {
     setNames((n) => ({ ...n, [item._id]: item.name }));
     if (!selected.includes(item._id)) onChange([...selected, item._id]);
   };
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" ref={boxRef}>
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        <input className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(`campaigns.rules.search_${kind}`)} disabled={disabled} />
+        <input
+          className={`${inputCls} pl-9`}
+          value={q}
+          onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+          placeholder={t(`campaigns.rules.search_${kind}`)}
+          disabled={disabled}
+          autoComplete="off"
+        />
+        {open && results.length > 0 && (
+          <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-800">
+            {results.map((r) => (
+              <li key={r._id}>
+                <button type="button" className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => add(r)} disabled={disabled}>
+                  <span>{r.name}{r.sku ? <span className="ml-2 text-xs text-gray-400">{r.sku}</span> : null}{selected.includes(r._id) ? <span className="ml-2 text-xs text-green-600">✓</span> : null}</span>
+                  {r.price ? <span className="text-xs text-gray-500">{money(r.price)}</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-      {results.length > 0 && (
-        <ul className="max-h-36 overflow-auto rounded-lg border border-gray-200 text-sm dark:border-gray-600">
-          {results.map((r) => (
-            <li key={r._id}>
-              <button type="button" className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => add(r)} disabled={disabled}>
-                <span>{r.name}{r.sku ? <span className="ml-2 text-xs text-gray-400">{r.sku}</span> : null}</span>
-                {r.price ? <span className="text-xs text-gray-500">{money(r.price)}</span> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
       <div className="flex flex-wrap gap-1.5">
         {selected.map((id) => (
           <span key={id} className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
-            {names[id] || id.slice(-6)}
+            {names[id] || "…"}
             {!disabled && (
               <button type="button" aria-label={t("common.delete")} onClick={() => onChange(selected.filter((x) => x !== id))}><X className="h-3 w-3" /></button>
             )}

@@ -9,7 +9,7 @@ import {
   Edit, CreditCard, CheckSquare, Archive, AlertTriangle,
   PieChart, MapPin, Navigation, Image, Layout, Zap, Inbox,
   Bell, LifeBuoy, Lock, Landmark, Languages, Mail, MessageSquareText, Gift, Snowflake, CalendarCheck,
-  ChevronsLeft, ChevronsRight, Send, Briefcase, Clock,
+  ChevronsLeft, ChevronsRight, Send, Briefcase, Clock, Share2,
 } from "lucide-react";
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { useAdminCountry } from "../../contexts/AdminCountryContext.jsx";
@@ -143,6 +143,8 @@ const AdminSidebar = ({
       permission: ["campaigns.view", "campaigns.manage", "campaigns.discounts"], allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES_MANAGER","SALES","ACCOUNTANT","EDITOR"] },
     { key: "email-marketing", title: t("nav.emailMarketing"), path: "/admin/email-marketing", icon: Send, single: true,
       permission: ["marketing.view"], allowedSubRoles: ["IT","DIRECTOR","MANAGER","SALES","EDITOR"] },
+    { key: "social-pages", title: t("nav.socialPages"), path: "/admin/social-pages", icon: Share2, single: true,
+      permission: ["social.view"], allowedSubRoles: ["IT","DIRECTOR","MANAGER","EDITOR"] },
     { key: "hr", title: t("nav.hr"), path: "/admin/hr", icon: Briefcase, single: true,
       permission: ["hr.view"], allowedSubRoles: ["IT","DIRECTOR","HR"] },
     // Self-service: any admin with an HR record marks attendance here (geolocation prompt).
