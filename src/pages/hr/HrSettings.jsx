@@ -8,6 +8,45 @@ import { useHr, hrGet, hrSend, Spinner } from "./hrApi.js";
 
 const blankOffice = () => ({ name: "", address: "", lat: "", lng: "", radiusMeters: 150, notifyEmails: "", enforceGeofence: false, isActive: true });
 
+
+const MAX_ITEMS = 10;
+/** Editable list of logos or signatures: upload/URL, name, default flag, (signatures) signer name + title. */
+function BrandingList({ kind, items, onChange, canEdit, t }) {
+  const [busy, setBusy] = useState(-1);
+  const isSig = kind === "signature";
+  const patch = (i, p) => onChange(items.map((x, idx) => (idx === i ? { ...x, ...p } : x)));
+  const setDefault = (i) => onChange(items.map((x, idx) => ({ ...x, isDefault: idx === i })));
+  const remove = (i) => { const next = items.filter((_, idx) => idx !== i); if (next.length && !next.some((x) => x.isDefault)) next[0] = { ...next[0], isDefault: true }; onChange(next); };
+  const add = () => onChange([...items, { label: "", url: "", isDefault: items.length === 0, ...(isSig ? { signerName: "", signerTitle: "" } : {}) }]);
+  const upload = async (e, i) => { const file = e.target.files?.[0]; if (!file) return; setBusy(i); try { const r = await fileAPI.uploadImage(file); if (r?.data?.url) patch(i, { url: r.data.url }); } catch { toast.error(t("hr.staff.uploadFailed")); } finally { setBusy(-1); } };
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div><h4 className="text-sm font-semibold">{isSig ? t("hr.branding.signaturesTitle") : t("hr.branding.logosTitle")}</h4><p className="text-xs text-gray-500">{isSig ? t("hr.branding.signaturesHint") : t("hr.branding.logosHint")}</p></div>
+        {canEdit && <button type="button" className={btnGhost} disabled={items.length >= MAX_ITEMS} onClick={add}><Plus className="h-4 w-4" />{isSig ? t("hr.branding.addSignature") : t("hr.branding.addLogo")}</button>}
+      </div>
+      {items.length === 0 && <p className="rounded border border-dashed p-3 text-sm text-gray-500">{isSig ? t("hr.branding.noSignatures") : t("hr.branding.noLogos")}</p>}
+      <ul className="space-y-2">
+        {items.map((x, i) => (
+          <li key={x._id || `n${i}`} className="rounded-lg border p-3 dark:border-gray-700">
+            <div className="flex flex-wrap items-start gap-3">
+              <div className="flex h-16 w-28 items-center justify-center rounded border bg-white">{x.url ? <img src={x.url} alt={x.label} className="max-h-14 max-w-[104px] object-contain" /> : <span className="text-xs text-gray-400">{t("hr.branding.noImage")}</span>}</div>
+              <div className="grid min-w-[240px] flex-1 gap-2 md:grid-cols-2">
+                <Field label={t("hr.branding.name")}><input className={inputCls} maxLength={60} disabled={!canEdit} placeholder={isSig ? t("hr.branding.sigNamePh") : t("hr.branding.logoNamePh")} value={x.label} onChange={(e) => patch(i, { label: e.target.value })} /></Field>
+                <Field label={t("hr.branding.image")}><div className="flex gap-2"><input className={inputCls} disabled={!canEdit} placeholder="https://…" value={x.url} onChange={(e) => patch(i, { url: e.target.value })} />{canEdit && <label className={`${btnGhost} cursor-pointer`}><Upload className="h-4 w-4" />{busy === i ? "…" : t("marketing.upload")}<input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => upload(e, i)} /></label>}</div></Field>
+                {isSig && <><Field label={t("hr.settings.signerName")}><input className={inputCls} maxLength={100} disabled={!canEdit} value={x.signerName || ""} onChange={(e) => patch(i, { signerName: e.target.value })} /></Field><Field label={t("hr.settings.signerTitle")}><input className={inputCls} maxLength={100} disabled={!canEdit} value={x.signerTitle || ""} onChange={(e) => patch(i, { signerTitle: e.target.value })} /></Field></>}
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <label className="flex items-center gap-1.5 text-xs"><input type="radio" name={`default-${kind}`} disabled={!canEdit} checked={!!x.isDefault} onChange={() => setDefault(i)} />{t("hr.branding.default")}</label>
+                {canEdit && <button type="button" aria-label={t("common.delete")} className="p-1 text-red-600" onClick={() => remove(i)}><Trash2 className="h-4 w-4" /></button>}
+              </div>
+            </div>
+          </li>))}
+      </ul>
+    </div>
+  );
+}
+
 export default function HrSettings() {
   const { t } = useAdminTranslation();
   const { country, can } = useHr();
@@ -17,7 +56,6 @@ export default function HrSettings() {
   const [office, setOffice] = useState(null);
   const [holiday, setHoliday] = useState({ name: "", date: "" });
   const [del, setDel] = useState(null);
-  const [uploading, setUploading] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -27,8 +65,8 @@ export default function HrSettings() {
   }, [country, t]);
   useEffect(() => { load(); }, [load]);
 
-  const saveSettings = async () => { try { await hrSend("/settings", "PUT", { ...settings, countryCode: country }); toast.success(t("hr.saved")); } catch (e) { toast.error(handleApiError(e, t("hr.saveFailed"))); } };
-  const upload = async (e, field) => { const file = e.target.files?.[0]; if (!file) return; setUploading(field); try { const r = await fileAPI.uploadImage(file); if (r?.data?.url) setSettings((s) => ({ ...s, [field]: r.data.url })); } catch { toast.error(t("hr.staff.uploadFailed")); } finally { setUploading(""); } };
+  const saveSettings = async () => { try { const { logoUrl, signatureUrl, signerName, signerTitle, ...rest } = settings; void logoUrl; void signatureUrl; void signerName; void signerTitle; // legacy single fields are derived server-side from the defaults
+      await hrSend("/settings", "PUT", { ...rest, logos: (settings.logos || []).map(({ _id, ...l }) => (/^[a-f0-9]{24}$/i.test(_id || "") ? { _id, ...l } : l)), signatures: (settings.signatures || []).map(({ _id, ...l }) => (/^[a-f0-9]{24}$/i.test(_id || "") ? { _id, ...l } : l)), countryCode: country }); toast.success(t("hr.saved")); load(); } catch (e) { toast.error(handleApiError(e, t("hr.saveFailed"))); } };
   const saveOffice = async () => {
     try { const body = { ...office, lat: Number(office.lat), lng: Number(office.lng), radiusMeters: Number(office.radiusMeters), countryCode: country };
       if (office._id) await hrSend(`/offices/${office._id}`, "PUT", body); else await hrSend("/offices", "POST", body);
@@ -48,9 +86,6 @@ export default function HrSettings() {
 
   if (!settings || !offices) return <Spinner />;
   const set = (p) => setSettings((s) => ({ ...s, ...p }));
-  const imgField = (field, label) => (
-    <Field label={label}><div className="flex items-center gap-2">{settings[field] && <img src={settings[field]} alt="" className="h-10 max-w-[120px] rounded border bg-white object-contain" />}<input className={inputCls} placeholder="https://…" value={settings[field] || ""} onChange={(e) => set({ [field]: e.target.value })} /><label className={`${btnGhost} cursor-pointer`}><Upload className="h-4 w-4" />{uploading === field ? "…" : t("marketing.upload")}<input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => upload(e, field)} /></label></div></Field>
-  );
   return (
     <div className="space-y-4">
       <Card title={t("hr.settings.payrollIdentity")}>
@@ -58,14 +93,15 @@ export default function HrSettings() {
         <div className="grid gap-3 md:grid-cols-2">
           <Field label={t("hr.settings.companyName")}><input className={inputCls} maxLength={120} value={settings.companyName || ""} onChange={(e) => set({ companyName: e.target.value })} /></Field>
           <Field label={t("hr.settings.companyAddress")}><input className={inputCls} maxLength={300} value={settings.companyAddress || ""} onChange={(e) => set({ companyAddress: e.target.value })} /></Field>
-          {imgField("logoUrl", t("hr.settings.logo"))}{imgField("signatureUrl", t("hr.settings.signature"))}
-          <Field label={t("hr.settings.signerName")}><input className={inputCls} maxLength={100} value={settings.signerName || ""} onChange={(e) => set({ signerName: e.target.value })} /></Field>
-          <Field label={t("hr.settings.signerTitle")}><input className={inputCls} maxLength={100} value={settings.signerTitle || ""} onChange={(e) => set({ signerTitle: e.target.value })} /></Field>
           <Field label={t("hr.settings.notifyEmails")} hint={t("hr.settings.notifyHint")}><input className={inputCls} value={settings.payrollNotifyEmails} onChange={(e) => set({ payrollNotifyEmails: e.target.value })} /></Field>
           <Field label={t("hr.settings.workingDays")}><input type="number" min="15" max="31" className={inputCls} value={settings.workingDaysPerMonth || 22} onChange={(e) => set({ workingDaysPerMonth: e.target.value })} /></Field>
           <Field label={t("hr.settings.footer")} className="md:col-span-2"><input className={inputCls} maxLength={300} value={settings.payslipFooter || ""} onChange={(e) => set({ payslipFooter: e.target.value })} /></Field>
         </div>
-        {can.manage && <button type="button" className={`${btnPrimary} mt-3`} onClick={saveSettings}>{t("common.save")}</button>}
+        <div className="mt-5 grid gap-6 border-t pt-4 dark:border-gray-700 lg:grid-cols-2">
+          <BrandingList kind="logo" items={settings.logos || []} onChange={(logos) => set({ logos })} canEdit={can.manage} t={t} />
+          <BrandingList kind="signature" items={settings.signatures || []} onChange={(signatures) => set({ signatures })} canEdit={can.manage} t={t} />
+        </div>
+        {can.manage && <button type="button" className={`${btnPrimary} mt-4`} onClick={saveSettings}>{t("common.save")}</button>}
       </Card>
 
       <Card title={t("hr.settings.offices")} actions={can.manage && <button type="button" className={btnPrimary} onClick={() => setOffice(blankOffice())}><Plus className="h-4 w-4" />{t("hr.settings.addOffice")}</button>}>

@@ -4,6 +4,7 @@ import { Plus, Search, ArrowLeft, Save, Eye, EyeOff, UserMinus } from "lucide-re
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { handleApiError } from "../../utils/api";
 import { Card, ConfirmDialog, Field, inputCls, btnPrimary, btnGhost, btnDanger } from "../../components/campaign/ui.jsx";
+import StaffDocuments, { ExportOne } from "../../components/hr/StaffDocuments.jsx";
 import StaffForm, { emptyStaff, staffToForm, formToPayload } from "../../components/hr/StaffForm.jsx";
 import { useHr, hrGet, hrSend, Spinner, day } from "./hrApi.js";
 
@@ -70,6 +71,7 @@ export default function HrStaff() {
           <Card title={t("hr.staff.linkAccount")}>
             <Field label={t("hr.staff.linkHint")}><select className={inputCls} value={edit.linkUser} onChange={(e) => { const u = candidates.find((c) => c._id === e.target.value); const f = edit.form; setEdit({ ...edit, linkUser: e.target.value, form: u ? { ...f, fullName: f.fullName || u.name || "", photoUrl: f.photoUrl || (/^https:\/\//i.test(u.avatar || "") ? u.avatar : ""), phone: f.phone || (u.mobile ? String(u.mobile) : "") } : f }); }}><option value="">{t("hr.staff.noAccount")}</option>{candidates.map((u) => <option key={u._id} value={u._id}>{u.name} — {u.subRole} ({u.email})</option>)}</select></Field>
           </Card>)}
+        {edit.id && can.manage && <ExportOne staff={{ _id: edit.id, fullName: edit.form.fullName, employeeId: edit.employeeId }} country={country} />}
         <StaffForm value={edit.form} onChange={(form) => setEdit({ ...edit, form })} offices={offices} masked={edit.masked} defaultCurrency={cur?.currency} />
         <ConfirmDialog open={confirm} danger title={t("hr.staff.terminateTitle")} body={t("hr.staff.terminateBody")} confirmLabel={t("hr.staff.terminate")} cancelLabel={t("common.cancel")} onConfirm={terminate} onCancel={() => setConfirm(false)} />
       </div>
@@ -78,6 +80,7 @@ export default function HrStaff() {
   const setF = (p) => { setPage(1); setFilters((f) => ({ ...f, ...p })); };
   return (
     <div className="space-y-4">
+      <StaffDocuments />
       <div className="flex flex-wrap gap-2">
         <div className="relative min-w-[220px] flex-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" /><input className={`${inputCls} pl-9`} placeholder={t("hr.staff.searchPlaceholder")} value={filters.q} onChange={(e) => setF({ q: e.target.value })} /></div>
         <select className={`${inputCls} w-auto`} value={filters.status} onChange={(e) => setF({ status: e.target.value })}><option value="">{t("hr.all")}</option>{["ACTIVE", "ON_LEAVE", "SUSPENDED", "TERMINATED"].map((s) => <option key={s} value={s}>{t(`hr.empStatus.${s}`)}</option>)}</select>

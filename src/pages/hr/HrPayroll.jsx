@@ -4,7 +4,8 @@ import { Plus, ArrowLeft, Eye, Download, FileCheck2, Send, RefreshCw, Trash2, Ba
 import { useAdminTranslation } from "../../hooks/useAdminTranslation.js";
 import { handleApiError } from "../../utils/api";
 import { Card, ConfirmDialog, Field, inputCls, btnPrimary, btnGhost, btnDanger } from "../../components/campaign/ui.jsx";
-import { useHr, hrGet, hrSend, hrFile, money, Spinner } from "./hrApi.js";
+import BrandingPicker from "../../components/hr/BrandingPicker.jsx";
+import { useHr, hrGet, hrSend, hrFile, money, Spinner, useBranding } from "./hrApi.js";
 
 const TONE = { DRAFT: "bg-gray-100 text-gray-700", APPROVED: "bg-blue-100 text-blue-700", PAID: "bg-green-100 text-green-700" };
 
@@ -17,6 +18,9 @@ export default function HrPayroll() {
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [sendResult, setSendResult] = useState(null);
+  const branding = useBranding(country);
+  const [newIds, setNewIds] = useState({ logoId: "", signatureId: "" });
+  const [apprSig, setApprSig] = useState("");
 
   const loadRuns = useCallback(() => hrGet("/payroll", { countryCode: country, limit: 24 }).then((r) => r.success && setRuns(r.data)).catch((e) => toast.error(handleApiError(e, t("hr.loadFailed")))), [country, t]);
   useEffect(() => { loadRuns(); }, [loadRuns]);
@@ -30,7 +34,7 @@ export default function HrPayroll() {
       toast.error(d?.code === "MISSING_BANK" ? `${t("hr.payroll.missingBank")}: ${d.staff.join(", ")}` : handleApiError(e, t("hr.saveFailed")), { duration: 7000 });
     } finally { setBusy(false); }
   };
-  const create = () => act(async () => { const r = await hrSend("/payroll", "POST", { period, countryCode: country }); if (r.success) { setRun(r.data); loadRuns(); } }, t("hr.saved"));
+  const create = () => act(async () => { const r = await hrSend("/payroll", "POST", { period, countryCode: country, ...newIds }); if (r.success) { setRun(r.data); loadRuns(); } }, t("hr.saved"));
   const set = (r) => { if (r?.success) { setRun(r.data); loadRuns(); } };
   const file = (path, opts) => act(() => hrFile(path, opts));
 
@@ -56,13 +60,20 @@ export default function HrPayroll() {
           {[["gross", run.totals.gross], ["deductions", run.totals.deductions], ["net", run.totals.net]].map(([k, v]) => <div key={k} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><div className="text-xs text-gray-500">{t(`hr.payroll.${k}`)}</div><div className="text-lg font-semibold">{money(v, d, c, true)}</div></div>)}
           <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><div className="text-xs text-gray-500">{t("hr.dash.headcount")}</div><div className="text-lg font-semibold">{run.totals.headcount}</div></div>
         </div>
+        {draft ? (
+          <Card title={t("hr.branding.payrollTitle")}>
+            <p className="mb-2 text-xs text-gray-500">{t("hr.branding.payrollHint")}</p>
+            <BrandingPicker logos={branding.logos} signatures={branding.signatures} logoId={run.branding?.logoId} signatureId={apprSig || run.branding?.signatureId} disabled={busy}
+              onChange={(p) => { if (p.signatureId !== undefined) setApprSig(p.signatureId); act(async () => set(await hrSend(`/payroll/${run._id}/branding`, "PUT", { logoId: p.logoId ?? run.branding?.logoId ?? "", signatureId: p.signatureId ?? run.branding?.signatureId ?? "" })), t("hr.saved")); }} />
+          </Card>
+        ) : null}
         {run.signedBy?.name && <p className="text-sm text-gray-600">{t("hr.payroll.signedBy", { name: run.signedBy.name })} · {new Date(run.signedBy.signedAt).toLocaleString()}</p>}
         {sendResult && <Card title={t("hr.payroll.sendResult")}><p className="text-sm">{t("hr.payroll.sendSummary", { sent: sendResult.sent.length, failed: sendResult.failed.length, none: sendResult.noEmail.length })}</p>{sendResult.failed.length > 0 && <ul className="mt-1 list-disc pl-5 text-xs text-red-700">{sendResult.failed.map((f) => <li key={f.name}>{f.name}: {f.reason}</li>)}</ul>}{sendResult.noEmail.length > 0 && <p className="mt-1 text-xs text-amber-700">{t("hr.payroll.noEmail")}: {sendResult.noEmail.join(", ")}</p>}</Card>}
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           <table className="w-full text-left text-sm"><thead className="border-b text-xs uppercase text-gray-500 dark:border-gray-700"><tr><th className="p-3">{t("hr.staff.one")}</th><th className="p-3">{t("hr.staff.sections.bank")}</th><th className="p-3 text-right">{t("hr.payroll.base")}</th><th className="p-3 text-right">{t("hr.payroll.bonus")}</th><th className="p-3 text-right">{t("hr.payroll.overtime")}</th><th className="p-3 text-right">{t("hr.payroll.other")}</th><th className="p-3 text-right">{t("hr.payroll.gross")}</th><th className="p-3 text-right">{t("hr.payroll.deductions")}</th><th className="p-3 text-right">{t("hr.payroll.net")}</th><th /></tr></thead>
             <tbody>{run.lines.map((l) => <Line key={l.staffId} l={l} run={run} draft={draft} t={t} onSaved={set} act={act} onSlip={() => file(`/payroll/${run._id}/download?staffId=${l.staffId}`, { mode: "save", filename: `payslip-${run.period}-${l.employeeId}.pdf` })} />)}</tbody></table>
         </div>
-        <ConfirmDialog open={confirm === "approve"} title={t("hr.payroll.approveTitle")} body={t("hr.payroll.approveBody")} confirmLabel={t("hr.payroll.approve")} cancelLabel={t("common.cancel")} busy={busy} onConfirm={async () => { setConfirm(null); await act(async () => set(await hrSend(`/payroll/${run._id}/approve`, "POST")), t("hr.payroll.approved")); }} onCancel={() => setConfirm(null)} />
+        <ConfirmDialog open={confirm === "approve"} title={t("hr.payroll.approveTitle")} body={t("hr.payroll.approveBody")} confirmLabel={t("hr.payroll.approve")} cancelLabel={t("common.cancel")} busy={busy} onConfirm={async () => { setConfirm(null); await act(async () => set(await hrSend(`/payroll/${run._id}/approve`, "POST", { signatureId: apprSig || run.branding?.signatureId || "" })), t("hr.payroll.approved")); }} onCancel={() => setConfirm(null)} />
         <ConfirmDialog open={confirm === "send"} title={t("hr.payroll.sendTitle")} body={t("hr.payroll.sendBody", { n: run.lines.length })} confirmLabel={t("hr.payroll.send")} cancelLabel={t("common.cancel")} busy={busy} onConfirm={async () => { setConfirm(null); const r = await act(() => hrSend(`/payroll/${run._id}/send`, "POST", {})); if (r?.success) { setSendResult(r.data); open(run._id); } }} onCancel={() => setConfirm(null)} />
         <ConfirmDialog open={confirm === "delete"} danger title={t("hr.payroll.deleteTitle")} body={t("hr.payroll.deleteBody")} confirmLabel={t("common.delete")} cancelLabel={t("common.cancel")} onConfirm={async () => { setConfirm(null); await act(() => hrSend(`/payroll/${run._id}`, "DELETE")); setRun(null); loadRuns(); }} onCancel={() => setConfirm(null)} />
       </div>
@@ -74,6 +85,7 @@ export default function HrPayroll() {
         <Field label={t("hr.payroll.period")}><input type="month" className={`${inputCls} w-auto`} max={new Date().toISOString().slice(0, 7)} value={period} onChange={(e) => setPeriod(e.target.value)} /></Field>
         <button type="button" className={btnPrimary} disabled={busy || !period} onClick={create}><Plus className="h-4 w-4" />{t("hr.payroll.create")}</button>
       </div>
+      {(branding.logos.length > 1 || branding.signatures.length > 1) && <Card title={t("hr.branding.payrollTitle")}><BrandingPicker logos={branding.logos} signatures={branding.signatures} logoId={newIds.logoId} signatureId={newIds.signatureId} onChange={(p) => setNewIds({ ...newIds, ...p })} /></Card>}
       {!runs ? <Spinner /> : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           <table className="w-full text-left text-sm"><thead className="border-b text-xs uppercase text-gray-500 dark:border-gray-700"><tr><th className="p-3">{t("hr.payroll.period")}</th><th className="p-3">{t("common.status")}</th><th className="p-3 text-right">{t("hr.dash.headcount")}</th><th className="p-3 text-right">{t("hr.payroll.net")}</th></tr></thead>

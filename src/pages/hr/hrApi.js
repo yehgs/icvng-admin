@@ -40,3 +40,33 @@ export const money = (minorOrMajor, decimals = 2, currency = "", minor = false) 
 };
 export const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 export const Spinner = () => React.createElement("div", { className: "p-8 text-center text-gray-500" }, "…");
+
+/** POST that returns a file (PDF). Rejects with an Error carrying `.status` and `.retryAfter` so the UI can react to 403/429. */
+export async function hrPostFile(path, body, { filename = "document.pdf" } = {}) {
+  const res = await fetch(`${API_BASE_URL}/hr${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("accessToken")}`, "x-storefront-host": window.location.hostname },
+    body: JSON.stringify(body || {}),
+  });
+  if (!res.ok) {
+    let data = {};
+    try { data = await res.json(); } catch { /* not json */ }
+    const err = new Error(data.message || res.statusText);
+    err.status = res.status; err.retryAfter = data.retryAfter || 0;
+    throw err;
+  }
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+/** The country's saved logos + signatures (for the pickers). */
+export function useBranding(country) {
+  const [state, setState] = React.useState({ logos: [], signatures: [], loaded: false });
+  React.useEffect(() => {
+    let alive = true;
+    hrGet("/settings", { countryCode: country }).then((r) => { if (alive && r.success) setState({ logos: r.data.logos || [], signatures: r.data.signatures || [], loaded: true }); }).catch(() => { if (alive) setState((s) => ({ ...s, loaded: true })); });
+    return () => { alive = false; };
+  }, [country]);
+  return state;
+}
